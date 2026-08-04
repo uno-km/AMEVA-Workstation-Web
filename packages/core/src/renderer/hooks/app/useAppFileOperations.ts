@@ -514,7 +514,7 @@ export function useAppFileOperations(
        */
       const input = document.createElement('input')
       input.type = 'file'
-      input.accept = '.md,.markdown,.txt,.docx,.hwpx,.pdf,.xlsx,.ipynb'
+      input.accept = '.md,.markdown,.txt,.docx,.hwpx,.pdf,.xlsx,.ipynb,.adc'
       input.onchange = async (e) => {
       /*
        * [RUN-TIME STATE / INVARIANT]

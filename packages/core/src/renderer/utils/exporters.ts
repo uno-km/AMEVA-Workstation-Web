@@ -289,6 +289,14 @@ export async function blocksToHTML(rawBlocks: any): Promise<string> {
             return `<pre><code class="language-mermaid">${escapeHtml(code)}</code></pre>\n`
           }
         }
+        
+        // 🚨 방어 로직: 커스텀 블록 (문서, 프레젠테이션) 텍스트 폴백 (Bypass 방지)
+        if (lang === 'ameva-document') {
+           return `<div style="padding: 15px; margin-bottom: 1rem; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px;"><h4 style="color: #334155;">📎 [첨부 문서: ${escapeHtml(block.props?.title || '문서 파일')}]</h4><p style="font-size: 13px; color: #64748b; margin-top: 5px;">* 이 문서는 워드 내보내기 시 인라인 뷰어 출력이 지원되지 않습니다.</p></div>\n`
+        }
+        if (lang === 'ameva-presentation') {
+           return `<div style="padding: 15px; margin-bottom: 1rem; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px;"><h4 style="color: #334155;">📊 [프레젠테이션 슬라이드]</h4><p style="font-size: 13px; color: #64748b; margin-top: 5px;">* 이 문서는 워드 내보내기 시 인라인 슬라이드 출력이 지원되지 않습니다.</p></div>\n`
+        }
 
         // INTERCEPT AMEVA-EXCEL
         if (lang === 'ameva-excel') {
@@ -422,7 +430,23 @@ export async function blocksToHTML(rawBlocks: any): Promise<string> {
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const url = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-        const url = block.props?.url || ''
+        let url = block.props?.url || ''
+        
+        // 🚨 방어 로직: Blob URL은 워드 내보내기 시 외부 유출이 차단되므로 강제로 Base64 인코딩 매핑함.
+        if (url.startsWith('blob:')) {
+          try {
+            const res = await fetch(url)
+            const blob = await res.blob()
+            const buf = await blob.arrayBuffer()
+            const uint8 = new Uint8Array(buf)
+            let binary = ''
+            for (let i = 0; i < uint8.byteLength; i++) binary += String.fromCharCode(uint8[i])
+            url = `data:${blob.type || 'image/png'};base64,${btoa(binary)}`
+          } catch (e) {
+            console.error('Failed to encode image blob to base64', e)
+          }
+        }
+
       /*
        * [RUN-TIME STATE / INVARIANT]
        * - 변수 명: `caption`
@@ -431,7 +455,7 @@ export async function blocksToHTML(rawBlocks: any): Promise<string> {
        * - 예시 코드: `const caption = ...` 형태로 안전 캐싱 후 가공 기동.
        */
         const caption = block.props?.caption || ''
-        return `<figure style="text-align:center;margin:1.2rem 0"><img src="${url}" alt="${escapeHtml(caption)}" />${caption ? `<figcaption style="font-size:12px;color:#9ca3af;margin-top:6px">${escapeHtml(caption)}</figcaption>` : ''}</figure>\n`
+        return `<figure style="text-align:center;margin:1.2rem 0"><img src="${url}" alt="${escapeHtml(caption)}" style="max-width:100%" />${caption ? `<figcaption style="font-size:12px;color:#9ca3af;margin-top:6px">${escapeHtml(caption)}</figcaption>` : ''}</figure>\n`
       }
     /*
      * [CASE ROUTING DECISION BINDING]
@@ -662,45 +686,148 @@ export async function exportToWord(rawBlocks: any): Promise<Blob> {
 // ══════════════════════════════════════════════════════════════
 // 3. Excel (XLSX) 브라우저 폴백 내보내기
 // ══════════════════════════════════════════════════════════════
-export function exportToExcel(rawBlocks: any): Uint8Array {
+export async function exportToExcel(rawBlocks: any): Promise<Uint8Array> {
   const blocks: NormalizedBlock[] = Array.isArray(rawBlocks) ? rawBlocks : []
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `csv`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const csv = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-  let csv = '\ufeff위치,블록타입,텍스트\n'
   
-  blocks.forEach(b => {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `txt`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const txt = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-    const txt = getPlainTextFromNormalized(b).replace(/"/g, '""')
-    csv += `"${b.id}","${b.type}","${txt}"\n`
-  })
+  try {
+    const { default: ExcelJS } = await import('exceljs')
+    const workbook = new ExcelJS.Workbook()
+    const sheet = workbook.addWorksheet('Document')
+    
+    let rowIdx = 1
+    for (const block of blocks) {
+      if (block.type === 'table') {
+        const rows = block.tableRows || []
+        rows.forEach(r => {
+          sheet.addRow(r.map(c => c.content || ''))
+          rowIdx++
+        })
+        rowIdx++ // 빈 줄 추가
+      } else {
+        const txt = getPlainTextFromNormalized(block)
+        if (txt) {
+          sheet.getCell(`A${rowIdx}`).value = txt
+          rowIdx++
+        }
+      }
+    }
 
-  return new TextEncoder().encode(csv)
+    const buffer = await workbook.xlsx.writeBuffer()
+    return new Uint8Array(buffer)
+  } catch (err) {
+    console.error('Failed Excel Export, fallback to CSV', err)
+    let csv = '\ufeff위치,블록타입,텍스트\n'
+    blocks.forEach(b => {
+      const txt = getPlainTextFromNormalized(b).replace(/"/g, '""')
+      csv += `"${b.id}","${b.type}","${txt}"\n`
+    })
+    return new TextEncoder().encode(csv)
+  }
 }
 
 // ══════════════════════════════════════════════════════════════
 // 4. PPTX 브라우저 폴백 내보내기
 // ══════════════════════════════════════════════════════════════
 export async function exportToPPTX(rawBlocks: any): Promise<Uint8Array> {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `html`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const html = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-  const html = await blocksToHTML(rawBlocks)
-  return new TextEncoder().encode(html)
+  const blocks: NormalizedBlock[] = Array.isArray(rawBlocks) ? rawBlocks : []
+  
+  try {
+    const { default: PptxGenJS } = await import('pptxgenjs')
+    const pres = new PptxGenJS()
+    
+    let currentSlide = pres.addSlide()
+    let hasSlides = false
+    let currentY = 1.0
+
+    const addText = (text: string, options: any) => {
+      if (text) {
+        currentSlide.addText(text, options)
+        hasSlides = true
+      }
+    }
+
+    for (const block of blocks) {
+      const type = block.type
+      const text = getPlainTextFromNormalized(block) || ''
+
+      if (type === 'heading') {
+        const level = block.props?.level || 1
+        if (level === 1) {
+          // # -> Cover slide
+          currentSlide = pres.addSlide()
+          addText(text, { x: 0.5, y: '40%', w: '90%', h: 1.5, fontSize: 44, bold: true, align: 'center', color: '111111' })
+          currentY = 5.0
+        } else if (level === 2) {
+          // ## -> Chapter slide
+          currentSlide = pres.addSlide()
+          addText(text, { x: 0.5, y: 0.5, w: '90%', h: 1, fontSize: 32, bold: true, color: '202020' })
+          currentY = 1.5
+        } else {
+          // ### -> Content slide header
+          currentSlide = pres.addSlide()
+          addText(text, { x: 0.5, y: 0.3, w: '90%', h: 0.8, fontSize: 24, bold: true, color: '303030' })
+          currentY = 1.2
+        }
+      } else if (type === 'image') {
+        let url = block.props?.url
+        if (url) {
+          if (url.startsWith('blob:')) {
+            try {
+              const res = await fetch(url)
+              const blob = await res.blob()
+              const buf = await blob.arrayBuffer()
+              const uint8 = new Uint8Array(buf)
+              let binary = ''
+              for (let i = 0; i < uint8.byteLength; i++) binary += String.fromCharCode(uint8[i])
+              url = `data:${blob.type || 'image/png'};base64,${btoa(binary)}`
+            } catch (e) {
+              console.error(e)
+            }
+          }
+          try {
+            // Add image and move cursor down
+            currentSlide.addImage({ data: url.startsWith('data:') ? url : undefined, path: !url.startsWith('data:') ? url : undefined, x: 0.5, y: currentY, w: 6, h: 3, sizing: { type: 'contain' } })
+            hasSlides = true
+            currentY += 3.2
+          } catch(e) {}
+        }
+      } else if (type === 'table') {
+        const rows = block.tableRows || []
+        if (rows.length > 0) {
+          const tableData = rows.map(r => r.map(c => ({ text: c.content || '' })))
+          currentSlide.addTable(tableData, { x: 0.5, y: currentY, w: 9 })
+          hasSlides = true
+          currentY += (rows.length * 0.4) + 0.2
+        }
+      } else if (type === 'codeBlock') {
+        addText(`[코드 블록: ${block.props?.language || 'text'}]\n${text}`, { x: 0.5, y: currentY, w: '90%', fontSize: 12, fontFace: 'Courier New', color: '404040' })
+        currentY += 1.0
+      } else if (type === 'kanban' || type === 'excel' || type === 'inlineDocument' || type === 'presentation' || type === 'jupyter') {
+        addText(`[AMEVA 커스텀 블록: ${type}] 변환 폴백`, { x: 0.5, y: currentY, w: '90%', fontSize: 14, color: '888888', italic: true })
+        currentY += 0.5
+      } else {
+        if (text) {
+          addText(text, { x: 0.5, y: currentY, w: '90%', fontSize: 16, color: '333333' })
+          currentY += 0.4
+        }
+      }
+      // 새 슬라이드 생성 방어코드
+      if (currentY > 7.0) {
+        currentSlide = pres.addSlide()
+        currentY = 0.5
+      }
+    }
+    
+    if (!hasSlides) currentSlide.addText('내용이 없습니다.', { x: 1, y: 2, fontSize: 24 })
+    
+    const arrayBuffer = await pres.write({ outputType: 'arraybuffer' })
+    return new Uint8Array(arrayBuffer as ArrayBuffer)
+  } catch (e) {
+    console.error('PPTX Export Error:', e)
+    // 폴백
+    const html = await blocksToHTML(rawBlocks)
+    return new TextEncoder().encode(html)
+  }
 }
 
 // ══════════════════════════════════════════════════════════════

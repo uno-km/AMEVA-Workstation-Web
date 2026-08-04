@@ -141,11 +141,11 @@ export async function handleBrowserExport(
     case 'docx': triggerBrowserDownload(await exportToWord(blocks), 'document.docx'); savedPath = 'document.docx'; break
     /*
      * [CASE ROUTING DECISION BINDING]
-     * - 분기 타겟: `case 'xlsx': triggerBrowserDownload(new Blob([exportToExcel(blocks) as any]), 'tables.xlsx'); savedPath = 'tables.xlsx'; break`
+     * - 분기 타겟: `case 'xlsx': triggerBrowserDownload(new Blob([(await exportToExcel(blocks)) as any]), 'tables.xlsx'); savedPath = 'tables.xlsx'; break`
      * - 만족 시: 본 케이스 전용 연산을 이행하고 break/return을 거쳐 스위치 게이트를 마감함.
-     * - 예시: `case 'xlsx': triggerBrowserDownload(new Blob([exportToExcel(blocks) as any]), 'tables.xlsx'); savedPath = 'tables.xlsx'; break` 만족 시 해당 포맷 바이너리 빌더 호출.
+     * - 예시: `case 'xlsx': triggerBrowserDownload(new Blob([(await exportToExcel(blocks)) as any]), 'tables.xlsx'); savedPath = 'tables.xlsx'; break` 만족 시 해당 포맷 바이너리 빌더 호출.
      */
-    case 'xlsx': triggerBrowserDownload(new Blob([exportToExcel(blocks) as any]), 'tables.xlsx'); savedPath = 'tables.xlsx'; break
+    case 'xlsx': triggerBrowserDownload(new Blob([(await exportToExcel(blocks)) as any]), 'tables.xlsx'); savedPath = 'tables.xlsx'; break
     /*
      * [CASE ROUTING DECISION BINDING]
      * - 분기 타겟: `case 'pptx': triggerBrowserDownload(new Blob([(await exportToPPTX(blocks)) as any]), 'presentation.pptx'); savedPath = 'presentation.pptx'; break`

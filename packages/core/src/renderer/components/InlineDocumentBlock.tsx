@@ -394,7 +394,7 @@ function PptxMiniViewer({ sourceUrl, fileBase64, height }: { sourceUrl: string; 
           const blob = await getAttachment(fileId)
           if (!blob) throw new Error('VFS_EXPIRED')
           arrayBuffer = await blob.arrayBuffer()
-        } else if (sourceUrl.startsWith('blob:')) {
+        } else if (sourceUrl.startsWith('blob:') || sourceUrl.startsWith('data:') || sourceUrl.startsWith('http')) {
           const res = await fetch(sourceUrl)
           arrayBuffer = await res.arrayBuffer()
         } else if (fileBase64) {
@@ -467,7 +467,7 @@ function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, height }: {
           const blob = await getAttachment(fileId)
           if (!blob) throw new Error('VFS_EXPIRED')
           arrayBuffer = await blob.arrayBuffer()
-        } else if (sourceUrl.startsWith('blob:')) {
+        } else if (sourceUrl.startsWith('blob:') || sourceUrl.startsWith('data:') || sourceUrl.startsWith('http')) {
           const res = await fetch(sourceUrl)
           arrayBuffer = await res.arrayBuffer()
         } else if (fileBase64) {
