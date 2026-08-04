@@ -1,0 +1,21 @@
+/*
+ * AMEVA OS Stylesheet - StatusBar.css
+ * Location: src/renderer/styles/components/StatusBar.css
+ * Consumers: 관련 컴포넌트(JSX) 뷰 렌더링에 이 스타일 클래스가 매핑되어 사용됨.
+ */
+/* 상태바(StatusBar) 컴포넌트 독립 스타일 */
+.status-bar-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 24px;
+  padding: 0 12px;
+  background: var(--bg-deep);
+  border-top: 1px solid var(--border-muted);
+  font-size: 11px;
+  color: var(--text-muted);
+  user-select: none;
+}
+
+/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */
+/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */

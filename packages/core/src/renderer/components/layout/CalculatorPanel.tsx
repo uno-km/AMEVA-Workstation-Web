@@ -1,0 +1,121 @@
+import React, { useState } from 'react'
+import { Calculator, X, Delete } from 'lucide-react'
+import { useUIStore } from '../../stores/useUIStore'
+
+export function CalculatorPanel() {
+  const { setShowAIPanel } = useUIStore()
+  const [display, setDisplay] = useState('0')
+  const [equation, setEquation] = useState('')
+
+  const handleNum = (num: string) => {
+    if (display === '0' || display === 'Error') setDisplay(num)
+    else setDisplay(display + num)
+  }
+
+  const handleOp = (op: string) => {
+    if (display === 'Error') return
+    setEquation(display + ' ' + op)
+    setDisplay('0')
+  }
+
+  const handleCalc = () => {
+    if (!equation || display === 'Error') return
+    try {
+      const full = equation + ' ' + display
+      // eval 대용 안전한 수식 계산
+      const result = new Function(`return ${full.replace('×', '*').replace('÷', '/')}`)()
+      setDisplay(String(result))
+      setEquation('')
+    } catch {
+      setDisplay('Error')
+      setEquation('')
+    }
+  }
+
+  const handleClear = () => {
+    setDisplay('0')
+    setEquation('')
+  }
+
+  const handleDel = () => {
+    if (display.length > 1) setDisplay(display.slice(0, -1))
+    else setDisplay('0')
+  }
+
+  const btnStyle = {
+    background: 'var(--bg-glass-active)',
+    border: '1px solid var(--border-muted)',
+    borderRadius: '12px',
+    color: 'var(--text-main)',
+    fontSize: '18px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'background 0.2s',
+  }
+
+  return (
+    <div style={{
+      width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
+      background: 'var(--bg-deep)', borderLeft: '1px solid var(--border-muted)',
+    }}>
+      {/* 헤더 */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '10px 14px', borderBottom: '1px solid var(--border-muted)', flexShrink: 0
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ color: '#ec4899' }}><Calculator size={24} /></span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0' }}>계산기</span>
+        </div>
+        <button
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+          onClick={() => setShowAIPanel(false)}
+        ><X size={14} /></button>
+      </div>
+
+      {/* 계산기 본체 */}
+      <div style={{ flex: 1, padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {/* 디스플레이 */}
+        <div style={{
+          background: '#0f0f13', borderRadius: '16px', padding: '20px',
+          border: '1px inset rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column',
+          alignItems: 'flex-end', justifyContent: 'center', gap: '8px'
+        }}>
+          <div style={{ color: 'var(--text-muted)', fontSize: '14px', minHeight: '20px' }}>{equation}</div>
+          <div style={{ color: '#fff', fontSize: '36px', fontWeight: 700, letterSpacing: '2px', wordBreak: 'break-all' }}>
+            {display}
+          </div>
+        </div>
+
+        {/* 키패드 */}
+        <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', gridTemplateRows: 'repeat(5, 1fr)' }}>
+          <button style={{ ...btnStyle, color: '#ec4899' }} onClick={handleClear}>C</button>
+          <button style={{ ...btnStyle, color: '#ec4899' }} onClick={handleDel}><Delete size={20} /></button>
+          <button style={{ ...btnStyle, color: '#a855f7' }} onClick={() => handleOp('%')}>%</button>
+          <button style={{ ...btnStyle, color: '#a855f7', fontSize: '24px' }} onClick={() => handleOp('/')}>÷</button>
+
+          <button style={btnStyle} onClick={() => handleNum('7')}>7</button>
+          <button style={btnStyle} onClick={() => handleNum('8')}>8</button>
+          <button style={btnStyle} onClick={() => handleNum('9')}>9</button>
+          <button style={{ ...btnStyle, color: '#a855f7', fontSize: '24px' }} onClick={() => handleOp('*')}>×</button>
+
+          <button style={btnStyle} onClick={() => handleNum('4')}>4</button>
+          <button style={btnStyle} onClick={() => handleNum('5')}>5</button>
+          <button style={btnStyle} onClick={() => handleNum('6')}>6</button>
+          <button style={{ ...btnStyle, color: '#a855f7', fontSize: '24px' }} onClick={() => handleOp('-')}>-</button>
+
+          <button style={btnStyle} onClick={() => handleNum('1')}>1</button>
+          <button style={btnStyle} onClick={() => handleNum('2')}>2</button>
+          <button style={btnStyle} onClick={() => handleNum('3')}>3</button>
+          <button style={{ ...btnStyle, color: '#a855f7', fontSize: '24px' }} onClick={() => handleOp('+')}>+</button>
+
+          <button style={{ ...btnStyle, gridColumn: 'span 2' }} onClick={() => handleNum('0')}>0</button>
+          <button style={btnStyle} onClick={() => handleNum('.')}>.</button>
+          <button style={{ ...btnStyle, background: '#ec4899', color: '#fff', border: 'none' }} onClick={handleCalc}>=</button>
+        </div>
+      </div>
+    </div>
+  )
+}

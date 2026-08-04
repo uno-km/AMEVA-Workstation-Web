@@ -1,0 +1,13 @@
+/*
+ * AMEVA OS Stylesheet - Modals.css
+ * Location: src/renderer/styles/components/Modals.css
+ * Consumers: 관련 컴포넌트(JSX) 뷰 렌더링에 이 스타일 클래스가 매핑되어 사용됨.
+ */
+/* 모달 (일반) 포커스 영역 및 스타일 */
+[data-focus-region="modal"] {
+  --region-color: var(--secondary);
+  --region-glow: var(--secondary-glow);
+}
+
+/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */
+/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Collaboration Demo | AMEVA Workstation</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* 💎 프리미엄 Vercel/Linear 스타일 수락 및 거절 단추 정의 */
+    .btn-action-accept {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.25);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-action-accept:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+    }
+    .btn-action-reject {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border-muted);
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-action-reject:hover {
+      border-color: #ef4444;
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.05);
+    }
+
+    /* 🎨 연두색 글배경 + 밑줄 + 마우스 호버 직전 내용 툴팁 레이저 연출 */
+    .collab-highlight-diff {
+      background-color: rgba(16, 185, 129, 0.18);
+      border-bottom: 2px solid #10b981;
+      padding: 2px 4px;
+      border-radius: 3px;
+      cursor: help;
+      position: relative;
+      font-weight: 700;
+      color: #10b981;
+      transition: all 0.2s ease;
+    }
+    .collab-highlight-diff:hover {
+      background-color: rgba(16, 185, 129, 0.3);
+      color: #059669;
+    }
+    
+    /* 툴팁 버블 */
+    .collab-highlight-diff::after {
+      content: "수정 전: " attr(data-prev);
+      position: absolute;
+      bottom: 135%;
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      background-color: #1f2937;
+      color: #f3f4f6;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 9999;
+      border: 1px solid var(--border-muted);
+    }
+    .collab-highlight-diff:hover::after {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* 에디터 div 텍스트 영역 */
+    .collab-editor-area {
+      width: 100%;
+      height: 220px;
+      background: transparent;
+      border: none;
+      color: var(--text-collab-textarea);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      line-height: 1.8;
+      overflow-y: auto;
+      outline: none;
+      white-space: pre-wrap;
+    }
+
+    /* 📊 3대 도구 대체 비교 인포그래픽 테이블 스타일 */
+    .comparison-container {
+      margin-top: 60px;
+      text-align: center;
+    }
+    .comparison-table {
+      width: 100%;
+      max-width: 900px;
+      margin: 30px auto 0;
+      border-collapse: collapse;
+      background: var(--bg-main);
+      border: 1px solid var(--border-muted);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    .comparison-table th, .comparison-table td {
+      padding: 18px 24px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-muted);
+    }
+    .comparison-table th {
+      background: var(--bg-card);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+      text-transform: uppercase;
+    }
+    .comparison-table td {
+      font-size: 13px;
+    }
+    .comparison-column-legacy {
+      color: #ef4444;
+      font-weight: 600;
+    }
+    .comparison-column-ameva {
+      color: #10b981;
+      font-weight: 700;
+      background: rgba(16, 185, 129, 0.02);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="index.html" class="brand">
+      <div class="brand-icon"><i class="fas fa-cubes"></i></div>
+      <span>AMEVA Workstation</span>
+    </a>
+    <nav class="nav-menu">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="features.html" class="nav-link">Features</a>
+      <a href="demo.html" class="nav-link">Playground</a>
+      <a href="demo-collab.html" class="nav-link">Collaboration</a>
+      <a href="solutions-enterprise.html" class="nav-link">Solutions</a>
+      <a href="pricing.html" class="nav-link">Pricing</a>
+      <a href="contact.html" class="nav-link">Contact</a>
+    </nav>
+    <div class="header-actions">
+      <button id="theme-toggle" class="btn-theme"><i class="fas fa-sun"></i></button>
+      <a href="contact.html" class="btn-primary" style="padding: 8px 16px; font-size: 11px;">Request Demo</a>
+    </div>
+  </header>
+
+  <main class="promo-container">
+    <section style="text-align: center; margin-bottom: 30px;">
+      <div class="badge-tag"><i class="fas fa-users"></i> 실시간 협업 동기화</div>
+      <h2 style="font-size:32px; font-weight:800;">다자간 실시간 협업 & AI 병합 시뮬레이션관</h2>
+      <p style="color:var(--text-muted); font-size:14px; margin-top:6px;">
+        기존의 문서 작성, 소통, 협업 단계를 완전히 통합한 AMEVA만의 초지연 동시 협업 솔루션을 가상 체험해 보세요.
+      </p>
+    </section>
+
+    <!-- 체험 활성화 버튼 -->
+    <div style="text-align:center; margin-bottom:20px;">
+      <button id="start-collab-btn" class="btn-primary" style="background:linear-gradient(135deg, var(--accent), var(--primary)); box-shadow:0 0 20px rgba(236,72,153,0.3);"><i class="fas fa-play"></i> 실시간 협업 라이브 데모 시작</button>
+    </div>
+
+    <!-- 👥 협업 레이아웃 본체 -->
+    <div class="collab-layout" style="margin-bottom:60px;">
+      
+      <!-- 좌측 가상 공유 에디터 -->
+      <div class="collab-editor-container">
+        <div class="mac-bar" style="justify-content: space-between; align-items:center;">
+          <div style="display:flex; gap:6px;">
+            <div class="mac-dot mac-red"></div>
+            <div class="mac-dot mac-yellow"></div>
+            <div class="mac-dot mac-green"></div>
+          </div>
+          <div id="collab-users-list" style="display:flex; align-items:center;">
+            <span class="collab-user-badge" style="border-color:var(--secondary); color:var(--secondary);">나 (Me)</span>
+          </div>
+        </div>
+        
+        <!-- 실시간 네온 가상 커서 -->
+        <div id="virtual-cursor" class="collab-cursor">
+          <div class="collab-cursor-label">Ameva-Chan</div>
+        </div>
+
+        <!-- 🎪 contenteditable 에디터 영역으로 업그레이드 -->
+        <div id="collab-editor-content" class="collab-editor-area" contenteditable="true"># 하반기 신제품 공동 마케팅 기획안
+- 주력 채널: 온라인 비디오 및 글로벌 소셜 미디어
+- 기대 효과: 브랜드 선호도 400% 상승 기대</div>
+
+        <!-- AI 인라인 수정 수락 제안 영역 -->
+        <div id="collab-ai-box" style="margin-top:10px;"></div>
+      </div>
+
+      <!-- 우측 가상 채팅 패널 -->
+      <div class="collab-chat-panel">
+        <div class="collab-chat-header">
+          <i class="fas fa-comments"></i> <span>라이브 채팅 세션</span>
+        </div>
+        <div id="collab-chat-messages" class="collab-chat-messages">
+          <div class="collab-chat-bubble" style="background:rgba(255,255,255,0.01); border-color:transparent; color:var(--text-dark);">채팅 세션이 비어 있습니다.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 📊 [NEW] 3대 도구 대체 비교 인포그래픽 테이블 섹션 -->
+    <div class="comparison-container">
+      <div class="badge-tag" style="color:var(--accent); border-color:var(--accent);"><i class="fas fa-balance-scale"></i> 가치 비교 대조</div>
+      <h2 style="font-size:28px; font-weight:800;">왜 AMEVA Workstation인가?</h2>
+      <p style="color:var(--text-muted); font-size:13px; margin-top:6px;">기존 파편화된 협업 방식과 AMEVA 통합 생산성의 차이를 눈으로 직접 비교해 보세요.</p>
+      
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>기능 영역</th>
+            <th class="comparison-column-legacy">전통적인 작업 방식</th>
+            <th class="comparison-column-ameva">AMEVA Workstation 통합 공간</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>문서 작업</strong></td>
+            <td style="color:var(--text-muted);">읽기 전용의 정적인 문서. 연산이나 차트 작성을 위해 외부 프로그램을 오가며 수동으로 복사/붙여넣기 반복.</td>
+            <td class="comparison-column-ameva">수식 연산, 차트 렌더링, 데이터 시각화가 문서 내에서 즉시 실행되는 동적 인터랙티브 환경.</td>
+          </tr>
+          <tr>
+            <td><strong>팀 소통</strong></td>
+            <td style="color:var(--text-muted);">이메일과 메신저를 오가는 파편화된 소통. 히스토리 추적이 어렵고 커뮤니케이션 비용 증가.</td>
+            <td class="comparison-column-ameva">문서 내 실시간 채팅 및 공동 편집 지원. 동료의 커서 위치를 확인하며 대화와 작성을 한 곳에서 완벽히 통합.</td>
+          </tr>
+          <tr>
+            <td><strong>버전 및 병합</strong></td>
+            <td style="color:var(--text-muted);">변경 이력 대조가 어렵고, 동시 편집 시 충돌로 인해 데이터가 유실되거나 덮어씌워질 위험 상존.</td>
+            <td class="comparison-column-ameva">AI 기반의 직관적인 인라인 Diff 분석. 변경 사항을 붉은색/초록색으로 확인하고 클릭 한 번에 안전한 병합.</td>
+          </tr>
+          <tr>
+            <td><strong>기능 확장</strong></td>
+            <td style="color:var(--text-muted);">필요한 템플릿이나 도구를 외부에서 일일이 검색하고 수동으로 세팅하느라 잦은 컨텍스트 스위칭 발생.</td>
+            <td class="comparison-column-ameva">내장된 통합 마켓플레이스를 통해 글로벌 스마트 도구 및 템플릿을 원클릭 주입. 무한한 확장성으로 생산성 극대화.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initTheme } from './js/common/theme.js';
+    import { initNavigation } from './js/common/navigation.js';
+    import { showToast } from './js/utils/toast.js';
+    import { calculateSimpleDiff } from './js/utils/diff-engine.js';
+
+    initTheme();
+    initNavigation();
+
+    const startBtn = document.getElementById('start-collab-btn');
+    const chatMsg = document.getElementById('collab-chat-messages');
+    const usersList = document.getElementById('collab-users-list');
+    const editorEl = document.getElementById('collab-editor-content');
+    const vCursor = document.getElementById('virtual-cursor');
+    const aiBox = document.getElementById('collab-ai-box');
+
+    // 🎯 네온 가상 커서의 정밀 X, Y 트래킹 타이핑 시뮬레이터 함수 (contenteditable 버전)
+    function runPreciseTyping(element, textToAdd, speed, onComplete) {
+      let i = 0;
+      vCursor.style.display = 'block';
+
+      function updateCursorPosition() {
+        const textUpToCursor = element.innerText;
+        const lines = textUpToCursor.split('\n');
+        const currentLineIdx = lines.length - 1;
+        const currentLineText = lines[currentLineIdx] || '';
+
+        // 줄간격 23.4px, 기점 상단 48px
+        const topPos = 48 + (currentLineIdx * 23.4);
+        
+        // 한글 13px, 영문/특문/공백 약 8px 계산
+        let xOffset = 24;
+        for (let char of currentLineText) {
+          xOffset += /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(char) ? 13 : 8.5;
+        }
+
+        vCursor.style.top = `${topPos}px`;
+        vCursor.style.left = `${xOffset}px`;
+      }
+
+      function step() {
+        if (i < textToAdd.length) {
+          element.innerText += textToAdd[i++];
+          updateCursorPosition();
+          element.scrollTop = element.scrollHeight;
+          setTimeout(step, speed);
+        } else {
+          vCursor.style.display = 'none';
+          if (onComplete) onComplete();
+        }
+      }
+      step();
+    }
+
+    if (startBtn) {
+      startBtn.addEventListener('click', () => {
+        startBtn.disabled = true;
+        startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 협업 세션 연결 중...';
+        chatMsg.innerHTML = '';
+
+        setTimeout(() => {
+          showToast('로컬 P2P CRDT 채널이 형성되었습니다.', 'success');
+          startBtn.style.display = 'none';
+
+          // 1. Ameva-Chan 접속 대화
+          chatMsg.innerHTML = `
+            <div class="collab-chat-bubble">
+              <div class="collab-chat-sender" style="color:#ec4899;">Ameva-Chan</div>
+              반갑습니다! 이번 신제품 기획안 문구 다 같이 손보시죠! 기획안 아래에 기획 참여팀 문장 덧붙이겠습니다.
+            </div>
+          `;
+          usersList.innerHTML += `<span class="collab-user-badge" style="border-color:#ec4899; color:#ec4899;">Ameva-Chan</span>`;
+
+          // 2. 가상 커서 X, Y 정밀 타이핑 시동
+          setTimeout(() => {
+            const addedText = '\n- 기획 참여: 홍보팀, 마케팅팀, 글로벌 개발팀 공동 참여';
+            runPreciseTyping(editorEl, addedText, 50, () => {
+              showToast('Ameva-Chan 님이 입력을 완료했습니다.', 'info');
+
+              // 3. 채팅창에 Ameva-Chan의 수정 요청 전송
+              setTimeout(() => {
+                chatMsg.innerHTML += `
+                  <div class="collab-chat-bubble">
+                    <div class="collab-chat-sender" style="color:#ec4899;">Ameva-Chan</div>
+                    3번째 줄 기대 효과 부분 내용 좀 더 구체적이고 신뢰감 있게 수정해 주세요!
+                  </div>
+                `;
+                chatMsg.scrollTop = chatMsg.scrollHeight;
+
+                // 4. AI 비서의 친근한 대답
+                setTimeout(() => {
+                  chatMsg.innerHTML += `
+                    <div class="collab-chat-bubble">
+                      <div class="collab-chat-sender" style="color:#a855f7;">AI 비서</div>
+                      네, 기대 효과 부분을 글로벌 브랜드 가치 제고 관점을 추가하여 더 매끄럽게 다듬으면 좋을 것 같아요. 교정안을 추천해 드렸으니 확인해 보세요!
+                    </div>
+                  `;
+                  chatMsg.scrollTop = chatMsg.scrollHeight;
+
+                  // 5. 우아한 AI Diff 제안창 기동 (Vercel/Linear 수락/거절 단추 매핑)
+                  setTimeout(() => {
+                    const originalText = editorEl.innerText;
+                    const beforeContent = '브랜드 선호도 400% 상승 기대';
+                    const afterContent = '글로벌 유력 유통 채널과의 독점 파트너십 구축 및 전년 대비 브랜드 신뢰성 650% 향상 목표 확보';
+                    
+                    const proposedText = originalText.replace(beforeContent, afterContent);
+                    const diffs = calculateSimpleDiff(originalText, proposedText);
+                    
+                    let diffHtml = '<div class="sim-diff-box">';
+                    diffs.forEach(item => {
+                      if (item.type === 'removed') {
+                        diffHtml += `<div class="sim-diff-removed">- ${item.text}</div>`;
+                      } else if (item.type === 'added') {
+                        diffHtml += `<div class="sim-diff-added">+ ${item.text}</div>`;
+                      } else {
+                        diffHtml += `<div class="sim-diff-normal">  ${item.text}</div>`;
+                      }
+                    });
+                    diffHtml += '</div>';
+
+                    aiBox.innerHTML = `
+                      <div class="ai-sim-card pending">
+                        <div class="ai-sim-header" style="margin-bottom:8px;">
+                          <i class="fas fa-sparkles" style="color:var(--primary);"></i> <strong>AI 비서의 실시간 추천 제안</strong>
+                        </div>
+                        <div class="ai-sim-body">
+                          ${diffHtml}
+                          <div class="ai-sim-actions" style="margin-top:12px; display:flex; gap:8px;">
+                            <button class="btn-action-accept" id="collab-accept-btn">수락 (Accept)</button>
+                            <button class="btn-action-reject" id="collab-reject-btn">거절</button>
+                          </div>
+                        </div>
+                      </div>
+                    `;
+
+                    // 수락 버튼 이벤트
+                    document.getElementById('collab-accept-btn').addEventListener('click', () => {
+                      // 🎨 연두색 밑줄 + 호버 시 툴팁을 뿜어내는 HTML span 형태로 치환 주입!
+                      const innerHTMLText = editorEl.innerHTML;
+                      
+                      // 줄바꿈 보존을 위해 innerHTML 상에서 안전하게 매칭 치환
+                      const spanHighlight = `<span class="collab-highlight-diff" data-prev="${beforeContent}">${afterContent}</span>`;
+                      editorEl.innerHTML = innerHTMLText.replace(beforeContent, spanHighlight);
+                      
+                      aiBox.innerHTML = `
+                        <div class="ai-sim-card accepted" style="background:rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); color:#10b981; padding:10px; border-radius:6px; font-size:12px;">
+                          <i class="fas fa-check-circle"></i> AI 실시간 추천 제안을 수락하여 문서에 적용했습니다. (연두색 하이라이트에 마우스를 올려 이전 내용을 확인해보세요)
+                        </div>
+                      `;
+                      showToast('AI 추천 수정안 적용 완료!', 'success');
+                    });
+
+                    // 거절 버튼 이벤트
+                    document.getElementById('collab-reject-btn').addEventListener('click', () => {
+                      aiBox.innerHTML = `
+                        <div class="ai-sim-card rejected" style="background:rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.25); color:#ef4444; padding:10px; border-radius:6px; font-size:12px;">
+                          <i class="fas fa-times-circle"></i> 제안을 거절했습니다.
+                        </div>
+                      `;
+                      showToast('AI 제안이 기각되었습니다.', 'info');
+                    });
+
+                  }, 1200);
+
+                }, 1800);
+
+              }, 1200);
+
+            });
+          }, 1500);
+
+        }, 1200);
+      });
+    }
+  </script>
+</body>
+</html>

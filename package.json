@@ -1,0 +1,10 @@
+{
+  "name": "ameva-workstation-web",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @ameva/core"
+  }
+}

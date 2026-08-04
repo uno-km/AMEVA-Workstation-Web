@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AMEVA Workstation | Enterprise AI Productivity Space</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- ── 프리미엄 네비게이션 바 ── -->
+  <header>
+    <a href="index.html" class="brand">
+      <div class="brand-icon">
+        <i class="fas fa-cubes"></i>
+      </div>
+      <span>AMEVA Workstation</span>
+    </a>
+    <nav class="nav-menu">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="features.html" class="nav-link">Features</a>
+      <a href="demo.html" class="nav-link">Playground</a>
+      <a href="demo-collab.html" class="nav-link">Collaboration</a>
+      <a href="solutions-enterprise.html" class="nav-link">Solutions</a>
+      <a href="pricing.html" class="nav-link">Pricing</a>
+      <a href="contact.html" class="nav-link">Contact</a>
+    </nav>
+    <div class="header-actions">
+      <button id="theme-toggle" class="btn-theme" title="테마 전환">
+        <i class="fas fa-sun"></i>
+      </button>
+      <a href="contact.html" class="btn-primary" style="padding: 8px 16px; font-size: 11px;">Request Demo</a>
+    </div>
+  </header>
+
+  <!-- ── 홈 메인 컨테이너 ── -->
+  <main class="promo-container">
+    <section class="hero-section">
+      <div class="badge-tag">
+        <i class="fas fa-sparkles"></i> Next-Gen AI Workspace Release
+      </div>
+      <h1 class="hero-title" style="margin-bottom: 20px; font-size: 54px; font-weight: 900; letter-spacing: -2px;">
+        <span class="grad-text">완벽한 하나가 되다.</span>
+      </h1>
+      <div style="font-size: 24px; font-weight: 800; margin-bottom: 32px; color: var(--secondary); letter-spacing: 1.5px; min-height: 36px;">
+        <span id="hero-typing"></span><span style="display:inline-block; width:2px; height:20px; background:var(--secondary); animation: cursor-blink 0.8s step-end infinite; margin-left: 4px; vertical-align: middle;"></span>
+      </div>
+      <p class="hero-subtitle">
+        문서 작성, 이메일 소통, 그리고 버전 관리 및 협업으로 쪼개져 작동하던 모든 비즈니스 인프라와 컨텍스트를 단 하나의 통합 에디터 공간에 완벽하게 때려 넣었습니다.
+      </p>
+      
+      <div class="hero-actions">
+        <a href="demo-collab.html" class="btn-primary" style="background:linear-gradient(135deg, var(--accent), var(--primary)); box-shadow: 0 4px 20px rgba(236,72,153,0.3);"><i class="fas fa-users"></i> 협업 맛보기</a>
+        <a href="demo.html" class="btn-secondary">4대 언어 컴파일러</a>
+      </div>
+
+      <!-- 입체적 에디터 시뮬레이터 카드 -->
+      <div class="hero-preview-card" style="margin-bottom:60px;">
+        <div class="mac-bar">
+          <div class="mac-dot mac-red"></div>
+          <div class="mac-dot mac-yellow"></div>
+          <div class="mac-dot mac-green"></div>
+        </div>
+        <div class="mock-editor-area" style="flex-direction: column; gap: 10px;">
+          <h3 style="font-weight: 700; color: var(--secondary);">AI 기반 협업 및 웹 샌드박스</h3>
+          <p style="color: var(--text-muted); font-size:13px; line-height: 1.6;">
+            문서 작성, 팀 커뮤니케이션, 소스코드 공유 및 테스트를 별도의 브라우저 탭들로 오갈 필요가 없습니다. AMEVA는 실시간 캐럿 및 다국어 샌드박스를 연동하여 단 하나의 통합 문서상에서 동료들과 채팅하고 컴파일 결과를 즉시 확인합니다.
+          </p>
+          <div style="border-top: 1px solid var(--border-muted); padding-top: 10px; margin-top: 10px; display: flex; gap: 10px;">
+            <a href="demo.html" class="run-btn" style="margin:0;"><i class="fas fa-terminal"></i> 4대 언어 맛보기</a>
+            <a href="demo-collab.html" class="run-btn" style="margin:0; background:var(--accent);"><i class="fas fa-comments"></i> 실시간 협업 라이브 체험</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 📊 [NEW] 3대 도구 대체 비교 인포그래픽 테이블 섹션 -->
+      <div class="comparison-container">
+        <div class="badge-tag" style="color:var(--accent); border-color:var(--accent);"><i class="fas fa-balance-scale"></i> 가치 비교 대조</div>
+        <h2 style="font-size:28px; font-weight:800;">왜 AMEVA Workstation인가?</h2>
+        <p style="color:var(--text-muted); font-size:13px; margin-top:6px;">기존 파편화된 협업 방식과 AMEVA 통합 생산성의 차이를 눈으로 직접 비교해 보세요.</p>
+        
+        <table class="comparison-table">
+          <thead>
+            <tr>
+              <th>기능 영역</th>
+              <th class="comparison-column-legacy">전통적인 작업 방식</th>
+              <th class="comparison-column-ameva">AMEVA Workstation 통합 공간</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>문서 작업</strong></td>
+              <td style="color:var(--text-muted);">읽기 전용의 정적인 문서. 연산이나 차트 작성을 위해 외부 프로그램을 오가며 수동으로 복사/붙여넣기 반복.</td>
+              <td class="comparison-column-ameva">수식 연산, 차트 렌더링, 데이터 시각화가 문서 내에서 즉시 실행되는 동적 인터랙티브 환경.</td>
+            </tr>
+            <tr>
+              <td><strong>팀 소통</strong></td>
+              <td style="color:var(--text-muted);">이메일과 메신저를 오가는 파편화된 소통. 히스토리 추적이 어렵고 커뮤니케이션 비용 증가.</td>
+              <td class="comparison-column-ameva">문서 내 실시간 채팅 및 공동 편집 지원. 동료의 커서 위치를 확인하며 대화와 작성을 한 곳에서 완벽히 통합.</td>
+            </tr>
+            <tr>
+              <td><strong>버전 및 병합</strong></td>
+              <td style="color:var(--text-muted);">변경 이력 대조가 어렵고, 동시 편집 시 충돌로 인해 데이터가 유실되거나 덮어씌워질 위험 상존.</td>
+              <td class="comparison-column-ameva">AI 기반의 직관적인 인라인 Diff 분석. 변경 사항을 붉은색/초록색으로 확인하고 클릭 한 번에 안전한 병합.</td>
+            </tr>
+            <tr>
+              <td><strong>기능 확장</strong></td>
+              <td style="color:var(--text-muted);">필요한 템플릿이나 도구를 외부에서 일일이 검색하고 수동으로 세팅하느라 잦은 컨텍스트 스위칭 발생.</td>
+              <td class="comparison-column-ameva">내장된 통합 마켓플레이스를 통해 글로벌 스마트 도구 및 템플릿을 원클릭 주입. 무한한 확장성으로 생산성 극대화.</td>
+            </tr>
+            <tr>
+              <td><strong>다중 문서 관리</strong></td>
+              <td style="color:var(--text-muted);">다중 문서 대조 시 새 창을 띄우거나 문서를 닫아야 해 흐름이 단절됨. 번거로운 수동 복사로 인한 작업 비효율.</td>
+              <td class="comparison-column-ameva">덮어쓰기, 이어서 열기(무한 스크롤), 독립 탭 등 3대 뷰어 모드 지원. 사이드바 앵커 점프로 문서 간 초고속 교차 편집.</td>
+            </tr>
+            <tr>
+              <td><strong>AI 도구 확장 (MCP)</strong></td>
+              <td style="color:var(--text-muted);">단순 텍스트 답변에 그치는 범용 AI 비서. 코드 실행, 로컬 파일 수정, DB 조회 등 실무 작업은 여전히 인간의 몫.</td>
+              <td class="comparison-column-ameva">업계 표준 MCP 클라이언트 내장. 커스텀 데이터베이스 및 시스템 툴을 연동하여 AI가 직접 실무를 수행하고 제어하는 완전 자동화 실현.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initTheme } from './js/common/theme.js';
+    import { initNavigation } from './js/common/navigation.js';
+    import { initHome } from './js/pages/home.js';
+
+    initTheme();
+    initNavigation();
+    initHome();
+  </script>
+</body>
+</html>

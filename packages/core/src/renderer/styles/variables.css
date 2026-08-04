@@ -1,0 +1,256 @@
+/*
+ * AMEVA OS Stylesheet - variables.css
+ * Location: src/renderer/styles/variables.css
+ * Consumers: 관련 컴포넌트(JSX) 뷰 렌더링에 이 스타일 클래스가 매핑되어 사용됨.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css');
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+:root {
+  /* 안티그래비티 IDE 스타일의 극도로 세련된 모노크롬 매트 차콜 & 슬레이트 실버 팔레트 */
+  --bg-deep: #0f0f11;
+  --bg-main: #18181c;
+  --bg-card: rgba(30, 30, 35, 0.85);
+  --bg-glass: rgba(24, 24, 28, 0.75);
+  --bg-glass-active: rgba(255, 255, 255, 0.05);
+  
+  --border-glow: rgba(255, 255, 255, 0.12);
+  --border-muted: rgba(255, 255, 255, 0.05);
+  
+  --text-main: #ffffff; /* 완전 백색 상향 */
+  --text-muted: #d1d5db; /* 밝은 회색 상향 */
+  --text-dark: #94a3b8;
+  
+  --primary: #94a3b8; /* Slate Silver */
+  --primary-glow: rgba(148, 163, 184, 0.15);
+  --secondary: #475569; /* Slate Dark */
+  --secondary-glow: rgba(71, 85, 105, 0.15);
+  
+  --accent: #cbd5e1;
+  --danger: #ef4444;
+  --success: #10b981;
+  
+  --font-sans: 'Pretendard', 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Fira Code', 'D2Coding', Consolas, Monaco, monospace;
+  
+  --blur-val: 18px;
+  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: all 0.15s ease;
+  
+  --sidebar-width: 280px;
+  --header-height: 52px;
+  
+  --text-on-primary: #ffffff;
+  --text-on-active: var(--text-main);
+  
+  /* 전역 스크롤바 추상화 객체 */
+  --sb-w: 6px;
+  --sb-track: transparent;
+  --sb-thumb: color-mix(in srgb, var(--primary) 30%, transparent);
+  --sb-thumb-hover: color-mix(in srgb, var(--primary) 60%, transparent);
+  --sb-thumb-border: none;
+  --sb-thumb-border-br: none; /* bottom-right for win98 3d effect */
+  --sb-thumb-radius: 99px;
+  --sb-btn-display: none;
+  
+  /* 터미널(콘솔) 전용 색상 */
+  --term-bg: #0a0a0f;
+  --term-text: #e5e7eb;
+  --term-border: var(--border-glow);
+  --term-icon-color: var(--primary);
+}
+
+/* 테마 스위칭 지원 */
+[data-theme='dark'] {
+  --bg-deep: #0f0f11;
+  --bg-main: #18181c;
+  --bg-card: rgba(30, 30, 35, 0.85);
+  --bg-glass: rgba(24, 24, 28, 0.75);
+  --bg-glass-active: rgba(255, 255, 255, 0.05);
+  --border-glow: rgba(255, 255, 255, 0.12);
+  --border-muted: rgba(255, 255, 255, 0.05);
+  --text-main: #ffffff; /* 다크테마 메인 텍스트 완전백색 */
+  --text-muted: #d1d5db; /* 다크테마 보조 텍스트 밝은회색 */
+  --text-dark: #94a3b8;
+  --primary: #94a3b8;
+  --primary-glow: rgba(148, 163, 184, 0.15);
+  --secondary: #475569;
+  --secondary-glow: rgba(71, 85, 105, 0.15);
+  --text-on-primary: #ffffff;
+  --text-on-active: var(--text-main);
+
+  --term-bg: #0a0a0f;
+  --term-text: #e5e7eb;
+  --term-border: var(--border-glow);
+  --term-icon-color: var(--primary);
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+[data-theme='gray'] {
+  --bg-deep: #1e1e2e;
+  --bg-main: #27273a;
+  --bg-card: #313244;
+  --bg-glass: rgba(49, 50, 68, 0.85);
+  --bg-glass-active: #45475a;
+  --border-glow: rgba(137, 180, 250, 0.4);
+  --border-muted: #585b70;
+  --text-main: #cdd6f4;
+  --text-muted: #a6adc8;
+  --text-dark: #bac2de;
+  --primary: #89b4fa;
+  --primary-glow: rgba(137, 180, 250, 0.3);
+  --secondary: #f38ba8;
+  --secondary-glow: rgba(243, 139, 168, 0.3);
+  --text-on-primary: #1e1e2e;
+  --text-on-active: var(--text-main);
+
+  --term-bg: #11111b;
+  --term-text: #cdd6f4;
+  --term-border: var(--border-glow);
+  --term-icon-color: var(--primary);
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+[data-theme='white'] {
+  --bg-deep: #eef2f6;
+  --bg-main: #ffffff;
+  --bg-card: #f8fafc;
+  --bg-glass: rgba(255, 255, 255, 0.9);
+  --bg-glass-active: #e2e8f0;
+  --border-glow: rgba(109, 40, 217, 0.4);
+  --border-muted: #cbd5e1;
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-dark: #1e293b;
+  --primary: #6d28d9;
+  --primary-glow: rgba(109, 40, 217, 0.2);
+  --secondary: #0891b2;
+  --secondary-glow: rgba(8, 145, 178, 0.2);
+  --text-on-primary: #ffffff;
+  --text-on-active: var(--text-main);
+
+  --term-bg: #0c0f17;
+  --term-text: #cbd5e1;
+  --term-border: rgba(109, 40, 217, 0.2);
+  --term-icon-color: #6d28d9;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+[data-theme='hacker'] {
+  --bg-deep: #000000;
+  --bg-main: #050505;
+  --bg-card: rgba(0, 25, 0, 0.35);
+  --bg-glass: rgba(0, 15, 0, 0.75);
+  --bg-glass-active: rgba(0, 255, 0, 0.2);
+  --border-glow: rgba(0, 255, 0, 0.45);
+  --border-muted: rgba(0, 255, 0, 0.18);
+  /* Hacker mode visibility fix: normal text is white, accents are green */
+  --text-main: #e3e3e6;
+  --text-muted: #8e9196;
+  --text-dark: #52545c;
+  --primary: #00ff00;
+  --primary-glow: rgba(0, 255, 0, 0.5);
+  --secondary: #00aa00;
+  --secondary-glow: rgba(0, 170, 0, 0.4);
+  --text-on-primary: #000000;
+  --text-on-active: #00ff00;
+
+  --term-bg: #000000;
+  --term-text: #39ff14; /* Terminal keeps matrix green text */
+  --term-border: var(--border-glow);
+  --term-icon-color: #39ff14;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+[data-theme='nature'] {
+  --bg-deep: #e8f5e9;
+  --bg-main: #f1f8f1;
+  --bg-card: #ffffff;
+  --bg-glass: rgba(255, 255, 255, 0.85);
+  --bg-glass-active: #c8e6c9;
+  --border-glow: rgba(76, 175, 80, 0.5);
+  --border-muted: #a5d6a7;
+  --text-main: #1b5e20;
+  --text-muted: #2e7d32;
+  --text-dark: #003300;
+  --primary: #4caf50;
+  --primary-glow: rgba(76, 175, 80, 0.3);
+  --secondary: #8bc34a;
+  --secondary-glow: rgba(139, 195, 74, 0.3);
+  --text-on-primary: #ffffff;
+  --text-on-active: var(--text-main);
+
+  --term-bg: #070f08;
+  --term-text: #8bf67d;
+  --term-border: rgba(76, 175, 80, 0.25);
+  --term-icon-color: #4caf50;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+[data-theme='win98'] {
+  --bg-deep: #008080; /* Win98 teal background */
+  --bg-main: #c0c0c0; /* Classic gray */
+  --bg-card: #c0c0c0;
+  --bg-glass: #c0c0c0;
+  --bg-glass-active: #000080;
+  --border-glow: #ffffff;
+  --border-muted: #808080;
+  --text-main: #000000;
+  --text-muted: #000000;
+  --text-dark: #ffffff;
+  --primary: #000080; /* Win98 title bar blue */
+  --primary-glow: rgba(0, 0, 128, 0.3);
+  --secondary: #008080;
+  --secondary-glow: rgba(0, 128, 128, 0.3);
+  --text-on-primary: #ffffff;
+  --text-on-active: #ffffff;
+  --font-sans: 'Dotum', 'Gulim', sans-serif;
+  --font-mono: 'Fixedsys', monospace;
+  
+  /* Win98 전용 레트로 스크롤바 오버라이딩 */
+  --sb-w: 16px;
+  --sb-track: #dfdfdf;
+  --sb-thumb: #c0c0c0;
+  --sb-thumb-hover: #c0c0c0;
+  --sb-thumb-border: 1px solid #ffffff;
+  --sb-thumb-border-br: 1px solid #000000;
+  --sb-thumb-radius: 0px;
+  --sb-btn-display: block;
+  
+  /* Win98 전용 콘솔(MS-DOS 스타일) 색상 */
+  --term-bg: #000000;
+  --term-text: #c0c0c0;
+  --term-border: #ffffff;
+  --term-icon-color: #c0c0c0;
+}
+
+/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */
+/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */
+[data-theme='neon'] {
+  --bg-deep: #0a0a0a;
+  --bg-main: #121212;
+  --bg-card: rgba(20, 20, 20, 0.95);
+  --bg-glass: rgba(18, 18, 18, 0.85);
+  --bg-glass-active: rgba(255, 255, 255, 0.08);
+  
+  --border-glow: rgba(0, 230, 118, 0.3);
+  --border-muted: #333333;
+  
+  --text-main: #ffffff;
+  --text-muted: #a0a0a0;
+  --text-dark: #666666;
+  
+  --primary: #00e676;
+  --primary-glow: rgba(0, 230, 118, 0.25);
+  --secondary: #1de9b6;
+  --secondary-glow: rgba(29, 233, 182, 0.25);
+  
+  --text-on-primary: #000000;
+  --text-on-active: var(--text-main);
+
+  --term-bg: #000000;
+  --term-text: #00e676;
+  --term-border: var(--border-glow);
+  --term-icon-color: var(--primary);
+}

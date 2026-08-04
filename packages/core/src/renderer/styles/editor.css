@@ -1,0 +1,623 @@
+/*
+ * AMEVA OS Stylesheet - editor.css
+ * Location: src/renderer/styles/editor.css
+ * Consumers: 관련 컴포넌트(JSX) 뷰 렌더링에 이 스타일 클래스가 매핑되어 사용됨.
+ */
+/* ── [FEAT-5] 에디터 블록 hover / focus 테두리 효과 ────────────────────── */
+/* 기본 상태: 투명 테두리 예약 (레이아웃 시프트 없이 부드럽게 전환) */
+.bn-block-outer {
+  border-left: 3px solid transparent;
+  padding-left: 10px;
+  border-radius: 0 6px 6px 0;
+  /* [FEAT-5] box-shadow로 전체 테두리 예약 — 레이아웃 변형 없이 부드럽게 표시 */
+  outline: 1px solid transparent;
+  outline-offset: 2px;
+  transition:
+    border-left 0.18s ease,
+    background-color 0.18s ease,
+    outline 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+/* [FEAT-5] hover 상태: 매우 연한 테두리 + 왼쪽 악센트 */
+.bn-block-outer:hover:not([data-bn-active="true"]) {
+  border-left: 3px solid color-mix(in srgb, var(--primary) 35%, transparent);
+  background-color: color-mix(in srgb, var(--primary) 1.8%, transparent);
+  border-radius: 0 6px 6px 0;
+  outline: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
+  outline-offset: 1px;
+}
+
+/* [FEAT-5] active/focus 상태: 더 선명한 왼쪽 border + 살짝 진한 테두리 */
+.bn-block-outer[data-bn-active="true"] {
+  border-left: 3px solid var(--primary) !important;
+  background-color: color-mix(in srgb, var(--primary) 5%, transparent) !important;
+  padding-left: 10px !important;
+  border-radius: 0 6px 6px 0 !important;
+  box-shadow: inset 5px 0 12px -4px color-mix(in srgb, var(--primary) 18%, transparent) !important;
+  outline: 1px solid color-mix(in srgb, var(--primary) 28%, transparent) !important;
+  outline-offset: 1px !important;
+}
+
+
+/* 줄바꿈 해제(가로 스크롤 고정) 모드 스타일링 */
+.wrap-disabled .bn-editor,
+.wrap-disabled .bn-block-outer,
+.wrap-disabled .bn-inline-content,
+.wrap-disabled p,
+.wrap-disabled h1,
+.wrap-disabled h2,
+.wrap-disabled h3,
+.wrap-disabled h4,
+.wrap-disabled h5,
+.wrap-disabled h6,
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.wrap-disabled li {
+  white-space: pre !important;
+  word-wrap: normal !important;
+  overflow-x: auto;
+}
+
+/* BlockNote 에디터 제목(Heading) 스타일 강제 커스텀 (제목 느낌 극대화) */
+.bn-editor h1 {
+  font-size: 2.2rem !important;
+  font-weight: 850 !important;
+  color: var(--text-main) !important;
+  margin-top: 24px !important;
+  margin-bottom: 12px !important;
+  text-shadow: 0 0 10px var(--primary-glow);
+  letter-spacing: -0.03em;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.bn-editor h2 {
+  font-size: 1.8rem !important;
+  font-weight: 800 !important;
+  color: var(--text-main) !important;
+  margin-top: 20px !important;
+  margin-bottom: 10px !important;
+  letter-spacing: -0.02em;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.bn-editor h3 {
+  font-size: 1.4rem !important;
+  font-weight: 750 !important;
+  color: var(--text-main) !important;
+  margin-top: 16px !important;
+  margin-bottom: 8px !important;
+  letter-spacing: -0.01em;
+}
+
+/* 깃허브 스타일 프리미엄 마크다운 프리뷰어 CSS */
+.markdown-preview-body {
+  font-family: var(--font-sans);
+  color: var(--text-main);
+  line-height: 1.7;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.markdown-preview-body h1 {
+  font-size: 2.3rem;
+  font-weight: 850;
+  border-bottom: 1px solid var(--border-muted);
+  padding-bottom: 8px;
+  margin-top: 28px;
+  margin-bottom: 16px;
+  color: var(--text-main);
+  text-shadow: 0 0 12px var(--primary-glow);
+  letter-spacing: -0.03em;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.markdown-preview-body h2 {
+  font-size: 1.8rem;
+  font-weight: 800;
+  border-bottom: 1px solid var(--border-muted);
+  padding-bottom: 6px;
+  margin-top: 24px;
+  margin-bottom: 12px;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.markdown-preview-body h3 {
+  font-size: 1.4rem;
+  font-weight: 750;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  color: var(--text-main);
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.markdown-preview-body p {
+  margin-top: 0;
+  margin-bottom: 14px;
+  font-size: 14.5px;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.markdown-preview-body ul {
+  list-style-type: disc !important;
+  padding-left: 24px;
+  margin-top: 0;
+  margin-bottom: 14px;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.markdown-preview-body ol {
+  list-style-type: decimal !important;
+  padding-left: 24px;
+  margin-top: 0;
+  margin-bottom: 14px;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.markdown-preview-body li {
+  display: list-item !important;
+  margin-bottom: 6px;
+  font-size: 14.5px;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.markdown-preview-body code {
+  font-family: monospace;
+  background-color: rgba(255, 255, 255, 0.08);
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.markdown-preview-body pre {
+  background-color: rgba(5, 5, 10, 0.85);
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border-muted);
+  overflow-x: auto;
+  margin-bottom: 16px;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.markdown-preview-body pre code {
+  background-color: transparent;
+  padding: 0;
+  color: #a3e635; /* Neon Green */
+  font-size: 13px;
+  font-weight: 400;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.markdown-preview-body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 18px;
+  border: 1px solid var(--border-muted);
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.markdown-preview-body th, .markdown-preview-body td {
+  border: 1px solid var(--border-muted);
+  padding: 10px 14px;
+  font-size: 13.5px;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.markdown-preview-body th {
+  background-color: rgba(255, 255, 255, 0.04);
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.markdown-preview-body tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.01);
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.markdown-preview-body blockquote {
+  border-left: 4px solid var(--primary);
+  padding: 4px 16px;
+  color: var(--text-muted);
+  background-color: rgba(255, 255, 255, 0.01);
+  margin: 0 0 16px 0;
+  border-radius: 0 4px 4px 0;
+}
+
+/* ── 에디터 내 텍스트 선택 허용 ── */
+.bn-editor,
+.bn-block-content,
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.markdown-preview-body {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* ── Mermaid SVG 다크 테마 강제 오버라이드 ── */
+/* SVG 내부의 텍스트, 라벨, 선이 다크 배경에서 선명하게 표시 */
+.mermaid-chart-container svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaid-chart-container svg text,
+.mermaid-chart-container svg .label,
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.mermaid-chart-container svg .nodeLabel {
+  fill: #f3f4f6 !important;
+  color: #f3f4f6 !important;
+}
+
+.mermaid-chart-container svg .edgePath .path,
+.mermaid-chart-container svg .flowchart-link,
+.mermaid-chart-container svg line,
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.mermaid-chart-container svg path.er {
+  stroke: #9ca3af !important;
+}
+
+.mermaid-chart-container svg .node rect,
+.mermaid-chart-container svg .node circle,
+.mermaid-chart-container svg .node ellipse,
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.mermaid-chart-container svg .node polygon {
+  fill: #1e1e2e !important;
+  stroke: #8b5cf6 !important;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.mermaid-chart-container svg .edgeLabel {
+  background-color: #1e1e2e !important;
+  color: #f3f4f6 !important;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.mermaid-chart-container svg .cluster rect {
+  fill: #12121e !important;
+  stroke: #4b5563 !important;
+}
+
+/* arrowhead 마커 */
+.mermaid-chart-container svg marker path {
+  fill: #9ca3af !important;
+  stroke: #9ca3af !important;
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   현재 편집 블록 하이라이트 시스템
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 텍스트 선택 색상 강화 ── */
+.bn-editor ::selection {
+  background-color: rgba(139, 92, 246, 0.35) !important;
+  color: inherit !important;
+}
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.bn-editor ::-moz-selection {
+  background-color: rgba(139, 92, 246, 0.35) !important;
+  color: inherit !important;
+}
+
+/* ── 모든 블록: 전환 애니메이션 기반 세팅 ── */
+.bn-block-outer {
+  position: relative;
+  border-radius: 6px;
+  /* 좌측 메뉴(+ ::) 공간까지 완벽히 포함하도록 영역 대폭 확장 (마우스 호버 인식 및 테두리 포함 목적) */
+  padding-left: 42px !important;
+  margin-left: -42px !important;
+  transition:
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
+  /* 기본 상태: 좌측 indicator 없음 */
+  border-left: 3px solid transparent;
+}
+
+/* ── Hover: 옅은 배경 + 인디케이터 색 예고 + 얇은 실선 테두리 ── */
+.bn-block-outer:hover,
+.bn-block-outer:focus-within,
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.bn-block-outer[data-bn-hover-sync="true"] {
+  background-color: var(--bg-glass-active);
+  border-left-color: var(--primary);
+  /* 훨씬 눈에 잘 띄게 보라색 계열의 투명한 테두리 및 은은한 빛 반사 추가 */
+  box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.5), 0 0 12px rgba(139, 92, 246, 0.2);
+  border-radius: 6px;
+}
+
+/* ── Active (JS로 data-bn-active 부여): 현재 커서 블록 ── */
+.bn-block-outer[data-bn-active="true"] {
+  background-color: rgba(139, 92, 246, 0.07);
+  border-left-color: var(--primary);
+  box-shadow:
+    -2px 0 12px rgba(139, 92, 246, 0.18),
+    inset 2px 0 0 rgba(139, 92, 246, 0.08);
+  border-radius: 0 6px 6px 0;
+}
+
+/* ── Active 블록 내부 콘텐츠 영역: 미세한 glow ── */
+.bn-block-outer[data-bn-active="true"] > .bn-block > .bn-block-content {
+  position: relative;
+}
+
+/* ── CSS-native 폴백: focus-within (JS 추적 실패 시 보조) ── */
+.bn-block-outer:has(.bn-block-content:focus-within) {
+  background-color: rgba(139, 92, 246, 0.07);
+  border-left-color: var(--primary);
+  box-shadow: -2px 0 12px rgba(139, 92, 246, 0.18);
+  border-radius: 0 6px 6px 0;
+}
+
+/* ── 입력 중(타이핑): active border 강조 애니메이션 ── */
+@keyframes bn-block-editing-pulse {
+  0%, 100% { border-left-color: var(--primary); }
+  50%       { border-left-color: var(--secondary); }
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.bn-block-outer[data-bn-active="true"]:has([contenteditable]:focus) {
+  animation: bn-block-editing-pulse 2.5s ease-in-out infinite;
+  background-color: rgba(139, 92, 246, 0.10);
+}
+
+/* ── Heading 블록 active: 약간 더 강한 강조 ── */
+.bn-block-outer[data-bn-active="true"]:has(h1),
+.bn-block-outer[data-bn-active="true"]:has(h2),
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.bn-block-outer[data-bn-active="true"]:has(h3) {
+  background-color: rgba(139, 92, 246, 0.09);
+  border-left-width: 4px;
+}
+
+/* ── Code 블록 active: 노란/파란 색조 ── */
+.bn-block-outer[data-bn-active="true"]:has([data-content-type="codeBlock"]) {
+  border-left-color: #f59e0b;
+  box-shadow: -2px 0 12px rgba(245, 158, 11, 0.20);
+}
+
+/* ── Table 블록 active ── */
+.bn-block-outer[data-bn-active="true"]:has([data-content-type="table"]) {
+  border-left-color: var(--secondary);
+  box-shadow: -2px 0 12px rgba(6, 182, 212, 0.18);
+}
+
+/* ── BlockNote 에디터 컨테이너: 포커스 시 외곽선 glow ── */
+.bn-editor[data-bn-editor-focused] {
+  outline: none !important;
+  /* 에디터 전체 soft glow */
+  box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.08);
+  border-radius: 6px;
+}
+
+/* ── 선택 영역이 있는 블록(멀티 블록 드래그) ── */
+.bn-editor .ProseMirror-selectednode {
+  outline: 2px solid rgba(139, 92, 246, 0.5) !important;
+  border-radius: 4px;
+}
+
+/* ── 테이블 셀 선택 ── */
+.bn-editor .ProseMirror .selectedCell::after {
+  background: rgba(139, 92, 246, 0.20) !important;
+}
+
+/* ── Slash menu 트리거 문자 하이라이트 ── */
+.bn-editor .bn-mention {
+  background: rgba(139, 92, 246, 0.15);
+  border-radius: 3px;
+  padding: 1px 3px;
+}
+
+/* ── Placeholder 텍스트 (빈 블록) ── */
+.bn-block-content:has(.ProseMirror-trailingBreak:only-child)::after {
+  color: rgba(156, 163, 175, 0.45) !important;
+  font-style: italic;
+}
+
+/* ── 에디터 포커스 없을 때: 모든 hover/active 효과 비활성 ── */
+.bn-editor:not([data-bn-editor-focused]) .bn-block-outer {
+  border-left-color: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  animation: none !important;
+}
+
+/* ─────────────────────────────────────────────────────────────
+   🎨 BlockNote 에디터 내부 코드블록 테두리 & 구문 강조 (Syntax Highlight)
+   ───────────────────────────────────────────────────────────── */
+
+/* 1. 에디터 내 코드블록에 깔끔한 코딩 전용 글꼴 및 크기 지정 */
+.bn-block-outer[data-content-type="codeBlock"] code,
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.bn-block-outer[data-content-type="codeBlock"] pre {
+  font-family: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+}
+
+/* 2. 에디터 코드블록 최외곽 노드는 단순 레이아웃 마진만 제공 */
+.bn-block-outer[data-content-type="codeBlock"] {
+  margin: 14px 0 !important;
+  overflow: visible !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+}
+
+/* 원래의 BlockNote 에디터 입력 래퍼 스타일링 */
+.bn-block-outer[data-content-type="codeBlock"] .bn-block-content {
+  background-color: transparent !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* 3. 코드블록의 실제 '카드 형태' 컨테이너 (.bn-code-block-wrapper) 리폼 */
+.bn-block-outer[data-content-type="codeBlock"] .bn-code-block-wrapper {
+  background-color: #12131a !important; /* 뷰어와 동일한 일체형 어두운 배경색 지정 */
+  border: 1.5px solid rgba(139, 92, 246, 0.25) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  position: relative !important;
+  
+  /* 헤더(36px) 및 간격 여유를 완벽히 확보하여 첫 줄 코드 겹침 방지 */
+  padding-top: 48px !important;
+  padding-left: 2px !important;
+  padding-right: 2px !important;
+  /* padding-bottom 은 useEditorPortal.ts 에서 실행 여부에 따라 6px 또는 160px 로 동적 주입됨 */
+}
+
+/* 에디팅 가독성을 위한 순정 입력 pre 태그의 배경 및 글자색 강제 선명화 */
+.bn-block-outer[data-content-type="codeBlock"] pre {
+  background-color: #12131a !important; /* 일체형 다크 그레이로 통일 */
+  color: #f3f4f6 !important; /* 👈 글자가 100% 선명하게 보이도록 완전 밝은 화이트 지정!!! */
+  padding: 10px 14px !important;
+  border-radius: 6px !important;
+  border: none !important; /* 이음새 제거를 위해 보더 제거 */
+  margin-top: 0 !important; /* 패딩이 부모에서 들어가므로 이중 마진 방지를 위해 0px로 수정 */
+  margin-bottom: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* CodeMirror 에디터 본체 배경 및 외곽선 제거 */
+.bn-block-outer[data-content-type="codeBlock"] .cm-editor {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.bn-block-outer[data-content-type="codeBlock"] .cm-scroller {
+  background-color: transparent !important;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.bn-block-outer[data-content-type="codeBlock"] code {
+  color: #f3f4f6 !important;
+  background: transparent !important;
+}
+
+/* 원래 중복으로 뜨는 밋밋한 언어 셀렉트 박스는 상단 헤더 배지가 대신하므로 숨김 */
+.bn-block-outer[data-content-type="codeBlock"] .bn-language-select {
+  display: none !important;
+}
+
+/* 하단에 포털로 주입되는 터미널/런타임 영역 */
+.code-runner-terminal-inject {
+  width: 100% !important;
+  margin-top: 4px !important;
+  box-sizing: border-box !important;
+}
+
+/* 3. Prism.js / Prosemirror 계열 구문 강조 토큰 매핑 */
+.bn-block-content[data-content-type="codeBlock"] .token.keyword,
+.bn-block-content[data-content-type="codeBlock"] .token.selector,
+.bn-block-content[data-content-type="codeBlock"] .token.important,
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.bn-block-content[data-content-type="codeBlock"] .token.atrule {
+  color: #ff7b72 !important; /* 키워드: 로즈 핑크 */
+  font-weight: 600 !important;
+}
+.bn-block-content[data-content-type="codeBlock"] .token.string,
+.bn-block-content[data-content-type="codeBlock"] .token.char,
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.bn-block-content[data-content-type="codeBlock"] .token.attr-value {
+  color: #a5d6ff !important; /* 문자열: 스카이 블루 */
+}
+.bn-block-content[data-content-type="codeBlock"] .token.comment,
+.bn-block-content[data-content-type="codeBlock"] .token.prolog,
+.bn-block-content[data-content-type="codeBlock"] .token.doctype,
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.bn-block-content[data-content-type="codeBlock"] .token.cdata {
+  color: #8b949e !important; /* 주석: 차분한 그레이 */
+  font-style: italic !important;
+}
+.bn-block-content[data-content-type="codeBlock"] .token.number,
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.bn-block-content[data-content-type="codeBlock"] .token.boolean {
+  color: #ff79c6 !important; /* 숫자/불리언: 형광 핑크 */
+}
+.bn-block-content[data-content-type="codeBlock"] .token.function,
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.bn-block-content[data-content-type="codeBlock"] .token.class-name {
+  color: #d2a6ff !important; /* 함수/클래스: 라벤더 퍼플 */
+}
+.bn-block-content[data-content-type="codeBlock"] .token.operator,
+.bn-block-content[data-content-type="codeBlock"] .token.entity,
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.bn-block-content[data-content-type="codeBlock"] .token.url {
+  color: #ff7b72 !important;
+}
+
+/* 4. CodeMirror 계열 구문 강조 토큰 매핑 */
+.bn-block-content[data-content-type="codeBlock"] .cm-keyword { color: #ff7b72 !important; font-weight: 600 !important; }
+.bn-block-content[data-content-type="codeBlock"] .cm-string { color: #a5d6ff !important; }
+.bn-block-content[data-content-type="codeBlock"] .cm-comment { color: #8b949e !important; font-style: italic !important; }
+.bn-block-content[data-content-type="codeBlock"] .cm-number { color: #ff79c6 !important; }
+.bn-block-content[data-content-type="codeBlock"] .cm-function { color: #d2a6ff !important; }
+.bn-block-content[data-content-type="codeBlock"] .cm-variable { color: #f3f4f6 !important; }
+.bn-block-content[data-content-type="codeBlock"] .cm-operator { color: #ff7b72 !important; }
+
+/* 5. Highlight.js 계열 구문 강조 토큰 매핑 */
+.bn-block-content[data-content-type="codeBlock"] .hljs-keyword { color: #ff7b72 !important; font-weight: 600 !important; }
+.bn-block-content[data-content-type="codeBlock"] .hljs-string { color: #a5d6ff !important; }
+.bn-block-content[data-content-type="codeBlock"] .hljs-comment { color: #8b949e !important; font-style: italic !important; }
+.bn-block-content[data-content-type="codeBlock"] .hljs-number { color: #ff79c6 !important; }
+.bn-block-content[data-content-type="codeBlock"] .hljs-title { color: #d2a6ff !important; }
+.bn-block-content[data-content-type="codeBlock"] .hljs-variable { color: #f3f4f6 !important; }
+
+/* 에디터용 셀 내부의 모든 hljs 및 pre 배경 검은색 강제 제거 */
+.jupyter-cell.editor-cell,
+.jupyter-cell.editor-cell .hljs,
+.jupyter-cell.editor-cell .hljs-pre,
+.jupyter-cell.editor-cell pre,
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.jupyter-cell.editor-cell code {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* 파일 이동 시 순간 깜박임 하이라이트 애니메이션 */
+.bn-block-outer[data-highlighted-temp="true"] {
+  animation: tempHighlightPulse 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  border-radius: 4px;
+}
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+@keyframes tempHighlightPulse {
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+  0% {
+    background-color: rgba(139, 92, 246, 0.35);
+    box-shadow: 0 0 16px rgba(139, 92, 246, 0.4);
+  }
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+  100% {
+    background-color: transparent;
+    box-shadow: none;
+  }
+}
+
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+[data-theme='win98'] .win98-font {
+  font-family: 'Gulim', '굴림', 'MS Sans Serif', sans-serif !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+  letter-spacing: 0 !important;
+}
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.terminal-focused {
+  outline: none;
+}
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+[data-theme='win98'] .terminal-focused {
+  outline: 1px dotted #000000;
+  outline-offset: -2px;
+}
+
+/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */
+/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */

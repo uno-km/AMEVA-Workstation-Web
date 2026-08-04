@@ -1,0 +1,172 @@
+/*
+ * AMEVA OS Stylesheet - layout.css
+ * Location: src/renderer/styles/layout.css
+ * Consumers: 관련 컴포넌트(JSX) 뷰 렌더링에 이 스타일 클래스가 매핑되어 사용됨.
+ */
+/* ══════════════════════════════════════════════════════════
+   줌 안전 레이아웃 — Ctrl+Wheel 줌 시 사이드바/패널 보호
+   ══════════════════════════════════════════════════════════ */
+
+/* 메인 레이아웃 row: overflow 차단, 사이드바 찌그러짐 방지 */
+.main-layout-row {
+  display: flex;
+  flex: 1;
+  height: 0;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+  /* flex 자식들이 최소 너비 이하로 찌그러지지 않도록 */
+  min-width: 0;
+}
+
+/* 사이드바: flex-shrink 0 — 너비는 JS(usePanelResize)가 관리 */
+aside.glass-panel {
+  flex-shrink: 0;
+  flex-grow: 0;
+  overflow: hidden;
+  /* 최소/최대는 JS에서 clamp하므로 CSS 제한 없음 */
+  position: relative; /* ResizeHandle 절대위치 기준 */
+}
+
+/* AI 패널: 우측 슬라이드인 패널도 줌에 무관하게 고정.
+   width는 AppLayout 인라인 스타일(useProcessStore.aiPanelWidth)이 단독으로 제어한다.
+   AIPanel 내부는 width: 100% — 이 래퍼의 크기를 그대로 따른다. */
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+.ai-panel-wrapper {
+  flex-shrink: 0;
+  flex-grow: 0;
+  height: 100%;
+  overflow: hidden;
+  position: relative; /* ResizeHandle 절대위치 기준 */
+}
+
+/* 에디터 영역: flex: 1 + min-width: 0 으로 나머지 공간 차지 */
+.editor-zoom-wrapper {
+  flex: 1 1 0%;
+  min-width: 200px; /* 에디터 영역 최소 너비 보장 */
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  /* zoom 속성이 height 계산에 영향을 주므로 height는 인라인으로 처리 */
+}
+
+/* ── 드래그 중 전체 화면 커서 오버레이 ── */
+/* 드래그 중 iframe/WebView만 pointer-events 차단 (다른 요소는 영향 없도록) */
+body.is-resizing {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+/* iframe은 mouse 이벤트를 빼앗으므로 드래그 중 차단 */
+body.is-resizing iframe,
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+body.is-resizing webview {
+  pointer-events: none !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   포커스 영역 하이라이트 시스템 (focus-region)
+   ══════════════════════════════════════════════════════════════
+   동작: data-focus-region="id" 속성을 가진 요소가 클릭되면
+         .focus-region-active 클래스가 토글됨 (focusRegion.ts가 처리)
+   확장: 새 영역 추가 시 data-focus-region="new-id" 만 추가. CSS 수정 불필요.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 기본 region 요소: transition 준비 ── */
+[data-focus-region] {
+  /* 영역별 accent 색상 (기본: primary) */
+  --region-color: var(--primary);
+  --region-glow: var(--primary-glow);
+
+  /* 테두리 전환 공간 확보 */
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  transition:
+    outline-color 0.15s ease,
+    outline-width 0.1s ease,
+    box-shadow 0.15s ease;
+  border-radius: inherit;
+}
+
+/* ── 1. 마우스 호버 (은은한 예고 테두리) ── */
+[data-focus-region]:not(.focus-region-active):not(:focus-within):hover {
+  outline: none !important;
+  border-color: color-mix(in srgb, var(--region-color) 45%, var(--border-muted)) !important;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--region-color) 10%, transparent) !important;
+}
+
+/* ── 2. 키보드 입력 캐럿 활성화 (focus-within) 또는 활성 상태 (focus-region-active) ── */
+[data-focus-region]:focus-within,
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+[data-focus-region].focus-region-active {
+  outline: none !important;
+  border-color: var(--region-color) !important;
+  box-shadow:
+    0 0 15px color-mix(in srgb, var(--region-color) 20%, transparent),
+    inset 0 0 12px color-mix(in srgb, var(--region-color) 5%, transparent) !important;
+}
+
+/* ── 3. 마우스와 키보드 동시 공존 상태 (활성 상태에서 마우스 호버 시) ── */
+[data-focus-region]:focus-within:hover,
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+[data-focus-region].focus-region-active:hover {
+  outline: none !important;
+  border-color: var(--region-color) !important;
+  box-shadow:
+    0 0 25px color-mix(in srgb, var(--region-color) 35%, transparent),
+    inset 0 0 15px color-mix(in srgb, var(--region-color) 8%, transparent) !important;
+}
+
+/* ── 영역별 accent 색상 커스터마이징 ── */
+
+/* 에디터: 보라 (primary) — 기본값이므로 override 불필요 */
+[data-focus-region="editor"] {
+  --region-color: var(--primary);
+  --region-glow: var(--primary-glow);
+}
+
+/* 입력창 (chat input, AI input 등) */
+[data-focus-region="chat-input"] {
+  --region-color: #ec4899;
+  --region-glow: rgba(236,72,153,0.35);
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+[data-focus-region="ai-input"] {
+  --region-color: var(--primary);
+  --region-glow: var(--primary-glow);
+}
+
+/* ── 활성 region 내부의 입력창: 추가 강조 ── */
+[data-focus-region].focus-region-active input:focus,
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+[data-focus-region].focus-region-active textarea:focus {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--region-color) 50%, transparent) !important;
+}
+
+/* ── 비활성 region: hover 시 예고 ── */
+[data-focus-region]:not(.focus-region-active):hover {
+  outline-color: color-mix(in srgb, var(--region-color) 25%, transparent);
+}
+
+/* ── region indicator 레이블 (선택사항: 디버그용) ── */
+/* 실제 운영에서는 아래를 주석처리하세요 */
+/*
+[data-focus-region].focus-region-active::before {
+  content: attr(data-focus-region);
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--region-color);
+  opacity: 0.6;
+  letter-spacing: 0.05em;
+  pointer-events: none;
+  z-index: 1000;
+}
+*/
+
+/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */
+/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */

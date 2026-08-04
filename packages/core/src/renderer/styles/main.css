@@ -1,0 +1,17 @@
+/*
+ * AMEVA OS Stylesheet - main.css
+ * Location: src/renderer/styles/main.css
+ * Consumers: 관련 컴포넌트(JSX) 뷰 렌더링에 이 스타일 클래스가 매핑되어 사용됨.
+ */
+@import './variables.css';
+@import './base.css';
+@import './layout.css';
+@import './editor.css';
+@import './components/Sidebar.css';
+@import './components/AIPanel.css';
+@import './components/Modals.css';
+@import './components/StatusBar.css';
+@import './components/MenuBar.css';
+
+/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */
+/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */

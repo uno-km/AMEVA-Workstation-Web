@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Features | AMEVA Workstation</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <header>
+    <a href="index.html" class="brand">
+      <div class="brand-icon"><i class="fas fa-cubes"></i></div>
+      <span>AMEVA Workstation</span>
+    </a>
+    <nav class="nav-menu">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="features.html" class="nav-link">Features</a>
+      <a href="demo.html" class="nav-link">Playground</a>
+      <a href="demo-collab.html" class="nav-link">Collaboration</a>
+      <a href="solutions-enterprise.html" class="nav-link">Solutions</a>
+      <a href="pricing.html" class="nav-link">Pricing</a>
+      <a href="contact.html" class="nav-link">Contact</a>
+    </nav>
+    <div class="header-actions">
+      <button id="theme-toggle" class="btn-theme"><i class="fas fa-sun"></i></button>
+      <a href="contact.html" class="btn-primary" style="padding: 8px 16px; font-size: 11px;">Request Demo</a>
+    </div>
+  </header>
+
+  <main class="promo-container">
+    <section style="text-align: center; margin-bottom: 50px;">
+      <div class="badge-tag"><i class="fas fa-sparkles"></i> Core Capabilities</div>
+      <h2 style="font-size:36px; font-weight:800; margin-bottom:12px;">기존 협업 도구들을 완전히 대체하는 혁신적인 문서 워크스테이션</h2>
+      <p style="color:var(--text-muted); max-width:600px; margin:0 auto;">카드를 클릭하여 각 기능의 상세한 메커니즘과 비즈니스 활용 방안을 확장 확인하세요.</p>
+    </section>
+
+    <div class="features-grid">
+      <!-- 카드 1 -->
+      <div class="feature-detail-card">
+        <div class="feature-icon-wrapper"><i class="fas fa-brain"></i></div>
+        <h3>AI Copilot & Diff Acceptor</h3>
+        <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">자연어 명령 편집 및 Git 스타일 충돌 분석 UI 탑재.</p>
+        <div class="expanded-desc">
+          <p>
+            사용자가 본문을 드래그하고 "수정해줘" 라고 전송하면, AI가 수정 전/후를 분석하여 Diff 카드로 띄웁니다. 사용자는 클릭 한 번으로 변경 제안을 본문에 즉시 융합(Accept)하거나 기각(Reject)할 수 있습니다.
+          </p>
+        </div>
+      </div>
+
+      <!-- 카드 2 -->
+      <div class="feature-detail-card">
+        <div class="feature-icon-wrapper"><i class="fas fa-terminal"></i></div>
+        <h3>4대 언어 가상 샌드박스</h3>
+        <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">문서 내에서 JavaScript, Python, HTML, SQL 즉시 컴파일 실행.</p>
+        <div class="expanded-desc">
+          <p>
+            별도의 개발 서버 환경 구축 필요 없이 에디터 내부의 Jupyter Block을 통해 런타임 결과와 오류 로그를 즉시 수집하고 테이블 양식으로 보기 좋게 렌더링합니다.
+          </p>
+        </div>
+      </div>
+
+      <!-- 카드 3 -->
+      <div class="feature-detail-card">
+        <div class="feature-icon-wrapper"><i class="fas fa-users"></i></div>
+        <h3>Y.js 분산 실시간 협업</h3>
+        <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">로컬 P2P 및 퍼블릭 릴레이 클라우드 듀얼 모드 CRDT 싱크.</p>
+        <div class="expanded-desc">
+          <p>
+            외부 서버 연동 없이 동일 인트라넷 망 내에서 독자적인 웹소켓 서버를 1초 만에 띄워 동료들을 초대할 수 있으며, 공용 릴레이 서버로 전 세계 팀원들과 지연률 0%로 문서와 캐럿을 공유합니다.
+          </p>
+        </div>
+      </div>
+
+      <!-- 카드 4 -->
+      <div class="feature-detail-card">
+        <div class="feature-icon-wrapper"><i class="fas fa-play"></i></div>
+        <h3>리치 미디어 임베더</h3>
+        <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">고화질 비디오, 오디오 스트리밍 블록 완벽 지원.</p>
+        <div class="expanded-desc">
+          <p>
+            용량이 큰 오디오 파일이나 사내 시연 비디오 가이드라인을 문서 본문 내에 깔끔하게 임베딩하고 커스텀 플레이어 위젯을 통해 편리하게 청취 및 인라인 재생을 할 수 있습니다.
+          </p>
+        </div>
+      </div>
+
+      <!-- 카드 5 -->
+      <div class="feature-detail-card">
+        <div class="feature-icon-wrapper"><i class="fas fa-store"></i></div>
+        <h3>통합 플러그인 마켓플레이스</h3>
+        <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">업무 템플릿과 다양한 확장 도구 원클릭 조회 및 로드.</p>
+        <div class="expanded-desc">
+          <p>
+            앱 내부의 마켓플레이스 메뉴를 통해 다양한 서식 템플릿, 커스텀 확장 블록, 생산성 플러그인 생태계를 원클릭으로 주입하여 에디터의 기능을 필요에 따라 무한히 늘려나갈 수 있습니다.
+          </p>
+        </div>
+      </div>
+
+      <!-- 카드 6 -->
+      <div class="feature-detail-card">
+        <div class="feature-icon-wrapper"><i class="fas fa-puzzle-piece"></i></div>
+        <h3>HWP(아래한글) & 원노트 기능 확장</h3>
+        <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">한글(HWP) 및 원노트 스타일 생산성 모듈 완벽 지원.</p>
+        <div class="expanded-desc">
+          <p>
+            국내 문서 환경에 꼭 맞는 아래한글(HWP) 스타일 서식 뷰와 원노트(OneNote) 같은 강력하고 유연한 페이지 구조 확장 모듈을 클릭 한 번으로 설치 및 이식할 수 있어 한 차원 높은 편의성을 선사합니다.
+          </p>
+        </div>
+      </div>
+
+      <!-- 카드 7 -->
+      <div class="feature-detail-card">
+        <div class="feature-icon-wrapper"><i class="fas fa-layer-group"></i></div>
+        <h3>하이브리드 다중 문서 모드</h3>
+        <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">덮어쓰기, 이어서 열기, 탭별 열기를 조율하는 스마트 멀티뷰.</p>
+        <div class="expanded-desc">
+          <p>
+            작업의 성격에 따라 파일을 별도의 탭으로 나누어 보거나(Tab Mode), 하나의 에디터 아래에 연속으로 이어 붙여(Append Mode) 하나의 긴 문서처럼 스크롤하며 편집할 수 있습니다. 각 문서의 경계는 사이드바에 앵커 링크로 표출되어 클릭 한 번으로 이동할 수 있습니다.
+          </p>
+        </div>
+      </div>
+
+      <!-- 카드 8 -->
+      <div class="feature-detail-card">
+        <div class="feature-icon-wrapper"><i class="fas fa-plug"></i></div>
+        <h3>지능형 AI MCP 도구 확장</h3>
+        <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">사용자 정의 MCP 서버를 플러그인하여 AI 에이전트 자동화 실행.</p>
+        <div class="expanded-desc">
+          <p>
+            HTTP 및 stdio 기반의 임의의 MCP 서버를 마우스 클릭 몇 번으로 실시간 연동할 수 있습니다. 이를 통해 로컬/원격 AI 에이전트가 로컬 파일 제어, 외부 API 호출, 데이터베이스 직접 쿼리 등의 실질적인 액션을 직접 실행하게 만들어 문서 작성 및 개발 생산성을 비약적으로 극대화합니다.
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initTheme } from './js/common/theme.js';
+    import { initNavigation } from './js/common/navigation.js';
+    import { initFeatures } from './js/pages/features.js';
+
+    initTheme();
+    initNavigation();
+    initFeatures();
+  </script>
+</body>
+</html>

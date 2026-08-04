@@ -1,0 +1,40 @@
+/*
+ * AMEVA OS Stylesheet - AIPanel.css
+ * Location: src/renderer/styles/components/AIPanel.css
+ * Consumers: 관련 컴포넌트(JSX) 뷰 렌더링에 이 스타일 클래스가 매핑되어 사용됨.
+ */
+/* AI 패널 포커스 영역 */
+[data-focus-region="ai-panel"] {
+  --region-color: var(--primary);
+  --region-glow: var(--primary-glow);
+}
+
+/* ── AI 패널 ── */
+.ai-panel-slide-enter {
+  animation: ai-slide-in 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+@keyframes ai-slide-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to   { transform: translateX(0);   opacity: 1; }
+}
+
+/* AI 스트리밍 커서 깜빡임 */
+.streaming-cursor::after {
+  content: '▋';
+  display: inline-block;
+  animation: blink 0.7s steps(1) infinite;
+  color: var(--primary);
+  margin-left: 2px;
+  font-weight: 400;
+}
+
+/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */
+/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */

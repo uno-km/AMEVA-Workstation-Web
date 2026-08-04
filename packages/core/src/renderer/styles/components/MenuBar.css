@@ -1,0 +1,275 @@
+/*
+ * AMEVA OS Stylesheet - MenuBar.css
+ * Location: src/renderer/styles/components/MenuBar.css
+ * Consumers: MenuBar.tsx 및 최상단 타이틀-메뉴 영역 렌더링에 매핑되어 사용됨.
+ */
+
+.menu-bar-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 12px;
+  background-color: var(--bg-deep);
+  border-bottom: 1px solid var(--border-muted);
+  user-select: none;
+  /* 윈도우 창 전체 드래그 허용 */
+  -webkit-app-region: drag;
+  z-index: 999;
+  position: relative;
+}
+
+/* 좌측 로고 및 풀다운 메뉴 영역 */
+.menu-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  -webkit-app-region: no-drag; /* 클릭 및 메뉴 활성화 허용 */
+}
+
+.menu-bar-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--primary);
+  filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.4));
+  transition: transform 0.3s ease;
+}
+
+.menu-bar-logo:hover {
+  transform: rotate(15deg) scale(1.1);
+}
+
+.menu-items-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 중앙 현재 열려 있는 파일명 영역 */
+.menu-bar-center {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-dark);
+  font-family: var(--font-sans);
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  cursor: default;
+}
+
+.menu-bar-center .file-name {
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* 우측 레이아웃 버튼 & 구글 아바타 영역 */
+.menu-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-right: 130px; /* Windows 창 제어 오버레이(최소화/최대화/닫기) 영역 회피를 위한 여백 */
+  -webkit-app-region: no-drag; /* 클릭 동작 허용 */
+}
+
+/* 레이아웃 제어 버튼 툴바 */
+.layout-btn-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-glass-subtle);
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid var(--border-muted);
+}
+
+.layout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.layout-btn:hover {
+  background: var(--bg-glass-active);
+  color: var(--text-main);
+}
+
+.layout-btn.active {
+  background: var(--primary-glow);
+  color: var(--primary);
+}
+
+/* 구글 프로필 단추 (아바타와 ChevronDown 세트) */
+.google-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.google-profile-btn:hover {
+  background: var(--bg-glass-active);
+}
+
+.google-profile-avatar {
+  width: 23px;
+  height: 23px;
+  border-radius: 50%;
+  background: #f97316; /* 주황색 */
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* 구글 계정 관리 팝오버 카드 */
+.google-popover {
+  position: absolute;
+  top: 42px;
+  right: 124px; /* Windows 창 제어 오버레이 여백 고려 */
+  width: 280px;
+  background: rgba(13, 14, 22, 0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-glow);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 1001;
+  font-family: var(--font-sans);
+  color: var(--text-main);
+  animation: popoverFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes popoverFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.google-popover-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-muted);
+  padding-bottom: 12px;
+}
+
+.google-popover-avatar-big {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4285f4, #ea4335, #fbbc05, #34a853);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.google-popover-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.google-popover-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.google-popover-email {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.google-popover-badge {
+  display: inline-block;
+  align-self: flex-start;
+  margin-top: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--primary), #ec4899);
+  color: #fff;
+  text-transform: uppercase;
+}
+
+.google-popover-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.google-popover-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.google-popover-btn-primary {
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  color: #fff;
+}
+
+.google-popover-btn-primary:hover {
+  background: var(--primary-glow);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
+}
+
+.google-popover-btn-secondary {
+  background: transparent;
+  border: 1px solid var(--border-muted);
+  color: var(--text-main);
+}
+
+.google-popover-btn-secondary:hover {
+  background: var(--bg-glass-active);
+  border-color: var(--border-glow);
+}
+
+/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */

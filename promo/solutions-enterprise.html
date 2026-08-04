@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enterprise Solutions | AMEVA Workstation</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <header>
+    <a href="index.html" class="brand">
+      <div class="brand-icon"><i class="fas fa-cubes"></i></div>
+      <span>AMEVA Workstation</span>
+    </a>
+    <nav class="nav-menu">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="features.html" class="nav-link">Features</a>
+      <a href="demo.html" class="nav-link">Playground</a>
+      <a href="demo-collab.html" class="nav-link">Collaboration</a>
+      <a href="solutions-enterprise.html" class="nav-link">Solutions</a>
+      <a href="pricing.html" class="nav-link">Pricing</a>
+      <a href="contact.html" class="nav-link">Contact</a>
+    </nav>
+    <div class="header-actions">
+      <button id="theme-toggle" class="btn-theme"><i class="fas fa-sun"></i></button>
+      <a href="contact.html" class="btn-primary" style="padding: 8px 16px; font-size: 11px;">Request Demo</a>
+    </div>
+  </header>
+
+  <main class="promo-container">
+    <section style="text-align: center; margin-bottom: 40px;">
+      <div class="badge-tag"><i class="fas fa-building"></i> Solutions Matrix</div>
+      <h2 style="font-size:36px; font-weight:800;">대상 환경별 비즈니스 맞춤형 솔루션</h2>
+      <p style="color:var(--text-muted); max-width:600px; margin:0 auto; margin-top:6px;">
+        기존 문서/코드/협업 플랫폼을 대체하여 사내 보안을 강화한 폐쇄망 구축부터 연구실 특화 시뮬레이션 환경까지 최적의 도입 아키텍처를 안내합니다.
+      </p>
+    </section>
+
+    <!-- 3대 솔루션 이동 탭 버튼 -->
+    <div class="solutions-tabs">
+      <a href="solutions-enterprise.html" class="solution-tab-btn active" style="text-decoration:none;">🏢 대기업 / 금융 (폐쇄망)</a>
+      <a href="solutions-academic.html" class="solution-tab-btn" style="text-decoration:none;">🔬 R&D / 대학 연구실</a>
+      <a href="solutions-personal.html" class="solution-tab-btn" style="text-decoration:none;">🧑‍💻 개인 개발자 / 크리에이터</a>
+    </div>
+
+    <!-- 대기업 탭 본문 -->
+    <div class="solution-tab-content active" style="display:block;">
+      <h3 style="font-size:24px; font-weight:700; color:var(--primary); margin-bottom:14px;">금융 및 대기업 보안망을 위한 독립 구동 협업 환경</h3>
+      <p style="color:var(--text-muted); line-height:1.7; margin-bottom:20px;">
+        사외 클라우드를 전혀 경유하지 않고, 인터넷이 완전히 차단된 사내 폐쇄망 환경에서도 안전하게 문서 저작과 인공지능 보조를 기동할 수 있습니다. 기업 내부 지식 자산이 외부로 무단 반출되는 사고를 완벽하게 예방합니다.
+      </p>
+      
+      <div style="background:rgba(255,255,255,0.015); border:1px solid var(--border-muted); border-radius:12px; padding:20px; margin-top:20px;">
+        <h4 style="font-weight:700; color:var(--secondary); margin-bottom:8px;"><i class="fas fa-shield-halved"></i> 사내 내부 보안 설계 핵심</h4>
+        <ul style="margin-left:20px; color:var(--text-muted); font-size:13px; line-height:1.8;">
+          <li><strong>100% 독립된 사내 인프라 구동</strong>: 외부 AI 서버에 텍스트를 전송하지 않고 로컬 기기 내에서 자체 지능형 문맥 분석 완료</li>
+          <li><strong>간편한 동료 협업 세션</strong>: 별도의 서버 설치 필요 없이, 동일한 인트라넷/사내 망 내에서 즉시 동료들과 실시간 동시 편집 가능</li>
+          <li><strong>기밀 데이터 로컬 보안 저장</strong>: 작성한 글이나 소스코드는 외부망 클라우드가 아닌 오직 사내 스토리지와 PC 내부에만 암호화 저장</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initTheme } from './js/common/theme.js';
+    import { initNavigation } from './js/common/navigation.js';
+
+    initTheme();
+    initNavigation();
+  </script>
+</body>
+</html>
