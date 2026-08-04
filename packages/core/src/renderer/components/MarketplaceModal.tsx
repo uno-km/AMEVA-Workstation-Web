@@ -31,44 +31,7 @@ import { useAppContext } from '../contexts/AppContext'
 
 export type { PluginMetadata, MarketplaceModalProps }
 
-const SAAS_ITEMS = [
-  {
-    id: 'webSearch',
-    name: 'DuckDuckGo Web Search API (Pro)',
-    description: 'ReAct 에이전트가 외부 웹 검색(실시간 인터넷 정보 및 뉴스)을 통해 추론하고 결과를 조합할 수 있게 권한을 위임합니다.',
-    type: 'tool' as const,
-    version: '1.2.0'
-  },
-  {
-    id: 'pythonConsole',
-    name: 'Python Sandbox Executor (Pro)',
-    description: '로컬 파이썬 샌드박스를 연동하여 복잡한 수식 연산 및 데이터 처리 알고리즘 코드를 실제 런타임에서 실행해 줍니다.',
-    type: 'tool' as const,
-    version: '2.0.4'
-  },
-  {
-    id: 'requestQueue',
-    name: 'Sequential Request Queue (Pro)',
-    description: '질문을 연달아 우다다닥 보낼 때 취소되지 않고 안전하게 백그라운드 큐 버퍼에 쌓여 차례로 실행해 주는 순차 처리기입니다.',
-    type: 'feature' as const,
-    version: '1.0.1'
-  },
-  {
-    id: 'excelViewer',
-    name: 'Excel Viewer & Editor (Pro)',
-    description: '로컬 마크다운 문서 내에 엑셀 스프레드시트를 삽입하고 편집할 수 있는 확장 기능입니다.',
-    type: 'feature' as const,
-    version: '1.0.0'
-  },
-  {
-    id: 'kanbanBoard',
-    name: 'Jira-Style Kanban Workflow (Pro)',
-    description: '지라(Jira) 스타일의 드래그 앤 드롭 칸반 보드. AI 에이전트 담당자 할당, 우선순위 관리, 마크다운 실시간 동기화 지원.',
-    type: 'feature' as const,
-    version: '1.0.0'
-  }
-]
-
+// SAAS_ITEMS는 이제 깃허브 원격 서버에서 동적으로 가져옵니다.
 function parseDescription(html: string) {
   if (!html) return null;
   if (!html.includes('<span') && !html.includes('<br')) {
@@ -161,7 +124,7 @@ export function MarketplaceModal({
     let desc = 'No description available.';
 
     if (typeof pluginOrId === 'string') {
-      const premium = SAAS_ITEMS.find(p => p.id === pluginOrId);
+      const premium = plugins.find(p => p.id === pluginOrId && p.isSaaS);
       name = premium?.name || 'Premium Feature';
       desc = premium?.description || 'No description available.';
     } else {
@@ -186,72 +149,35 @@ export function MarketplaceModal({
   const [selectedCategory, setSelectedCategory] = useState<'all' | 'tool' | 'feature' | 'collab'>('all')
 
   useEffect(() => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `isOpen`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (isOpen)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
     if (isOpen) {
       try {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `stored`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const stored = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
         const stored = localStorage.getItem('enabled-plugins')
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `stored`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (stored)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
+        const saasIds = plugins.filter(p => p.isSaaS).map(p => p.id)
+        let initialEnabled: Record<string, boolean> = {}
+
         if (stored) {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `parsed`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const parsed = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-          const parsed = safeJsonParse(stored, {
-            excelViewer: false,
-            calculator: false
-          })
-          setEnabledPlugins(parsed)
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `!canUsePremium`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (!canUsePremium)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
+          const parsed = safeJsonParse(stored, {})
           if (!canUsePremium) {
-            setEnabledPlugins({ webSearch: false, pythonConsole: false, requestQueue: false, excelViewer: false, kanbanBoard: false })
+            saasIds.forEach(id => { initialEnabled[id] = false })
           } else {
-            setEnabledPlugins(parsed)
+            initialEnabled = parsed
           }
         } else {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `canUsePremium`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (canUsePremium)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
           if (canUsePremium) {
-            setEnabledPlugins({ webSearch: true, pythonConsole: true, requestQueue: false, excelViewer: false, kanbanBoard: false })
+            // 프리미엄 유저의 기본 활성화 상태 (SaaS 플러그인들)
+            saasIds.forEach(id => { initialEnabled[id] = true })
+            // 원한다면 특정 플러그인만 기본 false로 지정 가능
+            if (saasIds.includes('excelViewer')) initialEnabled['excelViewer'] = false
+            if (saasIds.includes('kanbanBoard')) initialEnabled['kanbanBoard'] = false
+            if (saasIds.includes('requestQueue')) initialEnabled['requestQueue'] = false
           } else {
-            setEnabledPlugins({ webSearch: false, pythonConsole: false, requestQueue: false, excelViewer: false, kanbanBoard: false })
+            saasIds.forEach(id => { initialEnabled[id] = false })
           }
         }
+        setEnabledPlugins(initialEnabled)
       } catch (e) {}
     }
-  }, [isOpen, canUsePremium])
+  }, [isOpen, canUsePremium, plugins])
 
       /*
        * [RUN-TIME STATE / INVARIANT]
@@ -314,7 +240,7 @@ export function MarketplaceModal({
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const res = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-      const res = await fetch('https://uno-km.github.io/AMEVA-Workstation-Market-Place/api/plugins.json', { signal: controller.signal })
+      const res = await fetch(`https://raw.githubusercontent.com/uno-km/AMEVA-Workstation-Market-Place/main/api/plugins.json?t=${Date.now()}`, { signal: controller.signal })
       clearTimeout(timeoutId)
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -380,7 +306,7 @@ export function MarketplaceModal({
     try {
       const enabledPluginsStored = safeJsonParse(localStorage.getItem('enabled-plugins'), {})
       const currentInstalled = settings?.installedPlugins || []
-      const saasIds = SAAS_ITEMS.map(s => s.id)
+      const saasIds = plugins.filter(p => p.isSaaS).map(s => s.id)
 
       // enabled-plugins에서 활성화된 SaaS 플러그인이 settings에 없으면 추가
       const toAdd = saasIds.filter((id: string) => enabledPluginsStored[id] === true && !currentInstalled.includes(id))
@@ -418,8 +344,10 @@ export function MarketplaceModal({
        */
       if (isInstalled) {
         onUninstallPlugin(plugin.id)
-      } else {
+      } else if (plugin.scriptUrl) {
         await onInstallPlugin(plugin.id, plugin.scriptUrl)
+      } else {
+        alert('해당 플러그인은 scriptUrl이 제공되지 않아 설치할 수 없습니다.')
       }
     } catch (err) {
       alert('플러그인 처리 중 실패했습니다.')
@@ -429,7 +357,7 @@ export function MarketplaceModal({
   }
 
   // 필터링 연산
-  const filteredPlugins = plugins.filter((p) => {
+  const filteredPlugins = plugins.filter(p => !p.isSaaS).filter((p) => {
       /*
        * [RUN-TIME STATE / INVARIANT]
        * - 변수 명: `matchesCategory`
@@ -539,7 +467,7 @@ export function MarketplaceModal({
 
             {/* 👑 SaaS Premium Toggles (DuckDuckGo, Python Sandbox, Request Queue) */}
             {categories.length > 0 && (() => {
-              const filteredSaas = SAAS_ITEMS.filter(p => {
+              const filteredSaas = plugins.filter(p => p.isSaaS).filter(p => {
                 const matchesCategory = selectedCategory === 'all' || p.type === selectedCategory
                 const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || p.description.toLowerCase().includes(searchQuery.toLowerCase())
                 return matchesCategory && matchesSearch

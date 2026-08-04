@@ -21,10 +21,11 @@ export interface PluginMetadata {
   id: string
   name: string
   description: string
-  scriptUrl: string
+  scriptUrl?: string
   previewUrl?: string
   version: string
   type: 'tool' | 'feature' | 'collab' | 'premium'
+  isSaaS?: boolean
 }
 
 export interface MarketplaceModalProps {
