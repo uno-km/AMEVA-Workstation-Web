@@ -449,10 +449,8 @@ function OfficeDocViewer({ sourceUrl, docType, fileName, height }: {
       setLoading(false)
       return
     }
-    // DOCX → mammoth.js로 HTML 변환 (동적 import)
-    const loadDocx = async () => {
+    const loadDoc = async () => {
       try {
-        const mammoth = await import('mammoth')
         let arrayBuffer: ArrayBuffer
         
         if (sourceUrl.startsWith('ameva-vfs://')) {
@@ -466,9 +464,31 @@ function OfficeDocViewer({ sourceUrl, docType, fileName, height }: {
         } else {
           throw new Error('Local file only')
         }
-        
-        const result = await mammoth.convertToHtml({ arrayBuffer })
-        setHtmlContent(result.value)
+
+        if (docType === 'docx') {
+          const mammoth = await import('mammoth')
+          const result = await mammoth.convertToHtml({ arrayBuffer })
+          setHtmlContent(result.value)
+        } else if (docType === 'xlsx') {
+          const ExcelJS = await import('exceljs')
+          const wb = new ExcelJS.Workbook()
+          await wb.xlsx.load(arrayBuffer)
+          let html = ''
+          wb.eachSheet((worksheet) => {
+            html += `<h3 style="margin-top: 1em; border-bottom: 1px solid #eee; padding-bottom: 8px;">${worksheet.name}</h3>`
+            html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 1em;">`
+            worksheet.eachRow((row) => {
+              html += '<tr>'
+              const cells = (row.values as any[]).slice(1)
+              cells.forEach((v) => {
+                html += `<td style="border: 1px solid #e2e8f0; padding: 6px 12px;">${v != null ? String(v) : ''}</td>`
+              })
+              html += '</tr>'
+            })
+            html += `</table>`
+          })
+          setHtmlContent(html || '<p style="color:#94a3b8">표 데이터가 없습니다.</p>')
+        }
       } catch (e: any) {
         if (e.message === 'VFS_EXPIRED' || sourceUrl.startsWith('blob:')) {
           setHtmlContent('<p style="color:#f87171">임시 파일이 만료되었거나 문서 변환에 실패했습니다.<br/><br/>원격/가상 환경 데이터가 손실되었습니다. 문서를 다시 드래그하여 업로드해주세요.</p>')
@@ -479,13 +499,13 @@ function OfficeDocViewer({ sourceUrl, docType, fileName, height }: {
         setLoading(false)
       }
     }
-    loadDocx()
+    loadDoc()
   }, [sourceUrl, docType])
 
-  if (docType === 'docx') {
+  if (docType === 'docx' || docType === 'xlsx') {
     if (loading) return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height, color: '#94a3b8', fontSize: 12 }}>
-        Word 문서 변환 중...
+        문서 변환 중...
       </div>
     )
     return (
@@ -500,29 +520,14 @@ function OfficeDocViewer({ sourceUrl, docType, fileName, height }: {
         }}
         style={{
           height, overflow: 'auto', padding: '16px 24px',
-          background: '#fff', color: '#1a1a1a', fontSize: 14, lineHeight: 1.7,
+          background: '#fff', color: '#1a1a1a', fontSize: 13, lineHeight: 1.6,
         }}
         dangerouslySetInnerHTML={{ __html: htmlContent || '' }}
       />
     )
   }
 
-  // XLSX: 안내 메시지
-  return (
-    <div style={{
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      height, gap: 12, color: '#64748b', fontSize: 12, padding: 24, textAlign: 'center',
-    }}>
-      <span style={{ fontSize: 32, opacity: 0.5 }}>
-        {DOC_TYPE_CONFIG[docType].icon}
-      </span>
-      <div>
-        <div style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8', marginBottom: 4 }}>{fileName}</div>
-        <div>Excel 파일은 로컬 인라인 미리보기를 지원하지 않습니다.</div>
-        <div style={{ marginTop: 6, color: '#475569' }}>임시 파일이 브라우저 메모리에 저장되었습니다.<br/>최종 저장 시 포함되므로 그대로 두시거나, 필요 시 외부 뷰어를 이용해 주세요.</div>
-      </div>
-    </div>
-  )
+  return <></>
 }
 
 /**

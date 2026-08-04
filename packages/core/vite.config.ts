@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url'
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 
 export default defineConfig({
+  base: process.env.GITHUB_PAGES ? '/AMEVA-Workstation-Web/' : '/',
   plugins: [
     react(),
     VitePWA({
@@ -19,9 +20,14 @@ export default defineConfig({
         display: 'standalone',
         icons: [
           {
-            src: '/favicon.svg',
+            src: '/favicon.png',
             sizes: '192x192',
-            type: 'image/svg+xml'
+            type: 'image/png'
+          },
+          {
+            src: '/favicon.png',
+            sizes: '512x512',
+            type: 'image/png'
           }
         ]
       },

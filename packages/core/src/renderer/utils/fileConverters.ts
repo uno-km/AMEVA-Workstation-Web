@@ -565,7 +565,11 @@ export async function parseFileToMarkdown(content: string, filePath: string, isB
   // base64 이진 파일 디코딩 복원 시도
   let binaryString = ''
   try {
-    binaryString = window.atob(content.replace(/\s/g, ''))
+    let base64Content = content.replace(/\s/g, '')
+    if (base64Content.includes(',')) {
+      base64Content = base64Content.split(',')[1]
+    }
+    binaryString = window.atob(base64Content)
   } catch (e) {
     console.warn('[parseFileToMarkdown] atob 디코딩 실패, 원본 텍스트 폴백 사용:', e)
     return content

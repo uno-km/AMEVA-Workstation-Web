@@ -225,11 +225,11 @@ export function SettingsTabCredentials({ isOpen, activeTab }: SettingsTabCredent
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {[
-          { id: 'gemini', keyName: 'gemini-api-key', label: 'Google Gemini API Key', placeholder: 'AQ.Ab8... 또는 AIzaSy...' },
-          { id: 'openai', keyName: 'openai-api-key', label: 'OpenAI API Key', placeholder: 'sk-...' },
-          { id: 'claude', keyName: 'claude-api-key', label: 'Anthropic Claude API Key', placeholder: 'sk-ant-...' },
-          { id: 'github', keyName: 'github-token', label: 'GitHub Personal Access Token', placeholder: 'ghp_... 또는 github_pat_...' },
-          { id: 'googleClientId', keyName: 'google-client-id', label: 'Google OAuth Client ID', placeholder: '109283748293-...apps.googleusercontent.com' },
+          { id: 'gemini', keyName: 'gemini-api-key', label: 'Google Gemini API Key', placeholder: '1234567890abcdef...' },
+          { id: 'openai', keyName: 'openai-api-key', label: 'OpenAI API Key', placeholder: 'sk-1234567890abcdef...' },
+          { id: 'claude', keyName: 'claude-api-key', label: 'Anthropic Claude API Key', placeholder: 'sk-ant-1234567890abcdef...' },
+          { id: 'github', keyName: 'github-token', label: 'GitHub Personal Access Token', placeholder: 'ghp_1234567890abcdef...' },
+          { id: 'googleClientId', keyName: 'google-client-id', label: 'Google OAuth Client ID', placeholder: '1234567890-abcdef.apps.googleusercontent.com' },
         ].map(cred => {
       /*
        * [RUN-TIME STATE / INVARIANT]
