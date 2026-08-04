@@ -41,7 +41,7 @@ import { BlockNoteEditor } from "@blocknote/core"
  * - AppEditor: 스키마가 반영된 최종 에디터 타입 시그니처.
  */
 import { locales } from '@blocknote/core'
-import { Code, PenTool, Link, Youtube, Map, Presentation, Table, Kanban, FileText } from 'lucide-react'
+import { Code, PenTool, Link, Video, Map, Presentation, Table, Kanban, FileText } from 'lucide-react'
 import { amevaSchema as schema, type AmevaEditor as AppEditor } from '../../editor/amevaBlockSchema'
 
 // 커스텀 블록 Dictionary 확장을 통해 드래그 핸들(::) 메뉴 렌더링 시 React #130 에러(아이콘 undefined) 방지
@@ -52,7 +52,7 @@ const customDictionary = {
     jupyter: { name: 'Jupyter Code', icon: Code },
     drawing: { name: 'Drawing Canvas', icon: PenTool },
     linkPreview: { name: 'Link Preview', icon: Link },
-    youtube: { name: 'YouTube Video', icon: Youtube },
+    youtube: { name: 'YouTube Video', icon: Video },
     map: { name: 'Interactive Map', icon: Map },
     presentation: { name: 'Presentation', icon: Presentation },
     excel: { name: 'Excel Table', icon: Table },
