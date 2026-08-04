@@ -28,6 +28,12 @@ export async function handleBrowserExport(
   blocks: any[]
 ): Promise<string | null> {
   let savedPath: string | null = null
+  let exportBlocks = blocks
+  
+  if (['pdf', 'docx', 'xlsx', 'pptx', 'hwpx'].includes(format)) {
+    const { convertCustomBlocksToImages } = await import('../../../utils/imageExporter')
+    exportBlocks = await convertCustomBlocksToImages(editor.document)
+  }
 
       /*
        * [SWITCH ROUTING CASE]
@@ -43,9 +49,10 @@ export async function handleBrowserExport(
      * - 예시: `case 'md': {` 만족 시 해당 포맷 바이너리 빌더 호출.
      */
     case 'adc': {
-      const md = await editor.blocksToMarkdownLossy(editor.document)
+      const { convertJupyterToCodeBlocks } = await import('../../../utils/markdownUtils')
+      const md = await editor.blocksToMarkdownLossy(convertJupyterToCodeBlocks(editor.document))
       const { packMarkdownToADC } = await import('../../../utils/adcPackager')
-      const blob = await packMarkdownToADC(md)
+      const blob = await packMarkdownToADC(md, undefined)
       triggerBrowserDownload(blob, 'document.adc')
       savedPath = 'document.adc (브라우저 다운로드)'
       break
@@ -96,7 +103,7 @@ export async function handleBrowserExport(
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const html = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-      const html = await blocksToHTML(blocks)
+      const html = await blocksToHTML(exportBlocks)
       /*
        * [RUN-TIME STATE / INVARIANT]
        * - 변수 명: `iframe`
@@ -137,28 +144,28 @@ export async function handleBrowserExport(
      * - 만족 시: 본 케이스 전용 연산을 이행하고 break/return을 거쳐 스위치 게이트를 마감함.
      * - 예시: `case 'docx': triggerBrowserDownload(await exportToWord(blocks), 'document.docx'); savedPath = 'document.docx'; break` 만족 시 해당 포맷 바이너리 빌더 호출.
      */
-    case 'docx': triggerBrowserDownload(await exportToWord(blocks), 'document.docx'); savedPath = 'document.docx'; break
+    case 'docx': triggerBrowserDownload(await exportToWord(exportBlocks), 'document.docx'); savedPath = 'document.docx'; break
     /*
      * [CASE ROUTING DECISION BINDING]
      * - 분기 타겟: `case 'xlsx': triggerBrowserDownload(new Blob([(await exportToExcel(blocks)) as any]), 'tables.xlsx'); savedPath = 'tables.xlsx'; break`
      * - 만족 시: 본 케이스 전용 연산을 이행하고 break/return을 거쳐 스위치 게이트를 마감함.
      * - 예시: `case 'xlsx': triggerBrowserDownload(new Blob([(await exportToExcel(blocks)) as any]), 'tables.xlsx'); savedPath = 'tables.xlsx'; break` 만족 시 해당 포맷 바이너리 빌더 호출.
      */
-    case 'xlsx': triggerBrowserDownload(new Blob([(await exportToExcel(blocks)) as any]), 'tables.xlsx'); savedPath = 'tables.xlsx'; break
+    case 'xlsx': triggerBrowserDownload(new Blob([(await exportToExcel(exportBlocks)) as any]), 'tables.xlsx'); savedPath = 'tables.xlsx'; break
     /*
      * [CASE ROUTING DECISION BINDING]
      * - 분기 타겟: `case 'pptx': triggerBrowserDownload(new Blob([(await exportToPPTX(blocks)) as any]), 'presentation.pptx'); savedPath = 'presentation.pptx'; break`
      * - 만족 시: 본 케이스 전용 연산을 이행하고 break/return을 거쳐 스위치 게이트를 마감함.
      * - 예시: `case 'pptx': triggerBrowserDownload(new Blob([(await exportToPPTX(blocks)) as any]), 'presentation.pptx'); savedPath = 'presentation.pptx'; break` 만족 시 해당 포맷 바이너리 빌더 호출.
      */
-    case 'pptx': triggerBrowserDownload(new Blob([(await exportToPPTX(blocks)) as any]), 'presentation.pptx'); savedPath = 'presentation.pptx'; break
+    case 'pptx': triggerBrowserDownload(new Blob([(await exportToPPTX(exportBlocks)) as any]), 'presentation.pptx'); savedPath = 'presentation.pptx'; break
     /*
      * [CASE ROUTING DECISION BINDING]
      * - 분기 타겟: `case 'hwpx': triggerBrowserDownload(await exportToHWPX(blocks), 'document.hwpx'); savedPath = 'document.hwpx'; break`
      * - 만족 시: 본 케이스 전용 연산을 이행하고 break/return을 거쳐 스위치 게이트를 마감함.
      * - 예시: `case 'hwpx': triggerBrowserDownload(await exportToHWPX(blocks), 'document.hwpx'); savedPath = 'document.hwpx'; break` 만족 시 해당 포맷 바이너리 빌더 호출.
      */
-    case 'hwpx': triggerBrowserDownload(await exportToHWPX(blocks), 'document.hwpx'); savedPath = 'document.hwpx'; break
+    case 'hwpx': triggerBrowserDownload(await exportToHWPX(exportBlocks), 'document.hwpx'); savedPath = 'document.hwpx'; break
     /*
      * [CASE ROUTING DECISION BINDING]
      * - 분기 타겟: `case 'xml': triggerBrowserDownload(exportToXML(blocks), 'document.xml'); savedPath = 'document.xml'; break`

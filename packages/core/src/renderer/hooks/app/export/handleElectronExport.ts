@@ -31,6 +31,12 @@ export async function handleElectronExport(
   dynamicFileName: string = 'document'
 ): Promise<string | null> {
   let savedPath: string | null = null
+  let exportBlocks = blocks
+  
+  if (['pdf', 'docx', 'xlsx', 'pptx', 'hwpx'].includes(format)) {
+    const { convertCustomBlocksToImages } = await import('../../../utils/imageExporter')
+    exportBlocks = await convertCustomBlocksToImages(editor.document)
+  }
 
       /*
        * [SWITCH ROUTING CASE]
@@ -49,7 +55,7 @@ export async function handleElectronExport(
       setP(40, 'AMEVA 파일 컴파일 중...')
       const md = await editor.blocksToMarkdownLossy(convertJupyterToCodeBlocks(editor.document))
       const { packMarkdownToADC } = await import('../../../utils/adcPackager')
-      const blob = await packMarkdownToADC(md)
+      const blob = await packMarkdownToADC(md, undefined)
       const arrayBuffer = await blob.arrayBuffer()
       const uint8Array = new Uint8Array(arrayBuffer)
       // Base64 인코딩 후 전달
@@ -122,7 +128,7 @@ export async function handleElectronExport(
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const html = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-      const html = await blocksToHTML(blocks)
+      const html = await blocksToHTML(exportBlocks)
       setP(50, 'PDF 렌더링 (Chromium)...')
       savedPath = await ipc.printToPDF(html)
       break
@@ -142,7 +148,7 @@ export async function handleElectronExport(
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const res = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-      const res = await ipc.exportConvert({ blocks, format: 'docx', defaultName: dynamicFileName })
+      const res = await ipc.exportConvert({ blocks: exportBlocks, format: 'docx', defaultName: dynamicFileName })
       savedPath = res.success ? (res.savedPath ?? null) : null
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -169,7 +175,7 @@ export async function handleElectronExport(
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const res = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-      const res = await ipc.exportConvert({ blocks, format: 'xlsx', defaultName: dynamicFileName })
+      const res = await ipc.exportConvert({ blocks: exportBlocks, format: 'xlsx', defaultName: dynamicFileName })
       savedPath = res.success ? (res.savedPath ?? null) : null
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -196,7 +202,7 @@ export async function handleElectronExport(
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const res = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-      const res = await ipc.exportConvert({ blocks, format: 'pptx', defaultName: dynamicFileName })
+      const res = await ipc.exportConvert({ blocks: exportBlocks, format: 'pptx', defaultName: dynamicFileName })
       savedPath = res.success ? (res.savedPath ?? null) : null
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -223,7 +229,7 @@ export async function handleElectronExport(
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const res = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-      const res = await ipc.exportConvert({ blocks, format: 'hwpx', defaultName: dynamicFileName })
+      const res = await ipc.exportConvert({ blocks: exportBlocks, format: 'hwpx', defaultName: dynamicFileName })
       savedPath = res.success ? (res.savedPath ?? null) : null
       /*
        * [ALGORITHM BRANCH / DECISION]

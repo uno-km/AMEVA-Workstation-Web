@@ -281,7 +281,10 @@ export function useAppFileOperations(
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const markdown = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-    const markdown = await parseFileToMarkdown(rawContent, path, isBinary)
+    const parsedResult = await parseFileToMarkdown(rawContent, path, isBinary)
+    const isAdc = typeof parsedResult !== 'string' && parsedResult && 'markdown' in parsedResult
+    const markdown = isAdc ? (parsedResult as any).markdown : parsedResult
+    const sourceBlocks = isAdc ? (parsedResult as any).blocks : undefined
       /*
        * [RUN-TIME STATE / INVARIANT]
        * - 변수 명: `normalized`
@@ -297,7 +300,7 @@ export function useAppFileOperations(
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const newBlocks = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-    const newBlocks = await targetEditor.tryParseMarkdownToBlocks(normalized)
+    const newBlocks = sourceBlocks || await targetEditor.tryParseMarkdownToBlocks(normalized)
     cleanCodeBlocks(newBlocks)
     ensureBlockIds(newBlocks)
 
@@ -367,7 +370,10 @@ export function useAppFileOperations(
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const markdown = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-    const markdown = await parseFileToMarkdown(fileContent, path, isBinary)
+    const parsedResult = await parseFileToMarkdown(fileContent, path, isBinary)
+    const isAdc = typeof parsedResult !== 'string' && parsedResult && 'markdown' in parsedResult
+    const markdown = isAdc ? (parsedResult as any).markdown : parsedResult
+    const sourceBlocks = isAdc ? (parsedResult as any).blocks : undefined
     const converted = convertLocalPathsToMediaSchema(markdown)
     const normalized = normalizeMarkdown(converted)
       /*
@@ -377,7 +383,7 @@ export function useAppFileOperations(
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const parsed = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-    const parsed = await targetEditor.tryParseMarkdownToBlocks(normalized)
+    const parsed = sourceBlocks || await targetEditor.tryParseMarkdownToBlocks(normalized)
     cleanCodeBlocks(parsed)
     ensureBlockIds(parsed)
 
@@ -733,7 +739,7 @@ export function useAppFileOperations(
               savedPath = savedPath.split('.').slice(0, -1).join('.') + '.adc'
             }
 
-            const blob = await packMarkdownToADC(markdown)
+            const blob = await packMarkdownToADC(markdown, undefined, editor.document)
             const arrayBuffer = await blob.arrayBuffer()
             const contentToSave = await arrayBufferToBase64(arrayBuffer)
 
@@ -772,7 +778,7 @@ export function useAppFileOperations(
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const blob = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-          const blob = await packMarkdownToADC(markdown)
+          const blob = await packMarkdownToADC(markdown, undefined, editor.document)
           triggerBrowserDownload(blob, (filePath ? filePath.split('.').slice(0, -1).join('.') : 'document') + '.adc')
           return
         }

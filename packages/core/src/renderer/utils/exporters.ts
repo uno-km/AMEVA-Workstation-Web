@@ -125,6 +125,17 @@ function inlineToHTML(inline: NormalizedInlineContent[]): string {
 // ══════════════════════════════════════════════════════════════
 // 1. HTML 내보내기
 // ══════════════════════════════════════════════════════════════
+function parseAmevaBlockData(raw: any): any {
+  if (typeof raw !== 'string') return raw
+  const cleaned = raw.replace(/^\/\/\s*\[AMEVA_LANG:[a-zA-Z0-9_-]+\]\s*/, '').trim()
+  if (!cleaned) return {}
+  try {
+    return JSON.parse(cleaned)
+  } catch (e) {
+    return {}
+  }
+}
+
 export async function blocksToHTML(rawBlocks: any): Promise<string> {
   const blocks: NormalizedBlock[] = Array.isArray(rawBlocks) ? rawBlocks : []
 
@@ -302,7 +313,7 @@ export async function blocksToHTML(rawBlocks: any): Promise<string> {
              const mapDataStr = getPlainTextFromNormalized(block) || '{}'
              const jsonMatch = mapDataStr.match(/\{.*\}/s)
              if (jsonMatch) {
-               const mapData = JSON.parse(jsonMatch[0])
+               const mapData = parseAmevaBlockData(jsonMatch[0])
                const lat = mapData.lat || '37.5665'
                const lng = mapData.lng || '126.9780'
                const name = mapData.locationName || '지도 위치'
@@ -322,7 +333,7 @@ export async function blocksToHTML(rawBlocks: any): Promise<string> {
         if (lang === 'ameva-excel') {
           const excelDataRaw = getPlainTextFromNormalized(block) || '[]'
           try {
-            const sheets = JSON.parse(excelDataRaw)
+            const sheets = parseAmevaBlockData(excelDataRaw)
             if (Array.isArray(sheets) && sheets.length > 0) {
               let html = ''
               for (const sheet of sheets) {
@@ -373,7 +384,7 @@ export async function blocksToHTML(rawBlocks: any): Promise<string> {
         if (lang === 'ameva-kanban') {
           const kanbanDataRaw = getPlainTextFromNormalized(block) || '{}'
           try {
-            const board = JSON.parse(kanbanDataRaw)
+            const board = parseAmevaBlockData(kanbanDataRaw)
             const cols = board.columns || []
             if (cols.length === 0) return `<p><em>(Empty Kanban Board)</em></p>\n`
             
@@ -563,7 +574,7 @@ export async function blocksToHTML(rawBlocks: any): Promise<string> {
       case 'excel': {
         const excelDataRaw = block.props?.data || '[]'
         try {
-          const sheets = typeof excelDataRaw === 'string' ? JSON.parse(excelDataRaw) : excelDataRaw
+          const sheets = typeof excelDataRaw === 'string' ? parseAmevaBlockData(excelDataRaw) : excelDataRaw
           const sheetArr = Array.isArray(sheets) ? sheets : [sheets]
           if (sheetArr.length === 0) return `<p><em>(Empty Excel Block)</em></p>\n`
           let html = ''
@@ -618,7 +629,7 @@ export async function blocksToHTML(rawBlocks: any): Promise<string> {
       case 'kanban': {
         const kanbanRaw = block.props?.data || '{}'
         try {
-          const board = typeof kanbanRaw === 'string' ? JSON.parse(kanbanRaw) : kanbanRaw
+          const board = typeof kanbanRaw === 'string' ? parseAmevaBlockData(kanbanRaw) : kanbanRaw
           const cols = board.columns || []
           if (cols.length === 0) return `<p><em>(Empty Kanban Board)</em></p>\n`
           let html = `<div style="margin-bottom:1.5rem">`

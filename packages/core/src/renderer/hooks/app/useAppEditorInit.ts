@@ -40,12 +40,26 @@ import { BlockNoteEditor } from "@blocknote/core"
  * - schema: Jupyter 코드블록, Live HTML Sandbox, Drawing 캔버스를 포함한 AMEVA 커스텀 스키마.
  * - AppEditor: 스키마가 반영된 최종 에디터 타입 시그니처.
  */
+import { locales } from '@blocknote/core'
+import { Code, PenTool, Link, Youtube, Map, Presentation, Table, Kanban, FileText } from 'lucide-react'
 import { amevaSchema as schema, type AmevaEditor as AppEditor } from '../../editor/amevaBlockSchema'
 
-/* 
- * [ELECTRON IPC COOPERATION]
- * - ipc: 윈도우 로드 완료 통보(`appReady`) 채널 어댑터.
- */
+// 커스텀 블록 Dictionary 확장을 통해 드래그 핸들(::) 메뉴 렌더링 시 React #130 에러(아이콘 undefined) 방지
+const customDictionary = {
+  ...locales.en.dictionary,
+  block: {
+    ...locales.en.dictionary.block,
+    jupyter: { name: 'Jupyter Code', icon: Code },
+    drawing: { name: 'Drawing Canvas', icon: PenTool },
+    linkPreview: { name: 'Link Preview', icon: Link },
+    youtube: { name: 'YouTube Video', icon: Youtube },
+    map: { name: 'Interactive Map', icon: Map },
+    presentation: { name: 'Presentation', icon: Presentation },
+    excel: { name: 'Excel Table', icon: Table },
+    kanban: { name: 'Kanban Board', icon: Kanban },
+    inlineDocument: { name: 'Inline Document', icon: FileText },
+  }
+} as any
 import * as ipc from '../../services/ipc/electronApiAdapter'
 import { resolveLocalMediaUrl } from '../../utils/markdownUtils'
 
@@ -188,6 +202,7 @@ export function useAppEditorInit({
     if (ydoc && provider && isActive) {
       activeEditor = BlockNoteEditor.create({
         schema,
+        dictionary: customDictionary,
         collaboration: {
           provider,
           fragment: ydoc.getXmlFragment('document-store'),
@@ -200,6 +215,7 @@ export function useAppEditorInit({
     else {
       activeEditor = BlockNoteEditor.create({
         schema,
+        dictionary: customDictionary,
         uploadFile: uploadFileHandler,
       })
     }

@@ -178,7 +178,7 @@ export async function packMarkdownToADC(markdown: string, metadata?: any): Promi
   return await zip.generateAsync({ type: 'blob' })
 }
 
-export async function unpackADCToMarkdown(arrayBuffer: ArrayBuffer): Promise<string> {
+export async function unpackADCToMarkdown(arrayBuffer: ArrayBuffer): Promise<{ markdown: string, blocks?: any[] }> {
   const zip = await JSZip.loadAsync(arrayBuffer)
   const docFile = zip.file('document.md')
   if (!docFile) {
@@ -232,7 +232,7 @@ export async function unpackADCToMarkdown(arrayBuffer: ArrayBuffer): Promise<str
     }
   }
   
-  return markdown
+  return { markdown, blocks: undefined }
 }
 
 // 헬퍼: 확장자에 따른 MIME 타입 검출
