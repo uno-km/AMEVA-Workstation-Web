@@ -16,8 +16,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import * as pdfjsLib from 'pdfjs-dist'
-// @ts-ignore
-import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url'
+import PdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?worker'
 import {
   ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw,
   Download, Maximize2, Minimize2, FileText, Search,
@@ -28,10 +27,8 @@ import { usePdfAnnotations } from '../hooks/usePdfAnnotations'
 import type { AnnotationTool } from '../hooks/usePdfAnnotations'
 import { uint8ArrayToBase64 } from '../utils/pdfAnnotationWriter'
 
-// [FIX-CSP-001] PDF Worker CSP 대응 (Blob Module Worker)
-const workerBlob = new Blob([`import '${pdfWorkerUrl}';`], { type: 'application/javascript' })
-const workerBlobUrl = URL.createObjectURL(workerBlob)
-pdfjsLib.GlobalWorkerOptions.workerPort = new Worker(workerBlobUrl, { type: 'module' })
+// [FIX-CSP-001] PDF Worker CSP 대응 (Vite 기본 worker 활용)
+pdfjsLib.GlobalWorkerOptions.workerPort = new PdfWorker()
 
 interface PdfViewerProps {
   /** base64 인코딩된 PDF 데이터 또는 URL */

@@ -417,6 +417,8 @@ function OfficeDocViewer({ sourceUrl, docType, fileName, height }: {
     )
     return (
       <div
+        onMouseMove={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
         style={{
           height, overflow: 'auto', padding: '16px 24px',
           background: '#fff', color: '#1a1a1a', fontSize: 14, lineHeight: 1.7,

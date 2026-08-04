@@ -171,6 +171,20 @@ export function convertJupyterToCodeBlocks(blocks: any[]): any[] {
       copy.props = {
         language: 'ameva-kanban'
       }
+    } else if (copy.type === 'inlineDocument') {
+      copy.type = 'codeBlock'
+      const docData = JSON.stringify({
+        fileName: copy.props?.fileName || '',
+        fileBase64: copy.props?.fileBase64 || '',
+        docType: copy.props?.docType || 'unknown',
+        height: copy.props?.height || '420',
+        sourceUrl: copy.props?.sourceUrl || '',
+        isExpanded: copy.props?.isExpanded || 'false',
+      })
+      copy.content = [{ type: 'text', text: docData, styles: {} }]
+      copy.props = {
+        language: 'ameva-document'
+      }
     } else if (copy.children) {
       copy.children = convertJupyterToCodeBlocks(copy.children)
     }
@@ -263,7 +277,7 @@ export function cleanCodeBlocks(blocks: any[]) {
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const supportedLangs = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-  const supportedLangs = ['python', 'py', 'javascript', 'js', 'html', 'css', 'c', 'cpp', 'java', 'xml', 'json', 'text', 'txt', 'plaintext', 'mermaid', 'bash', 'sh', 'typescript', 'ts', 'sql', 'ameva-drawing', 'ameva-map', 'ameva-youtube', 'ameva-link', 'ameva-presentation', 'ameva-excel', 'ameva-kanban']
+  const supportedLangs = ['python', 'py', 'javascript', 'js', 'html', 'css', 'c', 'cpp', 'java', 'xml', 'json', 'text', 'txt', 'plaintext', 'mermaid', 'bash', 'sh', 'typescript', 'ts', 'sql', 'ameva-drawing', 'ameva-map', 'ameva-youtube', 'ameva-link', 'ameva-presentation', 'ameva-excel', 'ameva-kanban', 'ameva-document']
   blocks.forEach(block => {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -477,6 +491,27 @@ export function cleanCodeBlocks(blocks: any[]) {
         block.content = undefined
         return
       }
+
+      if (lang === 'ameva-document') {
+        block.type = 'inlineDocument'
+        try {
+          const parsed = JSON.parse(finalCode)
+          block.props = {
+            fileName: parsed.fileName || '',
+            fileBase64: parsed.fileBase64 || '',
+            docType: parsed.docType || 'unknown',
+            height: parsed.height || '420',
+            sourceUrl: parsed.sourceUrl || '',
+            isExpanded: parsed.isExpanded || 'false',
+          }
+        } catch (err) {
+          console.error('[cleanCodeBlocks] Failed to parse ameva-document json:', err)
+          block.props = { fileName: 'Unknown Document', fileBase64: '', docType: 'unknown', height: '420', sourceUrl: '', isExpanded: 'false' }
+        }
+        block.content = undefined
+        return
+      }
+
 
       if (lang === 'ameva-presentation') {
         block.type = 'presentation'
