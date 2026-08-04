@@ -60,7 +60,7 @@ export function WelcomeBanner({
       }}>
         <div style={{ zIndex: 2 }}>
           <h1 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 6px 0', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            🚀 AMEVA Workstation Guide Book
+            <img src="/favicon.png" alt="AMEVA Logo" style={{ width: '24px', height: '24px', objectFit: 'contain' }} /> AMEVA Workstation Guide Book
           </h1>
           <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
             아메바 워크스테이션에 오신 것을 환영합니다! 아래는 손실 없이 완전히 렌더링된 공식 안내 백서입니다.<br />

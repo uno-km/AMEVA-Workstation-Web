@@ -347,6 +347,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
         {docType !== 'pdf' && docType !== 'pptx' && hasFile && (
           <OfficeDocViewer
             sourceUrl={props.sourceUrl}
+            fileBase64={props.fileBase64}
             docType={docType}
             fileName={props.fileName}
             height={viewHeight}
@@ -357,6 +358,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
         {docType === 'pptx' && hasFile && (
           <PptxMiniViewer
             sourceUrl={props.sourceUrl}
+            fileBase64={props.fileBase64}
             height={viewHeight}
           />
         )}
@@ -374,7 +376,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
 }
 
 /** PPTX Viewer (pptx-preview 기반 렌더링) */
-function PptxMiniViewer({ sourceUrl, height }: { sourceUrl: string; height: number }) {
+function PptxMiniViewer({ sourceUrl, fileBase64, height }: { sourceUrl: string; fileBase64?: string; height: number }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -395,6 +397,13 @@ function PptxMiniViewer({ sourceUrl, height }: { sourceUrl: string; height: numb
         } else if (sourceUrl.startsWith('blob:')) {
           const res = await fetch(sourceUrl)
           arrayBuffer = await res.arrayBuffer()
+        } else if (fileBase64) {
+          const cleanBase64 = fileBase64.includes(',') ? fileBase64.split(',')[1] : fileBase64
+          const binaryString = atob(cleanBase64.replace(/\s/g, ''))
+          const len = binaryString.length
+          const bytes = new Uint8Array(len)
+          for (let i = 0; i < len; i++) bytes[i] = binaryString.charCodeAt(i)
+          arrayBuffer = bytes.buffer
         } else {
           throw new Error('Local file only')
         }
@@ -437,15 +446,15 @@ function PptxMiniViewer({ sourceUrl, height }: { sourceUrl: string; height: numb
   )
 }
 
-/** Office 문서 뷰어 (DOCX → mammoth.js HTML, XLSX → 안내문구) */
-function OfficeDocViewer({ sourceUrl, docType, fileName, height }: {
-  sourceUrl: string; docType: DocType; fileName: string; height: number
+/** Office 문서 뷰어 (DOCX → mammoth.js HTML, XLSX → exceljs HTML) */
+function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, height }: {
+  sourceUrl: string; fileBase64?: string; docType: DocType; fileName: string; height: number
 }) {
   const [htmlContent, setHtmlContent] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (docType !== 'docx') {
+    if (docType !== 'docx' && docType !== 'xlsx') {
       setLoading(false)
       return
     }
@@ -461,6 +470,13 @@ function OfficeDocViewer({ sourceUrl, docType, fileName, height }: {
         } else if (sourceUrl.startsWith('blob:')) {
           const res = await fetch(sourceUrl)
           arrayBuffer = await res.arrayBuffer()
+        } else if (fileBase64) {
+          const cleanBase64 = fileBase64.includes(',') ? fileBase64.split(',')[1] : fileBase64
+          const binaryString = atob(cleanBase64.replace(/\s/g, ''))
+          const len = binaryString.length
+          const bytes = new Uint8Array(len)
+          for (let i = 0; i < len; i++) bytes[i] = binaryString.charCodeAt(i)
+          arrayBuffer = bytes.buffer
         } else {
           throw new Error('Local file only')
         }

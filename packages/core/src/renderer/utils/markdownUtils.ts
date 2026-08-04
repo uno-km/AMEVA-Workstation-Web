@@ -72,7 +72,7 @@ export function convertJupyterToCodeBlocks(blocks: any[]): any[] {
        * - 예시 코드: `const dataText = ...` 형태로 안전 캐싱 후 가공 기동.
        */
       const dataText = copy.props?.data || '[]'
-      copy.content = [{ type: 'text', text: dataText, styles: {} }]
+      copy.content = [{ type: 'text', text: `// [AMEVA_LANG:ameva-drawing]\n${dataText}`, styles: {} }]
       copy.props = {
         language: 'ameva-drawing'
       }
@@ -92,7 +92,7 @@ export function convertJupyterToCodeBlocks(blocks: any[]): any[] {
         routeType: copy.props?.routeType || 'none',
         routingEngine: copy.props?.routingEngine || 'osrm'
       })
-      copy.content = [{ type: 'text', text: mapData, styles: {} }]
+      copy.content = [{ type: 'text', text: `// [AMEVA_LANG:ameva-map]\n${mapData}`, styles: {} }]
       copy.props = {
         language: 'ameva-map'
       }
@@ -118,7 +118,7 @@ export function convertJupyterToCodeBlocks(blocks: any[]): any[] {
         description: copy.props?.description || '동영상 설명을 불러오려면 클릭하세요.',
         thumbnail: copy.props?.thumbnail || ''
       })
-      copy.content = [{ type: 'text', text: ytData, styles: {} }]
+      copy.content = [{ type: 'text', text: `// [AMEVA_LANG:ameva-youtube]\n${ytData}`, styles: {} }]
       copy.props = {
         language: 'ameva-youtube'
       }
@@ -141,7 +141,7 @@ export function convertJupyterToCodeBlocks(blocks: any[]): any[] {
         description: copy.props?.description || '',
         thumbnail: copy.props?.thumbnail || ''
       })
-      copy.content = [{ type: 'text', text: linkData, styles: {} }]
+      copy.content = [{ type: 'text', text: `// [AMEVA_LANG:ameva-link]\n${linkData}`, styles: {} }]
       copy.props = {
         language: 'ameva-link'
       }
@@ -153,21 +153,21 @@ export function convertJupyterToCodeBlocks(blocks: any[]): any[] {
         fallback: copy.props?.fallback || false,
         slidesText: copy.props?.slidesText || '[]'
       })
-      copy.content = [{ type: 'text', text: presentationData, styles: {} }]
+      copy.content = [{ type: 'text', text: `// [AMEVA_LANG:ameva-presentation]\n${presentationData}`, styles: {} }]
       copy.props = {
         language: 'ameva-presentation'
       }
     } else if (copy.type === 'excel') {
       copy.type = 'codeBlock'
       const excelData = copy.props?.data || '[]'
-      copy.content = [{ type: 'text', text: excelData, styles: {} }]
+      copy.content = [{ type: 'text', text: `// [AMEVA_LANG:ameva-excel]\n${excelData}`, styles: {} }]
       copy.props = {
         language: 'ameva-excel'
       }
     } else if (copy.type === 'kanban') {
       copy.type = 'codeBlock'
       const kanbanData = copy.props?.data || '{}'
-      copy.content = [{ type: 'text', text: kanbanData, styles: {} }]
+      copy.content = [{ type: 'text', text: `// [AMEVA_LANG:ameva-kanban]\n${kanbanData}`, styles: {} }]
       copy.props = {
         language: 'ameva-kanban'
       }
@@ -181,7 +181,7 @@ export function convertJupyterToCodeBlocks(blocks: any[]): any[] {
         sourceUrl: copy.props?.sourceUrl || '',
         isExpanded: copy.props?.isExpanded || 'false',
       })
-      copy.content = [{ type: 'text', text: docData, styles: {} }]
+      copy.content = [{ type: 'text', text: `// [AMEVA_LANG:ameva-document]\n${docData}`, styles: {} }]
       copy.props = {
         language: 'ameva-document'
       }

@@ -136,12 +136,14 @@ export function Sidebar() {
       <div style={{ padding: '16px 16px 12px', display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--border-muted)', flexShrink: 0 }}>
         <div style={{
           width: '30px', height: '30px', borderRadius: '8px',
-          background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: '#fff', fontWeight: 900, fontSize: '14px',
           boxShadow: '0 0 12px var(--primary-glow)',
           flexShrink: 0,
-        }}>A</div>
+          overflow: 'hidden',
+          background: 'transparent',
+        }}>
+          <img src="/favicon.png" alt="AMEVA Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+        </div>
         <div>
           <div style={{ fontSize: '14px', fontWeight: 800, letterSpacing: '0.3px' }}>
             AMEVA <span style={{ color: 'var(--primary)' }}>Workstation</span>
