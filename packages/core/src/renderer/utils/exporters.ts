@@ -297,6 +297,26 @@ export async function blocksToHTML(rawBlocks: any): Promise<string> {
         if (lang === 'ameva-presentation') {
            return `<div style="padding: 15px; margin-bottom: 1rem; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px;"><h4 style="color: #334155;">📊 [프레젠테이션 슬라이드]</h4><p style="font-size: 13px; color: #64748b; margin-top: 5px;">* 이 문서는 워드 내보내기 시 인라인 슬라이드 출력이 지원되지 않습니다.</p></div>\n`
         }
+        if (lang === 'ameva-map') {
+           try {
+             const mapDataStr = getPlainTextFromNormalized(block) || '{}'
+             const jsonMatch = mapDataStr.match(/\{.*\}/s)
+             if (jsonMatch) {
+               const mapData = JSON.parse(jsonMatch[0])
+               const lat = mapData.lat || '37.5665'
+               const lng = mapData.lng || '126.9780'
+               const name = mapData.locationName || '지도 위치'
+               // OpenStreetMap Static Map API
+               const mapImgUrl = `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lng}&zoom=17&size=800x400&markers=${lat},${lng}`
+               return `<figure style="text-align: center; margin: 2rem 0; page-break-inside: avoid;">
+                 <img src="${mapImgUrl}" style="max-width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);" alt="Map" />
+                 <figcaption style="margin-top: 0.5rem; font-size: 14px; color: #64748b; font-weight: 500;">📍 ${escapeHtml(name)}</figcaption>
+               </figure>\n`
+             }
+           } catch (e) {
+             console.error('Map parsing failed:', e)
+           }
+        }
 
         // INTERCEPT AMEVA-EXCEL
         if (lang === 'ameva-excel') {
@@ -672,15 +692,87 @@ ${body}
 // 2. Word (DOCX) 브라우저 폴백 내보내기
 // ══════════════════════════════════════════════════════════════
 export async function exportToWord(rawBlocks: any): Promise<Blob> {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `html`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const html = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-  const html = await blocksToHTML(rawBlocks)
-  return new Blob([html], { type: 'application/msword' })
+  const blocks: NormalizedBlock[] = Array.isArray(rawBlocks) ? rawBlocks : []
+  try {
+    const docx = await import('docx')
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel } = docx
+    
+    const children: any[] = []
+    
+    for (const block of blocks) {
+      const text = getPlainTextFromNormalized(block.content)
+      
+      if (block.type === 'heading') {
+        const level = block.props.level || 1
+        let headingLevel = HeadingLevel.HEADING_1
+        if (level === 2) headingLevel = HeadingLevel.HEADING_2
+        else if (level === 3) headingLevel = HeadingLevel.HEADING_3
+        
+        children.push(
+          new Paragraph({
+            text,
+            heading: headingLevel,
+            spacing: { before: 240, after: 120 }
+          })
+        )
+      } else if (block.type === 'paragraph') {
+        if (text.trim()) {
+          children.push(
+            new Paragraph({
+              children: [new TextRun(text)],
+              spacing: { after: 120 }
+            })
+          )
+        }
+      } else if (block.type === 'bulletListItem') {
+        children.push(
+          new Paragraph({
+            text,
+            bullet: { level: 0 },
+            spacing: { after: 120 }
+          })
+        )
+      } else if (block.type === 'numberedListItem') {
+        // 간이 구현: 숫자는 docx에서 Numbering 설정을 따로 해야 하므로 텍스트로 처리
+        children.push(
+          new Paragraph({
+            text: '1. ' + text,
+            spacing: { after: 120 }
+          })
+        )
+      } else if (block.type === 'image') {
+        // 이미지 처리 로직은 복잡하므로 간단히 텍스트 대체
+        children.push(
+          new Paragraph({
+            text: '[이미지가 포함되었습니다]',
+            spacing: { after: 120 }
+          })
+        )
+      } else {
+        // Fallback
+        children.push(
+          new Paragraph({
+            text: `[지원되지 않는 블록: ${block.type}]`,
+            spacing: { after: 120 }
+          })
+        )
+      }
+    }
+    
+    const doc = new Document({
+      sections: [{
+        properties: {},
+        children
+      }]
+    })
+    
+    return await Packer.toBlob(doc)
+  } catch (err) {
+    console.error('Word export failed:', err)
+    // 에러 발생 시 원본 HTML 폴백
+    const html = await blocksToHTML(rawBlocks)
+    return new Blob([html], { type: 'application/msword' })
+  }
 }
 
 // ══════════════════════════════════════════════════════════════

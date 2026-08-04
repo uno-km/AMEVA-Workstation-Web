@@ -46,8 +46,7 @@ export async function handleBrowserExport(
       const md = await editor.blocksToMarkdownLossy(editor.document)
       const { packMarkdownToADC } = await import('../../../utils/adcPackager')
       const blob = await packMarkdownToADC(md)
-      const url = URL.createObjectURL(blob)
-      triggerBrowserDownload(url, 'document.adc')
+      triggerBrowserDownload(blob, 'document.adc')
       savedPath = 'document.adc (브라우저 다운로드)'
       break
     }
