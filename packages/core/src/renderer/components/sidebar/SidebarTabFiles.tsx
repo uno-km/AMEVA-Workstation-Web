@@ -26,6 +26,7 @@ import type { EditorMode, ExportFormat } from '../../../shared/types'
 import type { HotkeyConfig } from '../SettingsModal'
 
 const EXPORT_FORMATS: { format: ExportFormat; label: string; color?: string }[] = [
+  { format: 'adc',  label: 'AMEVA File (.adc)', color: 'var(--primary)' },
   { format: 'md',   label: 'Markdown (.md)' },
   { format: 'html', label: 'HTML' },
   { format: 'pdf',  label: 'PDF' },
@@ -426,14 +427,20 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
             {EXPORT_FORMATS.map(({ format, label, color }) => (
               <button
                 key={format}
-                className="btn btn-glass"
                 style={{
-                  justifyContent: 'flex-start', fontSize: '12px', padding: '7px 12px',
+                  padding: '10px 12px', textAlign: 'left', borderRadius: '6px',
+                  background: 'var(--bg-card)', border: '1px solid var(--border-subtle)',
+                  fontSize: '13px', color: color || 'var(--text-main)', cursor: 'pointer', transition: 'all 0.2s',
                   borderColor: color || undefined,
                 }}
                 onClick={() => handleExportClick(format)}
               >
                 {label}
+                {format === 'adc' && (
+                  <div style={{ marginTop: '4px', fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                    이 파일로 저장하면 깨짐없이 모두 저장가능하고 언제든 다시 완벽하게 열기가능합니다.
+                  </div>
+                )}
               </button>
             ))}
           </div>

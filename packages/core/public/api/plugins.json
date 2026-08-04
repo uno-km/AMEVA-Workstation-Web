@@ -1,0 +1,42 @@
+[
+  {
+    "id": "ameva-python-advanced",
+    "name": "AMEVA Python Core",
+    "description": "파이썬 데이터 분석 및 시각화 강력 지원, 로컬 샌드박스 완벽 호환",
+    "version": "1.2.0",
+    "author": "AMEVA Team",
+    "icon": "box"
+  },
+  {
+    "id": "mcp-agent-orchestrator",
+    "name": "MCP 오케스트레이터",
+    "description": "다중 에이전트 작업 분배 및 워크플로우 자동 스케줄링",
+    "version": "0.9.5",
+    "author": "AMEVA Team",
+    "icon": "cpu"
+  },
+  {
+    "id": "ui-dark-nebula",
+    "name": "Dark Nebula 테마",
+    "description": "눈이 편안한 심해 우주 테마, AMOLED 디스플레이 최적화",
+    "version": "2.0.1",
+    "author": "Community",
+    "icon": "palette"
+  },
+  {
+    "id": "ai-doc-summarizer",
+    "name": "문서 자동 요약 AI",
+    "description": "긴 HWP, PDF 문서를 3줄로 자동 요약해주는 플러그인",
+    "version": "1.0.4",
+    "author": "AMEVA AI",
+    "icon": "file-text"
+  },
+  {
+    "id": "db-sql-visualizer",
+    "name": "SQL 시각화 도구",
+    "description": "복잡한 SQL 쿼리 결과를 예쁜 차트와 그래프로 즉시 변환",
+    "version": "3.1.2",
+    "author": "Data Geeks",
+    "icon": "database"
+  }
+]

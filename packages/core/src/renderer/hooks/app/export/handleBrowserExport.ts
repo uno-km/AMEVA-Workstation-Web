@@ -42,6 +42,15 @@ export async function handleBrowserExport(
      * - 만족 시: 본 케이스 전용 연산을 이행하고 break/return을 거쳐 스위치 게이트를 마감함.
      * - 예시: `case 'md': {` 만족 시 해당 포맷 바이너리 빌더 호출.
      */
+    case 'adc': {
+      const md = await editor.blocksToMarkdownLossy(editor.document)
+      const { packMarkdownToADC } = await import('../../../utils/adcPackager')
+      const blob = await packMarkdownToADC(md)
+      const url = URL.createObjectURL(blob)
+      triggerBrowserDownload(url, 'document.adc')
+      savedPath = 'document.adc (브라우저 다운로드)'
+      break
+    }
     case 'md': {
       /*
        * [RUN-TIME STATE / INVARIANT]

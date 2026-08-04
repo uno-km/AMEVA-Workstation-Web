@@ -584,14 +584,8 @@ export function useAppFileOperations(
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const arrBuffer = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-                const arrBuffer = binEvt.target?.result as ArrayBuffer
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `base64`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 예시 코드: `const base64 = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-                const base64 = await arrayBufferToBase64(arrBuffer)
+
+                const base64 = binEvt.target?.result as string
       /*
        * [ALGORITHM BRANCH / DECISION]
        * - 조건 식: `fileOpenMode === 'append'`
@@ -608,7 +602,7 @@ export function useAppFileOperations(
                   await loadMarkdownIntoEditor(editor, base64, true, file.name)
                 }
               }
-              binReader.readAsArrayBuffer(file)
+              binReader.readAsDataURL(file)
             } else {
       /*
        * [ALGORITHM BRANCH / DECISION]

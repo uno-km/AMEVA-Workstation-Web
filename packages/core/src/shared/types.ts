@@ -19,7 +19,7 @@
 
 export type EditorMode = 'edit' | 'preview' | 'raw' | 'welcome' | 'kanban'
 
-export type ExportFormat = 'md' | 'pdf' | 'docx' | 'xlsx' | 'pptx' | 'hwpx' | 'html' | 'xml'
+export type ExportFormat = 'md' | 'pdf' | 'docx' | 'xlsx' | 'pptx' | 'hwpx' | 'html' | 'xml' | 'adc'
 
 export interface DocumentSnapshot {
   id: string

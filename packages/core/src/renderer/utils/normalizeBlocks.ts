@@ -272,7 +272,8 @@ export function normalizeBlocks(input: any): NormalizedBlock[] {
 
 /** NormalizedBlock에서 plain text 추출 */
 export function getPlainTextFromNormalized(block: NormalizedBlock): string {
-  return block.content.map(c => c.text).join('')
+  if (!block || !Array.isArray(block.content)) return ''
+  return block.content.map(c => c.text || '').join('')
 }
 
 /** NormalizedInlineContent[]에서 plain text 추출 */

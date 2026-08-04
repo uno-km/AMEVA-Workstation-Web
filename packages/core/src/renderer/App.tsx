@@ -521,6 +521,7 @@ export default function App() {
       settings, handleUpdateSettings, handleInstallPlugin, handleUninstallPlugin,
       handleOpenGithub, handleCloseApp, handleToggleFullscreen, handleZoomIn, handleZoomOut, handleZoomReset,
       editor, editorMode, setEditorMode, handleSwitchMode, handleStartWelcomeEdit, handleStartNewDocument,
+      loadMarkdownIntoEditor,
       handleOpenFile, handleSaveFile, handleSaveAsFile, handleExport,
       snapshots, createSnapshot, deleteSnapshot, handleSelectSnapshotForDiff, handleRollback, getLineDiff,
       peers, serverRunning, serverPort, setServerPort, serverHost, setServerHost,

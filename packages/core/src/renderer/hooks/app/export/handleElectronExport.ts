@@ -45,6 +45,24 @@ export async function handleElectronExport(
      * - 만족 시: 본 케이스 전용 연산을 이행하고 break/return을 거쳐 스위치 게이트를 마감함.
      * - 예시: `case 'md': {` 만족 시 해당 포맷 바이너리 빌더 호출.
      */
+    case 'adc': {
+      setP(40, 'AMEVA 파일 컴파일 중...')
+      const md = await editor.blocksToMarkdownLossy(convertJupyterToCodeBlocks(editor.document))
+      const { packMarkdownToADC } = await import('../../../utils/adcPackager')
+      const blob = await packMarkdownToADC(md)
+      const arrayBuffer = await blob.arrayBuffer()
+      const uint8Array = new Uint8Array(arrayBuffer)
+      // Base64 인코딩 후 전달
+      let binaryString = ''
+      for (let i = 0; i < uint8Array.length; i++) binaryString += String.fromCharCode(uint8Array[i])
+      const base64Content = btoa(binaryString)
+      setP(65, '저장 대화상자 열기...')
+      savedPath = await ipc.saveExportedFile(
+        base64Content, true, dynamicFileName.endsWith('.adc') ? dynamicFileName : dynamicFileName.replace(/\.[^/.]+$/, "") + '.adc',
+        [{ name: 'AMEVA Document', extensions: ['adc'] }]
+      )
+      break
+    }
     case 'md': {
       setP(40, 'Markdown 생성 중...')
       /*

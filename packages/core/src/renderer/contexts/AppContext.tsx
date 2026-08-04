@@ -66,6 +66,7 @@ export interface AppContextType {
   handleSwitchMode: (mode: EditorMode) => void
   handleStartWelcomeEdit: () => void
   handleStartNewDocument: () => void
+  loadMarkdownIntoEditor: (targetEditor: any, rawContent: string, isBinary: boolean, path: string) => Promise<void>
 
   // ── [3. File Operations] 물리 디스크 I/O ──
   handleOpenFile: () => void

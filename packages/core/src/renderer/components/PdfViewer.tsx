@@ -37,13 +37,15 @@ interface PdfViewerProps {
   fileName?: string
   /** 닫기/뒤로가기 콜백 (선택) */
   onClose?: () => void
+  /** AMEVA 문서로 변환 콜백 (선택) */
+  onConvertToAmeva?: () => void
 }
 
 /**
  * PDF 뷰어 - Canvas 직접 렌더링 방식
  * Adobe/알씨 수준의 레이아웃 보존 뷰어
  */
-export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose }: PdfViewerProps) {
+export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConvertToAmeva }: PdfViewerProps) {
   const [pdf, setPdf] = useState<any>(null)
   const [numPages, setNumPages] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
@@ -555,8 +557,32 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose }: PdfVi
 
         {/* 다운로드 */}
         <button style={btnStyle} onClick={handleDownload} title="PDF 다운로드">
-          <Download size={13} />
+          <Download size={14} />
         </button>
+
+        {onConvertToAmeva && (
+          <>
+            <div style={divider} />
+            <button
+              style={{
+                ...btnStyle,
+                width: 'auto',
+                padding: '0 10px',
+                background: 'rgba(168, 85, 247, 0.15)',
+                color: '#d8b4fe',
+                borderColor: 'rgba(168, 85, 247, 0.3)',
+                fontWeight: 600,
+                fontSize: '11px',
+                gap: '6px'
+              }}
+              onClick={onConvertToAmeva}
+              title="이 PDF 파일의 텍스트를 파싱하여 아메바 문서로 변환합니다"
+            >
+              <FileText size={12} />
+              아메바 문서로 작업하기
+            </button>
+          </>
+        )}
 
         {/* 전체화면 */}
         <button style={btnStyle} onClick={handleFullscreen} title="전체화면">
