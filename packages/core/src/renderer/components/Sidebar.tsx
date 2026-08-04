@@ -142,7 +142,7 @@ export function Sidebar() {
           overflow: 'hidden',
           background: 'transparent',
         }}>
-          <img src="/favicon.png" alt="AMEVA Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+          <img src={`${import.meta.env.BASE_URL}favicon.png`} alt="AMEVA Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         </div>
         <div>
           <div style={{ fontSize: '14px', fontWeight: 800, letterSpacing: '0.3px' }}>
