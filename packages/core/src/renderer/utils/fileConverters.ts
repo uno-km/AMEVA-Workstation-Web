@@ -39,8 +39,10 @@ import * as pdfjsLib from 'pdfjs-dist'
 // @ts-ignore
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url'
 
-// Worker CSP 대응 (Main thread fallback)
-pdfjsLib.GlobalWorkerOptions.workerSrc = ''
+// Worker CSP 대응 (Blob Module Worker)
+const workerBlob = new Blob([`import '${pdfWorkerUrl}';`], { type: 'application/javascript' })
+const workerBlobUrl = URL.createObjectURL(workerBlob)
+pdfjsLib.GlobalWorkerOptions.workerPort = new Worker(workerBlobUrl, { type: 'module' })
 
 /**
  * [CONTRACT - ArrayBuffer to Base64 String]

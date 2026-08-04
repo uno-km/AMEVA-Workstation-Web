@@ -28,8 +28,10 @@ import { usePdfAnnotations } from '../hooks/usePdfAnnotations'
 import type { AnnotationTool } from '../hooks/usePdfAnnotations'
 import { uint8ArrayToBase64 } from '../utils/pdfAnnotationWriter'
 
-// [FIX-CSP-001] PDF Worker CSP 대응 (Main thread fallback)
-pdfjsLib.GlobalWorkerOptions.workerSrc = ''
+// [FIX-CSP-001] PDF Worker CSP 대응 (Blob Module Worker)
+const workerBlob = new Blob([`import '${pdfWorkerUrl}';`], { type: 'application/javascript' })
+const workerBlobUrl = URL.createObjectURL(workerBlob)
+pdfjsLib.GlobalWorkerOptions.workerPort = new Worker(workerBlobUrl, { type: 'module' })
 
 interface PdfViewerProps {
   /** base64 인코딩된 PDF 데이터 또는 URL */

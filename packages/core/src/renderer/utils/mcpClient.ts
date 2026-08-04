@@ -94,67 +94,8 @@ export class MCPClientManager {
 
   /** 로컬 설정 로드 */
   static loadConfigs(): MCPServerConfig[] {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `isPro`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const isPro = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-    const isPro = typeof localStorage !== 'undefined' && localStorage.getItem('is-pro-plan') === 'true'
-    
-    // 기본 로컬 WASM 게이트웨이는 플랜과 무관하게 상시 존재
-    const defaultGateway: MCPServerConfig = {
-      id: 'mcp-wasm-gateway',
-      name: 'AMEVA OS WASM Gateway',
-      type: 'http',
-      url: 'http://127.0.0.1:11553/mcp',
-      enabled: true
-    }
-
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `!isPro`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (!isPro)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-    if (!isPro) {
-      // 무료 플랜일 경우 외부 추가 Stdio 서버들은 로드하지 않고 기본 로컬 게이트웨이만 허용
-      this.servers = [defaultGateway]
-      return this.servers
-    }
-
-    try {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `stored`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const stored = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-      const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('mcp-servers-config') : null
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `stored`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (stored)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-      if (stored) {
-        this.servers = JSON.parse(stored)
-        // 로드된 설정에 mcp-wasm-gateway가 누락되어 있다면 병합 보정
-        if (!this.servers.find(s => s.id === 'mcp-wasm-gateway')) {
-          this.servers.unshift(defaultGateway)
-        }
-      } else {
-        this.servers = [defaultGateway]
-        this.saveConfigs()
-      }
-    } catch (e) {
-      console.error('[MCPClientManager] 설정 로드 오류:', e)
-      this.servers = [defaultGateway]
-    }
+    // [UPDATE] MCP 기능 전면 제한 (모든 조건 무시)
+    this.servers = []
     return this.servers
   }
 

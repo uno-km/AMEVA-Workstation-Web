@@ -219,21 +219,43 @@ export function SettingsTabMCP({ isOpen }: SettingsTabMCPProps) {
 
   return (
     <>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-        <h3 style={{ fontSize: '13px', fontWeight: 700, margin: 0 }}>MCP Server Manager</h3>
-        <button
-          onClick={refreshMcpTools}
-          style={{
-            fontSize: '10px', color: 'var(--primary)', background: 'none',
-            border: 'none', cursor: 'pointer', fontWeight: 700, padding: 0
-          }}
-        >
-          새로고침 🔄
-        </button>
+      {/* MCP 기능 제한 안내 배너 */}
+      <div style={{
+        padding: '16px',
+        background: 'rgba(239,68,68,0.1)',
+        border: '1px solid rgba(239,68,68,0.3)',
+        borderRadius: '8px',
+        color: '#f87171',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        marginBottom: '16px'
+      }}>
+        <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+          ⚠️ MCP(Machine Communication Protocol) 기능 제한
+        </div>
+        <div style={{ fontSize: '13px', opacity: 0.9, lineHeight: 1.5 }}>
+          현재 보안 및 안정성 정책에 따라 MCP 기능이 <strong>전면 비활성화(사용 제한)</strong> 처리되어 있습니다.<br/>
+          로컬 노드 및 백그라운드 통신 연동이 모두 차단됩니다.
+        </div>
       </div>
-      <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>
-        외부 Stdio 자식 프로세스 또는 HTTP API 게이트웨이 기반의 MCP 도구(Tools) 서버를 하드코딩 없이 통합 제어합니다.
-      </div>
+      
+      <div style={{ opacity: 0.3, pointerEvents: 'none', filter: 'grayscale(1)', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+          <h3 style={{ fontSize: '13px', fontWeight: 700, margin: 0 }}>MCP Server Manager</h3>
+          <button
+            onClick={refreshMcpTools}
+            style={{
+              fontSize: '10px', color: 'var(--primary)', background: 'none',
+              border: 'none', cursor: 'pointer', fontWeight: 700, padding: 0
+            }}
+          >
+            새로고침 🔄
+          </button>
+        </div>
+        <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>
+          외부 Stdio 자식 프로세스 또는 HTTP API 게이트웨이 기반의 MCP 도구(Tools) 서버를 하드코딩 없이 통합 제어합니다.
+        </div>
 
       {/* 1. MCP 추가 폼 */}
       <div style={{
@@ -442,6 +464,7 @@ export function SettingsTabMCP({ isOpen }: SettingsTabMCPProps) {
             })}
           </div>
         )}
+      </div>
       </div>
     </>
   )

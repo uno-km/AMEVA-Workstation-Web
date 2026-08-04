@@ -23,8 +23,10 @@ import { saveAttachment, getAttachment } from '../utils/vfsDatabase'
 // @ts-ignore
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url'
 
-// Worker CSP 대응 (Main thread fallback)
-pdfjsLib.GlobalWorkerOptions.workerSrc = ''
+// Worker CSP 대응 (Blob Module Worker)
+const workerBlob = new Blob([`import '${pdfWorkerUrl}';`], { type: 'application/javascript' })
+const workerBlobUrl = URL.createObjectURL(workerBlob)
+pdfjsLib.GlobalWorkerOptions.workerPort = new Worker(workerBlobUrl, { type: 'module' })
 
 type DocType = 'pdf' | 'pptx' | 'docx' | 'xlsx' | 'unknown'
 
@@ -467,7 +469,35 @@ export const InlineDocumentBlockSpec = createReactBlockSpec(
           [AMEVA Document: {block.props.fileName || block.props.docType}]
         </a>
       )
-    }
+    },
+    parseHTML: [
+      {
+        tag: 'a',
+        getAttrs: (element) => {
+          if (typeof element === 'string') return false
+          const text = element.textContent || ''
+          if (!text.startsWith('[AMEVA Document:')) return false
+          
+          const href = element.getAttribute('href') || ''
+          const fileName = text.replace('[AMEVA Document: ', '').replace(']', '').trim()
+          
+          let docType = 'unknown'
+          if (fileName.toLowerCase().endsWith('.pdf')) docType = 'pdf'
+          else if (fileName.toLowerCase().endsWith('.docx')) docType = 'docx'
+          else if (fileName.toLowerCase().endsWith('.pptx')) docType = 'pptx'
+          else if (fileName.toLowerCase().endsWith('.xlsx')) docType = 'xlsx'
+
+          return {
+            sourceUrl: href === '#' ? '' : href,
+            fileName: fileName,
+            docType: docType,
+            isExpanded: 'false',
+            height: '420',
+            fileBase64: ''
+          }
+        }
+      }
+    ]
   }
 )
 

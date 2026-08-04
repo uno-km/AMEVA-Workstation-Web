@@ -365,14 +365,7 @@ export function MarketplaceModal({
     }
   }, [isOpen])
 
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `!isOpen`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (!isOpen)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-  if (!isOpen) return null
+
 
       /*
        * [RUN-TIME STATE / INVARIANT]
@@ -465,6 +458,8 @@ export function MarketplaceModal({
     { id: 'feature', label: 'Features' },
     { id: 'collab', label: 'Collab' },
   ]
+
+  if (!isOpen) return null
 
   return (
     <FreeModal
