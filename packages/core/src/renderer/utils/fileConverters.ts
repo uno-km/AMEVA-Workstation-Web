@@ -363,7 +363,7 @@ export async function convertMarkdownToBinary(editorInstance: any, filePath: str
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const html = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-    const html = blocksToHTML(rawBlocks)
+    const html = await blocksToHTML(rawBlocks)
       /*
        * [ALGORITHM BRANCH / DECISION]
        * - 조건 식: `ipc.isElectronEnv()`
@@ -597,6 +597,11 @@ export async function parseFileToMarkdown(content: string, filePath: string, isB
        */
   const arrayBuffer = bytes.buffer
   
+  // PPTX 파일의 경우 텍스트 파싱을 시도하지 않고 안내 메시지 반환
+  if (['pptx', 'ppt'].includes(ext)) {
+    return 'PowerPoint 파일은 인라인 뷰어로 표시됩니다. 에디터에서 `/ppt` 명령어를 사용하거나 화면에 끌어다 놓으세요.'
+  }
+
   // 1) DOCX Mammoth 디코더 + XML 태그 백업 복원 라우팅
   if (ext === 'docx') {
     try {

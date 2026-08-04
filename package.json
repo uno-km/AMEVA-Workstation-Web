@@ -5,6 +5,10 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "npm run dev -w @ameva/core"
+    "dev": "npm run dev -w @ameva/core",
+    "build": "npm run build -w @ameva/core"
+  },
+  "dependencies": {
+    "pptx-preview": "^1.0.7"
   }
 }

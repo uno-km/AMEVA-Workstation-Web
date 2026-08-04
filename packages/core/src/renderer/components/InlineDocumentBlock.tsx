@@ -343,8 +343,8 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
           />
         )}
 
-        {/* Office 파일 → mammoth.js(docx) 또는 iframe (PPTX/XLSX는 Google Viewer로 폴백) */}
-        {docType !== 'pdf' && hasFile && (
+        {/* Office 파일 (Word, Excel) → mammoth.js(docx) 또는 iframe (XLSX 안내문구) */}
+        {docType !== 'pdf' && docType !== 'pptx' && hasFile && (
           <OfficeDocViewer
             sourceUrl={props.sourceUrl}
             docType={docType}
@@ -352,6 +352,15 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
             height={viewHeight}
           />
         )}
+
+        {/* PowerPoint 파일 → pptx-preview 렌더러 */}
+        {docType === 'pptx' && hasFile && (
+          <PptxMiniViewer
+            sourceUrl={props.sourceUrl}
+            height={viewHeight}
+          />
+        )}
+
         {docType !== 'pdf' && hasUrl && (
           <iframe
             src={`https://docs.google.com/viewer?url=${encodeURIComponent(props.sourceUrl)}&embedded=true`}
@@ -364,7 +373,71 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
   )
 }
 
-/** Office 문서 뷰어 (DOCX → mammoth.js HTML, PPTX/XLSX → Google Docs Viewer 폴백) */
+/** PPTX Viewer (pptx-preview 기반 렌더링) */
+function PptxMiniViewer({ sourceUrl, height }: { sourceUrl: string; height: number }) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    setLoading(true)
+    setError(null)
+
+    const loadPptx = async () => {
+      try {
+        let arrayBuffer: ArrayBuffer
+        if (sourceUrl.startsWith('ameva-vfs://')) {
+          const fileId = sourceUrl.replace('ameva-vfs://', '')
+          const blob = await getAttachment(fileId)
+          if (!blob) throw new Error('VFS_EXPIRED')
+          arrayBuffer = await blob.arrayBuffer()
+        } else if (sourceUrl.startsWith('blob:')) {
+          const res = await fetch(sourceUrl)
+          arrayBuffer = await res.arrayBuffer()
+        } else {
+          throw new Error('Local file only')
+        }
+
+        if (cancelled || !containerRef.current) return
+
+        const pptxjs = await import('pptx-preview')
+        const previewer = pptxjs.init(containerRef.current, {
+          width: 800,
+          height: 600,
+          autoScale: true
+        })
+        
+        await previewer.preview(arrayBuffer)
+        setLoading(false)
+      } catch (e: any) {
+        if (!cancelled) {
+          setError(e.message === 'VFS_EXPIRED' ? '임시 파일이 만료되었거나 로드에 실패했습니다.' : 'PPTX 로드 실패')
+          setLoading(false)
+        }
+      }
+    }
+
+    if (sourceUrl) loadPptx()
+    return () => { cancelled = true }
+  }, [sourceUrl])
+
+  return (
+    <div style={{ position: 'relative', width: '100%', height, background: '#f8fafc', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {loading && <div style={{ color: '#94a3b8', fontSize: 13 }}>PowerPoint 로드 중...</div>}
+      {error && <div style={{ color: '#ef4444', fontSize: 13 }}>{error}</div>}
+      <div 
+        ref={containerRef} 
+        style={{ width: '100%', height: '100%', display: (loading || error) ? 'none' : 'block' }}
+        onMouseMove={e => e.stopPropagation()}
+        onMouseDown={e => e.stopPropagation()}
+        onMouseUp={e => e.stopPropagation()}
+      />
+    </div>
+  )
+}
+
+/** Office 문서 뷰어 (DOCX → mammoth.js HTML, XLSX → 안내문구) */
 function OfficeDocViewer({ sourceUrl, docType, fileName, height }: {
   sourceUrl: string; docType: DocType; fileName: string; height: number
 }) {
@@ -434,7 +507,7 @@ function OfficeDocViewer({ sourceUrl, docType, fileName, height }: {
     )
   }
 
-  // PPTX / XLSX: 안내 메시지 (로컬 파일은 Google Viewer 불가 → 외부 뷰어 권장)
+  // XLSX: 안내 메시지
   return (
     <div style={{
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -445,7 +518,7 @@ function OfficeDocViewer({ sourceUrl, docType, fileName, height }: {
       </span>
       <div>
         <div style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8', marginBottom: 4 }}>{fileName}</div>
-        <div>{docType === 'pptx' ? 'PowerPoint' : 'Excel'} 파일은 로컬 인라인 미리보기를 지원하지 않습니다.</div>
+        <div>Excel 파일은 로컬 인라인 미리보기를 지원하지 않습니다.</div>
         <div style={{ marginTop: 6, color: '#475569' }}>임시 파일이 브라우저 메모리에 저장되었습니다.<br/>최종 저장 시 포함되므로 그대로 두시거나, 필요 시 외부 뷰어를 이용해 주세요.</div>
       </div>
     </div>

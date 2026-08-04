@@ -4,7 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite --port 8888"
+    "dev": "vite --port 8888",
+    "build": "tsc && vite build"
   },
   "dependencies": {
     "@babel/standalone": "^8.0.4",

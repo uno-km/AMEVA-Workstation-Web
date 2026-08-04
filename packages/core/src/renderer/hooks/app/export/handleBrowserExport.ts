@@ -69,7 +69,7 @@ export async function handleBrowserExport(
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const html = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-      const html = blocksToHTML(blocks)
+      const html = await blocksToHTML(blocks)
       triggerBrowserDownload(html, 'document.html')
       savedPath = 'document.html (브라우저 다운로드)'
       break
@@ -88,7 +88,7 @@ export async function handleBrowserExport(
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const html = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-      const html = blocksToHTML(blocks)
+      const html = await blocksToHTML(blocks)
       /*
        * [RUN-TIME STATE / INVARIANT]
        * - 변수 명: `iframe`

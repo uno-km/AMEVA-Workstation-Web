@@ -125,7 +125,7 @@ function inlineToHTML(inline: NormalizedInlineContent[]): string {
 // ══════════════════════════════════════════════════════════════
 // 1. HTML 내보내기
 // ══════════════════════════════════════════════════════════════
-export function blocksToHTML(rawBlocks: any): string {
+export async function blocksToHTML(rawBlocks: any): Promise<string> {
   const blocks: NormalizedBlock[] = Array.isArray(rawBlocks) ? rawBlocks : []
 
       /*
@@ -195,7 +195,7 @@ export function blocksToHTML(rawBlocks: any): string {
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const renderBlock = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-  const renderBlock = (block: NormalizedBlock, depth = 0): string => {
+  const renderBlock = async (block: NormalizedBlock, depth = 0): Promise<string> => {
       /*
        * [RUN-TIME STATE / INVARIANT]
        * - 변수 명: `indent`
@@ -253,7 +253,7 @@ export function blocksToHTML(rawBlocks: any): string {
      */
       case 'bulletListItem':
         return `<li${indent}>${contentHtml}${
-          block.children?.length ? `<ul>${block.children.map(c => renderBlock(c, depth + 1)).join('')}</ul>` : ''
+          block.children?.length ? `<ul>${(await Promise.all(block.children.map(c => renderBlock(c, depth + 1)))).join('')}</ul>` : ''
         }</li>\n`
     /*
      * [CASE ROUTING DECISION BINDING]
@@ -263,7 +263,7 @@ export function blocksToHTML(rawBlocks: any): string {
      */
       case 'numberedListItem':
         return `<li${indent}>${contentHtml}${
-          block.children?.length ? `<ol>${block.children.map(c => renderBlock(c, depth + 1)).join('')}</ol>` : ''
+          block.children?.length ? `<ol>${(await Promise.all(block.children.map(c => renderBlock(c, depth + 1)))).join('')}</ol>` : ''
         }</li>\n`
     /*
      * [CASE ROUTING DECISION BINDING]
@@ -274,6 +274,22 @@ export function blocksToHTML(rawBlocks: any): string {
       case 'codeBlock': {
         const lang = block.props?.language || ''
         
+        // INTERCEPT MERMAID
+        if (lang === 'mermaid') {
+          const code = getPlainTextFromNormalized(block) || ''
+          try {
+            const mermaidModule = await import('mermaid')
+            const mermaid = mermaidModule.default || mermaidModule
+            mermaid.initialize({ startOnLoad: false })
+            const id = `mermaid-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`
+            const { svg } = await mermaid.render(id, code)
+            return `<div style="text-align: center; margin: 1.5rem 0;">${svg}</div>\n`
+          } catch (e) {
+            console.error('Failed to render mermaid for export', e)
+            return `<pre><code class="language-mermaid">${escapeHtml(code)}</code></pre>\n`
+          }
+        }
+
         // INTERCEPT AMEVA-EXCEL
         if (lang === 'ameva-excel') {
           const excelDataRaw = getPlainTextFromNormalized(block) || '[]'
@@ -598,39 +614,18 @@ export function blocksToHTML(rawBlocks: any): string {
     }
   }
 
-  blocks.forEach((block) => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `block.type === 'bulletListItem'`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (block.type === 'bulletListItem')` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
+  for (const block of blocks) {
     if (block.type === 'bulletListItem') {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `listType !== 'ul') { closeList(`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (listType !== 'ul') { closeList()` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
       if (listType !== 'ul') { closeList(); body += '<ul>\n'; listType = 'ul' }
-      body += renderBlock(block)
+      body += await renderBlock(block)
     } else if (block.type === 'numberedListItem') {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `listType !== 'ol') { closeList(`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (listType !== 'ol') { closeList()` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
       if (listType !== 'ol') { closeList(); body += '<ol>\n'; listType = 'ol' }
-      body += renderBlock(block)
+      body += await renderBlock(block)
     } else {
       closeList()
-      body += renderBlock(block)
+      body += await renderBlock(block)
     }
-  })
+  }
   closeList()
 
   return `<!DOCTYPE html>
@@ -660,7 +655,7 @@ export async function exportToWord(rawBlocks: any): Promise<Blob> {
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const html = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-  const html = blocksToHTML(rawBlocks)
+  const html = await blocksToHTML(rawBlocks)
   return new Blob([html], { type: 'application/msword' })
 }
 
@@ -704,7 +699,7 @@ export async function exportToPPTX(rawBlocks: any): Promise<Uint8Array> {
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const html = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-  const html = blocksToHTML(rawBlocks)
+  const html = await blocksToHTML(rawBlocks)
   return new TextEncoder().encode(html)
 }
 
@@ -719,7 +714,7 @@ export async function exportToHWPX(rawBlocks: any): Promise<Blob> {
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const html = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-  const html = blocksToHTML(rawBlocks)
+  const html = await blocksToHTML(rawBlocks)
   return new Blob([html], { type: 'application/xhtml+xml' })
 }
 
