@@ -141,6 +141,21 @@ export function PluginCard({
           }}>
             {p.type}
           </span>
+          {p.placement && (
+            <span style={{
+              fontSize: '9px',
+              color: p.placement === 'slash-menu' ? '#8b5cf6' : p.placement === 'editor-overlay' ? '#f59e0b' : '#10b981',
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.05)',
+              padding: '1px 5px',
+              borderRadius: '4px',
+              textTransform: 'uppercase',
+              fontWeight: 700,
+              letterSpacing: '0.3px'
+            }}>
+              {p.placement === 'slash-menu' ? '📝 BLOCK' : p.placement === 'editor-overlay' ? '✨ OVERLAY' : '👉 SIDEBAR'}
+            </span>
+          )}
         </div>
         <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: '1.4' }}>
           {parseDescription(p.description)}

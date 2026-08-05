@@ -152,38 +152,11 @@ export function RightTabStrip({}: RightTabStripProps = {}) {
   const { activeRightTab: activeTab, showAIPanel: isOpen, setShowAIPanel, setActiveRightTab, hasChatUnread } = useUIStore();
   const { settings } = useAppContext();
   const canAccessPremium = true;
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `installedPlugins`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const installedPlugins = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
+
   const installedPlugins = settings?.installedPlugins || [];
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `hotkeys`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const hotkeys = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const hotkeys = settings?.hotkeys;
 
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `isDraggingRef`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const isDraggingRef = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const isDraggingRef = useRef(false);
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `dragStartPos`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const dragStartPos = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const dragStartPos = useRef({ x: 0, y: 0 });
 
   const dragListenersRef = useRef<{ move: ((e: MouseEvent) => void) | null, up: (() => void) | null }>({ move: null, up: null });
@@ -199,21 +172,7 @@ export function RightTabStrip({}: RightTabStripProps = {}) {
     x: number; y: number; tabId: string; tabLabel: string
   } | null>(null);
 
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `onToggleTab`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const onToggleTab = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const onToggleTab = (tab: string) => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `isOpen && activeTab === tab`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (isOpen && activeTab === tab)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
     if (isOpen && activeTab === tab) {
       setShowAIPanel(false);
     } else {
@@ -222,21 +181,7 @@ export function RightTabStrip({}: RightTabStripProps = {}) {
     }
   };
 
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `formatHotkey`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const formatHotkey = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const formatHotkey = (raw: string | undefined): string => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `!raw`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (!raw)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
     if (!raw) return '';
     return raw
       .replace('Control', 'Ctrl')
@@ -248,113 +193,70 @@ export function RightTabStrip({}: RightTabStripProps = {}) {
       .join(' + ');
   };
 
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `hkeys`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const hkeys = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const hkeys = hotkeys || {
     save: 'Control+s', open: 'Control+o', newFile: 'Control+n',
     pdfExport: 'Control+p', toggleAI: 'Control+\\', toggleMode: 'Control+h',
     zoomIn: 'Control+=', zoomOut: 'Control+-', zoomReset: 'Control+0'
   };
 
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `isOutlineSubscribed`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const isOutlineSubscribed = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-  const isOutlineSubscribed = installedPlugins.includes('outline');
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `isCalculatorSubscribed`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const isCalculatorSubscribed = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-  const isCalculatorSubscribed = installedPlugins.includes('calculator');
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `isFinanceSubscribed`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const isFinanceSubscribed = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-  const isFinanceSubscribed = installedPlugins.includes('finance-dashboard');
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `isYoutubeSubscribed`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const isYoutubeSubscribed = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-  const isYoutubeSubscribed = installedPlugins.includes('youtube');
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `isCalendarSubscribed`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const isCalendarSubscribed = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-  const isCalendarSubscribed = installedPlugins.includes('calendar');
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `isGoogleDriveSubscribed`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const isGoogleDriveSubscribed = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-  const isGoogleDriveSubscribed = installedPlugins.includes('google-drive');
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `isGoogleMapsSubscribed`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const isGoogleMapsSubscribed = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-  const isGoogleMapsSubscribed = installedPlugins.includes('google-maps') || installedPlugins.includes('GoogleMapsView');
-  const isWebBrowserSubscribed = installedPlugins.includes('web-browser') || installedPlugins.includes('AmevaBrowserView') || installedPlugins.includes('SmartSearchScrap');
-  const isPdfRagSubscribed = installedPlugins.includes('pdf-rag') || installedPlugins.includes('PdfRagPlugin');
-  const isDbExplorerSubscribed = installedPlugins.includes('db-explorer') || installedPlugins.includes('DatabaseExplorerPlugin');
-  const isMindMapSubscribed = installedPlugins.includes('mind-map') || installedPlugins.includes('MindMapPlugin');
-  const isPresentationSubscribed = installedPlugins.includes('presentation') || installedPlugins.includes('PresentationPlugin');
-  const isPomodoroSubscribed = installedPlugins.includes('pomodoro') || installedPlugins.includes('PomodoroPlugin');
-  const isVoiceDictationSubscribed = installedPlugins.includes('voice-dictation') || installedPlugins.includes('VoiceDictationPlugin');
-  const isRestClientSubscribed = installedPlugins.includes('rest-client') || installedPlugins.includes('RestClientPlugin');
-  const isWireframeSubscribed = installedPlugins.includes('wireframe') || installedPlugins.includes('WireframePlugin');
+  const { marketplacePlugins } = useUIStore();
+  
+  // 알려진 플러그인 ID에 대한 아이콘 매핑 (없으면 기본값 Globe 사용)
+  const iconMap: Record<string, any> = {
+    'outline': List,
+    'calculator': Calculator,
+    'finance-dashboard': TrendingUp,
+    'FinanceDashboardView': TrendingUp,
+    'youtube': Play,
+    'calendar': Calendar,
+    'google-drive': HardDrive,
+    'osm-maps': Map,
+    'OpenStreetMapsView': Map,
+    'pdf-rag': FileText,
+    'PdfRagPlugin': FileText,
+    'web-browser': Globe,
+    'AmevaBrowserView': Globe,
+    'SmartSearchScrap': Globe,
+    'db-explorer': Database,
+    'DatabaseExplorerPlugin': Database,
+    'mind-map': Network,
+    'MindMapPlugin': Network,
+    'presentation': MonitorPlay,
+    'PresentationPlugin': MonitorPlay,
+    'pomodoro': Timer,
+    'PomodoroPlugin': Timer,
+    'voice-dictation': Mic,
+    'VoiceDictationPlugin': Mic,
+    'rest-client': Server,
+    'RestClientPlugin': Server,
+    'wireframe': LayoutTemplate,
+    'WireframePlugin': LayoutTemplate,
+  };
 
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `tabs`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const tabs = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-  const tabs = canAccessPremium ? [
-    { id: 'ai', icon: Sparkles, label: 'AI 어시스턴트', badge: hasChatUnread },
-    ...(isOutlineSubscribed ? [{ id: 'outline', icon: List, label: '문서 구조도 (TOC)', badge: false }] : []),
-    ...(isCalculatorSubscribed ? [{ id: 'calculator', icon: Calculator, label: '계산기 도구', badge: false }] : []),
-    ...(isFinanceSubscribed ? [{ id: 'finance', icon: TrendingUp, label: '주식/환율 정보센터', badge: false }] : []),
-    ...(isYoutubeSubscribed ? [{ id: 'youtube', icon: Play, label: 'YouTube 동영상', badge: false }] : []),
-    ...(isCalendarSubscribed ? [{ id: 'calendar', icon: Calendar, label: '스케줄 캘린더', badge: false }] : []),
-    ...(isGoogleDriveSubscribed ? [{ id: 'google-drive', icon: HardDrive, label: '구글 드라이브', badge: false }] : []),
-    ...(isGoogleMapsSubscribed ? [{ id: 'google-maps', icon: Map, label: '구글 지도', badge: false }] : []),
-    ...(isPdfRagSubscribed ? [{ id: 'pdf-rag', icon: FileText, label: 'PDF 문서 대화 (RAG)', badge: false }] : []),
-    ...(isWebBrowserSubscribed ? [{ id: 'web-browser', icon: Globe, label: '검색 및 스크랩 (Smart Search & Scrap)', badge: false }] : []),
-    ...(isDbExplorerSubscribed ? [{ id: 'db-explorer', icon: Database, label: '데이터베이스 탐색기', badge: false }] : []),
-    ...(isMindMapSubscribed ? [{ id: 'mind-map', icon: Network, label: '마인드맵 생성기', badge: false }] : []),
-    ...(isPresentationSubscribed ? [{ id: 'presentation', icon: MonitorPlay, label: '프레젠테이션 모드', badge: false }] : []),
-    ...(isPomodoroSubscribed ? [{ id: 'pomodoro', icon: Timer, label: '집중력 & 뽀모도로', badge: false }] : []),
-    ...(isVoiceDictationSubscribed ? [{ id: 'voice-dictation', icon: Mic, label: '음성 회의록 작성', badge: false }] : []),
-    ...(isRestClientSubscribed ? [{ id: 'rest-client', icon: Server, label: 'REST API 클라이언트', badge: false }] : []),
-    ...(isWireframeSubscribed ? [{ id: 'wireframe', icon: LayoutTemplate, label: 'UI 와이어프레임', badge: false }] : []),
-  ] : [
+  const tabs: any[] = [
     { id: 'ai', icon: Sparkles, label: 'AI 어시스턴트', badge: hasChatUnread },
   ];
+
+  if (canAccessPremium) {
+    installedPlugins.forEach((id) => {
+      // 마켓플레이스 데이터에서 플러그인 정보 찾기
+      const meta = marketplacePlugins.find((p) => p.id === id);
+      
+      // placement가 명시적으로 존재하고 'right-panel'이 아니면 탭에 추가하지 않음
+      if (meta && meta.placement && meta.placement !== 'right-panel') {
+        return;
+      }
+
+      const label = meta ? meta.name : id;
+      const icon = iconMap[id] || Globe;
+      
+      // 중복 추가 방지
+      if (!tabs.find(t => t.id === id)) {
+        tabs.push({ id, icon, label, badge: false });
+      }
+    });
+  }
+
 
       /*
        * [RUN-TIME STATE / INVARIANT]

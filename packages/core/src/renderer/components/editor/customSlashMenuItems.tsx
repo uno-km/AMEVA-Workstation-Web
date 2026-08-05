@@ -260,7 +260,7 @@ export function getCustomSlashMenuItems(editorInstance: AmevaEditor, installedPl
     aliases: ['map', 'googlemap', 'location', '지도'],
     group: 'Maps',
     icon: <Globe size={16} color="#10b981" />,
-    subtext: '구글 지도 임베드 블록 삽입 (/map)',
+    subtext: '오픈스트리트맵 임베드 블록 삽입 (/map)',
   }
 
       /*

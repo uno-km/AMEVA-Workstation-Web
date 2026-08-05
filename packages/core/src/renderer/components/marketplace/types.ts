@@ -26,6 +26,7 @@ export interface PluginMetadata {
   version: string
   type: 'tool' | 'feature' | 'collab' | 'premium'
   isSaaS?: boolean
+  placement?: string
 }
 
 export interface MarketplaceModalProps {

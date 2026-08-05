@@ -330,7 +330,7 @@ export function useEditorDragDrop(
     }
 
     // (2) [FIX-MAP-INSERT-001] 지도 삽입 이벤트 핸들러
-    // - 사이드바 지도 탭(GoogleMapsView)에서 발송되는 app:insert-map 이벤트를 가로채어,
+    // - 사이드바 지도 탭(OpenStreetMapsView)에서 발송되는 app:insert-map 이벤트를 가로채어,
     //   현재 커서 위치 바로 아래에 신규 MapBlock을 생성/인서트한다.
     // - 전달받은 lat, lng, zoom, locationName, destination, legend, memo 속성을 완벽히 병합 전달한다.
     const handleInsertMap = (e: Event) => {

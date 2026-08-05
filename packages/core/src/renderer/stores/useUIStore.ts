@@ -28,6 +28,7 @@
  * - create: Zustand 라이브러리의 불변 상태 트리 스토어 생성 빌더 API.
  */
 import { create } from 'zustand'
+import type { PluginMetadata } from '../components/marketplace/types'
 
 /**
  * UIState 인터페이스 정의.
@@ -214,6 +215,13 @@ export interface UIState {
   dynamicMenus: { id: string; label: string; action: () => void }[]
   addDynamicMenu: (menu: { id: string; label: string; action: () => void }) => void
   removeDynamicMenu: (id: string) => void
+
+  /*
+   * [MARKETPLACE METADATA]
+   * - marketplacePlugins: 동적으로 로드된 전체 플러그인 목록
+   */
+  marketplacePlugins: PluginMetadata[]
+  setMarketplacePlugins: (plugins: PluginMetadata[]) => void
 }
 
 /**
@@ -342,6 +350,9 @@ export const useUIStore = create<UIState>((set, get) => ({
   }),
   removeDynamicMenu: (id) => set((state) => ({
     dynamicMenus: state.dynamicMenus.filter(m => m.id !== id)
-  }))
+  })),
+
+  marketplacePlugins: [],
+  setMarketplacePlugins: (plugins) => set({ marketplacePlugins: plugins })
 }))
 

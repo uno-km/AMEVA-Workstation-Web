@@ -191,43 +191,59 @@ export function useAppBootstrap(
 
   // 4. 설치된 플러그인 지연 로딩 (1200ms 후 병렬 실행)
   useEffect(() => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `!settings.installedPlugins || settings.installedPlugins.length === 0`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (!settings.installedPlugins || settings.installedPlugins.length === 0)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-    if (!settings.installedPlugins || settings.installedPlugins.length === 0) return
-
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `timer`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const timer = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-    const timer = setTimeout(() => {
-      let urlMap: Record<string, string> = {}
+    const fetchAndLoadPlugins = async () => {
       try {
-        urlMap = safeJsonParse(localStorage.getItem('plugin-urls'), {})
-      } catch (e) {}
+        // 1. 마켓플레이스 JSON을 가져옵니다.
+        const res = await fetch(`https://raw.githubusercontent.com/uno-km/AMEVA-Workstation-Market-Place/main/public/api/plugins.json?t=${Date.now()}`)
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const data = await res.json()
+        const baseUrl = 'https://raw.githubusercontent.com/uno-km/AMEVA-Workstation-Market-Place/main/public/'
+        
+        const processedData = data.map((p: any) => {
+          if (p.scriptUrl && !p.scriptUrl.startsWith('http')) p.scriptUrl = baseUrl + p.scriptUrl
+          if (p.previewUrl && !p.previewUrl.startsWith('http')) p.previewUrl = baseUrl + p.previewUrl
+          return p
+        })
+        
+        // 2. 전역 스토어에 세팅 (RightTabStrip, PluginTabPanel 등에서 사용)
+        useUIStore.getState().setMarketplacePlugins(processedData)
+        
+        // 3. 사용자가 구독한 플러그인 로드
+        if (!settings.installedPlugins || settings.installedPlugins.length === 0) return
 
-      settings.installedPlugins!.forEach(async (id) => {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `scriptUrl`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const scriptUrl = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-        const scriptUrl = urlMap[id] || `https://uno-km.github.io/AMEVA-Workstation-Market-Place/plugins/${id}.js`
+        settings.installedPlugins.forEach(async (id) => {
+          const pluginMeta = processedData.find((p: any) => p.id === id)
+          // 마켓플레이스 데이터가 없으면 fallback 사용
+          const scriptUrl = pluginMeta?.scriptUrl || `https://uno-km.github.io/AMEVA-Workstation-Market-Place/plugins/${id}.js`
+          try {
+            await handleInstallPlugin(id, scriptUrl)
+          } catch (e) {
+            console.error(`[useAppBootstrap] 플러그인 '${id}' 자동 활성화 실패:`, e)
+          }
+        })
+      } catch (err) {
+        console.error('[useAppBootstrap] 마켓플레이스 플러그인 정보 로드 실패:', err)
+        
+        // 에러 시 기존 localStorage 방식 fallback
+        if (!settings.installedPlugins || settings.installedPlugins.length === 0) return
+        let urlMap: Record<string, string> = {}
         try {
-          await handleInstallPlugin(id, scriptUrl)
-        } catch (e) {
-          console.error(`[useAppBootstrap] 플러그인 '${id}' 자동 활성화 실패:`, e)
-        }
-      })
+          urlMap = safeJsonParse(localStorage.getItem('plugin-urls'), {})
+        } catch (e) {}
+
+        settings.installedPlugins.forEach(async (id) => {
+          const scriptUrl = urlMap[id] || `https://uno-km.github.io/AMEVA-Workstation-Market-Place/plugins/${id}.js`
+          try {
+            await handleInstallPlugin(id, scriptUrl)
+          } catch (e) {
+            console.error(`[useAppBootstrap] 플러그인 '${id}' 자동 활성화 실패:`, e)
+          }
+        })
+      }
+    }
+
+    const timer = setTimeout(() => {
+      fetchAndLoadPlugins()
     }, 1200)
 
     return () => clearTimeout(timer)

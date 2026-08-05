@@ -18,7 +18,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { Settings, Sliders, Monitor, Move, Bot, ToyBrick, User, Shield, Keyboard, ShieldAlert, Key, Cpu } from 'lucide-react'
+import { Settings, Sliders, Monitor, Move, ToyBrick, User, Shield, Keyboard, ShieldAlert, Key } from 'lucide-react'
 import * as ipc from '../services/ipc/electronApiAdapter'
 import { FreeModal } from './ui/modals/FreeModal'
 import { SettingsTabCredentials } from './settings/SettingsTabCredentials'
@@ -28,19 +28,15 @@ import { SettingsTabGeneral } from './settings/SettingsTabGeneral'
 import { SettingsTabAccount } from './settings/SettingsTabAccount'
 import { SettingsTabPermissions } from './settings/SettingsTabPermissions'
 import { SettingsTabAppearance } from './settings/SettingsTabAppearance'
-import { SettingsTabModels } from './settings/SettingsTabModels'
 import { SettingsTabCustomizations } from './settings/SettingsTabCustomizations'
-
 import { useSettingsDraft } from '../hooks/app/useSettingsDraft'
 import { SettingsTransitionOverlay } from './overlay/SettingsTransitionOverlay'
-import type { AISettings } from '../types/aiTypes'
 
 export interface HotkeyConfig {
   save: string
   open: string
   newFile: string
   pdfExport: string
-  toggleAI: string
   toggleMode: string
   zoomIn: string
   zoomOut: string
@@ -52,7 +48,7 @@ export interface AppSettings {
   showPeersDrag: boolean
   showCodeConsole: boolean
   autoSnapshot: boolean
-  theme: 'dark' | 'gray' | 'white' | 'hacker' | 'nature' | 'win98' | 'neon'
+  theme: 'dark' | 'gray' | 'white' | 'hacker' | 'nature' | 'win98'
   wordWrap: boolean
   showMinimap: boolean
   installedPlugins?: string[]
@@ -64,11 +60,22 @@ export interface AppSettings {
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
-  showPeersPointer: true, showPeersDrag: true, showCodeConsole: true, autoSnapshot: true,
-  theme: 'dark', wordWrap: true, showMinimap: true, installedPlugins: [],
+  showPeersPointer: true,
+  showPeersDrag: false,
+  showCodeConsole: false,
+  autoSnapshot: true,
+  theme: 'dark',
+  wordWrap: true,
+  showMinimap: false,
   hotkeys: {
-    save: 'Control+s', open: 'Control+o', newFile: 'Control+n', pdfExport: 'Control+p',
-    toggleAI: 'Control+\\', toggleMode: 'Control+e', zoomIn: 'Control+=', zoomOut: 'Control+-', zoomReset: 'Control+0'
+    save: 'Control+s',
+    open: 'Control+o',
+    newFile: 'Control+n',
+    pdfExport: 'Control+p',
+    toggleMode: 'Control+e',
+    zoomIn: 'Control+=',
+    zoomOut: 'Control+-',
+    zoomReset: 'Control+0'
   }
 }
 
@@ -77,16 +84,13 @@ interface SettingsModalProps {
   onClose: () => void
   settings: AppSettings
   onUpdateSettings: (newSettings: Partial<AppSettings>) => void
-  aiSettings: AISettings
-  onUpdateAISettings: (newSettings: Partial<AISettings>) => void
   initialTab?: TabType
   username?: string
   userColor?: string
   onUpdateUser?: (name: string, color: string) => void
-  onOpenModelHub?: () => void
 }
 
-type TabType = 'General' | 'AIEngine' | 'Account' | 'Permissions' | 'Appearance' | 'Models' | 'Customizations' | 'Hotkeys' | 'MCP' | 'Credentials'
+type TabType = 'General' | 'Account' | 'Permissions' | 'Appearance' | 'Customizations' | 'Hotkeys' | 'MCP' | 'Credentials'
 
   /*
    * [FUNCTION CONTRACT]
@@ -99,20 +103,15 @@ export function SettingsModal({
   onClose,
   settings,
   onUpdateSettings,
-  aiSettings,
-  onUpdateAISettings,
   initialTab,
   username = 'User',
   userColor = '#a855f7',
   onUpdateUser,
-  onOpenModelHub,
 }: SettingsModalProps) {
-  void { Move, ShieldAlert, onOpenModelHub };
+  void { Move, ShieldAlert };
 
   // 0. 설정 Draft 및 전환 상태
   const { draftSettings, updateDraft, resetDraft, isDirty: isAppDirty } = useSettingsDraft(settings, isOpen)
-  const [draftAISettings, setDraftAISettings] = useState<AISettings>(aiSettings)
-  const [isAIDirty, setIsAIDirty] = useState(false)
   const [isApplying, setIsApplying] = useState(false)
 
   // 2. 활성 탭 상태 (기본 General 또는 initialTab)
@@ -156,35 +155,16 @@ export function SettingsModal({
        * - 예시: `if (isOpen)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
        */
     if (isOpen) {
-      setDraftAISettings(aiSettings)
-      setIsAIDirty(false)
       setTempName(username)
       setTempColor(userColor)
     }
-  }, [isOpen, aiSettings, username, userColor])
-
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `updateDraftAI`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const updateDraftAI = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-  const updateDraftAI = (updates: Partial<AISettings>) => {
-    setDraftAISettings(prev => ({ ...prev, ...updates }))
-    setIsAIDirty(true)
-  }
-
-  // 4. 모델 탭 스캔 상태
-  const [localModels, setLocalModels] = useState<import('../services/ipc/ipcTypes').ModelInfo[]>([])
-  const [localCodeModels, setLocalCodeModels] = useState<import('../services/ipc/ipcTypes').ModelInfo[]>([])
-  const [gpuName, setGpuName] = useState<string | undefined>(undefined)
+  }, [isOpen, username, userColor])
 
   const canUseMCP = true
   const [isFreeModeLocked, setIsFreeModeLocked] = useState(false)
 
   const isUserDirty = tempName !== username || tempColor !== userColor
-  const isAnyDirty = isAppDirty || isAIDirty || isUserDirty
+  const isAnyDirty = isAppDirty || isUserDirty
 
   const handleSaveAndApply = () => {
     if (!isAnyDirty) {
@@ -194,7 +174,6 @@ export function SettingsModal({
     setIsApplying(true)
     setTimeout(() => {
       if (isAppDirty) onUpdateSettings(draftSettings)
-      if (isAIDirty) onUpdateAISettings(draftAISettings)
       if (isUserDirty && onUpdateUser) onUpdateUser(tempName, tempColor)
       setIsApplying(false)
       onClose()
@@ -203,8 +182,6 @@ export function SettingsModal({
 
   const handleCancel = () => {
     resetDraft()
-    setDraftAISettings(aiSettings)
-    setIsAIDirty(false)
     setTempName(username)
     setTempColor(userColor)
     onClose()
@@ -232,94 +209,8 @@ export function SettingsModal({
     }
   }, [isOpen, draftSettings.theme, settings.theme])
 
-  useEffect(() => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `isOpen && ipc.isElectronEnv()`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (isOpen && ipc.isElectronEnv())` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-    if (isOpen && ipc.isElectronEnv()) {
-      Promise.all([
-        ipc.llmListModels('llm').catch(() => []),
-        ipc.llmListModels('code').catch(() => [])
-      ]).then(([llmList, codeList]) => {
-        setLocalModels(llmList)
-        setLocalCodeModels(codeList)
-      })
-
-      ipc.llmGetGpuName?.().then(name => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `name) setGpuName(name`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (name) setGpuName(name)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-        if (name) setGpuName(name)
-      }).catch(() => {})
-    }
-  }, [isOpen, activeTab])
-
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `startModelDownload`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const startModelDownload = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-  const startModelDownload = async (url: string, filename: string, type: 'llm' | 'code') => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `!ipc.isElectronEnv()`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (!ipc.isElectronEnv())` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-    if (!ipc.isElectronEnv()) return
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `store`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const store = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-    const store = (await import('../stores/useProcessStore')).useProcessStore.getState()
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `existing`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const existing = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-    const existing = store.downloadQueue.find((q: any) => q.filename === filename && (q.status === 'pending' || q.status === 'downloading'))
-    
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `existing`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (existing)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-    if (existing) {
-      // 이미 큐에 있음
-      return
-    }
-
-    store.addDownloadToQueue({
-      id: Math.random().toString(36).substring(2, 9),
-      url,
-      filename,
-      type,
-      status: 'pending',
-      progress: 0
-    })
-  }
-
 
   const themes: { id: AppSettings['theme']; label: string; previewColor: string }[] = [
-    { id: 'neon', label: 'Neon (Modern)', previewColor: '#0A0A0A' },
     { id: 'dark', label: 'Dark (Antigravity)', previewColor: '#0a0a0f' },
     { id: 'gray', label: 'Carbon Gray', previewColor: '#1e1e2e' },
     { id: 'white', label: 'Light White', previewColor: '#f3f4f6' },
@@ -465,9 +356,6 @@ export function SettingsModal({
             onUpdateSettings={updateDraft}
           />
 
-          {/* AIEngine Tab */}
-          
-
           {/* Account Tab */}
           <SettingsTabAccount
             activeTab={activeTab}
@@ -494,17 +382,6 @@ export function SettingsModal({
             settings={draftSettings}
             handleThemeChange={(theme) => updateDraft({ theme })}
             themes={themes}
-          />
-
-          {/* Models Tab */}
-          <SettingsTabModels
-            activeTab={activeTab}
-            settings={draftSettings}
-            onUpdateSettings={updateDraft}
-            localModels={localModels}
-            localCodeModels={localCodeModels}
-            formatBytes={formatBytes}
-            startModelDownload={startModelDownload}
           />
 
           {/* Customizations Tab */}
@@ -564,5 +441,5 @@ export { SettingsTabGeneral } from './settings/SettingsTabGeneral'
 export { SettingsTabAccount } from './settings/SettingsTabAccount'
 export { SettingsTabPermissions } from './settings/SettingsTabPermissions'
 export { SettingsTabAppearance } from './settings/SettingsTabAppearance'
-export { SettingsTabModels } from './settings/SettingsTabModels'
 export { SettingsTabCustomizations } from './settings/SettingsTabCustomizations'
+

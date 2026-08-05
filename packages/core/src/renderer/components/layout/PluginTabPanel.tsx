@@ -10,7 +10,7 @@
  * - 설치된 플러그인 목록에 없는 탭이 열리면 graceful fallback을 보여준다.
  */
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import {
   Globe, FileText, Database, Network, MonitorPlay,
   Timer, Mic, Server, LayoutTemplate, Map, HardDrive,
@@ -19,6 +19,7 @@ import {
 import { useUIStore } from '../../stores/useUIStore'
 import { ChatPanel } from '../ChatPanel'
 import { CalculatorPanel } from './CalculatorPanel'
+import { OSMMapView } from './OSMMapView'
 import { useAppContext } from '../../contexts/AppContext'
 
 const PLUGIN_META: Record<string, {
@@ -98,18 +99,18 @@ const PLUGIN_META: Record<string, {
     description: '드래그 앤 드롭 UI 와이어프레임 설계 도구',
     implemented: false,
   },
-  'google-maps': {
-    label: '구글 지도',
+  'osm-maps': {
+    label: '오픈스트리트맵',
     icon: <Map size={24} />,
     color: '#22c55e',
-    description: '구글 지도 임베드 및 위치 검색',
+    description: '오픈스트리트맵 임베드 및 위치 검색',
     implemented: false,
   },
-  'GoogleMapsView': {
-    label: '구글 지도',
+  'OSMMapView': {
+    label: '오픈스트리트맵',
     icon: <Map size={24} />,
     color: '#22c55e',
-    description: '구글 지도 임베드 및 위치 검색',
+    description: '오픈스트리트맵 임베드 및 위치 검색',
     implemented: false,
   },
   'google-drive': {
@@ -164,7 +165,68 @@ export function PluginTabPanel({ tabId }: PluginTabPanelProps) {
     serverRunning
   } = useAppContext()
 
-  const meta = PLUGIN_META[tabId]
+  useEffect(() => {
+    // 탭 변경 시마다 해당 플러그인이 로드되었는지 확인하고 렌더링 시도
+    let attempts = 0
+    const containerId = `plugin-container-${tabId}`
+    
+    const timer = setInterval(() => {
+      attempts++
+      const plugin = (window as any).AMEVA_PLUGINS?.[tabId]
+      
+      if (plugin) {
+        clearInterval(timer)
+        // 컨테이너가 마운트되었는지 확인
+        const container = document.getElementById(containerId)
+        if (container) {
+          if (typeof plugin.render === 'function') {
+            container.innerHTML = '' // 로딩 표시 제거
+            try {
+              plugin.render(containerId)
+            } catch (e) {
+              console.error(`[PluginTabPanel] Error rendering plugin ${tabId}:`, e)
+              container.innerHTML = `<div style="padding: 20px; color: #ef4444; text-align: center; height: 100%; display: flex; align-items: center; justify-content: center;">플러그인 렌더링 오류가 발생했습니다.</div>`
+            }
+          } else {
+            // 렌더 함수가 없는 경우 (예: 순수 백그라운드 기능이거나 미구현 스크립트)
+            if (!plugin.native) {
+              container.innerHTML = `
+                <div style="padding: 20px; color: var(--text-muted); text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+                  <div style="font-size: 32px; margin-bottom: 12px; opacity: 0.8;">🚧</div>
+                  <div style="font-size: 14px; font-weight: 600; color: var(--text-main); margin-bottom: 4px;">개발 중인 기능입니다</div>
+                  <div style="font-size: 12px;">(Coming Soon)</div>
+                </div>
+              `
+            }
+          }
+        }
+      } else if (attempts > 20) { // 10초 타임아웃
+        clearInterval(timer)
+        const container = document.getElementById(containerId)
+        if (container) {
+          container.innerHTML = `<div style="padding: 20px; color: #ef4444; text-align: center; height: 100%; display: flex; align-items: center; justify-content: center;">플러그인 스크립트를 로드할 수 없습니다.</div>`
+        }
+      }
+    }, 500)
+
+    return () => clearInterval(timer)
+  }, [tabId])
+
+  return <PluginTabPanelContent tabId={tabId} />
+}
+
+function PluginTabPanelContent({ tabId }: PluginTabPanelProps) {
+  const { setShowAIPanel, marketplacePlugins } = useUIStore()
+  const {
+    chatMessages,
+    sendChatMessage,
+    clearChatMessages,
+    username,
+    userColor,
+    serverRunning
+  } = useAppContext()
+
+  const meta = marketplacePlugins.find(p => p.id === tabId)
 
   // ai 탭이면 ChatPanel 렌더
   if (tabId === 'ai') {
@@ -185,14 +247,37 @@ export function PluginTabPanel({ tabId }: PluginTabPanelProps) {
     return <CalculatorPanel />
   }
 
+  // 구글 맵스 (기존 AI 패널 하드코딩 제거 후 대체)
+  if (tabId === 'osm-maps') {
+    return (
+      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--bg-deep)', borderLeft: '1px solid var(--border-muted)' }}>
+        <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ color: '#22c55e' }}><Map size={16} /></span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0' }}>OpenStreetMap</span>
+          </div>
+          <button
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+            onClick={() => setShowAIPanel(false)}
+          >
+            <X size={14} />
+          </button>
+        </div>
+        <div style={{ flex: 1, overflow: 'hidden' }}>
+          <OSMMapView />
+        </div>
+      </div>
+    )
+  }
+
   // 구현된 플러그인 탭이면 해당 컴포넌트 렌더 (추후 확장)
   // ...
 
   // 미구현 플러그인 → 준비 중 안내 카드
-  const color = meta?.color || '#8b5cf6'
-  const label = meta?.label || tabId
-  const description = meta?.description || '이 플러그인은 현재 개발 중입니다.'
-  const icon = meta?.icon || <Globe size={24} />
+  const color = '#8b5cf6'
+  const label = meta?.name || tabId
+  const description = meta?.description || '이 플러그인은 현재 로딩 중이거나 개발 중입니다.'
+  const icon = <Globe size={24} />
 
   return (
     <div style={{
@@ -229,17 +314,21 @@ export function PluginTabPanel({ tabId }: PluginTabPanelProps) {
         </button>
       </div>
 
-      {/* 본문 */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 32,
-        gap: 20,
-        textAlign: 'center',
-      }}>
+      {/* 본문 (동적 플러그인 또는 폴백 안내) */}
+      <div 
+        id={`plugin-container-${tabId}`}
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 32,
+          gap: 20,
+          textAlign: 'center',
+          overflow: 'hidden'
+        }}
+      >
         {/* 아이콘 */}
         <div style={{
           width: 72,
@@ -277,12 +366,12 @@ export function PluginTabPanel({ tabId }: PluginTabPanelProps) {
           color,
           letterSpacing: '0.05em',
         }}>
-          🚧 개발 중 (Coming Soon)
+          🚧 로딩 중 (Loading)
         </div>
 
         <div style={{ fontSize: 11, color: '#475569', marginTop: 8 }}>
-          마켓플레이스에서 설치되었으나<br />
-          아직 패널이 준비되지 않은 플러그인입니다.
+          마켓플레이스에서 플러그인을 불러오고 있습니다...<br />
+          잠시만 기다려주세요.
         </div>
       </div>
     </div>
