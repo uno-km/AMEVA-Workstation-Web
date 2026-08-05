@@ -77,10 +77,10 @@ export function AboutModal({ isOpen, onClose, onOpenGithub }: AboutModalProps) {
             </div>
             <div>
               <h2 style={{ fontSize: '20px', fontWeight: 800, letterSpacing: '0.5px' }}>
-                AMEVA <span style={{ color: 'var(--primary)' }}>Model Nexus</span>
+                AMEVA <span style={{ color: 'var(--primary)' }}>Workspace</span>
               </h2>
               <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                Version 1.0.0 (Enterprise Gold Release)
+                Version 1.0.0 (Enterprise Release)
               </p>
             </div>
           </div>

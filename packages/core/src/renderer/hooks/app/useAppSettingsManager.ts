@@ -385,9 +385,9 @@ export function useAppSettingsManager(activeRightTab: string, setActiveRightTab:
        * - 예시: `if (ipc.isElectronEnv())` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
        */
     if (ipc.isElectronEnv()) {
-      ipc.openExternalLink('https://github.com/uno-km/AMEVA-Model-Nexus')
+      ipc.openExternalLink('https://github.com/uno-km')
     } else {
-      window.open('https://github.com/uno-km/AMEVA-Model-Nexus', '_blank', 'noopener,noreferrer')
+      window.open('https://github.com/uno-km', '_blank', 'noopener,noreferrer')
     }
   }
 
