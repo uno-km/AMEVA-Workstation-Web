@@ -230,7 +230,7 @@ export function getCustomSlashMenuItems(editorInstance: AmevaEditor, installedPl
        * - 예시 코드: `const mapItem = ...` 형태로 안전 캐싱 후 가공 기 기동.
        */
   const mapItem = {
-    title: 'Google Map Embed',
+    title: 'OpenStreetMap Embed',
     onItemClick: () => {
       try {
       /*
@@ -257,35 +257,12 @@ export function getCustomSlashMenuItems(editorInstance: AmevaEditor, installedPl
         editorInstance.focus()
       } catch {}
     },
-    aliases: ['map', 'googlemap', 'location', '지도'],
+    aliases: ['map', 'openstreetmap', 'location', '지도', 'osm'],
     group: 'Maps',
     icon: <Globe size={16} color="#10b981" />,
     subtext: '오픈스트리트맵 임베드 블록 삽입 (/map)',
   }
 
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `isKanbanEnabled`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const isKanbanEnabled = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-  let isKanbanEnabled = false
-  try {
-    const storedSaaS = localStorage.getItem('enabled-plugins')
-    if (storedSaaS) {
-      const parsed = JSON.parse(storedSaaS)
-      if (parsed.kanbanBoard) isKanbanEnabled = true
-    }
-  } catch (e) {}
-
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `insertKanbanBlock`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const insertKanbanBlock = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const insertKanbanBlock = () => {
     try {
       /*
@@ -320,7 +297,7 @@ export function getCustomSlashMenuItems(editorInstance: AmevaEditor, installedPl
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const kanbanItems = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-  const kanbanItems = isKanbanEnabled ? [
+  const kanbanItems = [
     {
       title: 'Kanban Board',
       onItemClick: insertKanbanBlock,
@@ -329,7 +306,7 @@ export function getCustomSlashMenuItems(editorInstance: AmevaEditor, installedPl
       icon: <Layout size={16} color="#3b82f6" />,
       subtext: '지라 스타일의 AI 협업 칸반 보드 삽입 (/kanban)',
     }
-  ] : []
+  ]
 
       /*
        * [RUN-TIME STATE / INVARIANT]

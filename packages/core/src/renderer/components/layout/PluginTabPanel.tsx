@@ -189,15 +189,13 @@ export function PluginTabPanel({ tabId }: PluginTabPanelProps) {
             }
           } else {
             // 렌더 함수가 없는 경우 (예: 순수 백그라운드 기능이거나 미구현 스크립트)
-            if (!plugin.native) {
-              container.innerHTML = `
-                <div style="padding: 20px; color: var(--text-muted); text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
-                  <div style="font-size: 32px; margin-bottom: 12px; opacity: 0.8;">🚧</div>
-                  <div style="font-size: 14px; font-weight: 600; color: var(--text-main); margin-bottom: 4px;">개발 중인 기능입니다</div>
-                  <div style="font-size: 12px;">(Coming Soon)</div>
-                </div>
-              `
-            }
+            container.innerHTML = `
+              <div style="padding: 20px; color: var(--text-muted); text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+                <div style="font-size: 32px; margin-bottom: 12px; opacity: 0.8;">🚧</div>
+                <div style="font-size: 14px; font-weight: 600; color: var(--text-main); margin-bottom: 4px;">개발 중인 기능입니다</div>
+                <div style="font-size: 12px;">(Coming Soon)</div>
+              </div>
+            `
           }
         }
       } else if (attempts > 20) { // 10초 타임아웃
