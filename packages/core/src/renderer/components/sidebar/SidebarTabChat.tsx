@@ -35,9 +35,9 @@ export function SidebarTabChat({}: SidebarTabChatProps = {}) {
   const [joinId, setJoinId] = useState('')
 
   const handleGenerateUUID = () => {
-    const newUUID = crypto.randomUUID()
+    const newUUID = crypto.randomUUID().slice(0, 8)
     setDocumentId(newUUID)
-    alert(`새로운 채팅방이 생성되었습니다.\nUUID: ${newUUID}\n클립보드에 복사되었습니다!`)
+    alert(`새로운 채팅방이 생성되었습니다.\n방 코드: ${newUUID}\n클립보드에 복사되었습니다!`)
     navigator.clipboard.writeText(newUUID).catch(() => {})
   }
 
@@ -75,7 +75,7 @@ export function SidebarTabChat({}: SidebarTabChatProps = {}) {
         <div style={{ display: 'flex', gap: '8px' }}>
           <input 
             type="text" 
-            placeholder="참여할 UUID 입력..." 
+            placeholder="참여할 방 코드(8자리) 입력..." 
             value={joinId}
             onChange={(e) => setJoinId(e.target.value)}
             style={{ 
@@ -94,7 +94,7 @@ export function SidebarTabChat({}: SidebarTabChatProps = {}) {
         </div>
 
         <button className="btn btn-glass" onClick={handleGenerateUUID} style={{ fontSize: '12px', width: '100%', justifyContent: 'center' }}>
-          <Key size={14} /> 새 채팅방 개설 (UUID 복사)
+          <Key size={14} /> 새 채팅방 개설 (방 코드 복사)
         </button>
 
         {/* 접속자 목록 (Awareness) */}

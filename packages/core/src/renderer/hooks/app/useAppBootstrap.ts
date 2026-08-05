@@ -250,13 +250,13 @@ export function useAppBootstrap(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // 5. Electron 네이티브 쉘 미설치 감지 및 다운로드 모달 권장 가동
+  // 5. Electron 네이티브 쉘 미설치 감지 및 다운로드 모달 권장 가동 (웹버전 첫 진입시 자동 노출 제거)
   useEffect(() => {
-    const isElectron = typeof window !== 'undefined' && !!(window as any).electronAPI
-    const dismissed = localStorage.getItem('ameva_desktop_install_prompt_dismissed') === 'true'
-    if (!isElectron && !dismissed) {
-      useUIStore.getState().setIsInstallPromptOpen(true)
-    }
+    // const isElectron = typeof window !== 'undefined' && !!(window as any).electronAPI
+    // const dismissed = localStorage.getItem('ameva_desktop_install_prompt_dismissed') === 'true'
+    // if (!isElectron && !dismissed) {
+    //   useUIStore.getState().setIsInstallPromptOpen(true)
+    // }
   }, [])
 
   // 6. SaaS 플러그인 (로컬 기능) 활성화 상태 연동

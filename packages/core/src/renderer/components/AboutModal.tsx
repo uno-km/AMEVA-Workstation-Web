@@ -17,8 +17,9 @@
  * - MUST NOT: TypeScript any 형식을 우회 수단으로 함부로 선언하지 말 것.
  */
 
-import { Award, Cpu, ExternalLink } from 'lucide-react'
+import { Award, Cpu, ExternalLink, Download } from 'lucide-react'
 import { StrictModal } from './ui/modals/StrictModal'
+import { useUIStore } from '../stores/useUIStore'
 
 interface AboutModalProps {
   isOpen: boolean
@@ -33,6 +34,8 @@ interface AboutModalProps {
    * - 예시: `AboutModal(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
 export function AboutModal({ isOpen, onClose, onOpenGithub }: AboutModalProps) {
+  const setIsInstallPromptOpen = useUIStore((state) => state.setIsInstallPromptOpen)
+  
   if (!isOpen) return null
 
   return (
@@ -120,6 +123,40 @@ export function AboutModal({ isOpen, onClose, onOpenGithub }: AboutModalProps) {
                   Word, Excel, PDF, HTML, XML은 물론 한글 HWPX 규격까지 무손실 빌드를 보장합니다.
                 </p>
               </div>
+            </div>
+
+            {/* 데스크톱 앱 설치 권장 */}
+            <div
+              style={{
+                background: 'rgba(34, 197, 94, 0.08)',
+                border: '1px solid rgba(34, 197, 94, 0.15)',
+                borderRadius: '8px',
+                padding: '12px 16px',
+                marginTop: '10px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                <Download size={18} style={{ color: '#22c55e', marginTop: '2px' }} />
+                <div>
+                  <h4 style={{ fontSize: '12px', fontWeight: 700, color: '#22c55e' }}>데스크톱 앱으로 더 강력하게 (추천)</h4>
+                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    웹 버전에서는 로컬 AI 모델 연동, 파일 시스템 직접 접근 등 일부 강력한 네이티브 기능이 제한됩니다. AMEVA의 모든 기능을 온전히 경험하려면 전용 데스크톱 앱을 설치해보세요!
+                  </p>
+                </div>
+              </div>
+              <button 
+                className="btn btn-primary" 
+                style={{ alignSelf: 'flex-end', fontSize: '11px', padding: '6px 16px', background: '#22c55e', borderColor: '#22c55e', color: '#fff' }}
+                onClick={() => {
+                  onClose()
+                  setIsInstallPromptOpen(true)
+                }}
+              >
+                데스크톱 앱 설치/안내 보기
+              </button>
             </div>
           </div>
 
