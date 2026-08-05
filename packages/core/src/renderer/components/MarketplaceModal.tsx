@@ -240,7 +240,7 @@ export function MarketplaceModal({
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const res = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-      const res = await fetch(`https://raw.githubusercontent.com/uno-km/AMEVA-Workstation-Market-Place/main/api/plugins.json?t=${Date.now()}`, { signal: controller.signal })
+      const res = await fetch(`https://raw.githubusercontent.com/uno-km/AMEVA-Workstation-Market-Place/main/public/api/plugins.json?t=${Date.now()}`, { signal: controller.signal })
       clearTimeout(timeoutId)
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -258,7 +258,17 @@ export function MarketplaceModal({
        * - 예시 코드: `const data = ...` 형태로 안전 캐싱 후 가공 기동.
        */
       const data = await res.json()
-      setPlugins(data)
+      const baseUrl = 'https://raw.githubusercontent.com/uno-km/AMEVA-Workstation-Market-Place/main/public/'
+      const processedData = data.map((p: PluginMetadata) => {
+        if (p.scriptUrl && !p.scriptUrl.startsWith('http')) {
+          p.scriptUrl = baseUrl + p.scriptUrl
+        }
+        if (p.previewUrl && !p.previewUrl.startsWith('http')) {
+          p.previewUrl = baseUrl + p.previewUrl
+        }
+        return p
+      })
+      setPlugins(processedData)
     } catch (err: any) {
       clearTimeout(timeoutId)
       console.warn('Marketplace fetch failed, using static fallback.', err)

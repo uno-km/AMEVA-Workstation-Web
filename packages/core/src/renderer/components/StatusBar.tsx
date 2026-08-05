@@ -319,6 +319,16 @@ export function StatusBar({}: StatusBarProps = {}) {
           <Settings size={12} style={{ color: 'var(--primary)' }} />
           <span>설정</span>
         </button>
+
+        <div style={{ width: '1px', height: '12px', backgroundColor: 'var(--border-muted)' }} />
+        
+        {/* 앱 배포 버전 */}
+        <span 
+          style={{ fontSize: '10.5px', color: 'var(--text-muted)', cursor: 'default', fontWeight: 500 }} 
+          title="현재 AMEVA Workstation 버전"
+        >
+          {import.meta.env.VITE_APP_VERSION || 'v1.0.0-dev'}
+        </span>
       </div>
     </div>
   )
