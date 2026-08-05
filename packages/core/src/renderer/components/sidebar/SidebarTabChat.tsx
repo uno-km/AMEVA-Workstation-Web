@@ -29,7 +29,7 @@ import { useState } from 'react'
 export interface SidebarTabChatProps {}
 
 export function SidebarTabChat({}: SidebarTabChatProps = {}) {
-  const { chatMessages, sendChatMessage, clearChatMessages, username, userColor, serverRunning, isConnected, documentId, setDocumentId, peers } = useAppContext()
+  const { chatMessages, sendChatMessage, clearChatMessages, username, userColor, serverRunning, isConnected, documentId, setDocumentId, peers, serverPort, toggleLocalServer } = useAppContext()
   const { isChatFloating, setIsChatFloating } = useUIStore()
   
   const [joinId, setJoinId] = useState('')
@@ -37,6 +37,9 @@ export function SidebarTabChat({}: SidebarTabChatProps = {}) {
   const handleGenerateUUID = () => {
     const newUUID = crypto.randomUUID().slice(0, 8)
     setDocumentId(newUUID)
+    if (!serverRunning && !isConnected) {
+      toggleLocalServer(serverPort)
+    }
     alert(`새로운 채팅방이 생성되었습니다.\n방 코드: ${newUUID}\n클립보드에 복사되었습니다!`)
     navigator.clipboard.writeText(newUUID).catch(() => {})
   }
@@ -45,6 +48,9 @@ export function SidebarTabChat({}: SidebarTabChatProps = {}) {
     if (!joinId.trim()) return
     setDocumentId(joinId.trim())
     setJoinId('')
+    if (!serverRunning && !isConnected) {
+      toggleLocalServer(serverPort)
+    }
     alert(`방 [${joinId}] 에 접속했습니다.`)
   }
 

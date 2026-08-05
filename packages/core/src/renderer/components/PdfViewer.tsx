@@ -20,12 +20,78 @@ import PdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?worker'
 import {
   ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw,
   Download, Maximize2, Minimize2, FileText, Search,
-  Highlighter, Type, PenLine, Square, ArrowRight, Eraser, Save, Minus
+  Highlighter, Type, PenLine, Square, ArrowRight, Eraser, Save, Minus, List, Bookmark
 } from 'lucide-react'
 import { PdfAnnotationLayer } from './PdfAnnotationLayer'
 import { usePdfAnnotations } from '../hooks/usePdfAnnotations'
 import type { AnnotationTool } from '../hooks/usePdfAnnotations'
 import { uint8ArrayToBase64 } from '../utils/pdfAnnotationWriter'
+
+
+// [NEW] 50페이지 제한을 없애고 레이지 로딩을 지원하는 썸네일 컴포넌트
+function PdfThumbnail({ pdf, pageNum, isActive, onClick }: { pdf: any, pageNum: number, isActive: boolean, onClick: () => void }) {
+  const [imgData, setImgData] = React.useState<string>('')
+  const containerRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    if (!pdf || !containerRef.current) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          observer.disconnect()
+          pdf.getPage(pageNum).then((page: any) => {
+            const viewport = page.getViewport({ scale: 0.2, rotation: 0 })
+            const canvas = document.createElement('canvas')
+            canvas.width = viewport.width
+            canvas.height = viewport.height
+            const ctx = canvas.getContext('2d')
+            if (ctx) {
+              page.render({ canvasContext: ctx, viewport }).promise.then(() => {
+                setImgData(canvas.toDataURL('image/jpeg', 0.7))
+                page.cleanup()
+              }).catch(() => {})
+            }
+          }).catch(() => {})
+        }
+      },
+      { rootMargin: '200px 0px' }
+    )
+    observer.observe(containerRef.current)
+    return () => observer.disconnect()
+  }, [pdf, pageNum])
+
+  return (
+    <div
+      ref={containerRef}
+      onClick={onClick}
+      style={{
+        cursor: 'pointer', borderRadius: '6px', overflow: 'hidden',
+        border: isActive ? '2px solid #a855f7' : '2px solid transparent',
+        boxShadow: isActive ? '0 0 10px rgba(168,85,247,0.4)' : 'none',
+        background: '#1e1e2e', transition: 'all 0.15s ease', flexShrink: 0,
+      }}
+      title={`페이지 ${pageNum}`}
+    >
+      {imgData ? (
+        <img src={imgData} alt={`페이지 ${pageNum}`} style={{ width: '100%', display: 'block' }} />
+      ) : (
+        <div style={{
+          width: '100%', aspectRatio: '0.71', background: '#252535',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: 'rgba(255,255,255,0.2)', fontSize: '10px',
+        }}>
+          {pageNum}
+        </div>
+      )}
+      <div style={{
+        textAlign: 'center', fontSize: '9px', color: isActive ? '#c084fc' : '#64748b',
+        padding: '2px 0', fontWeight: isActive ? 700 : 400,
+      }}>
+        {pageNum}
+      </div>
+    </div>
+  )
+}
 
 // [FIX-CSP-001] PDF Worker CSP 대응 (Vite 기본 worker 활용)
 pdfjsLib.GlobalWorkerOptions.workerPort = new PdfWorker()
@@ -53,8 +119,11 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
   const [rotation, setRotation] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [thumbnails, setThumbnails] = useState<string[]>([])
   const [showThumbnails, setShowThumbnails] = useState(true)
+  const [sidebarMode, setSidebarMode] = useState<'thumbnail' | 'outline'>('thumbnail')
+  const [outlines, setOutlines] = useState<any[]>([])
+  const [swipeOffset, setSwipeOffset] = useState(0)
+  const dragStartRef = useRef<{ x: number, y: number, scrollLeft: number, isSwipe: boolean } | null>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [pageInput, setPageInput] = useState('1')
   const [searchQuery, setSearchQuery] = useState('')
@@ -89,7 +158,7 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
     setLoading(true)
     setError(null)
     setPdf(null)
-    setThumbnails([])
+    setOutlines([])
 
     const loadPdf = async () => {
       try {
@@ -121,8 +190,12 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
         setPageInput('1')
         setLoading(false)
 
-        // 썸네일 비동기 생성
-        generateThumbnails(loadedPdf)
+        try {
+          const outline = await loadedPdf.getOutline()
+          setOutlines(outline || [])
+        } catch (e) {
+          setOutlines([])
+        }
       } catch (err: any) {
         if (isMounted) {
           setError(`PDF 로드 실패: ${err.message}`)
@@ -135,26 +208,80 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
     return () => { isMounted = false }
   }, [pdfData])
 
-  // 썸네일 생성
-  const generateThumbnails = async (pdfDoc: any) => {
-    const thumbs: string[] = []
-    const total = Math.min(pdfDoc.numPages, 50) // 최대 50페이지까지
-    for (let i = 1; i <= total; i++) {
-      try {
-        const page = await pdfDoc.getPage(i)
-        const viewport = page.getViewport({ scale: 0.2, rotation: 0 })
-        const canvas = document.createElement('canvas')
-        canvas.width = viewport.width
-        canvas.height = viewport.height
-        const ctx = canvas.getContext('2d')!
-        await page.render({ canvasContext: ctx, viewport }).promise
-        thumbs.push(canvas.toDataURL('image/jpeg', 0.7))
-        page.cleanup()
-      } catch {
-        thumbs.push('')
+
+
+
+  // 목차(Outline) 렌더링
+  const renderOutline = (items: any[], depth = 0) => {
+    return items.map((item, idx) => (
+      <div key={idx} style={{ paddingLeft: `${depth * 10}px` }}>
+        <div 
+          style={{ 
+            fontSize: '11px', color: '#e2e8f0', cursor: 'pointer', padding: '6px 0',
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+            borderBottom: '1px solid rgba(255,255,255,0.05)'
+          }}
+          onClick={async () => {
+            if (item.dest) {
+              try {
+                let dest = item.dest
+                if (typeof dest === 'string') {
+                  dest = await pdf.getDestination(dest)
+                }
+                const pageIdx = await pdf.getPageIndex(dest[0])
+                goToPage(pageIdx + 1)
+              } catch (e) { console.error(e) }
+            }
+          }}
+        >
+          {item.title}
+        </div>
+        {item.items && item.items.length > 0 && renderOutline(item.items, depth + 1)}
+      </div>
+    ))
+  }
+
+  // 마우스/터치 스와이프 로직
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (activeTool !== 'none' || showAnnotationTools) return
+    dragStartRef.current = { x: e.clientX, y: e.clientY, scrollLeft: e.currentTarget.scrollLeft, isSwipe: false }
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragStartRef.current) return
+    if (activeTool !== 'none' || showAnnotationTools) return
+
+    const dx = e.clientX - dragStartRef.current.x
+    const el = e.currentTarget
+    
+    // 만약 화면을 확대하지 않아 캔버스가 전부 보인다면 엣지로 간주
+    const isAtLeftEdge = el.scrollLeft <= 0
+    const isAtRightEdge = Math.ceil(el.scrollLeft + el.clientWidth) >= el.scrollWidth
+
+    if (dx > 0 && isAtLeftEdge) {
+      setSwipeOffset(dx)
+      dragStartRef.current.isSwipe = true
+    } else if (dx < 0 && isAtRightEdge) {
+      setSwipeOffset(dx)
+      dragStartRef.current.isSwipe = true
+    } else {
+      setSwipeOffset(0)
+      el.scrollLeft = dragStartRef.current.scrollLeft - dx
+    }
+  }
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragStartRef.current) return
+    e.currentTarget.releasePointerCapture(e.pointerId)
+    
+    if (dragStartRef.current.isSwipe) {
+      if (swipeOffset > 80 && currentPage > 1) {
+        goToPage(currentPage - 1)
+      } else if (swipeOffset < -80 && currentPage < numPages) {
+        goToPage(currentPage + 1)
       }
     }
-    setThumbnails(thumbs)
+    dragStartRef.current = null
+    setSwipeOffset(0)
   }
 
   // 현재 페이지 렌더링
@@ -509,18 +636,37 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
           </>
         )}
 
-        {/* 주석 토글 */}
-        <button
-          style={{
-            ...btnStyle, width: 'auto', padding: '0 8px', fontSize: '10px', fontWeight: 600,
-            background: showThumbnails ? 'rgba(139,92,246,0.2)' : 'rgba(255,255,255,0.04)',
-            color: showThumbnails ? '#c084fc' : '#94a3b8',
-          }}
-          onClick={() => setShowThumbnails(s => !s)}
-          title="썸네일 사이드바"
-        >
-          페이지
-        </button>
+        {/* 사이드바 토글 (썸네일/목차) */}
+        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.04)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+          <button
+            style={{
+              ...btnStyle, width: 'auto', padding: '0 8px', fontSize: '10px', fontWeight: 600, border: 'none', borderRadius: 0,
+              background: showThumbnails && sidebarMode === 'thumbnail' ? 'rgba(139,92,246,0.2)' : 'transparent',
+              color: showThumbnails && sidebarMode === 'thumbnail' ? '#c084fc' : '#94a3b8',
+            }}
+            onClick={() => {
+              if (showThumbnails && sidebarMode === 'thumbnail') setShowThumbnails(false)
+              else { setShowThumbnails(true); setSidebarMode('thumbnail') }
+            }}
+            title="썸네일"
+          >
+            <List size={12} style={{ marginRight: '4px' }} /> 썸네일
+          </button>
+          <button
+            style={{
+              ...btnStyle, width: 'auto', padding: '0 8px', fontSize: '10px', fontWeight: 600, border: 'none', borderRadius: 0,
+              background: showThumbnails && sidebarMode === 'outline' ? 'rgba(139,92,246,0.2)' : 'transparent',
+              color: showThumbnails && sidebarMode === 'outline' ? '#c084fc' : '#94a3b8',
+            }}
+            onClick={() => {
+              if (showThumbnails && sidebarMode === 'outline') setShowThumbnails(false)
+              else { setShowThumbnails(true); setSidebarMode('outline') }
+            }}
+            title="목차(북마크)"
+          >
+            <Bookmark size={12} style={{ marginRight: '4px' }} /> 목차
+          </button>
+        </div>
 
         <div style={{ flex: 1 }} />
 
@@ -631,70 +777,39 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
       {/* ── 본체: 썸네일 + 캔버스 ── */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
 
-        {/* 썸네일 사이드바 */}
+        {/* 사이드바 (썸네일 or 목차) */}
         {showThumbnails && (
           <div style={{
-            width: '110px',
+            width: '160px',
             flexShrink: 0,
             overflowY: 'auto',
             background: 'rgba(10,10,15,0.8)',
             borderRight: '1px solid rgba(255,255,255,0.06)',
-            padding: '8px 6px',
+            padding: '8px',
             display: 'flex',
             flexDirection: 'column',
             gap: '6px',
           }}>
-            {Array.from({ length: numPages }).map((_, idx) => {
-              const pageNum = idx + 1
-              const isActive = pageNum === currentPage
-              return (
-                <div
-                  key={pageNum}
-                  onClick={() => goToPage(pageNum)}
-                  style={{
-                    cursor: 'pointer',
-                    borderRadius: '6px',
-                    overflow: 'hidden',
-                    border: isActive ? '2px solid #a855f7' : '2px solid transparent',
-                    boxShadow: isActive ? '0 0 10px rgba(168,85,247,0.4)' : 'none',
-                    background: '#1e1e2e',
-                    transition: 'all 0.15s ease',
-                    flexShrink: 0,
-                  }}
-                  title={`페이지 ${pageNum}`}
-                >
-                  {thumbnails[idx] ? (
-                    <img
-                      src={thumbnails[idx]}
-                      alt={`페이지 ${pageNum}`}
-                      style={{ width: '100%', display: 'block' }}
-                    />
-                  ) : (
-                    <div style={{
-                      width: '100%',
-                      aspectRatio: '0.71',
-                      background: '#252535',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'rgba(255,255,255,0.2)',
-                      fontSize: '10px',
-                    }}>
-                      {pageNum}
-                    </div>
-                  )}
-                  <div style={{
-                    textAlign: 'center',
-                    fontSize: '9px',
-                    color: isActive ? '#c084fc' : '#64748b',
-                    padding: '2px 0',
-                    fontWeight: isActive ? 700 : 400,
-                  }}>
-                    {pageNum}
+            {sidebarMode === 'thumbnail' ? (
+              Array.from({ length: numPages }).map((_, idx) => (
+                <PdfThumbnail
+                  key={idx + 1}
+                  pdf={pdf}
+                  pageNum={idx + 1}
+                  isActive={currentPage === idx + 1}
+                  onClick={() => goToPage(idx + 1)}
+                />
+              ))
+            ) : (
+              // 목차 렌더링
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {outlines.length > 0 ? renderOutline(outlines) : (
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', textAlign: 'center', marginTop: '20px' }}>
+                    목차가 없습니다
                   </div>
-                </div>
-              )
-            })}
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -708,6 +823,7 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
             justifyContent: 'center',
             background: '#1a1a24',
             padding: '20px',
+            touchAction: activeTool !== 'none' ? 'auto' : 'none',
           }}
           onWheel={(e) => {
             if (e.ctrlKey) {
@@ -716,6 +832,11 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
               else handleZoomOut()
             }
           }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          onPointerLeave={handlePointerUp}
         >
           <div
             style={{
@@ -724,6 +845,8 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
               overflow: 'hidden',
               background: '#fff',
               position: 'relative',
+              transform: `translateX(${swipeOffset}px)`,
+              transition: dragStartRef.current?.isSwipe ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
             }}
           >
             <canvas ref={canvasRef} />
