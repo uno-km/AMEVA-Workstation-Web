@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' http://localhost:* https://*; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: http://localhost:* https://*; style-src 'self' 'unsafe-inline' http://localhost:* https://*; font-src 'self' data: http://localhost:* https://*; img-src 'self' data: blob: http://localhost:* https://*; media-src 'self' data: blob: http://localhost:* https://*; connect-src 'self' ws://localhost:* wss://localhost:* ws://127.0.0.1:* http://127.0.0.1:* wss://demos.yjs.dev http://localhost:* https://*; worker-src 'self' blob: http://localhost:* https://*;" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' http://localhost:* https://*; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: http://localhost:* https://*; style-src 'self' 'unsafe-inline' http://localhost:* https://*; font-src 'self' data: http://localhost:* https://*; img-src 'self' data: blob: http://localhost:* https://*; media-src 'self' data: blob: http://localhost:* https://*; connect-src 'self' data: blob: ws://localhost:* wss://localhost:* ws://127.0.0.1:* http://127.0.0.1:* wss://demos.yjs.dev http://localhost:* https://*; worker-src 'self' blob: http://localhost:* https://*;" />
     <script>
       window.onerror = function(message, source, lineno, colno, error) {
         if (typeof message === 'string' && message.includes('ResizeObserver')) {

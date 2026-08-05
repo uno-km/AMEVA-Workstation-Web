@@ -5,7 +5,7 @@
  * @role Application Data Container (ADC) / Markdown Export Packager
  */
 import JSZip from 'jszip'
-import { getAttachment } from './vfsDatabase'
+import { getAttachment, saveAttachment } from './vfsDatabase'
 
 /**
  * [CONTRACT - ArrayBuffer to Base64 String]
@@ -98,11 +98,11 @@ export async function packMarkdownToADC(markdown: string, metadata?: any, rawBlo
   const zip = new JSZip()
   let processedMarkdown = markdown
   let blocksJsonStr = rawBlocks ? JSON.stringify(rawBlocks) : null
-  
+
   let mediaIndex = 0
-  
+
   const manifestFiles: any[] = []
-  
+
   const alreadyCompressedTypes = new Set([
     'application/pdf',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -115,7 +115,7 @@ export async function packMarkdownToADC(markdown: string, metadata?: any, rawBlo
     'video/mp4',
     'video/webm',
   ])
-  
+
   const getCompressionOptions = (mime: string) => {
     const isCompressed = alreadyCompressedTypes.has(mime)
     return {
@@ -160,13 +160,13 @@ export async function packMarkdownToADC(markdown: string, metadata?: any, rawBlo
         else if (['xlsx', 'xls'].includes(ext)) mime = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         else if (['docx', 'doc'].includes(ext)) mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         else if (ext === 'hwpx') mime = 'application/hwp+zip'
-        
+
         const res = await window.electronAPI.readBinary(item.absolutePath)
         if (res && res.success && res.data) {
           const buffer = base64ToArrayBuffer(res.data)
           // @ts-ignore
           zip.file(item.zipPath, buffer, getCompressionOptions(mime))
-          
+
           manifestFiles.push({
             id: `file-${mediaIndex}`,
             path: item.zipPath,
@@ -174,7 +174,7 @@ export async function packMarkdownToADC(markdown: string, metadata?: any, rawBlo
             mediaType: mime,
             role: 'media'
           })
-          
+
           processedMarkdown = processedMarkdown.split(item.full).join(item.zipPath)
           if (blocksJsonStr) blocksJsonStr = blocksJsonStr.split(item.full).join(item.zipPath)
         }
@@ -186,7 +186,7 @@ export async function packMarkdownToADC(markdown: string, metadata?: any, rawBlo
 
   // 1.5) ameva-vfs 가상 파일 시스템 내의 파일 감지 및 압축
   const vfsMediaRegex = /ameva-vfs:\/\/([^\s"'()#?,]+)/g
-  const vfsMatches: { full: string; fileId: string; zipPath: string }[] = []
+  const vfsMatches: { full: string; fileId: string }[] = []
   let vfsMatch
 
   const tempVfsRegex = new RegExp(vfsMediaRegex)
@@ -196,10 +196,7 @@ export async function packMarkdownToADC(markdown: string, metadata?: any, rawBlo
 
     if (vfsMatches.some(m => m.full === full)) continue
 
-    // UUID 뒤에 확장자가 붙어있을 수 있음
-    const ext = fileId.split('.').pop()?.toLowerCase() || 'png'
-    const zipPath = `media/file_${mediaIndex++}.${ext}`
-    vfsMatches.push({ full, fileId, zipPath })
+    vfsMatches.push({ full, fileId })
   }
 
   for (const item of vfsMatches) {
@@ -208,19 +205,26 @@ export async function packMarkdownToADC(markdown: string, metadata?: any, rawBlo
       if (blob) {
         const buffer = await blob.arrayBuffer()
         const mime = blob.type || 'application/octet-stream'
-        // @ts-ignore
-        zip.file(item.zipPath, buffer, getCompressionOptions(mime))
         
+        let ext = mime.split('/')[1] || 'png'
+        if (mime === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') ext = 'pptx'
+        else if (mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') ext = 'xlsx'
+        else if (mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') ext = 'docx'
+        else if (mime === 'application/pdf') ext = 'pdf'
+        else if (mime === 'application/hwp+zip') ext = 'hwpx'
+        
+        const zipPath = `media/file_${mediaIndex++}.${ext}`
+
+        // @ts-ignore
+        zip.file(zipPath, buffer, getCompressionOptions(mime))
+
         manifestFiles.push({
-          id: `file-${mediaIndex}`,
-          path: item.zipPath,
-          name: item.zipPath.split('/').pop() || `file_${mediaIndex}`,
+          id: item.fileId,
+          path: zipPath,
+          name: zipPath.split('/').pop() || `file_${mediaIndex}`,
           mediaType: mime,
           role: 'media'
         })
-        
-        processedMarkdown = processedMarkdown.split(item.full).join(item.zipPath)
-        if (blocksJsonStr) blocksJsonStr = blocksJsonStr.split(item.full).join(item.zipPath)
       }
     } catch (err) {
       console.error(`[packMarkdownToADC] VFS 파일 읽기 실패: ${item.fileId}`, err)
@@ -240,26 +244,34 @@ export async function packMarkdownToADC(markdown: string, metadata?: any, rawBlo
 
     if (dataMatches.some(m => m.full === full)) continue
 
-    const ext = mime.split('/')[1] || 'png'
-    const fileName = `media/file_${mediaIndex++}.${ext}`
-    dataMatches.push({ full, mime, base64, path: fileName })
+    let ext = mime.split('/')[1] || 'png'
+    if (mime === 'application/pdf') ext = 'pdf'
+    else if (mime.includes('presentationml')) ext = 'pptx'
+    else if (mime.includes('spreadsheetml')) ext = 'xlsx'
+    else if (mime.includes('wordprocessingml')) ext = 'docx'
+    else if (mime === 'application/hwp+zip') ext = 'hwpx'
+
+    const fileId = `0ffc56dc-${Math.random().toString(36).substring(2, 10)}`
+    const fileName = `media/${fileId}.${ext}`
+    dataMatches.push({ full, mime, base64, path: fileName, fileId })
   }
 
   for (const item of dataMatches) {
     const buffer = base64ToArrayBuffer(item.base64)
     // @ts-ignore
     zip.file(item.path, buffer, getCompressionOptions(item.mime))
-    
+
     manifestFiles.push({
-      id: `file-${mediaIndex}`,
+      id: item.fileId,
       path: item.path,
-      name: item.path.split('/').pop() || `file_${mediaIndex}`,
+      name: item.path.split('/').pop() || `file_${item.fileId}.${item.path.split('.').pop()}`,
       mediaType: item.mime,
       role: 'media'
     })
-    
-    processedMarkdown = processedMarkdown.split(item.full).join(item.path)
-    if (blocksJsonStr) blocksJsonStr = blocksJsonStr.split(item.full).join(item.path)
+
+    const vfsUrl = `ameva-vfs://${item.fileId}`
+    processedMarkdown = processedMarkdown.split(item.full).join(vfsUrl)
+    if (blocksJsonStr) blocksJsonStr = blocksJsonStr.split(item.full).join(vfsUrl)
   }
 
   // 경로 변환된 마크다운 문서 및 블록 삽입
@@ -304,64 +316,57 @@ export async function unpackADCToMarkdown(arrayBuffer: ArrayBuffer): Promise<{ m
   const blocksFile = zip.file('blocks.json')
   let blocksText = blocksFile ? await blocksFile.async('text') : null
 
-  // 미디어 파일 경로 추출 (마크다운 및 블록 데이터 모두 탐색)
-  const mediaRegex = /media\/file_\d+\.[a-zA-Z0-9]+/g
+  // 미디어 파일 경로 추출 (마크다운 및 블록 데이터 모두 탐색, UUID 등 하이픈 포함 확장자 지원)
+  const mediaRegex = /media\/file_\d+\.[a-zA-Z0-9\-]+/g
   const allText = markdown + (blocksText || '')
   const matches = Array.from(allText.matchAll(mediaRegex)).map(m => m[0])
   const uniquePaths = Array.from(new Set(matches))
 
-  const hasElectronIO = typeof window !== 'undefined' && window.electronAPI?.writeBinary
-  const sessionUuid = Math.random().toString(36).substring(2, 10)
+  let manifestFiles: any[] = []
+  const manifestFile = zip.file('manifest.json') || zip.file('meta.json')
+  if (manifestFile) {
+    try {
+      const parsed = JSON.parse(await manifestFile.async('text'))
+      if (parsed.files) manifestFiles = parsed.files
+    } catch (err) {}
+  }
 
-  // 수집된 상대 경로들을 하나씩 읽어서 복원 진행
+  // 1. 매니페스트에 등록된 파일들을 VFS에 등록
+  for (const mf of manifestFiles) {
+    const file = zip.file(mf.path)
+    if (file) {
+      const buffer = await file.async('arraybuffer')
+      const blob = new Blob([buffer], { type: mf.mediaType || 'application/octet-stream' })
+      await saveAttachment(mf.id, blob)
+    }
+  }
+
+  // 2. 구형 포맷(마크다운 내에 media/file_... 경로가 하드코딩된 경우)을 ameva-vfs:// 로 자동 변환
   for (const path of uniquePaths) {
     const file = zip.file(path)
     if (file) {
-      const buffer = await file.async('arraybuffer')
+      let mf = manifestFiles.find(f => f.path === path)
+      let fileId = mf ? mf.id : null
 
-      if (hasElectronIO) {
-        // Electron 환경: 임시 폴더에 디스크 저장 후 media:// 복원
-        try {
-          const base64 = await arrayBufferToBase64(buffer)
-          const relativeTarget = `temp_media/${sessionUuid}/${path.split('/').pop()}`
-          const res = await window.electronAPI!.writeBinary(relativeTarget, base64) as any
-          if (res.success && res.path) {
-            const mediaUrl = `media://${res.path}`
-            markdown = markdown.split(path).join(mediaUrl)
-            if (blocksText) blocksText = blocksText.split(path).join(mediaUrl)
-          } else {
-            throw new Error(res.error || '실패')
-          }
-        } catch (err) {
-          console.error(`[unpackADCToMarkdown] Electron 로컬 복원 실패, DataURL 폴백 작동: ${path}`, err)
-          const base64 = await file.async('base64')
-          const ext = path.split('.').pop() || 'png'
-          let mime = `image/${ext}`
-          if (ext === 'pdf') mime = 'application/pdf'
-          else if (['pptx', 'ppt'].includes(ext)) mime = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
-          else if (['xlsx', 'xls'].includes(ext)) mime = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-          else if (['docx', 'doc'].includes(ext)) mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-          else if (ext === 'hwpx') mime = 'application/hwp+zip'
-
-          const dataUrl = `data:${mime};base64,${base64}`
-          markdown = markdown.split(path).join(dataUrl)
-          if (blocksText) blocksText = blocksText.split(path).join(dataUrl)
-        }
-      } else {
-        // 일반 브라우저 환경: 기존 DataURL 변환 폴백
-        const base64 = await file.async('base64')
-        const ext = path.split('.').pop() || 'png'
+      if (!fileId) {
+        // 매니페스트에 없는 레거시 파일인 경우 즉석에서 VFS에 등록
+        fileId = `0ffc56dc-${Math.random().toString(36).substring(2, 10)}`
+        const buffer = await file.async('arraybuffer')
+        const ext = path.split('.').pop()?.toLowerCase() || 'png'
         let mime = `image/${ext}`
         if (ext === 'pdf') mime = 'application/pdf'
         else if (['pptx', 'ppt'].includes(ext)) mime = 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
         else if (['xlsx', 'xls'].includes(ext)) mime = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         else if (['docx', 'doc'].includes(ext)) mime = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         else if (ext === 'hwpx') mime = 'application/hwp+zip'
-
-        const dataUrl = `data:${mime};base64,${base64}`
-        markdown = markdown.split(path).join(dataUrl)
-        if (blocksText) blocksText = blocksText.split(path).join(dataUrl)
+        
+        const blob = new Blob([buffer], { type: mime })
+        await saveAttachment(fileId, blob)
       }
+
+      const vfsUrl = `ameva-vfs://${fileId}`
+      markdown = markdown.split(path).join(vfsUrl)
+      if (blocksText) blocksText = blocksText.split(path).join(vfsUrl)
     }
   }
 

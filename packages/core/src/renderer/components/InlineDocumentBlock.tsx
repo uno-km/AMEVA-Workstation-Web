@@ -61,6 +61,8 @@ function PdfMiniViewer({ sourceUrl, height }: { sourceUrl: string; height: numbe
     setLoading(true)
     setError(null)
 
+    let objectUrlToRevoke: string | null = null
+
     const loadPdf = async () => {
       try {
         let getDocumentArg: any = sourceUrl
@@ -68,8 +70,16 @@ function PdfMiniViewer({ sourceUrl, height }: { sourceUrl: string; height: numbe
           const fileId = sourceUrl.replace('ameva-vfs://', '')
           const blob = await getAttachment(fileId)
           if (!blob) throw new Error('VFS_EXPIRED')
-          const arrayBuffer = await blob.arrayBuffer()
-          getDocumentArg = { data: new Uint8Array(arrayBuffer) }
+          const objectUrl = URL.createObjectURL(blob)
+          objectUrlToRevoke = objectUrl
+          getDocumentArg = { url: objectUrl }
+        } else if (sourceUrl.startsWith('data:')) {
+          const cleanBase64 = sourceUrl.split(',')[1] || ''
+          const binaryString = atob(cleanBase64.replace(/\s/g, ''))
+          const len = binaryString.length
+          const bytes = new Uint8Array(len)
+          for (let i = 0; i < len; i++) bytes[i] = binaryString.charCodeAt(i)
+          getDocumentArg = { data: bytes }
         }
 
         const pdf = await pdfjsLib.getDocument(getDocumentArg).promise
@@ -94,6 +104,7 @@ function PdfMiniViewer({ sourceUrl, height }: { sourceUrl: string; height: numbe
     if (sourceUrl) loadPdf()
     return () => { 
       cancelled = true 
+      if (objectUrlToRevoke) URL.revokeObjectURL(objectUrlToRevoke)
     }
   }, [sourceUrl])
 
@@ -206,6 +217,16 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
     if (file) handleFileUpload(file)
   }, [handleFileUpload])
 
+  useEffect(() => {
+    // 블록이 처음 생성되었고 비어있을 때 자동으로 파일 탐색기 열기
+    if (!hasFile && !hasUrl && props.sourceUrl === '') {
+      const timer = setTimeout(() => {
+        fileInputRef.current?.click()
+      }, 100)
+      return () => clearTimeout(timer)
+    }
+  }, [hasFile, hasUrl, props.sourceUrl])
+
   const handleUrlInput = useCallback(() => {
     const url = window.prompt('문서 URL을 입력하세요 (PDF, Office Online 공유 링크):')
     if (!url) return
@@ -281,7 +302,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
+        onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click() }}
       >
         <span style={{ color: config.color, opacity: 0.8 }}>
           {React.cloneElement(config.icon as React.ReactElement, { size: 32 })}
@@ -394,9 +415,16 @@ function PptxMiniViewer({ sourceUrl, fileBase64, height }: { sourceUrl: string; 
           const blob = await getAttachment(fileId)
           if (!blob) throw new Error('VFS_EXPIRED')
           arrayBuffer = await blob.arrayBuffer()
-        } else if (sourceUrl.startsWith('blob:') || sourceUrl.startsWith('data:') || sourceUrl.startsWith('http')) {
+        } else if (sourceUrl.startsWith('blob:') || sourceUrl.startsWith('http')) {
           const res = await fetch(sourceUrl)
           arrayBuffer = await res.arrayBuffer()
+        } else if (sourceUrl.startsWith('data:')) {
+          const cleanBase64 = sourceUrl.split(',')[1] || ''
+          const binaryString = atob(cleanBase64.replace(/\s/g, ''))
+          const len = binaryString.length
+          const bytes = new Uint8Array(len)
+          for (let i = 0; i < len; i++) bytes[i] = binaryString.charCodeAt(i)
+          arrayBuffer = bytes.buffer
         } else if (fileBase64) {
           const cleanBase64 = fileBase64.includes(',') ? fileBase64.split(',')[1] : fileBase64
           const binaryString = atob(cleanBase64.replace(/\s/g, ''))
