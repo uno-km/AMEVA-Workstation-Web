@@ -200,68 +200,85 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
   const hasFile = !!props.sourceUrl && isLocalMemory
   const hasUrl = !!props.sourceUrl && !isLocalMemory
 
-  // ── 리사이저: native 이벤트에 stopImmediatePropagation 적용 (BlockNote ProseMirror 충돌 완전 차단)
+  // ── 리사이저: native capture 이벤트 + DOM 직접 조작 (리액트 재렌더 없이 실시간 스무스 리사이즈)
   useEffect(() => {
     const bottomEl = bottomResizerRef.current
     const rightEl = rightResizerRef.current
-    if (!bottomEl && !rightEl) return
+    const container = containerRef.current
+    if (!bottomEl || !container) return
 
     const stopAll = (e: Event) => {
       e.stopPropagation()
       e.stopImmediatePropagation()
     }
 
+    // ── 상하 리사이저 ──
     const onBottomMouseDown = (e: MouseEvent) => {
       e.preventDefault()
       stopAll(e)
       const startY = e.clientY
-      const startH = localHeight ?? parseInt(props.height || '420', 10)
+      const startH = container.getBoundingClientRect().height
+
+      // iframe 이벤트 스덕 방지 오버레이
+      const overlay = document.createElement('div')
+      overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;cursor:ns-resize;'
+      document.body.appendChild(overlay)
 
       const onMove = (mv: MouseEvent) => {
         const newH = Math.min(1000, Math.max(150, startH + mv.clientY - startY))
-        setLocalHeight(newH)
+        container.style.height = newH + 'px'
+        // 내부 빷어 내는 뷰어 높이도 동기화
+        const viewer = container.querySelector('[data-viewer-inner]') as HTMLElement | null
+        if (viewer) viewer.style.height = newH + 'px'
       }
       const onUp = (up: MouseEvent) => {
-        const finalH = Math.min(1000, Math.max(150, startH + up.clientY - startY))
-        setLocalHeight(null)
-        editor.updateBlock(block.id, { props: { ...props, height: finalH.toString() } })
+        document.body.removeChild(overlay)
         window.removeEventListener('mousemove', onMove)
         window.removeEventListener('mouseup', onUp)
+        const finalH = Math.min(1000, Math.max(150, startH + up.clientY - startY))
+        // React state 전혀 안 쓰고 props만 업데이트 (재렌더가 하이를 돌려준다)
+        editor.updateBlock(block.id, { props: { ...props, height: finalH.toString() } })
       }
       window.addEventListener('mousemove', onMove)
       window.addEventListener('mouseup', onUp)
     }
 
+    // ── 좌우 리사이저 ──
     const onRightMouseDown = (e: MouseEvent) => {
+      if (!rightEl) return
       e.preventDefault()
       stopAll(e)
       const startX = e.clientX
-      const containerWidth = containerRef.current?.getBoundingClientRect().width ?? 600
-      const startW = localWidthNum ?? containerWidth
+      const startW = container.getBoundingClientRect().width
+
+      const overlay = document.createElement('div')
+      overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;cursor:ew-resize;'
+      document.body.appendChild(overlay)
 
       const onMove = (mv: MouseEvent) => {
         const newW = Math.min(window.innerWidth - 80, Math.max(300, startW + mv.clientX - startX))
-        setLocalWidth(newW)
+        container.style.width = newW + 'px'
       }
       const onUp = (up: MouseEvent) => {
-        const finalW = Math.min(window.innerWidth - 80, Math.max(300, startW + up.clientX - startX))
-        setLocalWidth(null)
-        editor.updateBlock(block.id, { props: { ...props, width: finalW.toString() } })
+        document.body.removeChild(overlay)
         window.removeEventListener('mousemove', onMove)
         window.removeEventListener('mouseup', onUp)
+        const finalW = Math.min(window.innerWidth - 80, Math.max(300, startW + up.clientX - startX))
+        editor.updateBlock(block.id, { props: { ...props, width: finalW.toString() } })
       }
       window.addEventListener('mousemove', onMove)
       window.addEventListener('mouseup', onUp)
     }
 
-    bottomEl?.addEventListener('mousedown', onBottomMouseDown, { capture: true })
+    bottomEl.addEventListener('mousedown', onBottomMouseDown, { capture: true })
     rightEl?.addEventListener('mousedown', onRightMouseDown, { capture: true })
     return () => {
-      bottomEl?.removeEventListener('mousedown', onBottomMouseDown, { capture: true })
+      bottomEl.removeEventListener('mousedown', onBottomMouseDown, { capture: true })
       rightEl?.removeEventListener('mousedown', onRightMouseDown, { capture: true })
     }
+  // props 객체는 매렌더마다 업데이트되므로 block.id와 editor만 deps로 추적
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [block.id, editor, props.height, props.width, localHeight, localWidthNum])
+  }, [block.id, editor])
 
   const handleFileUpload = useCallback(async (file: File) => {
     const docT = detectDocType(file.name, file.type)
@@ -411,16 +428,12 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
   const viewHeight = isExpanded ? Math.min(height * 1.6, 800) : height
 
   return (
-    <div style={containerStyle}>
+    <div ref={containerRef} style={containerStyle}>
       {headerBar}
-      {/* URL 기반 PDF: overflow visible + height 보장해야 브라우저 PDF 툴바가 보임 */}
-      <div style={{ height: viewHeight, overflow: docType === 'pdf' && hasUrl ? 'hidden' : 'hidden', position: 'relative' }}>
-        {/* PDF → Canvas 직접 렌더링 (로컬 파일) */}
+      <div data-viewer-inner style={{ height: viewHeight, overflow: 'hidden', position: 'relative' }}>
         {docType === 'pdf' && hasFile && (
           <PdfMiniViewer sourceUrl={props.sourceUrl} height={viewHeight} />
         )}
-
-        {/* PDF URL → iframe full viewer */}
         {docType === 'pdf' && hasUrl && (
           <iframe
             src={props.sourceUrl}
@@ -429,8 +442,6 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
             allowFullScreen
           />
         )}
-
-        {/* Office 파일 (Word, Excel) → mammoth.js(docx) 또는 iframe (XLSX 안내문구) */}
         {docType !== 'pdf' && docType !== 'pptx' && hasFile && (
           <OfficeDocViewer
             sourceUrl={props.sourceUrl}
@@ -440,8 +451,6 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
             height={viewHeight}
           />
         )}
-
-        {/* PowerPoint 파일 → pptx-preview 렌더러 */}
         {docType === 'pptx' && hasFile && (
           <PptxMiniViewer
             sourceUrl={props.sourceUrl}
@@ -449,7 +458,6 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
             height={viewHeight}
           />
         )}
-
         {docType !== 'pdf' && hasUrl && (
           <iframe
             src={`https://docs.google.com/viewer?url=${encodeURIComponent(props.sourceUrl)}&embedded=true`}
@@ -458,27 +466,47 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
           />
         )}
       </div>
-      
-      {/* 하단 리사이저 (크기 조절 핸들) — contentEditable=false 필수: BlockNote DOM 파서 충돌 방지 */}
+
+      {/* 하단 리사이저 (상하 높이 조절) — native capture 이벤트로 stopImmediatePropagation 적용 */}
       <div
+        ref={bottomResizerRef}
         contentEditable={false}
-        onMouseDown={handleResizeMouseDown}
         style={{
           width: '100%',
           height: '12px',
           background: 'transparent',
           cursor: 'ns-resize',
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          zIndex: 10,
           display: 'flex',
           justifyContent: 'center',
-          alignItems: 'flex-end',
-          paddingBottom: '3px'
+          alignItems: 'center',
+        }}
+        title="위아래로 드래그하여 높이 조절"
+      >
+        <div style={{ width: '48px', height: '4px', background: 'rgba(255,255,255,0.2)', borderRadius: '2px' }} />
+      </div>
+
+      {/* 우측 리사이저 (좌우 폭 조절) */}
+      <div
+        ref={rightResizerRef}
+        contentEditable={false}
+        style={{
+          position: 'absolute',
+          top: 0,
+          right: 0,
+          width: '8px',
+          height: '100%',
+          cursor: 'ew-resize',
+          zIndex: 20,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+        title="좌우로 드래그하여 폭 조절 (더블클릭 → 100% 리셋)"
+        onDoubleClick={() => {
+          editor.updateBlock(block.id, { props: { ...props, width: '100%' } })
         }}
       >
-        <div style={{ width: '48px', height: '4px', background: 'rgba(255,255,255,0.25)', borderRadius: '2px', transition: 'background 0.15s' }} />
+        <div style={{ width: '3px', height: '32px', background: 'rgba(255,255,255,0.15)', borderRadius: '2px' }} />
       </div>
     </div>
   )

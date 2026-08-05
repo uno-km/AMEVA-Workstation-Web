@@ -18,7 +18,7 @@
  */
 
 
-import { MessageCircle, Share2, Key, LogIn } from 'lucide-react'
+import { MessageCircle, Share2, Key, LogIn, Users } from 'lucide-react'
 import type { ChatMessage } from '../../hooks/useChat'
 import { ChatPanel } from '../ChatPanel'
 
@@ -28,14 +28,8 @@ import { useState } from 'react'
 
 export interface SidebarTabChatProps {}
 
-  /*
-   * [FUNCTION CONTRACT]
-   * - 함수 명: `SidebarTabChat`
-   * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
-   * - 예시: `SidebarTabChat(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
-   */
 export function SidebarTabChat({}: SidebarTabChatProps = {}) {
-  const { chatMessages, sendChatMessage, clearChatMessages, username, userColor, serverRunning, documentId, setDocumentId } = useAppContext()
+  const { chatMessages, sendChatMessage, clearChatMessages, username, userColor, serverRunning, isConnected, documentId, setDocumentId, peers } = useAppContext()
   const { isChatFloating, setIsChatFloating } = useUIStore()
   
   const [joinId, setJoinId] = useState('')
@@ -57,6 +51,12 @@ export function SidebarTabChat({}: SidebarTabChatProps = {}) {
   const onChatSend = sendChatMessage
   const onChatClear = clearChatMessages
   const onToggleChatFloat = () => setIsChatFloating(!isChatFloating)
+
+  // 나와 상대방을 포함한 전체 피어 목록
+  const activePeers = [
+    { id: 'me', name: username, color: userColor },
+    ...peers.filter(p => p.name !== username)
+  ]
 
   return (
     <div
@@ -96,6 +96,32 @@ export function SidebarTabChat({}: SidebarTabChatProps = {}) {
         <button className="btn btn-glass" onClick={handleGenerateUUID} style={{ fontSize: '12px', width: '100%', justifyContent: 'center' }}>
           <Key size={14} /> 새 채팅방 개설 (UUID 복사)
         </button>
+
+        {/* 접속자 목록 (Awareness) */}
+        <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <Users size={12} />
+            <span>현재 접속자 ({activePeers.length}명)</span>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            {activePeers.map(peer => (
+              <div 
+                key={peer.id}
+                title={peer.name}
+                style={{
+                  width: '24px', height: '24px', borderRadius: '50%',
+                  backgroundColor: peer.color,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '10px', fontWeight: 800, color: '#fff',
+                  border: peer.id === 'me' ? '2px solid var(--primary)' : '2px solid transparent',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}
+              >
+                {peer.name.charAt(0).toUpperCase()}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {isChatFloating ? (
@@ -146,7 +172,7 @@ export function SidebarTabChat({}: SidebarTabChatProps = {}) {
             onClear={onChatClear}
             username={username}
             userColor={userColor}
-            serverRunning={serverRunning}
+            serverRunning={serverRunning || isConnected}
           />
         </div>
       )}

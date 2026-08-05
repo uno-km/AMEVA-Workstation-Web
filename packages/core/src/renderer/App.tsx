@@ -449,7 +449,7 @@ export default function App() {
 
   /** Yjs 협업 메신저 메시지 스트림 관리 */
   const { messages: chatMessages, sendMessage: sendChatMessage, clearMessages: clearChatMessages } = useChat(
-    ydoc, provider, username, userColor, serverRunning
+    ydoc, provider, username, userColor, serverRunning || isConnected
   )
 
   /**
