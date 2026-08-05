@@ -62,9 +62,8 @@ export function WelcomeBanner({
           <h1 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 6px 0', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
             <img src={`${import.meta.env.BASE_URL}favicon.png`} alt="AMEVA Logo" style={{ width: '24px', height: '24px', objectFit: 'contain' }} /> AMEVA Workstation Guide Book
           </h1>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
-            아메바 워크스테이션에 오신 것을 환영합니다! 아래는 손실 없이 완전히 렌더링된 공식 안내 백서입니다.<br />
-            문서를 직접 작성하거나 웰컴 가이드를 편집하려면 아래 버튼 중 하나를 클릭해 편집을 바로 시작하십시오.
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0, lineHeight: 1.6 }}>
+            처음이라면 가이드 문서로 시작해 보세요. 실제 예제를 클릭하며 주요 기능을 3분 안에 빠르게 익힐 수 있습니다!
           </p>
         </div>
 
@@ -80,16 +79,17 @@ export function WelcomeBanner({
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
-              background: 'var(--primary)',
-              color: 'var(--text-on-primary)',
-              boxShadow: '0 4px 12px var(--primary-glow)',
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #d946ef 100%)',
+              color: '#ffffff',
+              boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)',
               border: 'none',
               cursor: 'pointer',
-              transition: 'all 0.2s',
+              transition: 'all 0.2s transform 0.1s',
+              transform: 'scale(1)',
             }}
             onClick={onStartWelcomeEdit}
           >
-            <Code2 size={14} /> ✍ 가이드 문서 편집하기
+            🚀 기능 체험 시작하기
           </button>
           
           <button
@@ -131,7 +131,7 @@ export function WelcomeBanner({
             }}
             onClick={onOpenFile}
           >
-            📂 기존 파일 열기
+            📁 기존 파일 열기 (PDF, MD, Word, Excel, PPT 등)
           </button>
         </div>
       </div>

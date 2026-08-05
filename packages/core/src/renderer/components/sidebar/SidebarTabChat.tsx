@@ -18,12 +18,13 @@
  */
 
 
-import { MessageCircle, Share2 } from 'lucide-react'
+import { MessageCircle, Share2, Key, LogIn } from 'lucide-react'
 import type { ChatMessage } from '../../hooks/useChat'
 import { ChatPanel } from '../ChatPanel'
 
 import { useAppContext } from '../../contexts/AppContext'
 import { useUIStore } from '../../stores/useUIStore'
+import { useState } from 'react'
 
 export interface SidebarTabChatProps {}
 
@@ -34,38 +35,69 @@ export interface SidebarTabChatProps {}
    * - 예시: `SidebarTabChat(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
 export function SidebarTabChat({}: SidebarTabChatProps = {}) {
-  const { chatMessages, sendChatMessage, clearChatMessages, username, userColor, serverRunning } = useAppContext()
+  const { chatMessages, sendChatMessage, clearChatMessages, username, userColor, serverRunning, documentId, setDocumentId } = useAppContext()
   const { isChatFloating, setIsChatFloating } = useUIStore()
   
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `onChatSend`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const onChatSend = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
+  const [joinId, setJoinId] = useState('')
+
+  const handleGenerateUUID = () => {
+    const newUUID = crypto.randomUUID()
+    setDocumentId(newUUID)
+    alert(`새로운 채팅방이 생성되었습니다.\nUUID: ${newUUID}\n클립보드에 복사되었습니다!`)
+    navigator.clipboard.writeText(newUUID).catch(() => {})
+  }
+
+  const handleJoinUUID = () => {
+    if (!joinId.trim()) return
+    setDocumentId(joinId.trim())
+    setJoinId('')
+    alert(`방 [${joinId}] 에 접속했습니다.`)
+  }
+
   const onChatSend = sendChatMessage
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `onChatClear`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const onChatClear = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const onChatClear = clearChatMessages
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `onToggleChatFloat`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const onToggleChatFloat = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const onToggleChatFloat = () => setIsChatFloating(!isChatFloating)
+
   return (
     <div
       data-focus-region="sidebar-chat"
       style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', position: 'relative' }}
     >
+      {/* 협업 방 접속 UI 패널 */}
+      <div style={{ padding: '16px', borderBottom: '1px solid var(--border-muted)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
+          <span>현재 접속 중인 방 ID:</span>
+          <span style={{ fontWeight: 600, color: 'var(--primary)', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={documentId}>
+            {documentId}
+          </span>
+        </div>
+        
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <input 
+            type="text" 
+            placeholder="참여할 UUID 입력..." 
+            value={joinId}
+            onChange={(e) => setJoinId(e.target.value)}
+            style={{ 
+              flex: 1, 
+              background: 'var(--bg-lighter)', 
+              border: '1px solid var(--border-muted)', 
+              borderRadius: '6px', 
+              padding: '6px 10px', 
+              fontSize: '12px', 
+              color: 'var(--text-normal)' 
+            }}
+          />
+          <button className="btn btn-primary" onClick={handleJoinUUID} style={{ padding: '6px 10px' }} title="방 접속">
+            <LogIn size={14} />
+          </button>
+        </div>
+
+        <button className="btn btn-glass" onClick={handleGenerateUUID} style={{ fontSize: '12px', width: '100%', justifyContent: 'center' }}>
+          <Key size={14} /> 새 채팅방 개설 (UUID 복사)
+        </button>
+      </div>
+
       {isChatFloating ? (
         <div style={{
           flex: 1, display: 'flex', flexDirection: 'column',

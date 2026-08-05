@@ -247,6 +247,15 @@ export function useAppEditorInit({
 
 ---
 
+### 🆕 [2026-08-05 신기능] 문서 속의 문서 (Doc in Doc)
+이제 PDF, PPT, Word 문서를 마크다운 문서 내부에 직접 포함시키고 조회할 수 있습니다! 아래는 내장된 샘플 문서 예시입니다.
+
+\`\`\`ameva-document
+{"sourceUrl":"https://mozilla.github.io/pdf.js/web/compressed.tracemonkey-pldi-09.pdf","docType":"pdf","fileName":"AMEVA_Sample_Document.pdf","isExpanded":"true"}
+\`\`\`
+
+---
+
 ### 🗄️ 가상 SQLite WASM 데이터베이스 예시
 일렉트론 메모리상에 상주하는 가상 SQLite DB입니다. SELECT 실행 시 예쁜 반응형 그리드 테이블로 즉시 표출됩니다!
 

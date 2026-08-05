@@ -31,6 +31,7 @@ import { InlineKanbanRenderer } from './markdown/InlineKanbanRenderer'
 import { InlineExcelRenderer } from './markdown/InlineExcelRenderer'
 import { InlineYoutubeRenderer } from './markdown/InlineYoutubeRenderer'
 import { InlineDrawingRenderer } from './markdown/InlineDrawingRenderer'
+import { InlineDocumentRenderer } from './markdown/InlineDocumentRenderer'
 
       /*
        * [RUN-TIME STATE / INVARIANT]
@@ -437,6 +438,14 @@ export function MarkdownPreview({ markdown, editor }: { markdown: string; editor
             return (
               <div key={idx} style={{ margin: '16px 0', width: '100%' }}>
                 <InlineDrawingRenderer code={seg.code} />
+              </div>
+            )
+          }
+
+          if (seg.language === 'ameva-document') {
+            return (
+              <div key={idx} style={{ margin: '16px 0', width: '100%' }}>
+                <InlineDocumentRenderer code={seg.code} />
               </div>
             )
           }

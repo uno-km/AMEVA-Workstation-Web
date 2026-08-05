@@ -28,7 +28,7 @@ const workerBlob = new Blob([`import '${pdfWorkerUrl}';`], { type: 'application/
 const workerBlobUrl = URL.createObjectURL(workerBlob)
 pdfjsLib.GlobalWorkerOptions.workerPort = new Worker(workerBlobUrl, { type: 'module' })
 
-type DocType = 'pdf' | 'pptx' | 'docx' | 'xlsx' | 'unknown'
+export type DocType = 'pdf' | 'pptx' | 'docx' | 'xlsx' | 'unknown'
 
 function detectDocType(fileName: string, mimeType?: string): DocType {
   const ext = fileName.split('.').pop()?.toLowerCase() || ''
@@ -39,7 +39,7 @@ function detectDocType(fileName: string, mimeType?: string): DocType {
   return 'unknown'
 }
 
-const DOC_TYPE_CONFIG: Record<DocType, { label: string; color: string; icon: React.ReactNode }> = {
+export const DOC_TYPE_CONFIG: Record<DocType, { label: string; color: string; icon: React.ReactNode }> = {
   pdf:     { label: 'PDF',         color: '#ef4444', icon: <FileText size={16} /> },
   pptx:    { label: 'PowerPoint',  color: '#f97316', icon: <Presentation size={16} /> },
   docx:    { label: 'Word',        color: '#3b82f6', icon: <FileType2 size={16} /> },
@@ -48,7 +48,7 @@ const DOC_TYPE_CONFIG: Record<DocType, { label: string; color: string; icon: Rea
 }
 
 /** PDF Mini Viewer (Canvas 렌더링) */
-function PdfMiniViewer({ sourceUrl, height }: { sourceUrl: string; height: number }) {
+export function PdfMiniViewer({ sourceUrl, height }: { sourceUrl: string; height: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [numPages, setNumPages] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
@@ -175,13 +175,23 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
     fileBase64: string
     docType: DocType
     height: string
+    width: string
     sourceUrl: string
     isExpanded: string
   }
 
   const [isDragging, setIsDragging] = useState(false)
+  const [localHeight, setLocalHeight] = useState<number | null>(null)
+  const [localWidth, setLocalWidth] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const height = parseInt(props.height || '420', 10)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const bottomResizerRef = useRef<HTMLDivElement>(null)
+  const rightResizerRef = useRef<HTMLDivElement>(null)
+  
+  const height = localHeight ?? parseInt(props.height || '420', 10)
+  // width: '100%'이면 null(full), 숫자면 px
+  const widthStr = props.width || '100%'
+  const localWidthNum = localWidth ?? (widthStr === '100%' ? null : parseInt(widthStr, 10))
   const isExpanded = props.isExpanded === 'true'
   const docType = (props.docType as DocType) || 'unknown'
   const config = DOC_TYPE_CONFIG[docType]
@@ -190,23 +200,77 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
   const hasFile = !!props.sourceUrl && isLocalMemory
   const hasUrl = !!props.sourceUrl && !isLocalMemory
 
+  // ── 리사이저: native 이벤트에 stopImmediatePropagation 적용 (BlockNote ProseMirror 충돌 완전 차단)
+  useEffect(() => {
+    const bottomEl = bottomResizerRef.current
+    const rightEl = rightResizerRef.current
+    if (!bottomEl && !rightEl) return
+
+    const stopAll = (e: Event) => {
+      e.stopPropagation()
+      e.stopImmediatePropagation()
+    }
+
+    const onBottomMouseDown = (e: MouseEvent) => {
+      e.preventDefault()
+      stopAll(e)
+      const startY = e.clientY
+      const startH = localHeight ?? parseInt(props.height || '420', 10)
+
+      const onMove = (mv: MouseEvent) => {
+        const newH = Math.min(1000, Math.max(150, startH + mv.clientY - startY))
+        setLocalHeight(newH)
+      }
+      const onUp = (up: MouseEvent) => {
+        const finalH = Math.min(1000, Math.max(150, startH + up.clientY - startY))
+        setLocalHeight(null)
+        editor.updateBlock(block.id, { props: { ...props, height: finalH.toString() } })
+        window.removeEventListener('mousemove', onMove)
+        window.removeEventListener('mouseup', onUp)
+      }
+      window.addEventListener('mousemove', onMove)
+      window.addEventListener('mouseup', onUp)
+    }
+
+    const onRightMouseDown = (e: MouseEvent) => {
+      e.preventDefault()
+      stopAll(e)
+      const startX = e.clientX
+      const containerWidth = containerRef.current?.getBoundingClientRect().width ?? 600
+      const startW = localWidthNum ?? containerWidth
+
+      const onMove = (mv: MouseEvent) => {
+        const newW = Math.min(window.innerWidth - 80, Math.max(300, startW + mv.clientX - startX))
+        setLocalWidth(newW)
+      }
+      const onUp = (up: MouseEvent) => {
+        const finalW = Math.min(window.innerWidth - 80, Math.max(300, startW + up.clientX - startX))
+        setLocalWidth(null)
+        editor.updateBlock(block.id, { props: { ...props, width: finalW.toString() } })
+        window.removeEventListener('mousemove', onMove)
+        window.removeEventListener('mouseup', onUp)
+      }
+      window.addEventListener('mousemove', onMove)
+      window.addEventListener('mouseup', onUp)
+    }
+
+    bottomEl?.addEventListener('mousedown', onBottomMouseDown, { capture: true })
+    rightEl?.addEventListener('mousedown', onRightMouseDown, { capture: true })
+    return () => {
+      bottomEl?.removeEventListener('mousedown', onBottomMouseDown, { capture: true })
+      rightEl?.removeEventListener('mousedown', onRightMouseDown, { capture: true })
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [block.id, editor, props.height, props.width, localHeight, localWidthNum])
+
   const handleFileUpload = useCallback(async (file: File) => {
     const docT = detectDocType(file.name, file.type)
-    
-    // UUID 생성 및 IndexedDB에 파일 저장 (새로고침 시 유지)
     const fileId = crypto.randomUUID()
     await saveAttachment(fileId, file)
     const url = `ameva-vfs://${fileId}`
-    
     editor.updateBlock(block.id, {
       type: 'inlineDocument',
-      props: {
-        ...props,
-        fileName: file.name,
-        fileBase64: '', // Base64 완전 제거
-        sourceUrl: url,
-        docType: docT,
-      }
+      props: { ...props, fileName: file.name, fileBase64: '', sourceUrl: url, docType: docT }
     })
   }, [block.id, editor, props])
 
@@ -218,17 +282,14 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
   }, [handleFileUpload])
 
   useEffect(() => {
-    // 블록이 처음 생성되었고 비어있을 때 자동으로 파일 탐색기 열기
     if (!hasFile && !hasUrl && props.sourceUrl === '') {
-      const timer = setTimeout(() => {
-        fileInputRef.current?.click()
-      }, 100)
+      const timer = setTimeout(() => { fileInputRef.current?.click() }, 100)
       return () => clearTimeout(timer)
     }
   }, [hasFile, hasUrl, props.sourceUrl])
 
   const handleUrlInput = useCallback(() => {
-    const url = window.prompt('문서 URL을 입력하세요 (PDF, Office Online 공유 링크):')
+    const url = window.prompt('문서 URL을 입력하세요:')
     if (!url) return
     const docT = detectDocType(url)
     editor.updateBlock(block.id, {
@@ -237,13 +298,16 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
   }, [block.id, editor, props])
 
   const containerStyle: React.CSSProperties = {
+    position: 'relative',
     border: `1px solid ${isDragging ? config.color : 'rgba(255,255,255,0.1)'}`,
     borderRadius: 8,
     overflow: 'hidden',
     background: 'var(--bg-panel, #0f0f1a)',
     margin: '4px 0',
-    transition: 'border-color 0.2s',
+    transition: 'border-color 0.2s, width 0.05s',
     userSelect: 'none',
+    width: localWidthNum ? `${localWidthNum}px` : '100%',
+    maxWidth: '100%',
   }
 
   // 헤더 바
@@ -349,18 +413,20 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
   return (
     <div style={containerStyle}>
       {headerBar}
-      <div style={{ height: viewHeight, overflow: 'hidden' }}>
-        {/* PDF → Canvas 직접 렌더링 */}
+      {/* URL 기반 PDF: overflow visible + height 보장해야 브라우저 PDF 툴바가 보임 */}
+      <div style={{ height: viewHeight, overflow: docType === 'pdf' && hasUrl ? 'hidden' : 'hidden', position: 'relative' }}>
+        {/* PDF → Canvas 직접 렌더링 (로컬 파일) */}
         {docType === 'pdf' && hasFile && (
           <PdfMiniViewer sourceUrl={props.sourceUrl} height={viewHeight} />
         )}
 
-        {/* PDF URL → iframe */}
+        {/* PDF URL → iframe full viewer */}
         {docType === 'pdf' && hasUrl && (
           <iframe
             src={props.sourceUrl}
-            style={{ width: '100%', height: '100%', border: 'none' }}
+            style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
             title={props.fileName || 'PDF'}
+            allowFullScreen
           />
         )}
 
@@ -392,12 +458,34 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
           />
         )}
       </div>
+      
+      {/* 하단 리사이저 (크기 조절 핸들) — contentEditable=false 필수: BlockNote DOM 파서 충돌 방지 */}
+      <div
+        contentEditable={false}
+        onMouseDown={handleResizeMouseDown}
+        style={{
+          width: '100%',
+          height: '12px',
+          background: 'transparent',
+          cursor: 'ns-resize',
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          zIndex: 10,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'flex-end',
+          paddingBottom: '3px'
+        }}
+      >
+        <div style={{ width: '48px', height: '4px', background: 'rgba(255,255,255,0.25)', borderRadius: '2px', transition: 'background 0.15s' }} />
+      </div>
     </div>
   )
 }
 
 /** PPTX Viewer (pptx-preview 기반 렌더링) */
-function PptxMiniViewer({ sourceUrl, fileBase64, height }: { sourceUrl: string; fileBase64?: string; height: number }) {
+export function PptxMiniViewer({ sourceUrl, fileBase64, height }: { sourceUrl: string; fileBase64?: string; height: number }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -475,7 +563,7 @@ function PptxMiniViewer({ sourceUrl, fileBase64, height }: { sourceUrl: string; 
 }
 
 /** Office 문서 뷰어 (DOCX → mammoth.js HTML, XLSX → exceljs HTML) */
-function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, height }: {
+export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, height }: {
   sourceUrl: string; fileBase64?: string; docType: DocType; fileName: string; height: number
 }) {
   const [htmlContent, setHtmlContent] = useState<string | null>(null)
@@ -586,6 +674,7 @@ export const InlineDocumentBlockSpec = createReactBlockSpec(
       fileBase64:  { default: '' },
       docType:     { default: 'unknown' },
       height:      { default: '420' },
+      width:       { default: '100%' },
       sourceUrl:   { default: '' },
       isExpanded:  { default: 'false' },
     },

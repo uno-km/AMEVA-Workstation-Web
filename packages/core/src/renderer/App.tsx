@@ -169,7 +169,7 @@ export default function App() {
    * - serverHost: 로컬 협업 서버 타깃 호스트.
    * - useLocalServer: 로컬 협업 서버 활성화 옵션.
    */
-  const [documentId] = useState('default-doc')
+  const [documentId, setDocumentId] = useState('default-doc')
   const [username, setUsername] = useState(randomUsername)
   const [userColor, setUserColor] = useState(randomColor)
   const [editor, setEditor] = useState<AppEditor | null>(null)
@@ -520,7 +520,7 @@ export default function App() {
     <AppProvider value={{
       settings, handleUpdateSettings, handleInstallPlugin, handleUninstallPlugin,
       handleOpenGithub, handleCloseApp, handleToggleFullscreen, handleZoomIn, handleZoomOut, handleZoomReset,
-      editor, editorMode, setEditorMode, handleSwitchMode, handleStartWelcomeEdit, handleStartNewDocument,
+      documentId, setDocumentId, editor, editorMode, setEditorMode, handleSwitchMode, handleStartWelcomeEdit, handleStartNewDocument,
       loadMarkdownIntoEditor,
       handleOpenFile, handleSaveFile, handleSaveAsFile, handleExport,
       snapshots, createSnapshot, deleteSnapshot, handleSelectSnapshotForDiff, handleRollback, getLineDiff,

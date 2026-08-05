@@ -208,7 +208,7 @@ export const PresentationBlockComponent = ({ block, editor: _editor }: Presentat
           }}
         >
           <button 
-            onClick={handlePrev}
+            onClick={(e) => { e.stopPropagation(); e.preventDefault(); handlePrev(); }}
             style={{
               border: 'none',
               background: 'none',
@@ -230,7 +230,7 @@ export const PresentationBlockComponent = ({ block, editor: _editor }: Presentat
           </span>
 
           <button 
-            onClick={handleNext}
+            onClick={(e) => { e.stopPropagation(); e.preventDefault(); handleNext(); }}
             style={{
               border: 'none',
               background: 'none',

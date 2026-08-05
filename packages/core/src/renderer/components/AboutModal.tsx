@@ -33,13 +33,6 @@ interface AboutModalProps {
    * - 예시: `AboutModal(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
 export function AboutModal({ isOpen, onClose, onOpenGithub }: AboutModalProps) {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `!isOpen`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (!isOpen)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
   if (!isOpen) return null
 
   return (
@@ -51,8 +44,8 @@ export function AboutModal({ isOpen, onClose, onOpenGithub }: AboutModalProps) {
       width={560}
       footer={
         <>
-          <button className="btn btn-glass" style={{ fontSize: '12px' }} onClick={onOpenGithub}>
-            <ExternalLink size={12} /> Contact Us (Github)
+          <button className="btn btn-glass" style={{ fontSize: '12px' }} onClick={() => window.open('https://github.com/uno-km', '_blank')}>
+            <ExternalLink size={12} /> Contact Us (UnoKim GitHub)
           </button>
           <button className="btn btn-primary" style={{ padding: '6px 20px', fontSize: '12px' }} onClick={onClose}>
             닫기
@@ -98,12 +91,16 @@ export function AboutModal({ isOpen, onClose, onOpenGithub }: AboutModalProps) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', lineHeight: '1.6', fontSize: '13px' }}>
             <p>
               <strong>아메바(AMEVA) 생태계</strong>는 개발자, 연구원, 기업이 디지털 문서를 단 하나의 툴에서 완벽하게 창작,
-              분석, 시각화하고 최종 빌드할 수 있는 통합 문서 플랫폼을 지향합니다.
+              분석, 시각화하고 최종 빌드할 수 있는 최첨단 통합 문서 플랫폼입니다.
             </p>
             <p>
-              단순한 텍스트 편집의 한계를 넘어, **실시간 Yjs 협업 엔진**을 탑재하여 언제 어디서나 안전하게 공동 연구 및
-              편집을 진행할 수 있으며, 격리된 터미널 샌드박스로 마크다운 문서 내에서 코드를 즉각 기동할 수 있습니다.
+              단순한 텍스트 편집의 한계를 넘어, <strong>실시간 Yjs 협업 엔진</strong>을 탑재하여 언제 어디서나 안전하게 공동 연구 및
+              편집을 진행할 수 있습니다. 
             </p>
+            <p>
+              또한 웹 환경에서도 원활하게 작동하는 P2P 기반 실시간 채팅 기능, 칸반 보드, 다크모드, 자동 백업 등 웹 워크스테이션으로서의 완벽한 기능들을 제공합니다.
+            </p>
+            
             <div
               style={{
                 background: 'rgba(139, 92, 246, 0.08)',
@@ -123,6 +120,26 @@ export function AboutModal({ isOpen, onClose, onOpenGithub }: AboutModalProps) {
                   Word, Excel, PDF, HTML, XML은 물론 한글 HWPX 규격까지 무손실 빌드를 보장합니다.
                 </p>
               </div>
+            </div>
+          </div>
+
+          <div style={{ height: '1px', backgroundColor: 'var(--border-muted)', marginTop: '10px' }} />
+
+          {/* 명함 (Business Card) 구역 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '10px', padding: '16px', borderRadius: '12px', backgroundColor: 'var(--bg-lighter)', border: '1px solid var(--border-muted)' }}>
+            <img 
+              src="/uno-km.jpg" 
+              alt="UnoKim" 
+              style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }} 
+            />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 800, margin: 0 }}>Uno Kim (uno-km)</h3>
+              <p style={{ fontSize: '12px', color: 'var(--text-muted)', margin: 0 }}>
+                Creator & Lead Architect of AMEVA OS
+              </p>
+              <p style={{ fontSize: '11px', color: 'var(--primary)', margin: 0, marginTop: '4px', fontStyle: 'italic' }}>
+                "Building the next generation of collaborative workspaces."
+              </p>
             </div>
           </div>
         </div>
