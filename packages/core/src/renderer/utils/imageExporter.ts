@@ -6,13 +6,25 @@
 
 const CUSTOM_BLOCK_TYPES = [
   'jupyter', 'drawing', 'linkPreview', 'youtube', 'map', 
-  'presentation', 'excel', 'kanban', 'inlineDocument'
+  'presentation', 'kanban', 'inlineDocument'
 ]
 
-export async function convertCustomBlocksToImages(blocks: any[]): Promise<any[]> {
+export async function convertCustomBlocksToImages(blocks: any[], setP?: (percent: number, msg: string) => void): Promise<any[]> {
   try {
     const html2canvasModule = await import('html2canvas')
     const html2canvas = html2canvasModule.default
+
+    let totalBlocks = 0
+    let processedBlocks = 0
+
+    // Count blocks recursively
+    const countBlocks = (nodes: any[]) => {
+      for (const b of nodes) {
+        if (CUSTOM_BLOCK_TYPES.includes(b.type)) totalBlocks++
+        if (b.children) countBlocks(b.children)
+      }
+    }
+    countBlocks(blocks)
 
     const processBlocks = async (nodes: any[]): Promise<any[]> => {
       const result: any[] = []
@@ -29,13 +41,21 @@ export async function convertCustomBlocksToImages(blocks: any[]): Promise<any[]>
               let targetElement = domElement.querySelector('.bn-block-content') as HTMLElement
               if (!targetElement) targetElement = domElement
 
-              // html2canvas 옵션: CORS 허용, 배경 투명, 고해상도
-              const canvas = await html2canvas(targetElement, {
-                useCORS: true,
-                allowTaint: true,
-                backgroundColor: null,
-                scale: 2 
-              })
+              if (setP && totalBlocks > 0) {
+                const percent = 25 + Math.floor((processedBlocks / totalBlocks) * 35) // 25% ~ 60%
+                setP(percent, `블록 이미지화 진행 중... (${processedBlocks + 1}/${totalBlocks})`)
+              }
+
+              // html2canvas 옵션: CORS 허용, 배경 투명, 고해상도 + 5초 타임아웃
+              const canvas = await Promise.race([
+                html2canvas(targetElement, {
+                  useCORS: true,
+                  allowTaint: false,
+                  backgroundColor: null,
+                  scale: 2 
+                }),
+                new Promise<HTMLCanvasElement>((_, reject) => setTimeout(() => reject(new Error('html2canvas timeout')), 5000))
+              ])
               
               const dataUrl = canvas.toDataURL('image/png')
               
@@ -52,6 +72,7 @@ export async function convertCustomBlocksToImages(blocks: any[]): Promise<any[]>
           } catch (e) {
             console.error(`[imageExporter] Failed to capture block ${block.id}:`, e)
           }
+          processedBlocks++
         }
 
         // 자식 블록 재귀 캡처

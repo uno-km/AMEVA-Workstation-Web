@@ -127,7 +127,7 @@ function inlineToHTML(inline: NormalizedInlineContent[]): string {
 // ══════════════════════════════════════════════════════════════
 function parseAmevaBlockData(raw: any): any {
   if (typeof raw !== 'string') return raw
-  const cleaned = raw.replace(/^\/\/\s*\[AMEVA_LANG:[a-zA-Z0-9_-]+\]\s*/, '').trim()
+  const cleaned = raw.replace(/^\/\/\s*\[.*?\]\s*/, '').trim()
   if (!cleaned) return {}
   try {
     return JSON.parse(cleaned)
@@ -570,6 +570,24 @@ export async function blocksToHTML(rawBlocks: any): Promise<string> {
       case 'divider':
         return '<hr />\n'
 
+      // ── AMEVA MAP, YOUTUBE, LINK PREVIEW BLOCKS → HTML ────────────────────
+      case 'map':
+        return `<div style="padding:12px; border:1px solid #cbd5e1; border-radius:8px; background:#f8fafc; margin-bottom:1.5rem;">
+          <h4 style="margin:0 0 8px 0; color:#334155; font-size:14px;">🗺️ [지도] ${escapeHtml(block.props?.locationName || '위치 정보')}</h4>
+          <span style="font-size:12px; color:#64748b;">(위도: ${escapeHtml(String(block.props?.lat || ''))}, 경도: ${escapeHtml(String(block.props?.lng || ''))})</span>
+        </div>\n`
+      case 'youtube':
+        return `<div style="padding:12px; border:1px solid #cbd5e1; border-radius:8px; background:#f8fafc; margin-bottom:1.5rem;">
+          <h4 style="margin:0 0 8px 0; color:#dc2626; font-size:14px;">▶️ [YouTube 영상]</h4>
+          <a href="${escapeHtml(block.props?.url || '')}" style="color:#2563eb; font-size:13px; text-decoration:none;">${escapeHtml(block.props?.url || '링크 없음')}</a>
+        </div>\n`
+      case 'linkPreview':
+        return `<div style="padding:12px; border:1px solid #cbd5e1; border-radius:8px; background:#f8fafc; margin-bottom:1.5rem;">
+          <h4 style="margin:0 0 6px 0; color:#334155; font-size:14px;">🔗 [링크 미리보기] ${escapeHtml(block.props?.title || '제목 없음')}</h4>
+          ${block.props?.description ? `<p style="font-size:12px; color:#64748b; margin:0 0 8px 0;">${escapeHtml(block.props.description)}</p>` : ''}
+          <a href="${escapeHtml(block.props?.url || '')}" style="color:#2563eb; font-size:12px; text-decoration:none;">${escapeHtml(block.props?.url || '링크 없음')}</a>
+        </div>\n`
+
       // ── AMEVA EXCEL BLOCK → HTML TABLE ─────────────────────────────────────
       case 'excel': {
         const excelDataRaw = block.props?.data || '[]'
@@ -706,12 +724,22 @@ export async function exportToWord(rawBlocks: any): Promise<Blob> {
   const blocks: NormalizedBlock[] = Array.isArray(rawBlocks) ? rawBlocks : []
   try {
     const docx = await import('docx')
-    const { Document, Packer, Paragraph, TextRun, HeadingLevel } = docx
+    const { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun, Table, TableRow, TableCell, WidthType } = docx
     
     const children: any[] = []
     
+    // Helper function to get image dimensions
+    const getImageDimensions = (url: string): Promise<{ width: number, height: number }> => {
+      return new Promise((resolve) => {
+        const img = new Image()
+        img.onload = () => resolve({ width: img.width, height: img.height })
+        img.onerror = () => resolve({ width: 500, height: 300 })
+        img.src = url
+      })
+    }
+    
     for (const block of blocks) {
-      const text = getPlainTextFromNormalized(block.content)
+      const text = getPlainTextFromNormalized(block)
       
       if (block.type === 'heading') {
         const level = block.props.level || 1
@@ -744,21 +772,106 @@ export async function exportToWord(rawBlocks: any): Promise<Blob> {
           })
         )
       } else if (block.type === 'numberedListItem') {
-        // 간이 구현: 숫자는 docx에서 Numbering 설정을 따로 해야 하므로 텍스트로 처리
         children.push(
           new Paragraph({
             text: '1. ' + text,
             spacing: { after: 120 }
           })
         )
-      } else if (block.type === 'image') {
-        // 이미지 처리 로직은 복잡하므로 간단히 텍스트 대체
+      } else if (block.type === 'checkListItem') {
         children.push(
           new Paragraph({
-            text: '[이미지가 포함되었습니다]',
+            text: (block.props.checked ? '[x] ' : '[ ] ') + text,
             spacing: { after: 120 }
           })
         )
+      } else if (block.type === 'quote') {
+        children.push(
+          new Paragraph({
+            text: '” ' + text,
+            spacing: { after: 120 }
+          })
+        )
+      } else if (block.type === 'divider') {
+        children.push(
+          new Paragraph({
+            text: '───────────────────────',
+            spacing: { after: 120, before: 120 }
+          })
+        )
+      } else if (block.type === 'image') {
+        try {
+          const url = block.props.url
+          const { width, height } = await getImageDimensions(url)
+          const res = await fetch(url)
+          const arrayBuffer = await res.arrayBuffer()
+          
+          // Constrain width to 600 max
+          const finalWidth = Math.min(width, 600)
+          const finalHeight = width > 600 ? 600 * (height / width) : height
+
+          children.push(
+            new Paragraph({
+              children: [
+                new ImageRun({
+                  data: arrayBuffer,
+                  transformation: { width: finalWidth, height: finalHeight }
+                })
+              ],
+              spacing: { after: 120 }
+            })
+          )
+        } catch (e) {
+          children.push(
+            new Paragraph({
+              text: '[이미지를 불러오지 못했습니다]',
+              spacing: { after: 120 }
+            })
+          )
+        }
+      } else if (block.type === 'table') {
+        const rows = block.content?.rows || []
+        if (Array.isArray(rows) && rows.length > 0) {
+          children.push(
+            new Table({
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              rows: rows.map((r: any) => new TableRow({
+                children: (Array.isArray(r) ? r : []).map((c: any) => new TableCell({
+                  children: [new Paragraph({ text: c.content || '' })]
+                }))
+              }))
+            })
+          )
+          children.push(new Paragraph({ text: '', spacing: { after: 120 } }))
+        }
+      } else if (block.type === 'excel') {
+        const excelDataRaw = block.props?.data || '[]'
+        try {
+          const sheets = typeof excelDataRaw === 'string' ? parseAmevaBlockData(excelDataRaw) : excelDataRaw
+          const sheetArr = Array.isArray(sheets) ? sheets : [sheets]
+          for (const sheet of sheetArr) {
+            if (sheet.data && Array.isArray(sheet.data)) {
+              const matrix = sheet.data.filter((r: any[]) => Array.isArray(r))
+              if (matrix.length === 0) continue
+              
+              children.push(
+                new Paragraph({ text: `[Excel] ${sheet.name || 'Sheet'}`, heading: HeadingLevel.HEADING_4, spacing: { before: 240, after: 120 } })
+              )
+              
+              children.push(
+                new Table({
+                  width: { size: 100, type: WidthType.PERCENTAGE },
+                  rows: matrix.map((r: any[]) => new TableRow({
+                    children: r.map((c: any) => new TableCell({
+                      children: [new Paragraph({ text: c?.m || c?.v || '' })]
+                    }))
+                  }))
+                })
+              )
+              children.push(new Paragraph({ text: '', spacing: { after: 120 } }))
+            }
+          }
+        } catch(e) {}
       } else {
         // Fallback
         children.push(
@@ -894,15 +1007,14 @@ export async function exportToPPTX(rawBlocks: any): Promise<Uint8Array> {
             currentY += 3.2
           } catch(e) {}
         }
-      } else if (type === 'table') {
-        const rows = block.tableRows || []
-        if (rows.length > 0) {
-          const tableData = rows.map(r => r.map(c => ({ text: c.content || '' })))
+        } else if (type === 'table') {
+          const rows = block.content?.rows || []
+          if (!Array.isArray(rows) || rows.length === 0) continue
+          const tableData = rows.map((r: any) => Array.isArray(r) ? r.map((c: any) => ({ text: c.content || '' })) : [])
           currentSlide.addTable(tableData, { x: 0.5, y: currentY, w: 9 })
           hasSlides = true
           currentY += (rows.length * 0.4) + 0.2
-        }
-      } else if (type === 'codeBlock') {
+        } else if (type === 'codeBlock') {
         addText(`[코드 블록: ${block.props?.language || 'text'}]\n${text}`, { x: 0.5, y: currentY, w: '90%', fontSize: 12, fontFace: 'Courier New', color: '404040' })
         currentY += 1.0
       } else if (type === 'kanban' || type === 'excel' || type === 'inlineDocument' || type === 'presentation' || type === 'jupyter') {

@@ -40,24 +40,24 @@ import { BlockNoteEditor } from "@blocknote/core"
  * - schema: Jupyter 코드블록, Live HTML Sandbox, Drawing 캔버스를 포함한 AMEVA 커스텀 스키마.
  * - AppEditor: 스키마가 반영된 최종 에디터 타입 시그니처.
  */
-import { locales } from '@blocknote/core'
+import { en as localeEn } from '@blocknote/core/locales'
 import { Code, PenTool, Link, Video, Map, Presentation, Table, Kanban, FileText } from 'lucide-react'
 import { amevaSchema as schema, type AmevaEditor as AppEditor } from '../../editor/amevaBlockSchema'
 
 // 커스텀 블록 Dictionary 확장을 통해 드래그 핸들(::) 메뉴 렌더링 시 React #130 에러(아이콘 undefined) 방지
 const customDictionary = {
-  ...locales.en.dictionary,
-  block: {
-    ...locales.en.dictionary.block,
-    jupyter: { name: 'Jupyter Code', icon: Code },
-    drawing: { name: 'Drawing Canvas', icon: PenTool },
-    linkPreview: { name: 'Link Preview', icon: Link },
-    youtube: { name: 'YouTube Video', icon: Video },
-    map: { name: 'Interactive Map', icon: Map },
-    presentation: { name: 'Presentation', icon: Presentation },
-    excel: { name: 'Excel Table', icon: Table },
-    kanban: { name: 'Kanban Board', icon: Kanban },
-    inlineDocument: { name: 'Inline Document', icon: FileText },
+  ...localeEn,
+  slash_menu: {
+    ...localeEn.slash_menu,
+    jupyter: { title: 'Jupyter Code', subtext: 'Interactive code block', aliases: ['jupyter', 'code'], group: 'AMEVA', icon: Code },
+    drawing: { title: 'Drawing Canvas', subtext: 'Excalidraw canvas', aliases: ['drawing', 'canvas'], group: 'AMEVA', icon: PenTool },
+    linkPreview: { title: 'Link Preview', subtext: 'URL preview card', aliases: ['link', 'url'], group: 'AMEVA', icon: Link },
+    youtube: { title: 'YouTube Video', subtext: 'Embed YouTube video', aliases: ['youtube', 'video'], group: 'AMEVA', icon: Video },
+    map: { title: 'Interactive Map', subtext: 'OpenStreetMap embed', aliases: ['map', 'location'], group: 'AMEVA', icon: Map },
+    presentation: { title: 'Presentation', subtext: 'Slide deck', aliases: ['pptx', 'slides'], group: 'AMEVA', icon: Presentation },
+    excel: { title: 'Excel Table', subtext: 'Spreadsheet', aliases: ['excel', 'table'], group: 'AMEVA', icon: Table },
+    kanban: { title: 'Kanban Board', subtext: 'Task board', aliases: ['kanban', 'board'], group: 'AMEVA', icon: Kanban },
+    inlineDocument: { title: 'Inline Document', subtext: 'PDF/Word viewer', aliases: ['pdf', 'document'], group: 'AMEVA', icon: FileText },
   }
 } as any
 import * as ipc from '../../services/ipc/electronApiAdapter'

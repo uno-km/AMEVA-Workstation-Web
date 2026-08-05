@@ -175,7 +175,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
   const docType = (props.docType as DocType) || 'unknown'
   const config = DOC_TYPE_CONFIG[docType]
 
-  const isLocalMemory = props.sourceUrl?.startsWith('blob:') || props.sourceUrl?.startsWith('ameva-vfs://')
+  const isLocalMemory = props.sourceUrl?.startsWith('blob:') || props.sourceUrl?.startsWith('ameva-vfs://') || props.sourceUrl?.startsWith('data:')
   const hasFile = !!props.sourceUrl && isLocalMemory
   const hasUrl = !!props.sourceUrl && !isLocalMemory
 

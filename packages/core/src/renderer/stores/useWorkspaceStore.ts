@@ -40,6 +40,8 @@ export interface WorkspaceTab {
   blocks: any[]
   originalContent?: string
   lastSavedTime?: Date | null
+  pdfData?: string | null
+  pdfFileName?: string
 }
 
 /**

@@ -25,15 +25,18 @@ import { triggerBrowserDownload } from './exportUtils'
 export async function handleBrowserExport(
   editor: AmevaEditor,
   format: ExportFormat,
-  blocks: any[]
+  blocks: any[],
+  setP?: (percent: number, message: string) => void
 ): Promise<string | null> {
   let savedPath: string | null = null
   let exportBlocks = blocks
   
   if (['pdf', 'docx', 'xlsx', 'pptx', 'hwpx'].includes(format)) {
     const { convertCustomBlocksToImages } = await import('../../../utils/imageExporter')
-    exportBlocks = await convertCustomBlocksToImages(editor.document)
+    exportBlocks = await convertCustomBlocksToImages(blocks, setP)
   }
+
+  if (setP) setP(65, '문서 포맷 빌드 중...')
 
       /*
        * [SWITCH ROUTING CASE]

@@ -94,7 +94,8 @@ export function useAppTabs(
       lastSavedTime: null
     }
 
-    updateActiveTab({ filePath, content: currentContent, blocks: currentBlocks, originalContent, lastSavedTime })
+    const { pdfData: currentPdfData, pdfFileName: currentPdfFileName } = useWorkspaceStore.getState()
+    updateActiveTab({ filePath, content: currentContent, blocks: currentBlocks, originalContent, lastSavedTime, pdfData: currentPdfData, pdfFileName: currentPdfFileName })
     addTab(newTab)
 
     setActiveTabId(newTabId)
@@ -102,6 +103,9 @@ export function useAppTabs(
     setCurrentContent('')
     setOriginalContent('')
     setLastSavedTime(null)
+    const { setPdfData, setPdfFileName } = useWorkspaceStore.getState()
+    setPdfData(null)
+    setPdfFileName('')
     
     setTimeout(() => {
       editor.replaceBlocks(editor.document, newTab.blocks)
@@ -119,7 +123,8 @@ export function useAppTabs(
 
     const currentBlocks = [...editor.document]
     
-    updateActiveTab({ filePath, content: currentContent, blocks: currentBlocks, originalContent, lastSavedTime })
+    const { pdfData, pdfFileName } = useWorkspaceStore.getState()
+    updateActiveTab({ filePath, content: currentContent, blocks: currentBlocks, originalContent, lastSavedTime, pdfData, pdfFileName })
     
       /*
        * [RUN-TIME STATE / INVARIANT]
@@ -142,6 +147,10 @@ export function useAppTabs(
         setCurrentContent(targetTab.content)
         setOriginalContent(targetTab.originalContent !== undefined ? targetTab.originalContent : targetTab.content)
         setLastSavedTime(targetTab.lastSavedTime !== undefined ? targetTab.lastSavedTime : null)
+        
+        const { setPdfData, setPdfFileName } = useWorkspaceStore.getState()
+        setPdfData(targetTab.pdfData || null)
+        setPdfFileName(targetTab.pdfFileName || '')
         
       /*
        * [ALGORITHM BRANCH / DECISION]

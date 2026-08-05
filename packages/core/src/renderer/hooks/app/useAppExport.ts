@@ -139,7 +139,7 @@ export function useAppExport(editor: AmevaEditor | null) {
       if (ipc.isElectronEnv()) {
         savedPath = await handleElectronExport(editor, format, blocks, setP, dynamicFileName)
       } else {
-        savedPath = await handleBrowserExport(editor, format, blocks)
+        savedPath = await handleBrowserExport(editor, format, blocks, setP)
       }
 
       // 사용자가 저장을 취소한 경우 상태 리셋 후 중단
@@ -170,6 +170,10 @@ export function useAppExport(editor: AmevaEditor | null) {
 
       // 2초 뒤 상태창 최소화 및 소멸 단계 진입 계약 준수
       setTimeout(() => {
+        const minimized = useProcessStore.getState().exportMinimized
+        if (minimized) {
+          alert('변환이 완료되었습니다.')
+        }
         setExportMinimized(true)
         setTimeout(() => setExportProgress(IDLE_PROGRESS), 2000)
       }, 2000)

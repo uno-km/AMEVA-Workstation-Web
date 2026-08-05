@@ -151,7 +151,11 @@ export function useAppFileOperations(
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const markdown = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-    const markdown = await parseFileToMarkdown(rawContent, path || filePath || '', isBinary)
+    const parsedResult = await parseFileToMarkdown(rawContent, path || filePath || '', isBinary)
+    const isAdc = typeof parsedResult !== 'string' && parsedResult && 'markdown' in parsedResult
+    const markdown = isAdc ? (parsedResult as any).markdown : parsedResult
+    // sourceBlocks for potential direct restoration (if used)
+    const sourceBlocks = isAdc ? (parsedResult as any).blocks : undefined
 
     // [FIX-PDF-001] PDF 파일은 텍스트 추출 대신 PdfViewer 전용 모드로 처리
     // rawContent(base64)를 pdfData에 분리 보존하여 모드 전환 시에도 데이터 보존
@@ -361,7 +365,34 @@ export function useAppFileOperations(
     const currentBlocks = [...targetEditor.document]
     
     // 현재 열려있는 구 문서 탭 정보 갱신 저장
-    updateActiveTab({ filePath, content: currentContent, blocks: currentBlocks, originalContent, lastSavedTime })
+    const { pdfData: currentPdfData, pdfFileName: currentPdfFileName, setPdfData, setPdfFileName } = useWorkspaceStore.getState()
+    updateActiveTab({ filePath, content: currentContent, blocks: currentBlocks, originalContent, lastSavedTime, pdfData: currentPdfData, pdfFileName: currentPdfFileName })
+
+    const ext = path.split('.').pop()?.toLowerCase() || ''
+
+    if (ext === 'pdf' && isBinary) {
+      const newTabId = Math.random().toString(36).substring(2, 10)
+      const pdfFileName = path.split('/').pop() || path.split('\\').pop() || 'document.pdf'
+      const newTab = {
+        id: newTabId,
+        filePath: path,
+        content: '',
+        blocks: [],
+        originalContent: '',
+        lastSavedTime: null,
+        pdfData: fileContent,
+        pdfFileName
+      }
+      addTab(newTab)
+      setActiveTabId(newTabId)
+      setFilePath(path)
+      setPdfData(fileContent)
+      setPdfFileName(pdfFileName)
+      setCurrentContent('')
+      setOriginalContent('')
+      setLastSavedTime(null)
+      return
+    }
 
       /*
        * [RUN-TIME STATE / INVARIANT]
@@ -417,6 +448,8 @@ export function useAppFileOperations(
     setOriginalContent(converted)
     setCurrentContent(converted)
     setLastSavedTime(null)
+    setPdfData(null)
+    setPdfFileName('')
 
     // 리액트 라이프사이클 안착 직후 블록 교체 실행
     setTimeout(() => {
@@ -660,7 +693,7 @@ export function useAppFileOperations(
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const path = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-    const path = filePath || 'document.md'
+    const path = filePath || 'document.adc'
       /*
        * [RUN-TIME STATE / INVARIANT]
        * - 변수 명: `ext`
@@ -743,8 +776,12 @@ export function useAppFileOperations(
             const arrayBuffer = await blob.arrayBuffer()
             const contentToSave = await arrayBufferToBase64(arrayBuffer)
 
-            // 보정된 경로로 최종 저장 기입 실행
-            await ipc.saveFile(contentToSave, savedPath)
+            // 보정된 경로로 최종 저장 기입 실행 (ADC 파일은 바이너리이므로 writeBinary 사용)
+            if (window.electronAPI?.writeBinary) {
+              await window.electronAPI.writeBinary(savedPath, contentToSave)
+            } else {
+              await ipc.saveFile(contentToSave, savedPath) // fallback
+            }
             setFilePath(savedPath)
             setOriginalContent(rawMarkdown)
             setLastSavedTime(new Date())
@@ -812,30 +849,34 @@ export function useAppFileOperations(
        * - 예시: `if (ipc.isElectronEnv())` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
        */
     if (ipc.isElectronEnv()) {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `saveResult`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const saveResult = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-      const saveResult = await ipc.saveFile(contentToSave, filePath || undefined)
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `saveResult && saveResult.success && saveResult.filePath`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (saveResult && saveResult.success && saveResult.filePath)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-      if (saveResult && saveResult.success && saveResult.filePath) {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `savedPath`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const savedPath = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-        const savedPath = saveResult.filePath
+      let savedPath = filePath
+      
+      // 파일 경로가 없으면(새 문서) 대화상자 호출
+      if (!savedPath) {
+        const promptResult = await ipc.saveFile('', undefined)
+        if (promptResult && promptResult.success && promptResult.filePath) {
+          savedPath = promptResult.filePath
+        } else {
+          return // 취소됨
+        }
+      }
+
+      // 확장자가 없거나 틀린 경우 자동 보정 로직 (isBinarySave 중 adc 우선)
+      if (ext === 'adc' && !savedPath.toLowerCase().endsWith('.adc')) {
+        savedPath = savedPath.split('.').slice(0, -1).join('.') + '.adc'
+      }
+
+      // 최종 파일 쓰기 (바이너리 포맷이면 writeBinary 사용)
+      let saveSuccess = false
+      if (isBinarySave && window.electronAPI?.writeBinary) {
+        const writeRes = await window.electronAPI.writeBinary(savedPath, contentToSave)
+        saveSuccess = writeRes.success
+      } else {
+        const saveRes = await ipc.saveFile(contentToSave, savedPath)
+        saveSuccess = saveRes.success
+      }
+
+      if (saveSuccess) {
         setFilePath(savedPath)
         setOriginalContent(rawMarkdown)
         setLastSavedTime(new Date())
@@ -861,7 +902,13 @@ export function useAppFileOperations(
         alert('모바일 문서 저장 실패: ' + err.message);
       }
     } else {
-      triggerBrowserDownload(contentToSave, filePath || 'document.' + ext)
+      if (ext === 'adc') {
+        const blob = await packMarkdownToADC(markdown, undefined, editor?.document)
+        const dlName = filePath ? (filePath.includes('.') ? filePath.split(/[\\/]/).pop()! : filePath.split(/[\\/]/).pop() + '.adc') : 'document.adc'
+        triggerBrowserDownload(blob, dlName)
+      } else {
+        triggerBrowserDownload(contentToSave, filePath ? filePath.split(/[\\/]/).pop()! : 'document.' + ext)
+      }
       createSnapshot('웹 브라우저 저장본', contentToSave)
     }
   }, [editor, filePath, setFilePath, setOriginalContent, setLastSavedTime, createSnapshot])
@@ -889,6 +936,9 @@ export function useAppFileOperations(
     const rawMarkdown = await editor.blocksToMarkdownLossy(convertJupyterToCodeBlocks(editor.document))
     const markdown = convertMediaSchemaToLocalPaths(rawMarkdown)
     
+    // 기본으로 adc 패키징하여 준비
+    const blob = await packMarkdownToADC(markdown, undefined, editor.document)
+    
       /*
        * [ALGORITHM BRANCH / DECISION]
        * - 조건 식: `ipc.isElectronEnv()`
@@ -904,57 +954,22 @@ export function useAppFileOperations(
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const saveResult = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-      const saveResult = await ipc.saveFile(markdown, undefined)
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `saveResult && saveResult.success && saveResult.filePath`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (saveResult && saveResult.success && saveResult.filePath)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
+      const arrayBuffer = await blob.arrayBuffer()
+      const contentToSave = await arrayBufferToBase64(arrayBuffer)
+      
+      const saveResult = await ipc.saveFile('', undefined)
       if (saveResult && saveResult.success && saveResult.filePath) {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `savedPath`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const savedPath = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-        const savedPath = saveResult.filePath
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `ext`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const ext = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-        const ext = savedPath.split('.').pop()?.toLowerCase() || 'md'
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `isBinarySave`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const isBinarySave = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-        const isBinarySave = ['docx', 'pdf', 'hwpx', 'xlsx', 'xls', 'adc'].includes(ext)
-        let contentToSave: string
-        
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `ext === 'ipynb'`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (ext === 'ipynb')` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-        if (ext === 'ipynb') {
-          contentToSave = convertMarkdownToIpynb(markdown)
-        } else if (isBinarySave) {
-          contentToSave = await convertMarkdownToBinary(editor, savedPath)
-        } else {
-          contentToSave = markdown
+        let savedPath = saveResult.filePath
+        if (!savedPath.toLowerCase().endsWith('.adc')) {
+          savedPath = savedPath.split('.').slice(0, -1).join('.') + '.adc'
         }
         
-        await ipc.saveFile(contentToSave, savedPath)
+        if (window.electronAPI?.writeBinary) {
+          await window.electronAPI.writeBinary(savedPath, contentToSave)
+        } else {
+          await ipc.saveFile(contentToSave, savedPath)
+        }
+        
         setFilePath(savedPath)
         setOriginalContent(rawMarkdown)
         setLastSavedTime(new Date())

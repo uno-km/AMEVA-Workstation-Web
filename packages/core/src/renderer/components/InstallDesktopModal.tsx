@@ -14,22 +14,8 @@ export function InstallDesktopModal({ isOpen, onClose }: InstallDesktopModalProp
   if (!isOpen) return null
 
   const handleDownload = () => {
-    setDownloading(true)
-    
-    // 강제 다운로드 유도
-    const link = document.createElement('a')
-    link.href = '/downloads/AMEVA_Workstation_Setup.exe'
-    link.download = 'AMEVA_Workstation_Setup.exe'
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-
-    setTimeout(() => {
-      setDownloading(false)
-      // 설치 중이거나 완료 단계 안내를 위해 상태를 유지한 뒤 나중에 닫도록 함
-      alert('AMEVA 데스크톱 클라이언트 다운로드가 시작되었습니다.\n다운로드가 완료되면 설치 프로그램을 실행해 주세요.')
-      onClose()
-    }, 1500)
+    window.open('https://github.com/uno-km/AMEVA-Workstation', '_blank')
+    onClose()
   }
 
   const handleDismissForever = () => {
@@ -174,15 +160,15 @@ export function InstallDesktopModal({ isOpen, onClose }: InstallDesktopModalProp
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px' }}>
             <Terminal size={14} color="#a78bfa" />
-            <span>로컬 AI & Ollama 백그라운드 무제한 로드</span>
+            <span>딥리즈닝(Deep Reasoning)을 통한 로컬 LLM 아키텍처 무료 사용</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px' }}>
             <Shield size={14} color="#a78bfa" />
-            <span>OS 샌드박스 보안 격리 실행</span>
+            <span>협업 비즈니스를 위한 광대한 마켓플레이스 환경 제공</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px' }}>
-            <Download size={14} color="#a78bfa" />
-            <span>동영상/오디오 미디어 자동 컴파일 패키징</span>
+            <ArrowRight size={14} color="#a78bfa" />
+            <span>향상된 네이티브 AI 툴 및 오프라인 미디어 자동 컴파일 지원</span>
           </div>
         </div>
 
@@ -211,8 +197,8 @@ export function InstallDesktopModal({ isOpen, onClose }: InstallDesktopModalProp
             onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
           >
-            {downloading ? '다운로드 생성 중...' : '설치 파일 다운로드 및 실행'}
-            <ArrowRight size={14} />
+            {downloading ? '다운로드 생성 중...' : '설치 페이지로 이동 및 깃허브 확인'}
+            <ArrowRight size={16} />
           </button>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
