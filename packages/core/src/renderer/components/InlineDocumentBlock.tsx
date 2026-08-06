@@ -17,9 +17,11 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { createReactBlockSpec } from '@blocknote/react'
-import { Upload, FileText, FileSpreadsheet, Presentation, FileType2, X, Maximize2, Minimize2, ExternalLink } from 'lucide-react'
+import { Upload, FileText, FileSpreadsheet, Presentation, FileType2, X, Maximize2, Minimize2, ExternalLink, Dna } from 'lucide-react'
 import * as pdfjsLib from 'pdfjs-dist'
 import { saveAttachment, getAttachment } from '../utils/vfsDatabase'
+import { useDocumentProfilerStore } from '../stores/useDocumentProfilerStore'
+import { DocumentProfileModal } from './DocumentProfileModal'
 // @ts-ignore
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url'
 
@@ -575,12 +577,16 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
   const containerRef = useRef<HTMLDivElement>(null)
   const bottomResizerRef = useRef<HTMLDivElement>(null)
   const rightResizerRef = useRef<HTMLDivElement>(null)
-  
   const height = localHeight ?? parseInt(props.height || '420', 10)
   // width: '100%'이면 null(full), 숫자면 px
   const widthStr = props.width || '100%'
   const localWidthNum = localWidth ?? (widthStr === '100%' ? null : parseInt(widthStr, 10))
-  const isExpanded = props.isExpanded === 'true'
+  const [isExpanded, setIsExpanded] = useState(props.isExpanded === 'true')
+  const [showDNA, setShowDNA] = useState(false)
+
+  const { profiles } = useDocumentProfilerStore()
+  const fileId = props.sourceUrl?.replace('ameva-vfs://', '')
+  const profile = profiles[fileId || '']
   const docType = (props.docType as DocType) || 'unknown'
   const config = DOC_TYPE_CONFIG[docType]
 
@@ -727,7 +733,19 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
       <span style={{ fontSize: 12, fontWeight: 600, color: '#e2e8f0', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {props.fileName || `${config.label} 문서`}
       </span>
-      <div style={{ display: 'flex', gap: 4 }}>
+          {docType === 'pdf' && profile && (
+            <button
+              onClick={() => setShowDNA(true)}
+              style={{
+                marginLeft: '8px', padding: '4px 10px', background: 'rgba(168, 85, 247, 0.2)', border: '1px solid rgba(168, 85, 247, 0.4)', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: '#d8b4fe', fontSize: '11px', fontWeight: 600,
+              }}
+            >
+              <Dna size={12} />
+              분석 결과
+            </button>
+          )}
+
+          <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
         {(hasFile || hasUrl) && (
           <button
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 2 }}
@@ -819,6 +837,13 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
     <div ref={containerRef} style={containerStyle}>
       {headerBar}
       <div data-viewer-inner style={{ height: viewHeight, overflow: 'hidden', position: 'relative' }}>
+        {showDNA && profile && (
+          <DocumentProfileModal 
+            fileId={fileId || ''}
+            profile={profile} 
+            onClose={() => setShowDNA(false)} 
+          />
+        )}
         {docType === 'pdf' && hasFile && (
           <PdfMiniViewer 
             sourceUrl={props.sourceUrl} 

@@ -60,6 +60,7 @@ import { useAppContext } from '../contexts/AppContext'
 import { useUIStore } from '../stores/useUIStore'
 import { useWorkspaceStore } from '../stores/useWorkspaceStore'
 import { useProcessStore } from '../stores/useProcessStore'
+import { useDocumentProfilerStore } from '../stores/useDocumentProfilerStore'
 
 export interface StatusBarProps {}
 
@@ -83,6 +84,9 @@ export function StatusBar({}: StatusBarProps = {}) {
   const canUseMCP = true
   const { filePath, currentContent, lastSavedTime, originalContent } = useWorkspaceStore()
   const { downloadStatus } = useProcessStore()
+  
+  // Document DNA 큐 상태
+  const { queue, isProcessing } = useDocumentProfilerStore()
   
   
   // 줄바꿈 옵션 상태 추출
@@ -219,30 +223,37 @@ export function StatusBar({}: StatusBarProps = {}) {
         </span>
       </div>
 
-      {/* 📥 중앙: 로컬 모델 다운로드 실시간 진행률 및 속도 지표 */}
-      {downloadStatus && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          background: 'rgba(6, 182, 212, 0.08)',
-          border: '1px solid rgba(6, 182, 212, 0.25)',
-          borderRadius: '6px',
-          padding: '2px 10px',
-          color: 'var(--secondary)',
-          fontWeight: 600,
-          fontSize: '10.5px',
-          height: '20px',
-        }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-            📥 {downloadStatus.filename?.split(/[\\/]/).pop()}: {downloadStatus.progress}%
-          </span>
-          <div style={{ width: '70px', height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
-            <div style={{ width: `${downloadStatus.progress}%`, height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--secondary))' }} />
+      {/* 📥 중앙: 로컬 모델 다운로드 또는 분석 큐 지표 */}
+      <div style={{ display: 'flex', gap: '8px' }}>
+        {isProcessing && queue.length > 0 && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.3)',
+            borderRadius: '6px', padding: '2px 10px', color: '#a78bfa',
+            fontWeight: 600, fontSize: '10.5px', height: '20px',
+            animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+          }}>
+            <span>🧠 문서 DNA 분석 중 ({queue.length}건 남음)</span>
           </div>
-          <span style={{ fontSize: '9px', opacity: 0.85 }}>({downloadStatus.speed || 0} MB/s)</span>
-        </div>
-      )}
+        )}
+
+        {downloadStatus && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            background: 'rgba(6, 182, 212, 0.08)', border: '1px solid rgba(6, 182, 212, 0.25)',
+            borderRadius: '6px', padding: '2px 10px', color: 'var(--secondary)',
+            fontWeight: 600, fontSize: '10.5px', height: '20px',
+          }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              📥 {downloadStatus.filename?.split(/[\\/]/).pop()}: {downloadStatus.progress}%
+            </span>
+            <div style={{ width: '70px', height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+              <div style={{ width: `${downloadStatus.progress}%`, height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--secondary))' }} />
+            </div>
+            <span style={{ fontSize: '9px', opacity: 0.85 }}>({downloadStatus.speed || 0} MB/s)</span>
+          </div>
+        )}
+      </div>
 
       {/* 2. 우측: 시스템 상태 진단 뱃지 및 설정 컨트롤 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>

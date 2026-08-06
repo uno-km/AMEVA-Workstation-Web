@@ -8,14 +8,19 @@
     <script>
       window.onerror = function(message, source, lineno, colno, error) {
         if (typeof message === 'string' && message.includes('ResizeObserver')) {
-          console.warn(message);
           return true; // prevent default error handling (no alert popup)
         }
-        alert("🚨 [AMEVA Runtime Error]\n\n" + message + "\n\nFile: " + source + "\nLine: " + lineno + ":" + colno + "\n\nStack:\n" + (error ? error.stack : 'N/A'));
+        console.group("🚨 [AMEVA Runtime Error]");
+        console.error(message);
+        console.error("File: " + source + " Line: " + lineno + ":" + colno);
+        if (error) console.error(error.stack);
+        console.groupEnd();
         return false;
       };
       window.addEventListener('unhandledrejection', function(event) {
-        alert("🚨 [AMEVA Unhandled Rejection]\n\nReason: " + event.reason + "\n\nStack:\n" + (event.reason ? event.reason.stack : 'N/A'));
+        console.group("🚨 [AMEVA Unhandled Rejection]");
+        console.error(event.reason);
+        console.groupEnd();
       });
     </script>
     <title>AMEVA Markdown Editor &amp; Viewer</title>

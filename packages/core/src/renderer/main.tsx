@@ -66,6 +66,23 @@ if (window.electronAPI) {
   registerPlatformAdapter(mobileAdapter)
 }
 
+if (import.meta.env.DEV) {
+  import('./document-intelligence/feedback/documentFeedbackStore').then(m1 => {
+    import('./document-intelligence/rules/user/userRuleGenerator').then(m2 => {
+      import('./document-intelligence/rules/user/userRuleStore').then(m3 => {
+        (window as any).amevaDnaDebug = {
+          listFeedbacks: () => m1.documentFeedbackStore.listDocumentFeedback(),
+          generateRuleCandidates: () => m2.userRuleGenerator.generateRuleCandidates(),
+          listRuleCandidates: () => m2.userRuleGenerator.listRuleCandidates(),
+          approveRuleCandidate: (id: string) => m2.userRuleGenerator.approveRuleCandidate(id),
+          rejectRuleCandidate: (id: string) => m2.userRuleGenerator.rejectRuleCandidate(id),
+          listUserDomainRules: () => m3.userRuleStore.listUserRules()
+        };
+      });
+    });
+  });
+}
+
 const rootContainer = document.getElementById('root')!
 let root = (window as any).__reactRoot
 if (!root) {

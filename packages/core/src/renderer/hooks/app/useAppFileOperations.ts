@@ -860,7 +860,6 @@ export function useAppFileOperations(
       contentToSave = markdown
     }
     
-    const activeTabPassword = tabs.find(t => t.id === activeTabId)?.documentPassword
     if (activeTabPassword) {
       let rawBuffer: ArrayBuffer
       if (isBinarySave) {

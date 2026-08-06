@@ -29,6 +29,7 @@
  */
 import React from 'react'
 import { useUIStore } from '../../stores/useUIStore'
+import { useWorkspaceStore } from '../../stores/useWorkspaceStore'
 
 /* 
  * [LUCIDE ICONS]
