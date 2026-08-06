@@ -581,10 +581,10 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
   // width: '100%'이면 null(full), 숫자면 px
   const widthStr = props.width || '100%'
   const localWidthNum = localWidth ?? (widthStr === '100%' ? null : parseInt(widthStr, 10))
-  const [isExpanded, setIsExpanded] = useState(props.isExpanded === 'true')
+  const isExpanded = props.isExpanded === 'true'
   const [showDNA, setShowDNA] = useState(false)
 
-  const { profiles } = useDocumentProfilerStore()
+  const { profiles, enqueue } = useDocumentProfilerStore()
   const fileId = props.sourceUrl?.replace('ameva-vfs://', '')
   const profile = profiles[fileId || '']
   const docType = (props.docType as DocType) || 'unknown'
@@ -593,6 +593,17 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
   const isLocalMemory = props.sourceUrl?.startsWith('blob:') || props.sourceUrl?.startsWith('ameva-vfs://') || props.sourceUrl?.startsWith('data:')
   const hasFile = !!props.sourceUrl && isLocalMemory
   const hasUrl = !!props.sourceUrl && !isLocalMemory
+
+  useEffect(() => {
+    if (docType === 'pdf' && hasFile && fileId && !profile) {
+      getAttachment(fileId).then(blob => {
+        if (blob) {
+          const file = new File([blob], props.fileName || 'document.pdf', { type: 'application/pdf' })
+          enqueue(fileId, file)
+        }
+      }).catch(console.error)
+    }
+  }, [docType, hasFile, fileId, profile, props.fileName, enqueue])
 
   // ── 리사이저: native capture 이벤트 + DOM 직접 조작 (리액트 재렌더 없이 실시간 스무스 리사이즈)
   useEffect(() => {

@@ -121,7 +121,25 @@ export function DocumentProfileModal({ fileId, profile, onClose }: Props) {
                 </div>
                 {classProfile.documentDomain && (
                   <div style={{ marginTop: '10px', fontSize: '13px', color: '#9ca3af', lineHeight: '1.5' }}>
+                    {classProfile.primaryTopic && (
+                      <>
+                        Topic: <span style={{ color: '#34d399' }}>{classProfile.primaryTopic.label}</span> ({classProfile.primaryTopic.confidence}%)
+                        <br />
+                      </>
+                    )}
                     Domain: <span style={{ color: '#a78bfa' }}>{classProfile.documentDomain.primary}</span> ({classProfile.documentDomain.confidence}%)
+                    {classProfile.documentSubDomain?.primary !== 'unknown' && classProfile.documentSubDomain && (
+                      <>
+                        <br />
+                        SubDomain: <span style={{ color: '#818cf8' }}>{classProfile.documentSubDomain.label}</span> ({classProfile.documentSubDomain.confidence}%)
+                      </>
+                    )}
+                    {classProfile.intent?.primary !== 'unknown' && classProfile.intent && (
+                      <>
+                        <br />
+                        Intent: <span style={{ color: '#fb923c' }}>{classProfile.intent.label}</span> ({classProfile.intent.confidence}%)
+                      </>
+                    )}
                     <br />
                     Shape: <span style={{ color: '#f472b6' }}>{classProfile.documentShape.primary}</span> ({classProfile.documentShape.confidence}%)
                   </div>

@@ -5,8 +5,12 @@ import type { DocumentProfileResult } from './types';
 import { ruleRegistry } from './rules/rulePluginRegistry';
 import { classifyShape } from './classifiers/shapeClassifier';
 import { classifyDomain } from './classifiers/domainClassifier';
-import { resolvePrimaryType } from './classifiers/primaryTypeResolver';
 import { userRuleStore } from './rules/user/userRuleStore';
+import { classifySubDomain } from './classifiers/subDomainClassifier';
+import { classifyIntent } from './classifiers/intentClassifier';
+import { discoverTopics } from './analyzers/topicDiscoveryAnalyzer';
+import { composeDisplayLabel } from './classifiers/labelComposer';
+import type { DocumentSubDomainResult, TopicCluster } from './types';
 
 export async function profileDocument(
   fileMeta: { fileName: string; docType: any; fileSize: number },
@@ -32,12 +36,29 @@ export async function profileDocument(
   const sections = detectSections(pagesText);
   
   // 3. 문서 유형 이중 분류기 적용 (Shape + Domain)
-  const shapeResult = classifyShape(fileMeta.fileName, keywords);
+  const shapeResult = classifyShape(fileMeta.fileName, keywords, pagesText.length, entities, fullText);
   const domainResult = classifyDomain(fileMeta.fileName, keywords, fullText);
   
-  const { primaryType, displayLabel, classificationStatus } = resolvePrimaryType(shapeResult, domainResult, keywords);
+  const activeDomainRule = ruleRegistry.getDomainRules().find(r => r.id === domainResult.primary);
+  let subDomainResult: DocumentSubDomainResult = { primary: 'unknown', label: '미분류', confidence: 0, scores: {}, evidence: [] };
+  
+  if (activeDomainRule) {
+    subDomainResult = classifySubDomain(activeDomainRule, fileMeta.fileName, keywords, sections, fullText, entities);
+  }
 
-  const evidence = [...shapeResult.evidence, ...domainResult.evidence];
+  const intentResult = classifyIntent(fileMeta.fileName, keywords, fullText);
+
+  // 5. Topic Discovery (New)
+  const discoveredTopics = discoverTopics(fileMeta.fileName, keywords, [], sections, pagesText, entities, fullText);
+  const primaryTopic = discoveredTopics.length > 0 ? discoveredTopics[0] : undefined;
+
+  // 6. Label Composition
+  const { primaryType, displayLabel, classificationStatus } = composeDisplayLabel(shapeResult, domainResult, subDomainResult, intentResult, primaryTopic, keywords);
+
+  const evidence = [...shapeResult.evidence, ...domainResult.evidence, ...subDomainResult.evidence, ...intentResult.evidence];
+  if (primaryTopic) {
+    evidence.push(...primaryTopic.evidence);
+  }
 
   const profileObj = {
     primaryType,
@@ -45,7 +66,11 @@ export async function profileDocument(
     classificationStatus,
     documentShape: shapeResult,
     documentDomain: domainResult,
-    confidence: Math.floor((shapeResult.confidence + domainResult.confidence) / 2),
+    documentSubDomain: subDomainResult,
+    intent: intentResult,
+    discoveredTopics,
+    primaryTopic,
+    confidence: Math.floor((shapeResult.confidence + domainResult.confidence + (subDomainResult.confidence || 0) + (primaryTopic?.confidence || 0)) / 4),
     evidence
   };
 
@@ -121,6 +146,30 @@ function detectImportantPages(
       if (/수강신청결과조회/i.test(text)) {
         score += 40;
         reasons.push("신청 결과 확인 단계");
+      }
+    }
+
+    const primaryTopicLabel = classification.primaryTopic?.label;
+    const intent = classification.intent?.primary;
+
+    if (primaryTopicLabel === '지진 피해' && intent === 'damage_analysis') {
+      if (/지진.*피해|복구|구조물.*사례/i.test(text)) {
+        score += 40;
+        reasons.push("지진 피해 관련 핵심 키워드 집중");
+      }
+    }
+
+    if (primaryTopicLabel === 'API 인증' && intent === 'integration_guide') {
+      if (/request|response|인증|토큰|endpoint/i.test(text)) {
+        score += 40;
+        reasons.push("API 인증 절차 관련 핵심 내용 포함");
+      }
+    }
+
+    if (primaryTopicLabel === '재무제표' && intent === 'financial_analysis') {
+      if (/매출|비용|영업이익|손익/i.test(text)) {
+        score += 40;
+        reasons.push("재무제표 및 손익 관련 핵심 지표 포함");
       }
     }
 

@@ -4,6 +4,26 @@ import { constructionRule } from './builtIn/constructionRule';
 import { softwareRule } from './builtIn/softwareRule';
 import { medicalRule } from './builtIn/medicalRule';
 import { welfareRule } from './builtIn/welfareRule';
+import { financeRule } from './builtIn/financeRule';
+import { investmentRule } from './builtIn/investmentRule';
+import { realEstateRule } from './builtIn/realEstateRule';
+import { hrRule } from './builtIn/hrRule';
+import { procurementRule } from './builtIn/procurementRule';
+import { electronicsRule } from './builtIn/electronicsRule';
+import { electricalRule } from './builtIn/electricalRule';
+import { manufacturingRule } from './builtIn/manufacturingRule';
+import { qualityRule } from './builtIn/qualityRule';
+import { logisticsRule } from './builtIn/logisticsRule';
+import { legalRule } from './builtIn/legalRule';
+import { publicAdministrationRule } from './builtIn/publicAdministrationRule';
+import { publicPolicyRule } from './builtIn/publicPolicyRule';
+import { healthcareRule } from './builtIn/healthcareRule';
+import { tourismRule } from './builtIn/tourismRule';
+import { foodRule } from './builtIn/foodRule';
+import { lifestyleRule } from './builtIn/lifestyleRule';
+import { researchRule } from './builtIn/researchRule';
+import { securityRule } from './builtIn/securityRule';
+import { environmentRule } from './builtIn/environmentRule';
 
 class RulePluginRegistry {
   private domainRules: Map<string, DomainRule> = new Map();
@@ -42,6 +62,26 @@ class RulePluginRegistry {
     this.registerDomainRule(softwareRule);
     this.registerDomainRule(medicalRule);
     this.registerDomainRule(welfareRule);
+    this.registerDomainRule(financeRule);
+    this.registerDomainRule(investmentRule);
+    this.registerDomainRule(realEstateRule);
+    this.registerDomainRule(hrRule);
+    this.registerDomainRule(procurementRule);
+    this.registerDomainRule(electronicsRule);
+    this.registerDomainRule(electricalRule);
+    this.registerDomainRule(manufacturingRule);
+    this.registerDomainRule(qualityRule);
+    this.registerDomainRule(logisticsRule);
+    this.registerDomainRule(legalRule);
+    this.registerDomainRule(publicAdministrationRule);
+    this.registerDomainRule(publicPolicyRule);
+    this.registerDomainRule(healthcareRule);
+    this.registerDomainRule(tourismRule);
+    this.registerDomainRule(foodRule);
+    this.registerDomainRule(lifestyleRule);
+    this.registerDomainRule(researchRule);
+    this.registerDomainRule(securityRule);
+    this.registerDomainRule(environmentRule);
 
     // 기본 Shape Rules
     this.registerShapeRule({ id: 'guide', label: '가이드/안내', keywords: ['방법', '절차', '순서', '확인', '클릭', '선택', '입력', '조회', '결과', '안내'] });

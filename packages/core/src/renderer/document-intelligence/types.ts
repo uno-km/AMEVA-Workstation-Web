@@ -38,10 +38,36 @@ export interface Entities {
   phones: string[];
 }
 
+export interface DocumentSubDomainResult {
+  primary: string;
+  label: string;
+  confidence: number;
+  scores: Record<string, number>;
+  evidence: string[];
+}
+
+export interface DocumentIntentResult {
+  primary: string;
+  label: string;
+  confidence: number;
+  evidence: string[];
+}
+
 export interface DocumentClassificationResult {
   primary: string;
   confidence: number;
   scores: Record<string, number>;
+  evidence: string[];
+}
+
+export interface TopicCluster {
+  id: string;
+  label: string;
+  terms: string[];
+  phrases: string[];
+  pages: number[];
+  score: number;
+  confidence: number;
   evidence: string[];
 }
 
@@ -54,6 +80,10 @@ export interface DocumentProfileResult {
     classificationStatus: 'classified' | 'low_confidence' | 'domain_detected_shape_unknown' | 'shape_detected_domain_unknown' | 'unknown';
     documentShape: DocumentClassificationResult;
     documentDomain: DocumentClassificationResult;
+    documentSubDomain?: DocumentSubDomainResult;
+    intent?: DocumentIntentResult;
+    discoveredTopics?: TopicCluster[];
+    primaryTopic?: TopicCluster;
     confidence: number;
     evidence: string[];
     fallbackMessage?: string;

@@ -1,4 +1,4 @@
-import { DocumentFeedback } from './feedbackTypes';
+import type { DocumentFeedback } from './feedbackTypes';
 import { getDnaDb } from '../rules/dnaDb';
 
 const STORE_NAME = 'documentFeedbacks';

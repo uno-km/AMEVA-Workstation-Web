@@ -1,7 +1,13 @@
 import { ruleRegistry } from '../rules/rulePluginRegistry';
-import type { KeywordStat, DocumentClassificationResult } from '../types';
+import type { KeywordStat, DocumentClassificationResult, Entities } from '../types';
 
-export function classifyShape(fileName: string, keywords: KeywordStat[]): DocumentClassificationResult {
+export function classifyShape(
+  fileName: string, 
+  keywords: KeywordStat[], 
+  pageCount: number = 0, 
+  entities?: Entities,
+  fullText?: string
+): DocumentClassificationResult {
   const rules = ruleRegistry.getShapeRules();
   const scores: Record<string, number> = {};
   const evidence: string[] = [];
@@ -25,6 +31,18 @@ export function classifyShape(fileName: string, keywords: KeywordStat[]): Docume
       }
     });
   });
+
+  // report 신호 보강
+  if (pageCount >= 50 && fullText && ['분석', '현황', '결과', '사례', '결론', '보고서'].some(w => fullText.includes(w))) {
+    scores['report'] = (scores['report'] || 0) + 30;
+  }
+  
+  // research_paper 신호 보강
+  if (pageCount >= 10 && entities?.organizations?.some(o => o.includes('대학') || o.includes('연구') || o.includes('학회'))) {
+    if (['abstract', '초록', '서론', '연구', '실험', '결론', '참고문헌', '논문'].some(w => keywords.some(k => k.term.toLowerCase() === w))) {
+      scores['research_paper'] = (scores['research_paper'] || 0) + 40;
+    }
+  }
 
   Object.entries(scores).forEach(([shape, score]) => {
     if (score > maxScore) { maxScore = score; primary = shape; }

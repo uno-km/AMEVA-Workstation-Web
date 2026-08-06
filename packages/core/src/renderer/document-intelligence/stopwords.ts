@@ -15,5 +15,10 @@ export const ENGLISH_STOPWORDS = new Set([
   'among', 'is', 'am', 'are', 'was', 'were', 'be', 'been', 'being', 'have',
   'has', 'had', 'do', 'does', 'did', 'will', 'would', 'shall', 'should', 'can',
   'could', 'may', 'might', 'must', 'ought', 'i', 'you', 'he', 'she', 'it',
-  'we', 'they', 'this', 'that', 'these', 'those'
+  'we', 'they', 'this', 'that', 'these', 'those',
+  'of', 'ic', 'vol', 'no', 'pp', 'fig', 'table', 'doi', 'issn', 'journal', 'proceedings', 'conference'
+]);
+
+export const AMBIGUOUS_TOPIC_WORDS = new Set([
+  '발생', '결과', '내용', '자료', '분석', '관련', '현황', '사례', '일반', '정보', '포함', '사용', '확인', '방법', '이용', '처리', '신청', '목적', '기본', '상세'
 ]);

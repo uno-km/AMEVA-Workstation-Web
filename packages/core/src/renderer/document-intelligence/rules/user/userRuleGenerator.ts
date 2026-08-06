@@ -1,6 +1,6 @@
 import { documentFeedbackStore } from '../../feedback/documentFeedbackStore';
 import { userRuleStore } from './userRuleStore';
-import { RuleCandidate } from '../../feedback/feedbackTypes';
+import type { RuleCandidate } from '../../feedback/feedbackTypes';
 import type { DomainRule } from '../types';
 import { getDnaDb } from '../dnaDb';
 import { ruleRegistry } from '../rulePluginRegistry';
