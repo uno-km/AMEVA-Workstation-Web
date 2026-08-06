@@ -153,6 +153,8 @@ export const AppLayout: React.FC<AppLayoutProps> = (props) => {
     setShowAIPanel,
   } = useUIStore()
 
+  const { isSplitView } = useWorkspaceStore()
+
   // AI 패널 너비: 설정에서 저장된 값 사용, 기본 320px
   const [aiPanelWidth, setAIPanelWidth] = React.useState<number>(320)
   const [isAIPanelDragging, setIsAIPanelDragging] = React.useState(false)
@@ -293,24 +295,49 @@ export const AppLayout: React.FC<AppLayoutProps> = (props) => {
             zoom: editorZoom,
             height: `${100 / editorZoom}%`,
             position: 'relative',
+            display: 'flex',
+            flexDirection: 'row',
+            width: '100%',
+            willChange: 'transform',
+            transform: 'translateZ(0)',
           }}
         >
-          <MarkdownEditor
-            onMouseMove={handleMouseMove}
-            onSelectionChange={updateDragSelection}
-            onBlockHighlight={updateBlockHighlight}
-            editorContainerRef={editorContainerRef}
-            onSelectedTextChange={setSelectedText}
-            taggedBlocks={taggedBlocks}
-            setTaggedBlocks={setTaggedBlocks}
-          />
-          {settings.showMinimap && (settings.installedPlugins || []).includes('minimap') && editor && (
-            <Minimap
-              editor={editor}
+          {/* PRIMARY EDITOR PANE */}
+          <div style={{ flex: 1, position: 'relative', borderRight: isSplitView ? '1px solid var(--border-muted)' : 'none', minWidth: 0, height: '100%' }}>
+            <MarkdownEditor
+              onMouseMove={handleMouseMove}
+              onSelectionChange={updateDragSelection}
+              onBlockHighlight={updateBlockHighlight}
               editorContainerRef={editorContainerRef}
-              blocks={editor.document}
+              onSelectedTextChange={setSelectedText}
+              taggedBlocks={taggedBlocks}
+              setTaggedBlocks={setTaggedBlocks}
             />
+            {settings.showMinimap && (settings.installedPlugins || []).includes('minimap') && editor && (
+              <Minimap
+                editor={editor}
+                editorContainerRef={editorContainerRef}
+                blocks={editor.document}
+              />
+            )}
+          </div>
+
+          {/* SPLIT (SECONDARY) EDITOR PANE */}
+          {isSplitView && (
+            <div style={{ flex: 1, position: 'relative', minWidth: 0, height: '100%' }}>
+              <MarkdownEditor
+                isSplitViewInstance={true}
+                onMouseMove={handleMouseMove}
+                onSelectionChange={updateDragSelection}
+                onBlockHighlight={updateBlockHighlight}
+                editorContainerRef={editorContainerRef}
+                onSelectedTextChange={setSelectedText}
+                taggedBlocks={taggedBlocks}
+                setTaggedBlocks={setTaggedBlocks}
+              />
+            </div>
           )}
+
           <AILogDrawer 
             isExpanded={isLogsExpanded} 
             onToggle={() => setIsLogsExpanded(!isLogsExpanded)} 

@@ -198,11 +198,19 @@ export function PluginTabPanel({ tabId }: PluginTabPanelProps) {
             `
           }
         }
-      } else if (attempts > 20) { // 10초 타임아웃
+      } else if (attempts > 60) { // 30초 타임아웃
         clearInterval(timer)
         const container = document.getElementById(containerId)
         if (container) {
-          container.innerHTML = `<div style="padding: 20px; color: #ef4444; text-align: center; height: 100%; display: flex; align-items: center; justify-content: center;">플러그인 스크립트를 로드할 수 없습니다.</div>`
+          container.innerHTML = `
+            <div style="padding: 20px; color: #ef4444; text-align: center; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <div style="font-size: 32px; margin-bottom: 12px;">⚠️</div>
+              <div style="font-weight: bold; margin-bottom: 8px;">플러그인 로드 실패</div>
+              <div style="font-size: 13px; opacity: 0.8; max-width: 250px;">
+                마켓플레이스 서버와의 연결이 원활하지 않거나 플러그인 스크립트에 오류가 있습니다.
+              </div>
+            </div>
+          `
         }
       }
     }, 500)

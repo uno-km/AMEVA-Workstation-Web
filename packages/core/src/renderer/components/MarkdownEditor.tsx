@@ -160,6 +160,7 @@ export interface MarkdownEditorProps {
   onSelectedTextChange?: (text: string) => void
   taggedBlocks?: { id: string; text: string }[]
   setTaggedBlocks?: (blocks: { id: string; text: string }[]) => void
+  isSplitViewInstance?: boolean
 }
 
 /**
@@ -311,6 +312,7 @@ export function MarkdownEditor({
   onSelectedTextChange,
   taggedBlocks = [],
   setTaggedBlocks = () => {},
+  isSplitViewInstance = false,
 }: MarkdownEditorProps) {
   /*
    * [CONTEXT VALUES]
@@ -322,7 +324,9 @@ export function MarkdownEditor({
    * - handleStartWelcomeEdit: 웰컴 화면 종료 및 에디터 로드 콜백.
    * - handleStartNewDocument: 새 문서 생성 콜백.
    */
-  const { editor, editorMode, peers, settings, handleOpenFile, handleStartWelcomeEdit, handleStartNewDocument, loadMarkdownIntoEditor } = useAppContext()
+  const appContext = useAppContext()
+  const { editorMode, peers, settings, handleOpenFile, handleStartWelcomeEdit, handleStartNewDocument, loadMarkdownIntoEditor } = appContext
+  const editor = isSplitViewInstance ? appContext.splitEditor : appContext.editor
   
   /*
    * [ZUSTAND STORE PROPERTIES]

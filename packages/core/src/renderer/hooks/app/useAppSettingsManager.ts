@@ -294,12 +294,12 @@ export function useAppSettingsManager(activeRightTab: string, setActiveRightTab:
           }
       /*
        * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `checkCount > 15`
+       * - 조건 식: `checkCount > 100`
        * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
        * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (checkCount > 15)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
+       * - 예시: `if (checkCount > 100)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
        */
-          if (checkCount > 15) {
+          if (checkCount > 100) {
             clearInterval(checkInterval)
             reject(new Error('플러그인 로드 타임아웃'))
           }

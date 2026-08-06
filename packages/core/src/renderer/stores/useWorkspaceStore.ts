@@ -42,6 +42,7 @@ export interface WorkspaceTab {
   lastSavedTime?: Date | null
   pdfData?: string | null
   pdfFileName?: string
+  documentPassword?: string | null
 }
 
 /**
@@ -110,6 +111,14 @@ export interface WorkspaceState {
   updateTab: (tabId: string, fields: Partial<WorkspaceTab>) => void
   activeTabId: string | null
   setActiveTabId: (id: string | null) => void
+
+  /*
+   * [SPLIT VIEW STATE]
+   * - isSplitView: 병렬 보기 모드 활성화 여부
+   * - toggleSplitView: 병렬 보기 토글 액션
+   */
+  isSplitView: boolean
+  toggleSplitView: () => void
 
   /*
    * [APPENDED DOCUMENT ANCHORS]
@@ -209,6 +218,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
 
   activeTabId: 'default',
   setActiveTabId: (id) => set({ activeTabId: id }),
+
+  isSplitView: false,
+  toggleSplitView: () => set((state) => ({ isSplitView: !state.isSplitView })),
 
   appendedFiles: [],
   setAppendedFiles: (files) => set({ appendedFiles: files }),

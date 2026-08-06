@@ -59,10 +59,11 @@ export interface AppContextType {
   handleZoomOut: () => void
   handleZoomReset: () => void
 
-  // ── [2. Editor instance & state] 에디터 및 화면 모드 ──
+  // ── [2. Editor & Documents] 핵심 상태 바인딩 ──
   documentId: string
   setDocumentId: (id: string) => void
   editor: AppEditor | null
+  splitEditor: AppEditor | null
   editorMode: EditorMode
   setEditorMode: (mode: EditorMode) => void
   handleSwitchMode: (mode: EditorMode) => void

@@ -1090,7 +1090,7 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
           {/* 스크롤 컴테이너 */}
           <div
             ref={scrollAreaRef}
-            style={{ width: '100%', height: '100%', overflow: 'auto', background: '#1a1a24' }}
+            style={{ width: '100%', height: '100%', overflow: 'auto', background: '#1a1a24', willChange: 'transform', transform: 'translateZ(0)' }}
             onWheel={(e) => {
               if (e.ctrlKey) {
                 e.preventDefault()

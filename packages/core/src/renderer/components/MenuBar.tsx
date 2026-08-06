@@ -22,6 +22,8 @@ import { Check, LayoutGrid, PanelLeft, PanelBottom, PanelRight, Search, Settings
 
 import { useMenuBarShortcuts } from '../hooks/app/useMenuBarShortcuts'
 
+import { SecurityModal } from './SecurityModal'
+
 import { useAppContext } from '../contexts/AppContext'
 import { useWorkspaceStore } from '../stores/useWorkspaceStore'
 import { useProcessStore } from '../stores/useProcessStore'
@@ -66,9 +68,12 @@ export function MenuBar({}: MenuBarProps = {}) {
   } = useUIStore()
 
   const filePath = useWorkspaceStore((state) => state.filePath)
+  const isSplitView = useWorkspaceStore((state) => state.isSplitView)
+  const toggleSplitView = useWorkspaceStore((state) => state.toggleSplitView)
   const canAccessMarketplace = true
   const [googlePopoverOpen, setGooglePopoverOpen] = useState(false)
   const [googleProfile, setGoogleProfile] = useState<any | null>(null)
+  const [isSecurityModalOpen, setIsSecurityModalOpen] = useState(false)
 
   // 🦾 [AUTO AUTH RETRIEVAL] 마운트 시 구글 로그인 영속 세션 자동 수신
   useEffect(() => {
@@ -450,6 +455,10 @@ export function MenuBar({}: MenuBarProps = {}) {
                   <span style={shortcutStyle}>{formatHotkey(hkeys.pdfExport)}</span>
                 </button>
                 <div style={{ height: '1px', backgroundColor: 'var(--border-muted)', margin: '4px 0' }} />
+                <button style={itemStyle} onClick={() => { triggerAction(); setIsSecurityModalOpen(true); }}>
+                  {renderLabel('보안 (비밀번호 설정)...', 'c')}
+                </button>
+                <div style={{ height: '1px', backgroundColor: 'var(--border-muted)', margin: '4px 0' }} />
                 <button style={{ ...itemStyle, color: 'var(--danger)' }} onClick={() => triggerAction(onCloseApp)}>
                   {renderLabel('종료', 'x')}
                   <span style={shortcutStyle}>Alt+F4</span>
@@ -476,6 +485,13 @@ export function MenuBar({}: MenuBarProps = {}) {
                   onClick={() => triggerAction(() => setEditorMode(editorMode === 'preview' ? 'edit' : 'preview'))}
                 >
                   {renderLabel(editorMode === 'preview' ? '편집 모드로 전환' : '뷰어 모드로 전환', 'e')}
+                </button>
+                <div style={{ height: '1px', backgroundColor: 'var(--border-muted)', margin: '4px 0' }} />
+                <button style={itemStyle} onClick={() => triggerAction(toggleSplitView)}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    {isSplitView ? <Check size={12} style={{ color: 'var(--primary)' }} /> : <span style={{ width: '12px' }} />}
+                    {renderLabel('병렬 보기 (Split View)', 's')}
+                  </span>
                 </button>
                 <div style={{ height: '1px', backgroundColor: 'var(--border-muted)', margin: '4px 0' }} />
                 <button style={itemStyle} onClick={() => triggerAction(() => setShowStatusBar(!showStatusBar))}>
@@ -813,7 +829,8 @@ export function MenuBar({}: MenuBarProps = {}) {
           </div>
         )}
       </div>
+      
+      {isSecurityModalOpen && <SecurityModal onClose={() => setIsSecurityModalOpen(false)} />}
     </div>
   )
 }
-

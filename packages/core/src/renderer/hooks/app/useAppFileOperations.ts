@@ -80,6 +80,7 @@ import {
  * - packMarkdownToADC: 미디어가 내장된 adc 패키지 파일 압축 유틸.
  */
 import { packMarkdownToADC } from '../../utils/adcPackager'
+import { encryptBlob, decryptBlob } from '../../utils/cryptoUtils'
 
 /**
  * @hook useAppFileOperations
@@ -571,13 +572,20 @@ export function useAppFileOperations(
        * - 예시: `if (file)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
        */
         if (file) {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `reader`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const reader = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
+          let targetFile = file
+          try {
+            const { isEncryptedBlob, decryptBlob } = await import('../../utils/cryptoUtils')
+            if (await isEncryptedBlob(file)) {
+              const pwd = window.prompt("암호화된 AMEVA 문서입니다. 비밀번호를 입력해주세요:")
+              if (!pwd) return
+              const decrypted = await decryptBlob(file, pwd)
+              targetFile = new File([decrypted], file.name, { type: file.type })
+            }
+          } catch (err: any) {
+            alert(err.message || "비밀번호가 틀렸거나 파일 복호화에 실패했습니다.")
+            return
+          }
+
           const reader = new FileReader()
           reader.onload = async (evt) => {
       /*
@@ -641,7 +649,7 @@ export function useAppFileOperations(
                   await loadMarkdownIntoEditor(editor, base64, true, file.name)
                 }
               }
-              binReader.readAsDataURL(file)
+              binReader.readAsDataURL(targetFile)
             } else {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -660,7 +668,7 @@ export function useAppFileOperations(
               }
             }
           }
-          reader.readAsText(file)
+          reader.readAsText(targetFile)
         }
       }
       input.click()
@@ -701,7 +709,7 @@ export function useAppFileOperations(
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const ext = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-    const ext = path.split('.').pop()?.toLowerCase() || 'md'
+    let ext = path.split('.').pop()?.toLowerCase() || 'md'
     
       /*
        * [RUN-TIME STATE / INVARIANT]
@@ -772,7 +780,11 @@ export function useAppFileOperations(
               savedPath = savedPath.split('.').slice(0, -1).join('.') + '.adc'
             }
 
-            const blob = await packMarkdownToADC(markdown, undefined, editor.document)
+            let blob = await packMarkdownToADC(markdown, undefined, editor.document)
+            const activeTabPassword = tabs.find(t => t.id === activeTabId)?.documentPassword
+            if (activeTabPassword) {
+              blob = await encryptBlob(blob, activeTabPassword)
+            }
             const arrayBuffer = await blob.arrayBuffer()
             const contentToSave = await arrayBufferToBase64(arrayBuffer)
 
@@ -822,8 +834,15 @@ export function useAppFileOperations(
       }
     }
     
+    const activeTabPassword = tabs.find(t => t.id === activeTabId)?.documentPassword
+    if (activeTabPassword && ext !== 'adc') {
+      const confirmForceAdc = window.confirm("암호화된 문서는 데이터 손상을 막기 위해 AMEVA 바이너리 포맷(.adc)으로 강제 변환되어 저장됩니다. 계속하시겠습니까?")
+      if (!confirmForceAdc) return
+      ext = 'adc'
+    }
+
     // 2) 일반 포맷 저장 진행
-    const isBinarySave = ['docx', 'pdf', 'hwpx', 'xlsx', 'xls', 'adc'].includes(ext)
+    let isBinarySave = ['docx', 'pdf', 'hwpx', 'xlsx', 'xls', 'adc'].includes(ext)
     
     let contentToSave: string
       /*
@@ -839,6 +858,30 @@ export function useAppFileOperations(
       contentToSave = await convertMarkdownToBinary(editor, path)
     } else {
       contentToSave = markdown
+    }
+    
+    const activeTabPassword = tabs.find(t => t.id === activeTabId)?.documentPassword
+    if (activeTabPassword) {
+      let rawBuffer: ArrayBuffer
+      if (isBinarySave) {
+        const binary = atob(contentToSave)
+        const bytes = new Uint8Array(binary.length)
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+        rawBuffer = bytes.buffer
+      } else {
+        rawBuffer = new TextEncoder().encode(contentToSave).buffer
+      }
+      const encryptedBlob = await encryptBlob(new Blob([rawBuffer]), activeTabPassword)
+      const encArrayBuffer = await encryptedBlob.arrayBuffer()
+      // base64로 변환하여 저장
+      const base64Parts = []
+      const bytes = new Uint8Array(encArrayBuffer)
+      const chunk = 0x8000
+      for (let i = 0; i < bytes.length; i += chunk) {
+        base64Parts.push(String.fromCharCode.apply(null, bytes.subarray(i, i + chunk) as unknown as number[]))
+      }
+      contentToSave = btoa(base64Parts.join(''))
+      isBinarySave = true
     }
     
       /*
@@ -903,7 +946,11 @@ export function useAppFileOperations(
       }
     } else {
       if (ext === 'adc') {
-        const blob = await packMarkdownToADC(markdown, undefined, editor?.document)
+        let blob = await packMarkdownToADC(markdown, undefined, editor?.document)
+        const activeTabPassword = tabs.find(t => t.id === activeTabId)?.documentPassword
+        if (activeTabPassword) {
+          blob = await encryptBlob(blob, activeTabPassword)
+        }
         const dlName = filePath ? (filePath.includes('.') ? filePath.split(/[\\/]/).pop()! : filePath.split(/[\\/]/).pop() + '.adc') : 'document.adc'
         triggerBrowserDownload(blob, dlName)
       } else {

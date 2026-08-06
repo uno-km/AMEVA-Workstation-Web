@@ -173,6 +173,7 @@ export default function App() {
   const [username, setUsername] = useState(randomUsername)
   const [userColor, setUserColor] = useState(randomColor)
   const [editor, setEditor] = useState<AppEditor | null>(null)
+  const [splitEditor, setSplitEditor] = useState<AppEditor | null>(null)
   const [editorMode, setEditorMode] = useState<EditorMode>('welcome')
   const [serverPort, setServerPort] = useState(1234)
   const [serverHost, setServerHost] = useState('localhost')
@@ -202,7 +203,7 @@ export default function App() {
     filePath, setFilePath, currentContent, setCurrentContent, appendContent,
     originalContent, setOriginalContent, lastSavedTime, setLastSavedTime,
     fileOpenMode, updateActiveTab, activeTabId, setSelectedText, setActiveBlockId,
-    taggedBlocks, setTaggedBlocks, setSelectedSnapshot
+    taggedBlocks, setTaggedBlocks, setSelectedSnapshot, isSplitView
   } = useWorkspaceStore()
 
   /**
@@ -235,6 +236,31 @@ export default function App() {
    * - getLineDiff: 스냅샷과 실시간 문서의 줄 단위 차이 계산기.
    */
   const { snapshots, createSnapshot, deleteSnapshot, getLineDiff } = useHistory(documentId)
+
+  /** [SPLIT VIEW SYNCHRONIZATION] */
+  useEffect(() => {
+    if (isSplitView && !splitEditor) {
+      import('@blocknote/core').then(({ BlockNoteEditor }) => {
+        import('./editor/amevaBlockSchema').then(({ amevaSchema }) => {
+          const customDictionary = {
+            slash_menu: { jupyter: { title: 'Jupyter Code', aliases: ['jupyter', 'code'], group: 'AMEVA' } }
+          }
+          const editor2 = BlockNoteEditor.create({
+            schema: amevaSchema,
+            dictionary: customDictionary as any,
+            collaboration: isActive ? {
+              provider,
+              fragment: ydoc.getXmlFragment('document-store'),
+              user: { name: username + " (Split)", color: '#06b6d4' }
+            } : undefined
+          })
+          setSplitEditor(editor2 as AppEditor)
+        })
+      })
+    } else if (!isSplitView && splitEditor) {
+      setSplitEditor(null)
+    }
+  }, [isSplitView, splitEditor, provider, ydoc, isActive, username])
 
   /** 
    * [FILE I/O ACTIONS]
@@ -520,7 +546,7 @@ export default function App() {
     <AppProvider value={{
       settings, handleUpdateSettings, handleInstallPlugin, handleUninstallPlugin,
       handleOpenGithub, handleCloseApp, handleToggleFullscreen, handleZoomIn, handleZoomOut, handleZoomReset,
-      documentId, setDocumentId, editor, editorMode, setEditorMode, handleSwitchMode, handleStartWelcomeEdit, handleStartNewDocument,
+      documentId, setDocumentId, editor, splitEditor, editorMode, setEditorMode, handleSwitchMode, handleStartWelcomeEdit, handleStartNewDocument,
       loadMarkdownIntoEditor,
       handleOpenFile, handleSaveFile, handleSaveAsFile, handleExport,
       snapshots, createSnapshot, deleteSnapshot, handleSelectSnapshotForDiff, handleRollback, getLineDiff,
