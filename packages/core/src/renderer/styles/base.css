@@ -121,8 +121,8 @@ body {
 
 /* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary), #7c3aed);
-  color: #ffffff;
+  background: var(--primary);
+  color: var(--text-on-primary);
   box-shadow: 0 4px 14px var(--primary-glow);
 }
 
@@ -135,8 +135,8 @@ body {
 
 /* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
 .btn-secondary {
-  background: linear-gradient(135deg, var(--secondary), #0891b2);
-  color: #ffffff;
+  background: var(--secondary);
+  color: var(--text-main);
   box-shadow: 0 4px 14px var(--secondary-glow);
 }
 

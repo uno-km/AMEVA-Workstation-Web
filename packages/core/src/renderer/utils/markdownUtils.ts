@@ -180,6 +180,7 @@ export function convertJupyterToCodeBlocks(blocks: any[]): any[] {
         height: copy.props?.height || '420',
         sourceUrl: copy.props?.sourceUrl || '',
         isExpanded: copy.props?.isExpanded || 'false',
+        bookmarks: copy.props?.bookmarks || '[]',
       })
       copy.content = [{ type: 'text', text: `// [AMEVA_LANG:ameva-document]\n${docData}`, styles: {} }]
       copy.props = {
@@ -503,10 +504,11 @@ export function cleanCodeBlocks(blocks: any[]) {
             height: parsed.height || '420',
             sourceUrl: parsed.sourceUrl || '',
             isExpanded: parsed.isExpanded || 'false',
+            bookmarks: parsed.bookmarks || '[]',
           }
         } catch (err) {
           console.error('[cleanCodeBlocks] Failed to parse ameva-document json:', err)
-          block.props = { fileName: 'Unknown Document', fileBase64: '', docType: 'unknown', height: '420', sourceUrl: '', isExpanded: 'false' }
+          block.props = { fileName: 'Unknown Document', fileBase64: '', docType: 'unknown', height: '420', sourceUrl: '', isExpanded: 'false', bookmarks: '[]' }
         }
         block.content = undefined
         return

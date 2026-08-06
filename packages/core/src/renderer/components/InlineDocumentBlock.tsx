@@ -47,20 +47,96 @@ export const DOC_TYPE_CONFIG: Record<DocType, { label: string; color: string; ic
   unknown: { label: '문서',        color: '#8b5cf6', icon: <FileText size={16} /> },
 }
 
-/** PDF Mini Viewer (Canvas 렌더링) */
-export function PdfMiniViewer({ sourceUrl, height }: { sourceUrl: string; height: number }) {
+function MiniContinuousPageCanvas({ pdf, pageNum, isActive, onVisible }: any) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const taskRef = useRef<any>(null)
+
+  useEffect(() => {
+    if (!containerRef.current) return
+    const obs = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) onVisible(pageNum)
+    }, { threshold: 0.2 })
+    obs.observe(containerRef.current)
+    return () => obs.disconnect()
+  }, [pageNum, onVisible])
+
+  useEffect(() => {
+    if (!pdf || !canvasRef.current) return
+    const obs = new IntersectionObserver(async (entries) => {
+      if (!entries[0].isIntersecting) return
+      obs.disconnect()
+      if (taskRef.current) try { taskRef.current.cancel() } catch {}
+      try {
+        const page = await pdf.getPage(pageNum)
+        const vp = page.getViewport({ scale: 1.2 })
+        const c = canvasRef.current!
+        const dpr = window.devicePixelRatio || 1
+        c.width = Math.floor(vp.width * dpr)
+        c.height = Math.floor(vp.height * dpr)
+        c.style.width = `${vp.width}px`
+        c.style.height = `${vp.height}px`
+        const ctx = c.getContext('2d')!
+        ctx.scale(dpr, dpr)
+        const task = page.render({ canvasContext: ctx, viewport: vp })
+        taskRef.current = task
+        await task.promise
+        page.cleanup()
+      } catch {}
+    }, { rootMargin: '300px 0px' })
+    if (containerRef.current) obs.observe(containerRef.current)
+    return () => obs.disconnect()
+  }, [pdf, pageNum])
+
+  return (
+    <div ref={containerRef} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 16, flexShrink: 0 }}>
+      <div style={{ fontSize: 9, color: isActive ? '#3b82f6' : '#64748b', marginBottom: 4, fontWeight: isActive ? 700 : 400 }}>{pageNum}</div>
+      <div style={{
+        boxShadow: isActive ? '0 0 0 2px #3b82f6, 0 8px 32px rgba(0,0,0,0.6)' : '0 4px 24px rgba(0,0,0,0.5)',
+        borderRadius: 3, overflow: 'hidden', background: '#fff', transition: 'box-shadow 0.2s',
+      }}>
+        <canvas ref={canvasRef} />
+      </div>
+    </div>
+  )
+}
+
+/** PDF Mini Viewer (Canvas 렌더링) - 향상된 UX 버전 */
+export function PdfMiniViewer({ 
+  sourceUrl, height, savedBookmarks = [], onBookmarksChange 
+}: { 
+  sourceUrl: string; height: number;
+  savedBookmarks?: { page: number, label: string }[];
+  onBookmarksChange?: (b: { page: number, label: string }[]) => void;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [numPages, setNumPages] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const pdfRef = useRef<any>(null)
+  const [outlines, setOutlines] = useState<any[]>([])
+  const [sidebarMode, setSidebarMode] = useState<'thumbnail' | 'outline' | 'bookmark'>('thumbnail')
+  const [showSidebar, setShowSidebar] = useState(true)
+  const [thumbnails, setThumbnails] = useState<Record<number, string>>({})
+  const [hoveredArrow, setHoveredArrow] = useState<'left' | 'right' | null>(null)
+  const [slideDir, setSlideDir] = useState<'left' | 'right' | 'none'>('none')
+  const observerRefs = useRef<Map<number, IntersectionObserver>>(new Map())
+
+  const [continuousScroll, setContinuousScroll] = useState(true)
+  const dragStartRef = useRef<{ x: number, y: number } | null>(null)
+  const [bookmarks, setBookmarks] = useState<{ page: number; label: string }[]>(savedBookmarks)
+
+  useEffect(() => {
+    setBookmarks(savedBookmarks)
+  }, [savedBookmarks])
 
   useEffect(() => {
     let cancelled = false
     setLoading(true)
     setError(null)
-
+    setThumbnails({})
+    setOutlines([])
     let objectUrlToRevoke: string | null = null
 
     const loadPdf = async () => {
@@ -83,12 +159,14 @@ export function PdfMiniViewer({ sourceUrl, height }: { sourceUrl: string; height
         }
 
         const pdf = await pdfjsLib.getDocument(getDocumentArg).promise
-        if (cancelled) {
-          return
-        }
+        if (cancelled) return
         pdfRef.current = pdf
         setNumPages(pdf.numPages)
         setLoading(false)
+        try {
+          const outline = await pdf.getOutline()
+          if (!cancelled) setOutlines(outline || [])
+        } catch {}
       } catch (e: any) {
         if (!cancelled) {
           if (sourceUrl.startsWith('blob:') || e.message === 'VFS_EXPIRED') {
@@ -102,12 +180,15 @@ export function PdfMiniViewer({ sourceUrl, height }: { sourceUrl: string; height
     }
 
     if (sourceUrl) loadPdf()
-    return () => { 
-      cancelled = true 
+    return () => {
+      cancelled = true
       if (objectUrlToRevoke) URL.revokeObjectURL(objectUrlToRevoke)
+      observerRefs.current.forEach(o => o.disconnect())
+      observerRefs.current.clear()
     }
   }, [sourceUrl])
 
+  // 현재 페이지 렌더링
   useEffect(() => {
     if (!pdfRef.current || loading) return
     const renderPage = async () => {
@@ -124,10 +205,100 @@ export function PdfMiniViewer({ sourceUrl, height }: { sourceUrl: string; height
         const ctx = canvas.getContext('2d')!
         ctx.scale(dpr, dpr)
         await page.render({ canvasContext: ctx, viewport }).promise
+        page.cleanup()
       } catch {}
     }
     renderPage()
   }, [currentPage, loading])
+
+  const goToPage = (page: number, dir?: 'left' | 'right') => {
+    const p = Math.max(1, Math.min(numPages, page))
+    if (p === currentPage) return
+    const d = dir ?? (p > currentPage ? 'left' : 'right')
+    setSlideDir(d)
+    setTimeout(() => {
+      setCurrentPage(p)
+      setSlideDir('none')
+    }, 10)
+  }
+
+  const toggleBookmark = () => {
+    setBookmarks(prev => {
+      const exists = prev.find(b => b.page === currentPage)
+      const next = exists ? prev.filter(b => b.page !== currentPage) : [...prev, { page: currentPage, label: `페이지 ${currentPage}` }].sort((a,b) => a.page - b.page)
+      onBookmarksChange?.(next)
+      return next
+    })
+  }
+  const isBookmarked = bookmarks.some(b => b.page === currentPage)
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (continuousScroll) return
+    dragStartRef.current = { x: e.clientX, y: e.clientY }
+    e.currentTarget.setPointerCapture(e.pointerId)
+  }
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragStartRef.current || continuousScroll) return
+    e.currentTarget.releasePointerCapture(e.pointerId)
+    const dx = e.clientX - dragStartRef.current.x
+    if (Math.abs(dx) > 50) {
+      if (dx > 0 && currentPage > 1) goToPage(currentPage - 1, 'right')
+      else if (dx < 0 && currentPage < numPages) goToPage(currentPage + 1, 'left')
+    }
+    dragStartRef.current = null
+  }
+
+  // 썸네일 lazy 렌더링 (IntersectionObserver)
+  const thumbRef = useCallback((node: HTMLDivElement | null, pageNum: number) => {
+    if (!node || !pdfRef.current || thumbnails[pageNum]) return
+    if (observerRefs.current.has(pageNum)) return
+    const obs = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        obs.disconnect()
+        observerRefs.current.delete(pageNum)
+        pdfRef.current.getPage(pageNum).then((page: any) => {
+          const vp = page.getViewport({ scale: 0.18 })
+          const c = document.createElement('canvas')
+          c.width = vp.width; c.height = vp.height
+          const ctx = c.getContext('2d')!
+          page.render({ canvasContext: ctx, viewport: vp }).promise.then(() => {
+            setThumbnails(prev => ({ ...prev, [pageNum]: c.toDataURL('image/jpeg', 0.6) }))
+            page.cleanup()
+          }).catch(() => {})
+        }).catch(() => {})
+      }
+    }, { rootMargin: '150px 0px' })
+    obs.observe(node)
+    observerRefs.current.set(pageNum, obs)
+  }, [pdfRef.current, thumbnails])
+
+  // 목차 재귀 렌더링
+  const renderOutline = (items: any[], depth = 0): React.ReactNode =>
+    items.map((item, idx) => (
+      <div key={idx} style={{ paddingLeft: `${depth * 10}px` }}>
+        <div
+          style={{
+            fontSize: '11px', color: '#cbd5e1', cursor: 'pointer', padding: '5px 4px',
+            borderBottom: '1px solid rgba(255,255,255,0.04)',
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          }}
+          onClick={async () => {
+            if (item.dest && pdfRef.current) {
+              try {
+                let dest = item.dest
+                if (typeof dest === 'string') dest = await pdfRef.current.getDestination(dest)
+                const pageIdx = await pdfRef.current.getPageIndex(dest[0])
+                goToPage(pageIdx + 1)
+              } catch {}
+            }
+          }}
+          title={item.title}
+        >
+          {item.title}
+        </div>
+        {item.items?.length > 0 && renderOutline(item.items, depth + 1)}
+      </div>
+    ))
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height, color: '#94a3b8', fontSize: 12 }}>
@@ -140,35 +311,251 @@ export function PdfMiniViewer({ sourceUrl, height }: { sourceUrl: string; height
     </div>
   )
 
+  const SIDEBAR_W = 140
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height }}>
-      {/* 페이지 이동 바 */}
+    <div style={{ display: 'flex', flexDirection: 'column', height, userSelect: 'none' }}>
+      <style>{`
+        @keyframes pdfSlideLeft { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes pdfSlideRight { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: translateX(0); } }
+      `}</style>
+
+      {/* 상단 네비 바 */}
       <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        padding: '4px 8px', background: 'rgba(0,0,0,0.4)', flexShrink: 0,
-        fontSize: 11, color: '#94a3b8',
+        display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px',
+        background: 'rgba(0,0,0,0.55)', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0,
       }}>
+        {/* 사이드바 토글 */}
         <button
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '2px 6px' }}
-          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+          style={{
+            background: showSidebar ? 'rgba(59,130,246,0.25)' : 'none', border: 'none',
+            cursor: 'pointer', color: showSidebar ? '#60a5fa' : '#64748b',
+            padding: '2px 8px', borderRadius: 4, fontSize: 10, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4,
+          }}
+          onClick={() => setShowSidebar(s => !s)}
+          title="사이드바"
+        >
+          ☰ 패널
+        </button>
+        <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)' }} />
+        <button
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: continuousScroll ? '#3b82f6' : '#94a3b8', padding: '2px 6px', fontSize: 11, fontWeight: 600 }}
+          onClick={() => setContinuousScroll(!continuousScroll)}
+          title="연속 스크롤 전환"
+        >
+          {continuousScroll ? '📜 연속' : '📄 단일'}
+        </button>
+        <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.1)' }} />
+        {/* 페이지 이동 */}
+        <button
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '2px 6px', fontSize: 14, lineHeight: 1 }}
+          onClick={() => goToPage(currentPage - 1, 'right')}
           disabled={currentPage <= 1}
         >‹</button>
-        <span>{currentPage} / {numPages}</span>
+        <span style={{ fontSize: 11, color: '#cbd5e1', minWidth: 50, textAlign: 'center' }}>{currentPage} / {numPages}</span>
         <button
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '2px 6px' }}
-          onClick={() => setCurrentPage(p => Math.min(numPages, p + 1))}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '2px 6px', fontSize: 14, lineHeight: 1 }}
+          onClick={() => goToPage(currentPage + 1, 'left')}
           disabled={currentPage >= numPages}
         >›</button>
       </div>
-      {/* 캔버스 영역 */}
-      <div style={{ flex: 1, overflow: 'auto', display: 'flex', justifyContent: 'center', background: '#1a1a24', padding: 8 }}>
-        <canvas ref={canvasRef} style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.5)' }} />
+
+      {/* 본체 */}
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden', minHeight: 0 }}>
+        {/* 사이드바 */}
+        {showSidebar && (
+          <div style={{
+            width: SIDEBAR_W, flexShrink: 0, display: 'flex', flexDirection: 'column',
+            background: 'rgba(8,8,14,0.97)', borderRight: '1px solid rgba(255,255,255,0.07)',
+          }}>
+            {/* 탭 */}
+            <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 }}>
+              {(['thumbnail', 'outline', 'bookmark'] as const).map(mode => (
+                <button key={mode}
+                  style={{
+                    flex: 1, padding: '6px 0', fontSize: 10, fontWeight: 600, border: 'none', cursor: 'pointer',
+                    background: sidebarMode === mode ? 'rgba(59,130,246,0.15)' : 'transparent',
+                    color: sidebarMode === mode ? '#60a5fa' : '#475569',
+                    borderBottom: sidebarMode === mode ? '2px solid #3b82f6' : '2px solid transparent',
+                    transition: 'all 0.15s',
+                  }}
+                  onClick={() => setSidebarMode(mode)}
+                >
+                  {mode === 'thumbnail' ? '페이지' : mode === 'outline' ? '목차' : '🔖'}
+                </button>
+              ))}
+            </div>
+            {/* 콘텐츠 */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {sidebarMode === 'thumbnail' ? (
+                Array.from({ length: numPages }).map((_, idx) => {
+                  const n = idx + 1
+                  const isActive = currentPage === n
+                  return (
+                    <div
+                      key={n}
+                      ref={(node) => thumbRef(node, n)}
+                      onClick={() => goToPage(n)}
+                      style={{
+                        cursor: 'pointer', borderRadius: 5, overflow: 'hidden', flexShrink: 0,
+                        border: isActive ? '2px solid #3b82f6' : '2px solid transparent',
+                        boxShadow: isActive ? '0 0 8px rgba(59,130,246,0.4)' : 'none',
+                        background: '#1e1e2e', transition: 'all 0.13s',
+                      }}
+                    >
+                      {thumbnails[n] ? (
+                        <img src={thumbnails[n]} alt={`페이지 ${n}`} style={{ width: '100%', display: 'block' }} />
+                      ) : (
+                        <div style={{
+                          width: '100%', aspectRatio: '0.71', background: '#252535',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: 'rgba(255,255,255,0.15)', fontSize: 9,
+                        }}>{n}</div>
+                      )}
+                      <div style={{
+                        textAlign: 'center', fontSize: 9, padding: '2px 0', display: 'flex', justifyContent: 'center', gap: 4,
+                        color: isActive ? '#60a5fa' : '#475569', fontWeight: isActive ? 700 : 400,
+                      }}>
+                        {bookmarks.some(b => b.page === n) && <span style={{color:'#fbbf24'}}>🔖</span>}
+                        {n}
+                      </div>
+                    </div>
+                  )
+                })
+              ) : sidebarMode === 'outline' ? (
+                outlines.length > 0 ? renderOutline(outlines) : (
+                  <div style={{ fontSize: 10, color: '#475569', textAlign: 'center', marginTop: 20 }}>
+                    목차가 없습니다
+                  </div>
+                )
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <button
+                    onClick={toggleBookmark}
+                    style={{
+                      padding: '5px 8px', borderRadius: 4, border: 'none', cursor: 'pointer', fontSize: 10, fontWeight: 600,
+                      background: isBookmarked ? 'rgba(251,191,36,0.2)' : 'rgba(255,255,255,0.07)',
+                      color: isBookmarked ? '#fbbf24' : '#94a3b8',
+                      display: 'flex', alignItems: 'center', gap: 4, marginBottom: 6,
+                    }}
+                  >
+                    🔖 {isBookmarked ? `${currentPage}p 제거` : `${currentPage}p 추가`}
+                  </button>
+                  {bookmarks.length === 0 ? (
+                    <div style={{ fontSize: 10, color: '#475569', textAlign: 'center', marginTop: 20 }}>북마크가 없습니다</div>
+                  ) : bookmarks.map(b => (
+                    <div key={b.page} style={{
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      padding: '4px 6px', borderRadius: 4, cursor: 'pointer',
+                      background: currentPage === b.page ? 'rgba(59,130,246,0.15)' : 'rgba(255,255,255,0.04)',
+                      border: currentPage === b.page ? '1px solid rgba(59,130,246,0.3)' : '1px solid transparent',
+                    }}>
+                      <span onClick={() => goToPage(b.page)} style={{ flex: 1, fontSize: 10, color: currentPage === b.page ? '#60a5fa' : '#e2e8f0' }}>
+                        🔖 {b.label}
+                      </span>
+                      <button
+                        onClick={() => setBookmarks(prev => { 
+                          const n = prev.filter(x => x.page !== b.page); 
+                          onBookmarksChange?.(n); 
+                          return n; 
+                        })}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: 12, padding: '0 2px', lineHeight: 1 }}
+                      >×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 캔버스 영역 - 스크롤 컴테이너 + 절대위치 화살표 */}
+        <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
+          {/* 좌측 화살표 */}
+          {!continuousScroll && (
+            <button
+              onMouseEnter={() => setHoveredArrow('left')}
+              onMouseLeave={() => setHoveredArrow(null)}
+              onClick={() => goToPage(currentPage - 1, 'right')}
+              disabled={currentPage <= 1}
+              style={{
+                position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)',
+                zIndex: 20, width: 30, height: 30, borderRadius: '50%',
+                background: hoveredArrow === 'left' && currentPage > 1 ? 'rgba(59,130,246,0.9)' : 'rgba(0,0,0,0.5)',
+                border: '1px solid rgba(255,255,255,0.2)', color: '#fff',
+                cursor: currentPage <= 1 ? 'default' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                opacity: currentPage <= 1 ? 0.15 : 1,
+                transition: 'all 0.18s', fontSize: 16, lineHeight: 1,
+                boxShadow: hoveredArrow === 'left' ? '0 0 12px rgba(59,130,246,0.6)' : '0 2px 6px rgba(0,0,0,0.4)',
+              }}
+            >‹</button>
+          )}
+
+          {/* 스크롤 컴테이너 */}
+          <div 
+            style={{ width: '100%', height: '100%', overflow: 'auto', background: '#1a1a24' }}
+            onPointerDown={handlePointerDown}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={() => { dragStartRef.current = null }}
+          >
+            {continuousScroll ? (
+              <div style={{ padding: '20px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                {Array.from({ length: numPages }).map((_, idx) => (
+                  <MiniContinuousPageCanvas
+                    key={idx + 1}
+                    pdf={pdfRef.current}
+                    pageNum={idx + 1}
+                    isActive={currentPage === idx + 1}
+                    onVisible={setCurrentPage}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 50px', minHeight: '100%', alignItems: 'flex-start' }}>
+                <canvas
+                  ref={canvasRef}
+                  style={{
+                    boxShadow: '0 2px 20px rgba(0,0,0,0.6)',
+                    borderRadius: 3,
+                    animation: slideDir === 'left'
+                      ? 'pdfSlideLeft 0.22s cubic-bezier(0.2,0.8,0.2,1)'
+                      : slideDir === 'right'
+                      ? 'pdfSlideRight 0.22s cubic-bezier(0.2,0.8,0.2,1)'
+                      : 'none',
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* 우측 화살표 */}
+          {!continuousScroll && (
+            <button
+              onMouseEnter={() => setHoveredArrow('right')}
+              onMouseLeave={() => setHoveredArrow(null)}
+              onClick={() => goToPage(currentPage + 1, 'left')}
+              disabled={currentPage >= numPages}
+              style={{
+                position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                zIndex: 20, width: 30, height: 30, borderRadius: '50%',
+                background: hoveredArrow === 'right' && currentPage < numPages ? 'rgba(59,130,246,0.9)' : 'rgba(0,0,0,0.5)',
+                border: '1px solid rgba(255,255,255,0.2)', color: '#fff',
+                cursor: currentPage >= numPages ? 'default' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                opacity: currentPage >= numPages ? 0.15 : 1,
+                transition: 'all 0.18s', fontSize: 16, lineHeight: 1,
+                boxShadow: hoveredArrow === 'right' ? '0 0 12px rgba(59,130,246,0.6)' : '0 2px 6px rgba(0,0,0,0.4)',
+              }}
+            >›</button>
+          )}
+        </div>
       </div>
     </div>
   )
 }
 
-/** 메인 InlineDocumentBlock */
+
 function InlineDocumentBlockComponent({ block, editor }: any) {
   const props = block.props as {
     fileName: string
@@ -178,6 +565,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
     width: string
     sourceUrl: string
     isExpanded: string
+    bookmarks: string
   }
 
   const [isDragging, setIsDragging] = useState(false)
@@ -432,7 +820,12 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
       {headerBar}
       <div data-viewer-inner style={{ height: viewHeight, overflow: 'hidden', position: 'relative' }}>
         {docType === 'pdf' && hasFile && (
-          <PdfMiniViewer sourceUrl={props.sourceUrl} height={viewHeight} />
+          <PdfMiniViewer 
+            sourceUrl={props.sourceUrl} 
+            height={viewHeight} 
+            savedBookmarks={(() => { try { return JSON.parse(props.bookmarks || '[]') } catch { return [] } })()}
+            onBookmarksChange={(b) => editor.updateBlock(block.id, { props: { ...props, bookmarks: JSON.stringify(b) } })}
+          />
         )}
         {docType === 'pdf' && hasUrl && (
           <iframe
@@ -705,6 +1098,7 @@ export const InlineDocumentBlockSpec = createReactBlockSpec(
       width:       { default: '100%' },
       sourceUrl:   { default: '' },
       isExpanded:  { default: 'false' },
+      bookmarks:   { default: '[]' },
     },
     content: 'none',
   },

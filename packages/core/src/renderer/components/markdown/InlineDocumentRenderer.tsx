@@ -102,7 +102,11 @@ export function InlineDocumentRenderer({ code }: { code: string }) {
       {/* 뷰어 영역 */}
       <div style={{ height: viewHeight, overflow: 'hidden', position: 'relative' }}>
         {docType === 'pdf' && hasFile && (
-          <PdfMiniViewer sourceUrl={props.sourceUrl} height={viewHeight} />
+          <PdfMiniViewer 
+            sourceUrl={props.sourceUrl} 
+            height={viewHeight} 
+            savedBookmarks={(() => { try { return JSON.parse(props.bookmarks || '[]') } catch { return [] } })()}
+          />
         )}
         {docType === 'pdf' && hasUrl && (
           <iframe
