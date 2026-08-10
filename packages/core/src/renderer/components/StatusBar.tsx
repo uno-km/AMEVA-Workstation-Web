@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ============================================================================
  * @file StatusBar.tsx
  * @description StatusBar.tsx 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
@@ -65,6 +65,7 @@ import { Settings, ZoomIn, WrapText } from 'lucide-react'
  */
 // [내부 프로젝트 의존성 모듈 임포트: ./statusbar/AIStatusIndicator]
 import { AIStatusIndicator } from './statusbar/AIStatusIndicator'
+import { EmbeddingStatusIndicator } from './statusbar/EmbeddingStatusIndicator'
 // [내부 프로젝트 의존성 모듈 임포트: ./statusbar/DocStatusIndicator]
 import { DocStatusIndicator } from './statusbar/DocStatusIndicator'
 
@@ -292,6 +293,14 @@ export function StatusBar({}: StatusBarProps = {}) {
           handleMouseEnter={handleMouseEnter}
           handleMouseLeave={handleMouseLeave}
           tooltipStyle={tooltipStyle}
+        />
+        <div style={{ width: '1px', height: '12px', backgroundColor: 'var(--border-muted)' }} />
+        <EmbeddingStatusIndicator
+          activeTooltip={activeTooltip}
+          handleMouseEnter={handleMouseEnter}
+          handleMouseLeave={handleMouseLeave}
+          tooltipStyle={tooltipStyle}
+          editorContent={currentContent}
         />
         <div style={{ width: '1px', height: '12px', backgroundColor: 'var(--border-muted)' }} />
 
