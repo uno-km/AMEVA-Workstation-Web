@@ -6,9 +6,10 @@ interface LLMActionParams {
   editor: any;
   activeModelId: string;
   generateStream: (prompt: string, userText: string) => AsyncGenerator<string, void, unknown>;
+  taggedBlocks?: any[];
 }
 
-export function useLLMAction({ editor, activeModelId, generateStream }: LLMActionParams) {
+export function useLLMAction({ editor, activeModelId, generateStream, taggedBlocks }: LLMActionParams) {
   const parser = React.useMemo(() => new XmlTagParser('answer'), []);
 
   const executeAction = useCallback(async (
@@ -18,10 +19,14 @@ export function useLLMAction({ editor, activeModelId, generateStream }: LLMActio
   ) => {
     if (!editor || !targetText) return;
 
+    const contextText = taggedBlocks && taggedBlocks.length > 0
+      ? taggedBlocks.map(b => Array.isArray(b.content) ? b.content.map((c: any) => c.text).join('') : b.text).filter(Boolean).join('\n')
+      : undefined;
+
     const factory = PromptManager.getFactory(activeModelId);
     const systemPrompt = mode === 'tone' 
-      ? factory.createTonePrompt() 
-      : factory.createSummaryPrompt();
+      ? factory.createTonePrompt(contextText) 
+      : factory.createSummaryPrompt(contextText);
 
     const stream = generateStream(systemPrompt, `[TARGET TEXT]\n${targetText}`);
     
@@ -57,7 +62,7 @@ export function useLLMAction({ editor, activeModelId, generateStream }: LLMActio
         props: { originalBlockJson, originalText, mode, suggestedText: displayContent } as any 
       });
     }
-  }, [editor, activeModelId, generateStream, parser]);
+  }, [editor, activeModelId, generateStream, parser, taggedBlocks]);
 
   return { executeAction };
 }

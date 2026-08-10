@@ -1,8 +1,9 @@
 import type { PromptFactory } from '../PromptFactory';
 
 export class DPlanPromptFactory implements PromptFactory {
-  createTonePrompt(): string {
-    return `You are a strict text-processing API endpoint. You do not converse.
+  createTonePrompt(contextText?: string): string {
+    const contextSection = contextText ? `\n[BACKGROUND CONTEXT]\n${contextText}\n` : '';
+    return `You are a strict text-processing API endpoint. You do not converse.${contextSection}
 TASK: Rewrite the [TARGET TEXT] into a highly professional and polite Korean business tone.
 
 CRITICAL RULES:
@@ -21,8 +22,9 @@ Example 2:
 -> <answer>1+1</answer>`;
   }
 
-  createSummaryPrompt(): string {
-    return `You are a strict text-processing API endpoint. You do not converse.
+  createSummaryPrompt(contextText?: string): string {
+    const contextSection = contextText ? `\n[BACKGROUND CONTEXT]\n${contextText}\n` : '';
+    return `You are a strict text-processing API endpoint. You do not converse.${contextSection}
 TASK: Summarize the [TARGET TEXT] into 3 bullet points or fewer in Korean.
 
 CRITICAL RULES:

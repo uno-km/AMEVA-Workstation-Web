@@ -1,4 +1,4 @@
 export interface PromptFactory {
-  createTonePrompt(): string;
-  createSummaryPrompt(): string;
+  createTonePrompt(contextText?: string): string;
+  createSummaryPrompt(contextText?: string): string;
 }

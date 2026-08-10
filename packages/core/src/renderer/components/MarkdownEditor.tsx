@@ -130,6 +130,7 @@ import { PdfViewer } from './PdfViewer'
 import { HwpxViewerModal } from './editor/HwpxViewerModal'
 import { useWebLLM } from './useWebLLM'
 import { useLLMAction } from '../hooks/editor/useLLMAction'
+import { useGhostText } from '../hooks/editor/useGhostText'
 
 /* 
  * [INTERACTION HOOKS]
@@ -426,9 +427,16 @@ export function MarkdownEditor({
     blockId: null,
     selectedText: ''
   })
-  const { initModel, generateStream, isReady, isLoading, activeModelId, progress } = useWebLLM()
-  const { executeAction } = useLLMAction({ editor, activeModelId, generateStream })
-  
+  const { initModel, generateStream, generateGhostStream, isMainReady, isGhostReady, isMainLoading, isGhostLoading, activeModelId, mainProgressText, ghostProgressText, mainProgress, ghostProgress } = useWebLLM()
+  const pMain = Math.round((mainProgress || 0) * 100);
+  const pGhost = Math.round((ghostProgress || 0) * 100);
+  const [pendingModelId, setPendingModelId] = useState('Qwen2.5-3B-Instruct-q4f32_1-MLC')
+  const [ghostTextEnabled, setGhostTextEnabled] = useState(true)
+  const { executeAction } = useLLMAction({ editor, activeModelId, generateStream, taggedBlocks })
+
+  // Ghost Text 자동완성 훅 연결 (Phase 3)
+  // enabled 토글로 ON/OFF 가능. 1.5B 모델을 별도 로드하지 않고 현재 활성 모델을 재사용한다.
+  useGhostText({ editor, generateStream: generateGhostStream, isLLMReady: isGhostReady, enabled: ghostTextEnabled })
 
   useEffect(() => {
     const handleHwpxParsed = (e: Event) => {
@@ -946,19 +954,66 @@ export function MarkdownEditor({
             AI 어시스턴트
           </div>
           
-          {!isReady ? (
-            <button
-              className="bn-button"
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'transparent', color: '#a855f7', border: 'none', cursor: isLoading ? 'default' : 'pointer', fontSize: '12px', pointerEvents: isLoading ? 'none' : 'auto' }}
-              onClick={() => {
-                if (!isLoading) initModel()
-              }}
-              onMouseOver={(e) => { if (!isLoading) e.currentTarget.style.backgroundColor = 'rgba(168,85,247,0.1)' }}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-            >
-              <Sparkles size={14} /> 
-              {isLoading ? `활성화 중... ${Math.round(progress * 100)}%` : 'AMEVA AI 활성화하기'}
-            </button>
+          {!isMainReady ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '0 4px' }}>
+              <select
+                value={pendingModelId}
+                onChange={(e) => setPendingModelId(e.target.value)}
+                style={{
+                  background: 'var(--bg-main)', color: 'var(--text-main)',
+                  border: '1px solid var(--border-muted)', borderRadius: '4px',
+                  padding: '4px 6px', fontSize: '11px', outline: 'none', cursor: 'pointer',
+                  marginBottom: '2px'
+                }}
+              >
+                <option value="Qwen2.5-3B-Instruct-q4f32_1-MLC">Qwen 2.5 (3B) - 기본 (권장)</option>
+                <option value="Qwen2.5-7B-Instruct-q4f16_1-MLC">Qwen 2.5 (7B) - 고성능 (8GB VRAM↑)</option>
+              </select>
+              {pendingModelId.includes('7B') && (
+                <div style={{ fontSize: '10px', color: '#ef4444', marginBottom: '4px', lineHeight: '1.2' }}>
+                  ⚠️ 첫 로딩 시 수 분이 소요되며 브라우저가 버벅일 수 있습니다.
+                </div>
+              )}
+              {isMainLoading || isGhostLoading ? (
+                <div style={{ padding: '8px', fontSize: '12px', color: '#666', borderTop: '1px solid var(--border-muted)', textAlign: 'center' }}>
+                  <div style={{ marginBottom: '6px' }}>AI 모델 병렬 로딩 중...</div>
+                  
+                  {/* Main Model Progress */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#10b981', opacity: 0.9 }}>
+                    <span>Main (3B/7B)</span>
+                    <span>{pMain}%</span>
+                  </div>
+                  <div style={{ width: '100%', height: '4px', background: 'rgba(0,0,0,0.1)', borderRadius: '2px', overflow: 'hidden', marginBottom: '2px' }}>
+                    <div style={{ width: `${pMain}%`, height: '100%', background: 'linear-gradient(90deg, #059669, #10b981)', transition: 'width 0.2s ease-out' }} />
+                  </div>
+                  <div style={{ color: '#10b981', fontSize: '9px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left', marginBottom: '6px' }}>{mainProgressText}</div>
+
+                  {/* Ghost Model Progress */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#8b5cf6', opacity: 0.9 }}>
+                    <span>Ghost (1.5B)</span>
+                    <span>{pGhost}%</span>
+                  </div>
+                  <div style={{ width: '100%', height: '4px', background: 'rgba(0,0,0,0.1)', borderRadius: '2px', overflow: 'hidden', marginBottom: '2px' }}>
+                    <div style={{ width: `${pGhost}%`, height: '100%', background: 'linear-gradient(90deg, #7c3aed, #8b5cf6)', transition: 'width 0.2s ease-out' }} />
+                  </div>
+                  <div style={{ color: '#8b5cf6', fontSize: '9px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left' }}>{ghostProgressText}</div>
+                </div>
+              ) : (
+                <button
+                  className="bn-button"
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'transparent', color: '#a855f7', border: 'none', cursor: 'pointer', fontSize: '12px' }}
+                  onClick={() => {
+                    if (isMainLoading || isGhostLoading) return;
+                    initModel(pendingModelId)
+                  }}
+                  onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'rgba(168,85,247,0.1)' }}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <Sparkles size={14} /> 
+                  AMEVA AI 활성화하기
+                </button>
+              )}
+            </div>
           ) : (
             <>
               <button
@@ -991,8 +1046,38 @@ export function MarkdownEditor({
                 <Sparkles size={14} />
                 AMEVA AI에게 요약 요청
               </button>
-            </>
-          )}
+              </>
+            )}
+
+            {/* Ghost Text 자동완성 ON/OFF 토글 (AI 활성 상태일 때만 노출) */}
+            {isGhostReady && (
+              <div style={{ display: 'flex', flexDirection: 'column', padding: '4px 8px', marginTop: '4px', borderTop: '1px solid var(--border-muted)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>자동완성 (Ghost Text)</span>
+                  <button
+                    style={{
+                      width: '36px', height: '20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+                      background: ghostTextEnabled ? '#a855f7' : 'var(--border-muted)',
+                      position: 'relative', transition: 'background 0.2s',
+                    }}
+                    onClick={() => setGhostTextEnabled(prev => !prev)}
+                    title={ghostTextEnabled ? '자동완성 비활성화' : '자동완성 활성화'}
+                  >
+                    <span style={{
+                      position: 'absolute', top: '2px', width: '16px', height: '16px', borderRadius: '50%',
+                      background: '#fff', transition: 'left 0.2s',
+                      left: ghostTextEnabled ? '18px' : '2px',
+                    }} />
+                  </button>
+                </div>
+                {ghostTextEnabled && (
+                  <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', opacity: 0.8, marginTop: '6px', lineHeight: 1.4 }}>
+                    💡 <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '1px 3px', borderRadius: '3px' }}>Ctrl+Space</kbd> 즉시 호출<br/>
+                    💡 <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '1px 3px', borderRadius: '3px' }}>Ctrl+→</kbd> 단어 단위 부분 수락
+                  </div>
+                )}
+              </div>
+            )}
         </div>,
         document.body
       )}

@@ -15,10 +15,10 @@ export function AIStatusIndicator({
   handleMouseLeave, 
   tooltipStyle 
 }: AIStatusIndicatorProps) {
-  const { isReady, isLoading, progress, progressText, initModel, activeModelId } = useWebLLM()
+  const { isMainReady, isGhostReady, isMainLoading, isGhostLoading, mainProgressText, ghostProgressText, mainProgress, ghostProgress, initModel, activeModelId } = useWebLLM()
   const [showDashboard, setShowDashboard] = useState(false)
   const [selectedModel, setSelectedModel] = useState(() => {
-    return localStorage.getItem('ameva_selected_llm_model') || 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC'
+    return localStorage.getItem('ameva_selected_llm_model') || 'Qwen2.5-3B-Instruct-q4f32_1-MLC'
   })
 
   useEffect(() => {
@@ -43,7 +43,12 @@ export function AIStatusIndicator({
   // 간단한 통계 더미 데이터 (실제 데이터 연동 가능시 교체)
   const sessionTime = "00:42:15"
   const avgTokens = "124 t/s"
-  const percentage = Math.round((progress || 0) * 100)
+  
+  // 상태 통합
+  const isLoading = isMainLoading || isGhostLoading;
+  const isReady = isMainReady;
+  const pMain = Math.round((mainProgress || 0) * 100);
+  const pGhost = Math.round((ghostProgress || 0) * 100);
 
   return (
     <div style={{ position: 'relative' }} ref={dashboardRef}>
@@ -116,9 +121,9 @@ export function AIStatusIndicator({
                     maxWidth: '140px', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden'
                   }}
                 >
-                  <option value="Qwen2.5-1.5B-Instruct-q4f32_1-MLC" style={{ color: '#000' }}>Qwen2.5 1.5B (빠름)</option>
-                  <option value="Qwen2.5-3B-Instruct-q4f32_1-MLC" style={{ color: '#000' }}>Qwen2.5 3B (정확함)</option>
+                  <option value="Qwen2.5-3B-Instruct-q4f32_1-MLC" style={{ color: '#000' }}>Qwen2.5 3B (기본)</option>
                   <option value="Llama-3.2-3B-Instruct-q4f32_1-MLC" style={{ color: '#000' }}>Llama 3.2 3B</option>
+                  <option value="Qwen2.5-7B-Instruct-q4f16_1-MLC" style={{ color: '#000' }}>Qwen2.5 7B (고성능)</option>
                 </select>
               ) : (
                 <span style={{ fontWeight: 600, color: '#e2e8f0' }}>
@@ -141,20 +146,31 @@ export function AIStatusIndicator({
           {isLoading && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#f59e0b', fontWeight: 600 }}>
-                <span>모델 다운로드 중...</span>
-                <span>{percentage}%</span>
+                <span>모델 병렬 로딩 중...</span>
               </div>
-              <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '3px', overflow: 'hidden', boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.5)' }}>
-                <div style={{ 
-                  width: `${percentage}%`, 
-                  height: '100%', 
-                  background: 'linear-gradient(90deg, #f59e0b, #fbbf24)', 
-                  boxShadow: '0 0 10px rgba(245, 158, 11, 0.5)',
-                  transition: 'width 0.2s ease-out' 
-                }} />
+              
+              {/* Main Model Progress Bar */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#10b981', opacity: 0.9 }}>
+                <span>Main (3B/7B)</span>
+                <span>{pMain}%</span>
               </div>
-              <div style={{ fontSize: '9px', color: 'var(--text-muted)', textAlign: 'center', wordBreak: 'break-all', opacity: 0.8, marginTop: '2px' }}>
-                {progressText}
+              <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ width: `${pMain}%`, height: '100%', background: 'linear-gradient(90deg, #059669, #10b981)', transition: 'width 0.2s ease-out' }} />
+              </div>
+              <div style={{ fontSize: '9px', color: '#10b981', textAlign: 'left', wordBreak: 'break-all', opacity: 0.9, marginTop: '2px' }}>
+                {mainProgressText}
+              </div>
+
+              {/* Ghost Model Progress Bar */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#8b5cf6', opacity: 0.9, marginTop: '4px' }}>
+                <span>Ghost (1.5B)</span>
+                <span>{pGhost}%</span>
+              </div>
+              <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ width: `${pGhost}%`, height: '100%', background: 'linear-gradient(90deg, #7c3aed, #8b5cf6)', transition: 'width 0.2s ease-out' }} />
+              </div>
+              <div style={{ fontSize: '9px', color: '#8b5cf6', textAlign: 'left', wordBreak: 'break-all', opacity: 0.9, marginTop: '2px' }}>
+                {ghostProgressText}
               </div>
             </div>
           )}

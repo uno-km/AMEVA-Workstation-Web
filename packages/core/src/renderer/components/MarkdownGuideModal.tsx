@@ -68,6 +68,12 @@ export function MarkdownGuideModal({ isOpen, onClose }: MarkdownGuideModalProps)
               }}
             >
               <div style={{ padding: '8px', background: 'var(--bg-glass-active)', borderRadius: '6px', border: '1px solid var(--border-muted)' }}>
+                <span style={{ color: 'var(--primary)' }}>Ctrl + Space</span> : 자동완성 즉시 호출
+              </div>
+              <div style={{ padding: '8px', background: 'var(--bg-glass-active)', borderRadius: '6px', border: '1px solid var(--border-muted)' }}>
+                <span style={{ color: 'var(--primary)' }}>Ctrl + →</span> : 자동완성 단어 수락
+              </div>
+              <div style={{ padding: '8px', background: 'var(--bg-glass-active)', borderRadius: '6px', border: '1px solid var(--border-muted)' }}>
                 <span style={{ color: 'var(--primary)' }}>Ctrl + S</span> : 문서 즉시 저장
               </div>
               <div style={{ padding: '8px', background: 'var(--bg-glass-active)', borderRadius: '6px', border: '1px solid var(--border-muted)' }}>

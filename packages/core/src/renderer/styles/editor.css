@@ -621,3 +621,26 @@
 
 /* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */
 /* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */
+
+/* ── [FEAT-GHOST] Ghost Text 자동완성 Decoration 스타일 ─────────────────── */
+/* ProseMirror Decoration.widget으로 커서 뒤에 삽입되는 가상 텍스트 */
+.ghost-text-suggestion {
+  color: #6b7280;
+  pointer-events: none;
+  white-space: pre-wrap;
+  font-style: italic;
+  opacity: 0.65;
+  user-select: none;
+  /* 부드러운 등장 애니메이션 */
+  animation: ghost-fade-in 0.15s ease-in;
+}
+
+@keyframes ghost-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 0.65; }
+}
+
+/* 다크 테마에서 Ghost Text 색상 보정 */
+[data-mantine-color-scheme='dark'] .ghost-text-suggestion {
+  color: #9ca3af;
+}
