@@ -19,7 +19,7 @@
 
 import React from 'react'
 import { getDefaultReactSlashMenuItems } from '@blocknote/react'
-import { Code2, Globe, Eye, Terminal, File, Layout, Pencil, FileText, FileSpreadsheet, Presentation, FileType2 } from 'lucide-react'
+import { Code2, Globe, Eye, Terminal, File, Layout, Pencil, FileText, FileSpreadsheet, Presentation, FileType2, Type } from 'lucide-react'
 import { type AmevaEditor } from '../../editor/amevaBlockSchema'
 
   /*
@@ -464,5 +464,95 @@ export function getCustomSlashMenuItems(editorInstance: AmevaEditor, installedPl
     },
   ]
 
-  return [...filtered, ...codeItems, ...drawingItems, mapItem, ...excelItems, ...kanbanItems, ...documentItems]
+  const smartDocsItems = [
+    {
+      title: '금액 한글화 변환',
+      onItemClick: () => {
+        try {
+          const pos = editorInstance.getTextCursorPosition();
+          if (!pos || !pos.block.content) return;
+          if (Array.isArray(pos.block.content)) {
+            const newContent = pos.block.content.map((c: any) => {
+              if (c.type === 'text') {
+                const text = c.text.replace(/[0-9,]+/g, (match: string) => {
+                  // 임시로 숫자 변환 로직 인라인으로 구현 (import 복잡도 피하기 위함)
+                  const numStr = match.replace(/,/g, '');
+                  const num = parseInt(numStr, 10);
+                  if (isNaN(num)) return match;
+                  const hanA = ["", "일", "이", "삼", "사", "오", "육", "칠", "팔", "구", "십"];
+                  const danA = ["", "십", "백", "천"];
+                  const danG = ["", "만", "억", "조", "경"];
+                  let result = "";
+                  for (let i = 0; i < numStr.length; i++) {
+                    const n = parseInt(numStr.charAt(i), 10);
+                    const str = hanA[n];
+                    if (str !== "") { result += str + danA[(numStr.length - i - 1) % 4]; }
+                    if ((numStr.length - i - 1) % 4 === 0 && result.length > 0) {
+                      const unit = danG[(numStr.length - i - 1) / 4];
+                      if (!result.endsWith(unit)) result += unit;
+                    }
+                  }
+                  return result ? result + " 원" : "영 원";
+                });
+                return { ...c, text };
+              }
+              return c;
+            });
+            editorInstance.updateBlock(pos.block.id, { content: newContent } as any);
+          }
+        } catch {}
+      },
+      aliases: ['smartdocs', '금액', '한글화', '돈', 'calc'],
+      group: 'SmartDocs',
+      icon: <FileText size={16} color="#059669" />,
+      subtext: '숫자를 한글 금액으로 일괄 변환 (/smartdocs)',
+    },
+    {
+      title: '공문서 표 삽입',
+      onItemClick: () => {
+        try {
+          const pos = editorInstance.getTextCursorPosition();
+          if (!pos) return;
+          editorInstance.insertBlocks([
+            {
+              type: 'table',
+              content: {
+                type: 'tableContent',
+                rows: [
+                  { cells: [[{ type: 'text', text: '구분', styles: { bold: true } as any }]], styles: {} },
+                  { cells: [[{ type: 'text', text: '내용', styles: {} as any }]], styles: {} }
+                ]
+              }
+            } as any
+          ], pos.block.id, 'after');
+        } catch {}
+      },
+      aliases: ['smartdocs', '표', '테이블', 'table', 'hwp'],
+      group: 'SmartDocs',
+      icon: <Layout size={16} color="#059669" />,
+      subtext: '한글(HWP) 스타일 기본 표 삽입 (/smartdocs-table)',
+    },
+    {
+      title: '공문서 대제목 삽입',
+      onItemClick: () => {
+        try {
+          const pos = editorInstance.getTextCursorPosition();
+          if (!pos) return;
+          editorInstance.insertBlocks([
+            {
+              type: 'heading',
+              props: { level: 1 },
+              content: [{ type: 'text', text: '제목을 입력하세요', styles: { bold: true } as any }]
+            } as any
+          ], pos.block.id, 'after');
+        } catch {}
+      },
+      aliases: ['smartdocs', '제목', '대제목', 'heading', 'title'],
+      group: 'SmartDocs',
+      icon: <Type size={16} color="#059669" />,
+      subtext: '중앙 정렬된 공문서 대제목 삽입 (/smartdocs-title)',
+    },
+  ]
+
+  return [...filtered, ...codeItems, ...drawingItems, mapItem, ...excelItems, ...kanbanItems, ...documentItems, ...smartDocsItems]
 }

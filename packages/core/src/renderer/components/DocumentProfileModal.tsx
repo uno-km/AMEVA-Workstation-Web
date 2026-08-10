@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, FileText, CheckCircle2, TrendingUp, Tags, AlertTriangle, Fingerprint } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { X, FileText, CheckCircle, TrendingUp, Tags, AlertTriangle, Fingerprint } from 'lucide-react';
 import type { DocumentProfileResult } from '../document-intelligence/types';
 import { documentFeedbackStore } from '../document-intelligence/feedback/documentFeedbackStore';
 import { userRuleGenerator } from '../document-intelligence/rules/user/userRuleGenerator';
@@ -64,63 +65,64 @@ export function DocumentProfileModal({ fileId, profile, onClose }: Props) {
     }
   };
 
-  return (
+  return createPortal(
     <div style={{
       position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
       background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999
+      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999,
+      letterSpacing: '-0.2px'
     }}>
       <div style={{
-        width: '640px', maxHeight: '85vh', background: '#111827',
+        width: '860px', maxHeight: '85vh', background: '#111827',
         border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px',
         display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.7)',
         overflow: 'hidden'
       }}>
         <div style={{
-          padding: '16px 20px', borderBottom: '1px solid var(--border-muted)',
+          padding: '12px 16px', borderBottom: '1px solid var(--border-muted)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           background: 'rgba(255,255,255,0.02)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Fingerprint size={20} style={{ color: '#a78bfa' }} />
-            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 600, color: '#f9fafb' }}>AMEVA 문서 DNA 프로필</h3>
+            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#f9fafb' }}>AMEVA 문서 DNA 프로필</h3>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
             <X size={18} />
           </button>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           
           {feedbackStatus === 'success' && (
-            <div style={{ padding: '10px', background: 'rgba(52, 211, 153, 0.15)', color: '#34d399', borderRadius: '6px', fontSize: '13px', border: '1px solid rgba(52, 211, 153, 0.3)' }}>
+            <div style={{ padding: '8px', background: 'rgba(52, 211, 153, 0.15)', color: '#34d399', borderRadius: '6px', fontSize: '12px', border: '1px solid rgba(52, 211, 153, 0.3)' }}>
               {feedbackMsg}
             </div>
           )}
           {feedbackStatus === 'error' && (
-            <div style={{ padding: '10px', background: 'rgba(248, 113, 113, 0.15)', color: '#f87171', borderRadius: '6px', fontSize: '13px', border: '1px solid rgba(248, 113, 113, 0.3)' }}>
+            <div style={{ padding: '8px', background: 'rgba(248, 113, 113, 0.15)', color: '#f87171', borderRadius: '6px', fontSize: '12px', border: '1px solid rgba(248, 113, 113, 0.3)' }}>
               {feedbackMsg}
             </div>
           )}
 
           {/* 1. 요약 카드 */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '10px' }}>
             <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '6px', display: 'flex', justifyContent: 'space-between', fontWeight: 500 }}>
+                <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px', display: 'flex', justifyContent: 'space-between', fontWeight: 500 }}>
                   추정 문서 유형 
                   <span style={{ color: classProfile.classificationStatus === 'unknown' ? '#f87171' : '#34d399' }}>
                     {classProfile.classificationStatus}
                   </span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                  <span style={{ fontSize: '20px', fontWeight: 700, color: '#60a5fa' }}>{classProfile.displayLabel}</span>
-                  <span style={{ fontSize: '13px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600 }}>
-                    <CheckCircle2 size={14} /> {classProfile.confidence}%
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                  <span style={{ fontSize: '18px', fontWeight: 700, color: '#60a5fa', lineHeight: '1.2' }}>{classProfile.displayLabel}</span>
+                  <span style={{ fontSize: '12px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '3px', fontWeight: 600 }}>
+                    <CheckCircle size={13} /> {classProfile.confidence}%
                   </span>
                 </div>
                 {classProfile.documentDomain && (
-                  <div style={{ marginTop: '10px', fontSize: '13px', color: '#9ca3af', lineHeight: '1.5' }}>
+                  <div style={{ marginTop: '8px', fontSize: '12px', color: '#9ca3af', lineHeight: '1.4' }}>
                     {classProfile.primaryTopic && (
                       <>
                         Topic: <span style={{ color: '#34d399' }}>{classProfile.primaryTopic.label}</span> ({classProfile.primaryTopic.confidence}%)
@@ -278,16 +280,16 @@ export function DocumentProfileModal({ fileId, profile, onClose }: Props) {
             <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#f9fafb', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <AlertTriangle size={16} style={{ color: '#ec4899' }} /> 중요 페이지 추정
             </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {importantPages.map((ip, i) => (
                 <div key={i} style={{ 
-                  display: 'flex', alignItems: 'center', gap: '14px', padding: '10px 14px',
-                  background: 'rgba(255,255,255,0.06)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)'
+                  display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 10px',
+                  background: 'rgba(255,255,255,0.06)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)'
                 }}>
-                  <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: '#ec4899', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '14px', fontWeight: 'bold', boxShadow: '0 2px 8px rgba(236,72,153,0.3)' }}>
+                  <div style={{ width: '24px', height: '24px', borderRadius: '4px', background: '#ec4899', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 2px 8px rgba(236,72,153,0.3)' }}>
                     {ip.page}
                   </div>
-                  <div style={{ flex: 1, fontSize: '13px', color: '#f3f4f6', lineHeight: '1.4' }}>
+                  <div style={{ flex: 1, fontSize: '12px', color: '#f3f4f6', lineHeight: '1.4' }}>
                     {ip.reasons.join(', ')}
                   </div>
                 </div>
@@ -297,6 +299,7 @@ export function DocumentProfileModal({ fileId, profile, onClose }: Props) {
 
         </div>
       </div>
-    </div>
-  )
+    </div>,
+    document.body
+  );
 }

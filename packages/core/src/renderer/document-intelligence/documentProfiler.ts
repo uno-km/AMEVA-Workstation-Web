@@ -60,17 +60,22 @@ export async function profileDocument(
     evidence.push(...primaryTopic.evidence);
   }
 
-  const profileObj = {
-    primaryType,
-    displayLabel,
-    classificationStatus,
-    documentShape: shapeResult,
-    documentDomain: domainResult,
-    documentSubDomain: subDomainResult,
-    intent: intentResult,
-    discoveredTopics,
-    primaryTopic,
-    confidence: Math.floor((shapeResult.confidence + domainResult.confidence + (subDomainResult.confidence || 0) + (primaryTopic?.confidence || 0)) / 4),
+    let baseConfidence = Math.floor((shapeResult.confidence + domainResult.confidence + (subDomainResult.confidence || 0) + intentResult.confidence + (primaryTopic?.confidence || 0)) / 5);
+    if (shapeResult.confidence < 50) {
+      baseConfidence = Math.floor(baseConfidence * 0.85); // Penalty for low shape confidence
+    }
+
+    const profileObj = {
+      primaryType,
+      displayLabel,
+      classificationStatus,
+      documentShape: shapeResult,
+      documentDomain: domainResult,
+      documentSubDomain: subDomainResult,
+      intent: intentResult,
+      discoveredTopics,
+      primaryTopic,
+      confidence: baseConfidence,
     evidence
   };
 
@@ -116,13 +121,17 @@ function detectImportantPages(
     }
 
     // B. 핵심 키워드 출현
-    let kwCount = 0;
+    const foundKeywords: string[] = [];
     keywords.slice(0, 10).forEach(kw => {
-      if (text.includes(kw.term)) kwCount++;
+      if (text.includes(kw.term)) foundKeywords.push(kw.term);
     });
-    if (kwCount >= 3) {
+    if (foundKeywords.length >= 3) {
       score += 30;
-      reasons.push("핵심 키워드 다수 포함");
+      if (classification.primaryTopic?.label) {
+        reasons.push(`[${classification.primaryTopic.label}] 관련 핵심 키워드 집중 (${foundKeywords.join(', ')})`);
+      } else {
+        reasons.push(`핵심 키워드 다수 포함 (${foundKeywords.join(', ')})`);
+      }
     }
 
     // C. 특수 목적 룰 (수강신청/학사 관련)
@@ -157,6 +166,8 @@ function detectImportantPages(
         score += 40;
         reasons.push("지진 피해 관련 핵심 키워드 집중");
       }
+      if (/사례|복구/i.test(text)) reasons.push("피해 사례 또는 복구 관련 설명 포함");
+      if (/출처|사례/i.test(text)) reasons.push("출처/사례 기반 분석 내용 포함");
     }
 
     if (primaryTopicLabel === 'API 인증' && intent === 'integration_guide') {
@@ -164,6 +175,7 @@ function detectImportantPages(
         score += 40;
         reasons.push("API 인증 절차 관련 핵심 내용 포함");
       }
+      if (/요청|응답|토큰/i.test(text)) reasons.push("요청/응답 또는 토큰 관련 설명 포함");
     }
 
     if (primaryTopicLabel === '재무제표' && intent === 'financial_analysis') {
@@ -171,6 +183,7 @@ function detectImportantPages(
         score += 40;
         reasons.push("재무제표 및 손익 관련 핵심 지표 포함");
       }
+      if (/매출|비용|수익/i.test(text)) reasons.push("매출/비용/수익성 분석 내용 집중");
     }
 
     // D. 섹션 시작 지점

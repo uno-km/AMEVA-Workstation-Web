@@ -525,16 +525,13 @@ export default function App() {
     settings, editor, filePath, currentContent, editorMode,
     onSave: handleSaveFile, onOpen: handleOpenFile, 
     onNewTab: () => {
-      handleNewTab();
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `editorMode === 'welcome'`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (editorMode === 'welcome')` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-      if (editorMode === 'welcome') {
-        setEditorMode('edit');
+      if (fileOpenMode === 'replace' || fileOpenMode === 'append') {
+        useUIStore.getState().setIsNewDocumentConfirmOpen(true);
+      } else if (fileOpenMode === 'tab') {
+        handleNewTab();
+        if (editorMode === 'welcome') {
+          setEditorMode('edit');
+        }
       }
     },
     onToggleAI: toggleAIPanel,

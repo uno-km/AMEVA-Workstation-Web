@@ -58,7 +58,8 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
   
   const {
     filePath, fileOpenMode, setFileOpenMode, appendedFiles,
-    tabs, activeTabId, setActiveTabId, removeTab
+    tabs, activeTabId, setActiveTabId, removeTab,
+    isSmartDocsMode, setIsSmartDocsMode
   } = useWorkspaceStore()
   
       /*
@@ -218,6 +219,32 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
           >
             <FileText size={12} /> 원문보기
           </button>
+        </div>
+        <div style={{ marginTop: '12px', padding: '8px 12px', background: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span style={{ fontSize: '12px', fontWeight: 'bold' }}>SmartDocs (공문서) 폼</span>
+            <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>자동 레이아웃 및 여백 적용</span>
+          </div>
+          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+            <div style={{
+              width: '36px', height: '20px', borderRadius: '10px',
+              background: isSmartDocsMode ? 'var(--brand-primary)' : 'var(--bg-surface)',
+              border: `1px solid ${isSmartDocsMode ? 'transparent' : 'var(--border-muted)'}`,
+              position: 'relative', transition: 'background 0.2s'
+            }}>
+              <div style={{
+                position: 'absolute', top: '2px', left: isSmartDocsMode ? '18px' : '2px',
+                width: '14px', height: '14px', borderRadius: '50%', background: 'white',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.3)', transition: 'left 0.2s'
+              }} />
+            </div>
+            <input 
+              type="checkbox" 
+              style={{ display: 'none' }}
+              checked={isSmartDocsMode}
+              onChange={(e) => setIsSmartDocsMode(e.target.checked)}
+            />
+          </label>
         </div>
       </div>
 

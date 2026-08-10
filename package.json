@@ -9,6 +9,7 @@
     "build": "npm run build -w @ameva/core"
   },
   "dependencies": {
-    "pptx-preview": "^1.0.7"
+    "pptx-preview": "^1.0.7",
+    "react-is": "^19.2.8"
   }
 }

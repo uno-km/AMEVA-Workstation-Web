@@ -56,24 +56,38 @@ import { PresentationBlock } from '../components/PresentationBlock'
 import { ExcelBlock } from '../components/ExcelBlock'
 import { KanbanBlock } from '../components/KanbanBlock'
 import { InlineDocumentBlock } from '../components/InlineDocumentBlock'
+import { SmartDocsTableBlock } from '../components/SmartDocsTableBlock'
+import { ChartBlock } from '../components/ChartBlock'
 
 /**
  * [CONTRACT - Root Custom Schema Configuration]
  * - amevaSchema: 커스텀 사양이 병합된 중앙 스키마 인스턴스.
  * - Rationale: 이 사양에 선언된 키값(jupyter, drawing 등)으로 마크다운 파서 및 플러그인이 동작한다.
  */
+export const customSpecs = {
+  jupyter: JupyterBlock,
+  drawing: DrawingBlock,
+  linkPreview: LinkPreviewBlock,
+  youtube: YoutubeBlock,
+  map: MapBlock,
+  presentation: PresentationBlock,
+  excel: ExcelBlock,
+  kanban: KanbanBlock,
+  inlineDocument: InlineDocumentBlock,
+  smartDocsTable: SmartDocsTableBlock,
+  chart: ChartBlock,
+}
+
+Object.entries(customSpecs).forEach(([key, value]) => {
+  if (!value) {
+    console.error(`[AMEVA SCHEMA ERROR] Block spec for '${key}' is undefined! This indicates a missing export or circular dependency.`);
+  }
+})
+
 export const amevaSchema = BlockNoteSchema.create({
   blockSpecs: {
     ...defaultBlockSpecs,
-    jupyter: JupyterBlock,
-    drawing: DrawingBlock,
-    linkPreview: LinkPreviewBlock,
-    youtube: YoutubeBlock,
-    map: MapBlock,
-    presentation: PresentationBlock,
-    excel: ExcelBlock,
-    kanban: KanbanBlock,
-    inlineDocument: InlineDocumentBlock,  // [NEW] 인라인 문서 뷰어 (PDF/Word/Excel/PPT)
+    ...customSpecs
   }
 })
 

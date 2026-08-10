@@ -152,7 +152,7 @@ export function SettingsTabHotkeys({ activeTab, settings, onUpdateSettings }: Se
       const currentHotkeys = settings.hotkeys || {
         save: 'Control+s',
         open: 'Control+o',
-        newFile: 'Control+n',
+        newFile: 'Control+Shift+n',
         pdfExport: 'Control+p',
         toggleAI: 'Control+\\',
         toggleMode: 'Control+e',
@@ -182,7 +182,7 @@ export function SettingsTabHotkeys({ activeTab, settings, onUpdateSettings }: Se
       hotkeys: {
         save: 'Control+s',
         open: 'Control+o',
-        newFile: 'Control+n',
+        newFile: 'Control+Shift+n',
         pdfExport: 'Control+p',
         toggleAI: 'Control+\\',
         toggleMode: 'Control+e',
@@ -240,7 +240,7 @@ export function SettingsTabHotkeys({ activeTab, settings, onUpdateSettings }: Se
           const currentHotkeys = settings.hotkeys || {
             save: 'Control+s',
             open: 'Control+o',
-            newFile: 'Control+n',
+            newFile: 'Control+Shift+n',
             pdfExport: 'Control+p',
             toggleAI: 'Control+\\',
             toggleMode: 'Control+e',

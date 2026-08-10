@@ -30,6 +30,7 @@ import { InstallDesktopModal } from '../InstallDesktopModal'
 
 
 import { RefreshConfirmModal } from '../RefreshConfirmModal'
+import { NewDocumentConfirmModal } from '../ui/modals/NewDocumentConfirmModal'
 
 import { useAppContext } from '../../contexts/AppContext'
 import { useUIStore } from '../../stores/useUIStore'
@@ -50,7 +51,7 @@ export function ModalManager({}: ModalManagerProps = {}) {
   const {
     settings, handleUpdateSettings, handleInstallPlugin, handleUninstallPlugin,
     username, setUsername, userColor, setUserColor, getLineDiff, handleRollback,
-    handleOpenGithub, refreshMcpServers, handleCloseApp
+    handleOpenGithub, refreshMcpServers, handleCloseApp, handleStartNewDocument
   } = useAppContext()
   
   const {
@@ -58,7 +59,7 @@ export function ModalManager({}: ModalManagerProps = {}) {
     setShowModelHub, isAboutOpen, setIsAboutOpen, isGuideOpen, setIsGuideOpen,
     showMarketplaceModal, setShowMarketplaceModal, showPricingModal, setShowPricingModal,
     isQuitConfirmOpen, setIsQuitConfirmOpen, isRefreshConfirmOpen, setIsRefreshConfirmOpen,
-    isInstallPromptOpen, setIsInstallPromptOpen
+    isInstallPromptOpen, setIsInstallPromptOpen, isNewDocumentConfirmOpen, setIsNewDocumentConfirmOpen
   } = useUIStore(useShallow((s) => ({
     isDiffOpen: s.isDiffOpen,
     setIsDiffOpen: s.setIsDiffOpen,
@@ -79,7 +80,9 @@ export function ModalManager({}: ModalManagerProps = {}) {
     isRefreshConfirmOpen: s.isRefreshConfirmOpen,
     setIsRefreshConfirmOpen: s.setIsRefreshConfirmOpen,
     isInstallPromptOpen: s.isInstallPromptOpen,
-    setIsInstallPromptOpen: s.setIsInstallPromptOpen
+    setIsInstallPromptOpen: s.setIsInstallPromptOpen,
+    isNewDocumentConfirmOpen: s.isNewDocumentConfirmOpen,
+    setIsNewDocumentConfirmOpen: s.setIsNewDocumentConfirmOpen
   })))
 
   const { selectedSnapshot, currentContent } = useWorkspaceStore()
@@ -193,6 +196,16 @@ export function ModalManager({}: ModalManagerProps = {}) {
           isOpen={isRefreshConfirmOpen}
           onClose={() => setIsRefreshConfirmOpen(false)}
           onConfirm={handleRefreshConfirm}
+        />
+      )}
+      {isNewDocumentConfirmOpen && setIsNewDocumentConfirmOpen && handleStartNewDocument && (
+        <NewDocumentConfirmModal
+          isOpen={isNewDocumentConfirmOpen}
+          onClose={() => setIsNewDocumentConfirmOpen(false)}
+          onConfirm={() => {
+            handleStartNewDocument()
+            setIsNewDocumentConfirmOpen(false)
+          }}
         />
       )}
     </>

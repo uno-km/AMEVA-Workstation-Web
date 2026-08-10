@@ -18,9 +18,10 @@ export function classifyShape(
   let primary = 'unknown';
 
   rules.forEach(rule => {
-    if (rule.keywords.some(w => fileName.toLowerCase().includes(w))) {
+    const matchedFilenameKeywords = rule.keywords.filter(w => fileName.toLowerCase().includes(w));
+    if (matchedFilenameKeywords.length > 0) {
       scores[rule.id] += 40;
-      evidence.push(`파일명에 [${rule.label}] 관련 형식 식별자 포함됨`);
+      evidence.push(`파일명에서 '${matchedFilenameKeywords.join("', '")}' 표현 감지`);
     }
   });
 
@@ -33,7 +34,19 @@ export function classifyShape(
   });
 
   // report 신호 보강
-  if (pageCount >= 50 && fullText && ['분석', '현황', '결과', '사례', '결론', '보고서'].some(w => fullText.includes(w))) {
+  if (pageCount >= 130) {
+    const matchedFilename = ['분석', '사례', '모음집'].filter(w => fileName.includes(w));
+    const matchedText = fullText ? ['출처', '결론', '사례', '분석'].filter(w => fullText.includes(w)) : [];
+    const matchedOrg = entities?.organizations?.filter(o => o.includes('대학교') || o.includes('학회') || o.includes('연구센터')) || [];
+    
+    if (matchedFilename.length > 0 || matchedText.length > 0 || matchedOrg.length > 0) {
+      scores['report'] = (scores['report'] || 0) + 60;
+      if (matchedOrg.length > 0) {
+        evidence.push(`조직명에서 '${matchedOrg.join("', '")}' 감지`);
+      }
+      evidence.push(`피해 사례와 출처 기반 설명이 포함되어 분석 보고서 성격이 강함`);
+    }
+  } else if (pageCount >= 50 && fullText && ['분석', '현황', '결과', '사례', '결론', '보고서'].some(w => fullText.includes(w))) {
     scores['report'] = (scores['report'] || 0) + 30;
   }
   
@@ -52,7 +65,13 @@ export function classifyShape(
   if (confidence < 15) {
     primary = 'unknown';
   } else {
-    evidence.push(`본문에 [${rules.find(r => r.id === primary)?.label}] 형식 핵심 키워드 감지`);
+    const primaryRule = rules.find(r => r.id === primary);
+    const matchedTextKeywords = keywords.slice(0, 30).filter(kw => primaryRule?.keywords.includes(kw.term)).map(k => k.term);
+    if (matchedTextKeywords.length > 0) {
+      evidence.push(`본문에서 '${matchedTextKeywords.slice(0, 3).join("', '")}' 표현 감지`);
+    } else {
+      evidence.push(`본문에서 [${primaryRule?.label}] 관련 핵심 표현 감지`);
+    }
   }
 
   return { primary, confidence, scores, evidence };

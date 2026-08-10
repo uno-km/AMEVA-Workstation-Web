@@ -41,6 +41,9 @@ export default defineConfig({
       '@': resolve(__dirname, './src/renderer'),
     },
   },
+  optimizeDeps: {
+    include: ['react-is', 'recharts']
+  },
   build: {
     outDir: resolve(__dirname, '../../dist'),
   }

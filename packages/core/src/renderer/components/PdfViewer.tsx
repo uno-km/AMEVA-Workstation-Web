@@ -104,6 +104,7 @@ function ContinuousPageCanvas({
   const containerRef = React.useRef<HTMLDivElement>(null)
   const renderTaskRef = React.useRef<any>(null)
   const [rendered, setRendered] = React.useState(false)
+  const [textItems, setTextItems] = React.useState<any[]>([])
 
   React.useEffect(() => {
     if (!containerRef.current) return
@@ -146,6 +147,17 @@ function ContinuousPageCanvas({
         renderTaskRef.current = task
         await task.promise
         setRendered(true)
+
+        // 브라우저 기본 Ctrl+F를 위한 텍스트 레이어 추출
+        const tc = await page.getTextContent()
+        const items = tc.items.map((item: any) => {
+          const tx = item.transform[4] * scale
+          const ty = item.transform[5] * scale
+          const fontHeight = Math.abs(item.transform[3]) * scale
+          return { str: item.str, left: tx, bottom: ty, fontSize: fontHeight }
+        })
+        setTextItems(items)
+
       } catch {}
     }, { rootMargin: '300px 0px' })
     if (containerRef.current) obs.observe(containerRef.current)
@@ -170,8 +182,28 @@ function ContinuousPageCanvas({
           : '0 4px 24px rgba(0,0,0,0.5)',
         borderRadius: '3px', overflow: 'hidden', background: '#fff',
         transition: 'box-shadow 0.2s',
+        position: 'relative',
       }}>
         <canvas ref={canvasRef} />
+        {/* NATIVE TEXT LAYER FOR BROWSER Ctrl+F */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+          color: 'transparent', pointerEvents: 'none', overflow: 'hidden'
+        }}>
+          {textItems.map((item, idx) => (
+            <span key={idx} style={{
+              position: 'absolute',
+              left: `${item.left}px`,
+              bottom: `${item.bottom}px`,
+              fontSize: `${item.fontSize}px`,
+              whiteSpace: 'pre',
+              transformOrigin: 'bottom left',
+              lineHeight: 1,
+            }}>
+              {item.str}
+            </span>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -542,15 +574,33 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') goToPage(currentPage + 1)
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') goToPage(currentPage - 1)
-      if (e.key === '+' || e.key === '=') handleZoomIn()
-      if (e.key === '-') handleZoomOut()
-      if (e.key === 'f' || e.key === 'F') setShowSearch(s => !s)
-      if (e.key === 'c' || e.key === 'C') setContinuousScroll(s => !s)
+      const eKey = e.key.toLowerCase()
+      const eCode = e.code ? e.code.toLowerCase() : ''
+
+      if (eKey === 'arrowright' || eKey === 'arrowdown') goToPage(currentPage + 1)
+      if (eKey === 'arrowleft' || eKey === 'arrowup') goToPage(currentPage - 1)
+      if (eKey === '+' || eKey === '=') handleZoomIn()
+      if (eKey === '-') handleZoomOut()
+      
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (eKey === 'f' || eCode === 'keyf')) {
+        e.preventDefault()
+        e.stopPropagation()
+        alert('PdfViewer: Ctrl+Shift+F')
+        if (e.repeat) return
+        setShowSearch(true)
+        // 만약 검색창이 이미 열려있고 포커스가 없으면 인풋으로 포커스
+        setTimeout(() => {
+          const searchInput = document.querySelector('input[placeholder*="PDF 내 텍스트 검색"]') as HTMLInputElement
+          if (searchInput) searchInput.focus()
+        }, 50)
+      }
+      
+      if (eKey === 'c' || eCode === 'keyc') {
+        if (!e.repeat) setContinuousScroll(s => !s)
+      }
     }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
+    window.addEventListener('keydown', handler, { capture: true })
+    return () => window.removeEventListener('keydown', handler, { capture: true })
   }, [currentPage, numPages])
 
   const toolbarStyle: React.CSSProperties = {
@@ -914,6 +964,12 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Escape') {
+                  e.preventDefault()
+                  setShowSearch(false)
+                }
+              }}
               placeholder={isIndexing ? `인덱싱 중... (${Object.keys(searchIndex).length}/${numPages}p)` : 'PDF 내 텍스트 검색...'}
               style={{
                 flex: 1, height: '26px', borderRadius: '5px',
@@ -948,7 +1004,7 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
             {searchQuery.trim() && !isIndexing && searchResults.length === 0 && (
               <span style={{ fontSize: '10px', color: '#f87171', whiteSpace: 'nowrap' }}>결과 없음</span>
             )}
-            <span style={{ fontSize: '10px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>F로 닫기</span>
+            <span style={{ fontSize: '10px', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>ESC로 닫기</span>
           </div>
           {/* 검색 결과 페이지 목록 */}
           {searchResults.length > 0 && (

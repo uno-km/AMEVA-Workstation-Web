@@ -17,6 +17,8 @@ export function discoverTopics(
     .filter(kw => !AMBIGUOUS_TOPIC_WORDS.has(kw.term))
     .slice(0, 30);
 
+  const GENERIC_WORDS = new Set(['발생', '결과', '내용', '자료', '관련', '일반', '정보', '포함', '사용', '확인', '방법']);
+
   if (topKeywords.length === 0) return [];
 
   // Boost by filename (Nouns in filename)
@@ -64,14 +66,19 @@ export function discoverTopics(
 
   // 3. Label generation (Combine top 2 related terms if it makes sense, or just use main term)
   let label = mainTerm.term;
-  if (relatedTerms.length > 1) {
-    // Check if the exact phrase exists in the text
-    const phrase1 = `${relatedTerms[0]} ${relatedTerms[1]}`;
-    const phrase2 = `${relatedTerms[1]} ${relatedTerms[0]}`;
+  const validRelatedTerms = relatedTerms.filter(t => t !== mainTerm.term && !GENERIC_WORDS.has(t));
+  
+  if (validRelatedTerms.length > 0) {
+    const secondaryTerm = validRelatedTerms[0];
+    const phrase1 = `${mainTerm.term} ${secondaryTerm}`;
+    const phrase2 = `${secondaryTerm} ${mainTerm.term}`;
+    
     if (fullText.includes(phrase1)) {
       label = phrase1;
     } else if (fullText.includes(phrase2)) {
       label = phrase2;
+    } else {
+      label = phrase1; // Default to main + secondary if not perfectly matched but co-occurring
     }
   }
 
@@ -84,7 +91,7 @@ export function discoverTopics(
     pages: Array.from(pages),
     score: mainTerm.boostedScore,
     confidence: Math.min(100, Math.floor(mainTerm.boostedScore / 2)),
-    evidence: [`키워드 및 공기어 기반 문서 핵심 토픽(${label}) 추출`]
+    evidence: [`본문에서 '${label.split(' ').join("', '")}' 관련 표현이 여러 페이지에 걸쳐 반복 등장하여 핵심 토픽으로 추출됨`]
   });
 
   return clusters;

@@ -19,6 +19,7 @@
 
 import React, { Suspense, lazy } from 'react'
 import ReactDOM from 'react-dom/client'
+import '@mantine/core/styles.css'
 import './styles/main.css'
 // 포커스 영역 관리 싱글턴 — import만으로 전역 이벤트 리스너 등록
 import './lib/focusRegion'

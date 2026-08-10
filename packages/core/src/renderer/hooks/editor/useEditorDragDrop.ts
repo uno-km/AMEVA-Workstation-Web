@@ -38,6 +38,8 @@ import { useCallback, useEffect } from 'react'
 import type { AmevaEditor } from '../../editor/amevaBlockSchema'
 import type { EditorMode } from '../../../shared/types'
 
+import { hwpxParser, type ParsedHwpx } from '../../features/smartdocs/hwpxParser'
+
 /**
  * @hook useEditorDragDrop
  * @description 드래그 드롭 이벤트를 분석하여 최적의 유튜브 혹은 링크 프리뷰 카드 블록을 자동 삽입해 주는 훅.
@@ -59,6 +61,25 @@ export function useEditorDragDrop(
     // 편집 모드가 아니거나 에디터 기동 전인 경우 즉각 이벤트를 흘려보냄
     if (!editor || editorMode !== 'edit') return
     
+    // 0. [NEW] HWPX 파일 드롭 가로채기 (SmartDocs V2)
+    const files = e.dataTransfer.files
+    if (files && files.length > 0) {
+      const file = files[0]
+      if (file.name.toLowerCase().endsWith('.hwpx')) {
+        e.preventDefault()
+        e.stopPropagation()
+        try {
+          // 파일을 즉시 파싱하고 전역 이벤트 발송하여 뷰어 모달을 띄우게 함
+          const parsedData = await hwpxParser.extractText(file)
+          const event = new CustomEvent('app:hwpx-parsed', { detail: { parsedData } })
+          window.dispatchEvent(event)
+        } catch (err) {
+          console.error("HWPX Drop Parsing Error:", err)
+        }
+        return
+      }
+    }
+
     // 드롭된 문자열 획득 (uri-list 우선, 없으면 일반 text 추출)
     let url = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain')
       /*

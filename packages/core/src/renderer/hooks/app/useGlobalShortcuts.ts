@@ -148,7 +148,8 @@ function matchHotkey(e: KeyboardEvent, hotkey: string): boolean {
        * - 예시 코드: `const eKey = ...` 형태로 안전 캐싱 후 가공 기동.
        */
   const eKey = e.key.toLowerCase()
-  return eKey === key || (key === '\\' && eKey === '\\')
+  const eCode = e.code ? e.code.toLowerCase() : ''
+  return eKey === key || eCode === `key${key}` || (key === '\\' && eKey === '\\')
 }
 
 /**
@@ -173,10 +174,12 @@ export function useGlobalShortcuts(params: GlobalShortcutsParams) {
        */
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     const hotkeys: HotkeyConfig = settings.hotkeys || {
-      save: 'Control+s', open: 'Control+o', newFile: 'Control+n',
+      save: 'Control+s', open: 'Control+o', newFile: 'Control+Shift+n',
       pdfExport: 'Control+p', toggleAI: 'Control+\\', toggleMode: 'Control+e',
       zoomIn: 'Control+=', zoomOut: 'Control+-', zoomReset: 'Control+0'
     }
+    // 마이그레이션 방어코드: 기존 세팅에 Control+n으로 남아있다면 Control+Shift+n으로 강제 처리
+    const newFileHotkey = hotkeys.newFile === 'Control+n' || hotkeys.newFile === 'Alt+n' ? 'Control+Shift+n' : (hotkeys.newFile || 'Control+Shift+n')
 
     // F11 — 전체화면 토글
     if (e.key === 'F11') {
@@ -206,7 +209,7 @@ export function useGlobalShortcuts(params: GlobalShortcutsParams) {
     } else if (matchHotkey(e, hotkeys.open || 'Control+o')) {
       e.preventDefault()
       onOpen()
-    } else if (matchHotkey(e, hotkeys.newFile || 'Control+n')) {
+    } else if (matchHotkey(e, newFileHotkey) || matchHotkey(e, 'Alt+n')) {
       e.preventDefault()
       onNewTab()
     } else if (matchHotkey(e, hotkeys.toggleAI || 'Control+\\')) {
@@ -224,6 +227,8 @@ export function useGlobalShortcuts(params: GlobalShortcutsParams) {
     } else if (matchHotkey(e, hotkeys.zoomReset || 'Control+0')) {
       e.preventDefault()
       onZoomReset()
+    } else if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'f') {
+      alert('Global: Ctrl+Shift+F')
     } else if (e.ctrlKey && e.key === ',') {
       e.preventDefault()
       useUIStore.getState().toggleSettings()
@@ -346,10 +351,10 @@ export function useGlobalShortcuts(params: GlobalShortcutsParams) {
   }, [adjustEditorZoom, setBrowserZoom])
 
   useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keydown', handleKeyDown, { capture: true })
     window.addEventListener('wheel', handleWheelZoom, { passive: false })
     return () => {
-      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keydown', handleKeyDown, { capture: true })
       window.removeEventListener('wheel', handleWheelZoom)
     }
   }, [handleKeyDown, handleWheelZoom])

@@ -57,30 +57,39 @@ export function RichStyleToolbar({
 
   return (
     <div style={{
-      padding: '8px 16px',
-      borderBottom: '1px solid var(--border-muted)',
-      backgroundColor: 'var(--bg-deep)',
+      padding: '12px 24px',
+      backgroundColor: 'rgba(24, 24, 27, 0.75)',
+      backdropFilter: 'blur(16px)',
+      WebkitBackdropFilter: 'blur(16px)',
+      borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+      boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
       display: 'flex',
       alignItems: 'center',
-      gap: '16px',
+      gap: '24px',
       zIndex: 50,
       flexShrink: 0,
+      transition: 'all 0.3s ease'
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Font</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '12px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.5)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Font</span>
         <select
           value={selectedFont}
           onChange={(e) => setSelectedFont(e.target.value)}
           style={{
-            background: '#16161a',
-            border: '1px solid #2e2e38',
-            borderRadius: '4px',
-            color: '#fff',
-            fontSize: '11px',
-            padding: '3px 6px',
+            background: 'rgba(0, 0, 0, 0.2)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '8px',
+            color: '#e2e8f0',
+            fontSize: '13px',
+            fontWeight: 500,
+            padding: '6px 12px',
             outline: 'none',
             cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.2)'
           }}
+          onMouseEnter={(e) => e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.25)'}
+          onMouseLeave={(e) => e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.1)'}
         >
           <option value="Pretendard">Pretendard (Gothic)</option>
           <option value="'Courier New', Courier, monospace">Monospace (Hacker)</option>
@@ -90,21 +99,28 @@ export function RichStyleToolbar({
         </select>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Size</span>
+      <div style={{ width: '1px', height: '24px', backgroundColor: 'rgba(255, 255, 255, 0.1)' }} />
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '12px', fontWeight: 600, color: 'rgba(255, 255, 255, 0.5)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Size</span>
         <select
           value={selectedSize}
           onChange={(e) => setSelectedSize(e.target.value)}
           style={{
-            background: '#16161a',
-            border: '1px solid #2e2e38',
-            borderRadius: '4px',
-            color: '#fff',
-            fontSize: '11px',
-            padding: '3px 6px',
+            background: 'rgba(0, 0, 0, 0.2)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '8px',
+            color: '#e2e8f0',
+            fontSize: '13px',
+            fontWeight: 500,
+            padding: '6px 12px',
             outline: 'none',
             cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            boxShadow: 'inset 0 1px 2px rgba(0, 0, 0, 0.2)'
           }}
+          onMouseEnter={(e) => e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.25)'}
+          onMouseLeave={(e) => e.currentTarget.style.border = '1px solid rgba(255, 255, 255, 0.1)'}
         >
           <option value="12px">12px (Compact)</option>
           <option value="14px">14px (Default)</option>

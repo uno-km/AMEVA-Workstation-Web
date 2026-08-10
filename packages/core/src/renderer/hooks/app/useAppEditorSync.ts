@@ -139,7 +139,7 @@ export function useAppEditorSync({
       // 디바운스 대기열 갱신 초기화
       if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current)
 
-      // 300ms 직렬화 시작
+      // 2000ms 직렬화 시작
       syncTimeoutRef.current = setTimeout(async () => {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -246,7 +246,7 @@ export function useAppEditorSync({
           }
           isUpdating = false
         }
-      }, 300)
+      }, 2000)
     }
 
     // 에디터 변경 리스너 등록

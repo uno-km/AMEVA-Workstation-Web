@@ -193,6 +193,8 @@ export interface UIState {
   setIsQuitConfirmOpen: (val: boolean) => void
   isRefreshConfirmOpen: boolean
   setIsRefreshConfirmOpen: (val: boolean) => void
+  isNewDocumentConfirmOpen: boolean
+  setIsNewDocumentConfirmOpen: (val: boolean) => void
 
   /*
    * [COMPOSITE ACTIONS]
@@ -300,6 +302,9 @@ export const useUIStore = create<UIState>((set, get) => ({
 
   isRefreshConfirmOpen: false,
   setIsRefreshConfirmOpen: (open) => set({ isRefreshConfirmOpen: open }),
+
+  isNewDocumentConfirmOpen: false,
+  setIsNewDocumentConfirmOpen: (open) => set({ isNewDocumentConfirmOpen: open }),
 
   /**
    * [CONTRACT - Right Panel Tab Toggle Action]

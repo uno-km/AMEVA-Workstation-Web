@@ -100,7 +100,7 @@ export function classifyIntent(
   const confidence = maxScore > 0 ? Math.min(100, Math.floor(maxScore / 1.5)) : 0;
   
   if (confidence >= 25) {
-    evidence.push(`문서 의도(Intent) 분석 결과: [${primaryLabel}] 성격 강함`);
+    evidence.push(`문서 의도(Intent) 분석 결과 [${primaryLabel}] 성격 강함`);
   } else {
     primary = 'unknown';
     primaryLabel = '미분류';

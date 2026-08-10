@@ -198,23 +198,60 @@ export function useAppBootstrap(
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const data = await res.json()
         const baseUrl = 'https://raw.githubusercontent.com/uno-km/AMEVA-Workstation-Market-Place/main/public/'
-        
+
+        /*
+         * [RUN-TIME STATE / INVARIANT]
+         * - 변수 명: `processedData`
+         * - 시나리오: scriptUrl/previewUrl이 상대경로이면 raw.githubusercontent.com baseUrl을 붙여 절대경로로 변환한다.
+         *             premium 플러그인은 scriptUrl이 .tsx로 끝나므로 handleInstallPlugin 내부의 .tsx 분기로 라우팅된다.
+         */
         const processedData = data.map((p: any) => {
           if (p.scriptUrl && !p.scriptUrl.startsWith('http')) p.scriptUrl = baseUrl + p.scriptUrl
           if (p.previewUrl && !p.previewUrl.startsWith('http')) p.previewUrl = baseUrl + p.previewUrl
           return p
         })
-        
+
         // 2. 전역 스토어에 세팅 (RightTabStrip, PluginTabPanel 등에서 사용)
         useUIStore.getState().setMarketplacePlugins(processedData)
-        
+
         // 3. 사용자가 구독한 플러그인 로드
         if (!settings.installedPlugins || settings.installedPlugins.length === 0) return
 
+        /*
+         * [RUN-TIME STATE / INVARIANT]
+         * - 변수 명: `PREMIUM_IDS`
+         * - 자료형: Set<string>
+         * - 시나리오: premium 플러그인 ID 집합. processedData에서 플러그인 메타를 찾지 못해도
+         *             이 집합에 속하면 .tsx fallback URL을 사용하여 JS 404를 방지한다.
+         *             plugins.json에서 type==='premium'인 항목이 추가될 때마다 여기에도 반영해야 한다.
+         */
+        const PREMIUM_IDS = new Set([
+          'DatabaseExplorerPlugin', 'FinanceDashboardView', 'GoogleMapsView',
+          'KanbanBoard', 'MindMapPlugin', 'PdfRagPlugin', 'PomodoroPlugin',
+          'PresentationPlugin', 'RestClientPlugin', 'SmartSearchScrap',
+          'VoiceDictationPlugin', 'WireframePlugin'
+        ])
+
         settings.installedPlugins.forEach(async (id) => {
+          /*
+           * [ALGORITHM BRANCH / DECISION]
+           * - 조건 식: `pluginMeta?.scriptUrl`
+           * - 만족 시: plugins.json에서 정확한 scriptUrl을 찾은 경우 그 URL 사용.
+           * - 불만족 시 (PREMIUM_IDS 포함): .tsx fallback → handleInstallPlugin의 .tsx 분기로 라우팅.
+           * - 불만족 시 (일반 플러그인): .js fallback URL 사용.
+           *
+           * [BUG-FIX] 이전 코드: 모든 미등록 플러그인이 `plugins/${id}.js` (404)로 fallback했음.
+           *           수정 후: premium ID는 .tsx URL로 fallback → JS 다운로드 시도 없이 설치 목록에 바로 등록.
+           */
           const pluginMeta = processedData.find((p: any) => p.id === id)
-          // 마켓플레이스 데이터가 없으면 fallback 사용
-          const scriptUrl = pluginMeta?.scriptUrl || `https://uno-km.github.io/AMEVA-Workstation-Market-Place/plugins/${id}.js`
+          let scriptUrl: string
+          if (pluginMeta?.scriptUrl) {
+            scriptUrl = pluginMeta.scriptUrl
+          } else if (PREMIUM_IDS.has(id)) {
+            scriptUrl = `${baseUrl}plugins/premium/${id}.tsx`
+          } else {
+            scriptUrl = `${baseUrl}plugins/${id}.js`
+          }
           try {
             await handleInstallPlugin(id, scriptUrl)
           } catch (e) {
@@ -223,16 +260,37 @@ export function useAppBootstrap(
         })
       } catch (err) {
         console.error('[useAppBootstrap] 마켓플레이스 플러그인 정보 로드 실패:', err)
-        
-        // 에러 시 기존 localStorage 방식 fallback
+
+        // 네트워크 에러 시 기존 localStorage url-map 방식으로 fallback
         if (!settings.installedPlugins || settings.installedPlugins.length === 0) return
         let urlMap: Record<string, string> = {}
         try {
           urlMap = safeJsonParse(localStorage.getItem('plugin-urls'), {})
         } catch (e) {}
 
+        /*
+         * [RUN-TIME STATE / INVARIANT]
+         * - 변수 명: `FALLBACK_BASE`
+         * - 시나리오: raw.githubusercontent.com fetch 자체가 실패한 경우 GitHub Pages URL을 fallback baseUrl로 사용한다.
+         *             PREMIUM_IDS 집합은 위와 동일하게 적용된다.
+         */
+        const FALLBACK_BASE = 'https://raw.githubusercontent.com/uno-km/AMEVA-Workstation-Market-Place/main/public/'
+        const PREMIUM_IDS_FALLBACK = new Set([
+          'DatabaseExplorerPlugin', 'FinanceDashboardView', 'GoogleMapsView',
+          'KanbanBoard', 'MindMapPlugin', 'PdfRagPlugin', 'PomodoroPlugin',
+          'PresentationPlugin', 'RestClientPlugin', 'SmartSearchScrap',
+          'VoiceDictationPlugin', 'WireframePlugin'
+        ])
+
         settings.installedPlugins.forEach(async (id) => {
-          const scriptUrl = urlMap[id] || `https://uno-km.github.io/AMEVA-Workstation-Market-Place/plugins/${id}.js`
+          let scriptUrl: string
+          if (urlMap[id]) {
+            scriptUrl = urlMap[id]
+          } else if (PREMIUM_IDS_FALLBACK.has(id)) {
+            scriptUrl = `${FALLBACK_BASE}plugins/premium/${id}.tsx`
+          } else {
+            scriptUrl = `${FALLBACK_BASE}plugins/${id}.js`
+          }
           try {
             await handleInstallPlugin(id, scriptUrl)
           } catch (e) {

@@ -71,7 +71,7 @@ export function classifySubDomain(
     primary = 'unknown';
     primaryLabel = '미분류';
   } else {
-    evidence.push(`본문 및 메타데이터에서 [${primaryLabel}] 서브도메인 신호 집중 감지`);
+    evidence.push(`세부 도메인(SubDomain) 분석 결과 [${primaryLabel}] 성격 강함`);
   }
 
   return { primary, label: primaryLabel, confidence, scores, evidence };

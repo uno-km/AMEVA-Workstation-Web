@@ -141,7 +141,7 @@ export function classifyDomain(fileName: string, keywords: KeywordStat[], fullTe
     primary = 'unknown';
   } else {
     resultEvidence = finalEvidence[primary] || [];
-    resultEvidence.push(`${primary}: 최종 분류 확정 (점수: ${maxScore.toFixed(1)})`);
+    resultEvidence.push(`문서 도메인(Domain) 분석 결과 [${rules.find(r => r.id === primary)?.label}] 성격 강함`);
   }
 
   return { 

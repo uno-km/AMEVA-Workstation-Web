@@ -50,7 +50,7 @@ export function useAppTabs(
   } = useWorkspaceStore()
 
   // 탭 생성
-  const handleNewTab = useCallback(() => {
+  const handleNewTab = useCallback(async () => {
       /*
        * [ALGORITHM BRANCH / DECISION]
        * - 조건 식: `!editor`
@@ -60,8 +60,15 @@ export function useAppTabs(
        */
     if (!editor) return
     
-    // 현재 탭의 변경 사항 저장
-    const currentBlocks = [...editor.document]
+    // 강제 블러 및 150ms 대기하여 BlockNote 내부 상태를 currentContent로 플러시 (stale content 방지)
+    if (document.activeElement && (document.activeElement as HTMLElement).blur) {
+      (document.activeElement as HTMLElement).blur()
+      window.dispatchEvent(new CustomEvent('AMEVA_FORCE_SAVE_BLOCKS'))
+      await new Promise(resolve => setTimeout(resolve, 150))
+    }
+
+    // 현재 탭의 변경 사항 저장 (deep clone to prevent reference mutation)
+    const currentBlocks = JSON.parse(JSON.stringify(editor.document))
     
       /*
        * [RUN-TIME STATE / INVARIANT]
@@ -94,7 +101,7 @@ export function useAppTabs(
       lastSavedTime: null
     }
 
-    const { pdfData: currentPdfData, pdfFileName: currentPdfFileName } = useWorkspaceStore.getState()
+    const { pdfData: currentPdfData, pdfFileName: currentPdfFileName, currentContent } = useWorkspaceStore.getState()
     updateActiveTab({ filePath, content: currentContent, blocks: currentBlocks, originalContent, lastSavedTime, pdfData: currentPdfData, pdfFileName: currentPdfFileName })
     addTab(newTab)
 
@@ -107,10 +114,20 @@ export function useAppTabs(
     setPdfData(null)
     setPdfFileName('')
     
+    // 에디터 화면 완전히 초기화
     setTimeout(() => {
-      editor.replaceBlocks(editor.document, newTab.blocks)
+      try {
+        editor.replaceBlocks(editor.document, newTabBlocks)
+      } catch (err) {
+        console.error('[useAppTabs] replaceBlocks failed during new tab:', err)
+        // 폴백: 블록 강제 삭제 후 삽입
+        try {
+          editor.removeBlocks(editor.document)
+          editor.insertBlocks(newTabBlocks, editor.document[0], "after")
+        } catch (e) {}
+      }
     }, 0)
-  }, [editor, activeTabId, filePath, currentContent, originalContent, lastSavedTime, addTab, updateActiveTab, setFilePath, setCurrentContent, setOriginalContent, setLastSavedTime, setActiveTabId])
+  }, [editor, activeTabId, filePath, originalContent, lastSavedTime, addTab, updateActiveTab, setFilePath, setCurrentContent, setOriginalContent, setLastSavedTime, setActiveTabId])
 
   // 탭 직접 선택 전환
   const handleSelectTab = useCallback(async (tabId: string) => {

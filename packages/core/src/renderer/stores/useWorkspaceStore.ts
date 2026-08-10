@@ -155,8 +155,16 @@ export interface WorkspaceState {
    * - selectedSnapshot: DB 복원 히스토리 모달에서 비교 타깃으로 임시 클릭한 문서 스냅샷.
    * - setSelectedSnapshot: 스냅샷 비교 타깃 지정 액션.
    */
-  selectedSnapshot: any
-  setSelectedSnapshot: (snapshot: any) => void
+  selectedSnapshot: string | null
+  setSelectedSnapshot: (snapshot: string | null) => void
+
+  /*
+   * [SMARTDOCS MODE STATE]
+   * - isSmartDocsMode: SmartDocs(공문서) 조판 및 뷰 모드 활성화 여부
+   * - setIsSmartDocsMode: 상태 토글 액션
+   */
+  isSmartDocsMode: boolean
+  setIsSmartDocsMode: (val: boolean) => void
 
   /*
    * [PDF VIEWER STATE]
@@ -263,10 +271,12 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
   selectedSnapshot: null,
   setSelectedSnapshot: (snapshot) => set({ selectedSnapshot: snapshot }),
 
+  isSmartDocsMode: false,
+  setIsSmartDocsMode: (val) => set({ isSmartDocsMode: val }),
+
   // PDF 븷얰어 전용 데이터 (pdfData는 모드 전환시에도 보존됨)
   pdfData: null,
   setPdfData: (data) => set({ pdfData: data }),
   pdfFileName: '',
   setPdfFileName: (name) => set({ pdfFileName: name }),
 }))
-

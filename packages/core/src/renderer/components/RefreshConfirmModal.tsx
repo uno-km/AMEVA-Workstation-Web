@@ -33,6 +33,7 @@
  * - RotateCw: 새로고침 순환 화살표 아이콘.
  */
 import { RotateCw } from 'lucide-react'
+import { ConfirmModal } from './ui/modals/ConfirmModal'
 
 /**
  * @interface RefreshConfirmModalProps
@@ -52,94 +53,21 @@ export interface RefreshConfirmModalProps {
  * @description 새로고침 동작 전 사용자 데이터 유실 경고 및 재확인을 요청하는 팝업 모달.
  */
 export function RefreshConfirmModal({ 
-  /*
-   * [PROPERTY MAPPINGS]
-   * - isOpen: 모달 활성화 플래그.
-   * - onClose: 모달 강제 종료/취소 콜백.
-   * - onConfirm: 리로드 최종 승인 확정 콜백.
-   */
   isOpen, 
   onClose, 
   onConfirm 
 }: RefreshConfirmModalProps) {
-  // CONTRACT: 모달이 비활성화 상태인 경우 렌더링을 완전히 스킵한다 (Invariant)
-  if (!isOpen) return null
-
   return (
-    <div 
-      style={{
-        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)', backdropFilter: 'blur(5px)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        zIndex: 999999,
-        pointerEvents: 'auto'
-      }} 
-      onClick={onClose}
-    >
-      {/* 
-       * [CONTRACT - Stop Propagation Card Wrapper]
-       * - MUST NOT remove e.stopPropagation(). 제거 시 내부 요소 클릭이 backdrop으로 전파되어 모달이 즉시 강제 종료됨.
-       */
-      }
-      <div 
-        style={{
-          background: 'var(--bg-main)', 
-          border: '1px solid var(--border-glow)',
-          borderRadius: '12px', width: '400px', padding: '24px',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.6)', 
-          display: 'flex', flexDirection: 'column', gap: '16px',
-          pointerEvents: 'auto'
-        }} 
-        onClick={e => e.stopPropagation()}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <RotateCw size={20} color="#3b82f6" />
-          </div>
-          <div>
-            <h2 style={{ margin: 0, fontSize: '15px', color: 'var(--text-main)', fontWeight: 800 }}>새로고침 하시겠습니까?</h2>
-            <p style={{ margin: '4px 0 0', fontSize: '11.5px', color: 'var(--text-muted)' }}>
-              저장하지 않은 데이터(로컬 임시 버퍼)는 모두 삭제됩니다.
-            </p>
-          </div>
-        </div>
-
-        {/* 제어 버튼 그룹 */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '8px' }}>
-          <button 
-            onClick={onClose}
-            style={{
-              padding: '8px 16px', borderRadius: '6px',
-              border: '1px solid var(--border-muted)', background: 'transparent',
-              color: 'var(--text-main)', fontSize: '12px', fontWeight: 600,
-              cursor: 'pointer', transition: 'all 0.15s'
-            }}
-          >
-            취소
-          </button>
-          
-          {/* 
-           * [CONTRACT - HTML5 autoFocus Implementation]
-           * - MUST possess autoFocus={true}. 유저가 단축키 입력 직후 엔터를 눌렀을 때 즉시 승인될 수 있도록 
-           *   브라우저 기본 포커싱 계약을 보존함. (수동 focus() 실행 시 렌더링 무한 루프 위험이 있음).
-           */
-          }
-          <button 
-            autoFocus
-            onClick={onConfirm}
-            style={{
-              padding: '8px 16px', borderRadius: '6px',
-              border: 'none', background: '#3b82f6', /* 기존 회색 대신 가시성 높은 파란색 브랜드 컬러 적용 */
-              color: '#fff', fontSize: '12px', fontWeight: 600,
-              cursor: 'pointer', transition: 'all 0.15s',
-              boxShadow: '0 0 12px rgba(59, 130, 246, 0.4)'
-            }}
-          >
-            새로고침
-          </button>
-        </div>
-      </div>
-    </div>
+    <ConfirmModal
+      isOpen={isOpen}
+      onClose={onClose}
+      onConfirm={onConfirm}
+      title="새로고침 하시겠습니까?"
+      description="저장하지 않은 데이터(로컬 임시 버퍼)는 모두 삭제됩니다."
+      confirmText="새로고침"
+      confirmButtonColor="#3b82f6"
+      icon={<RotateCw size={20} color="#3b82f6" />}
+    />
   )
 }
 
