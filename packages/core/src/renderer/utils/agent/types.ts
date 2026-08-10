@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file types.ts
+ * @description types.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './types';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file types.ts
  * @system AMEVA OS Desktop Workstation
  * @location src/renderer/utils/agent/types.ts
@@ -30,8 +46,16 @@ export const AgentState = {
   Done: "done",
   Error: "error"
 } as const;
+/**
+ * AgentState 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export type AgentState = typeof AgentState[keyof typeof AgentState];
 
+/**
+ * ToolDefinition 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface ToolDefinition {
   name: string
   description: string
@@ -45,6 +69,10 @@ export interface ToolDefinition {
   execute: (args: any) => Promise<{ success: boolean; result: string; error?: string }>
 }
 
+/**
+ * AgentConfig 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface AgentConfig {
   providerType: 'llama.cpp' | 'ollama' | 'openai'
   endpointUrl: string
@@ -54,6 +82,10 @@ export interface AgentConfig {
   apiKey?: string
 }
 
+/**
+ * AgentSessionStep 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface AgentSessionStep {
   turn: number
   thought: string
@@ -63,6 +95,10 @@ export interface AgentSessionStep {
   error?: string
 }
 
+/**
+ * AgentSessionResult 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface AgentSessionResult {
   success: boolean
   finalAnswer?: string
@@ -70,6 +106,10 @@ export interface AgentSessionResult {
   error?: string
 }
 
+/**
+ * ILLMAdapter 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface ILLMAdapter {
   generate: (prompt: string, systemPrompt: string, temperature: number, sessionId?: string) => Promise<string>
 }

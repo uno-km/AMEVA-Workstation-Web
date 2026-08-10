@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file llmAdapter.ts
+ * @description llmAdapter.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './llmAdapter';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file llmAdapter.ts
  * @system AMEVA OS Desktop Workstation
  * @location src/renderer/services/ipc/adapters/llmAdapter.ts
@@ -28,6 +44,10 @@ import type {
   ModelDownloadProgressEvent
 } from '../ipcTypes'
 
+/**
+ * llmGenerate 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function llmGenerate(params: LLMGenerateParams): Promise<LLMGenerateResult> {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -48,6 +68,10 @@ export async function llmGenerate(params: LLMGenerateParams): Promise<LLMGenerat
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `llmAbort(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * llmAbort 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export function llmAbort(sessionId: string): void {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -66,6 +90,10 @@ export function llmAbort(sessionId: string): void {
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `onLLMToken(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * onLLMToken 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export function onLLMToken(sessionId: string, callback: (token: string) => void): () => void {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -84,6 +112,10 @@ export function onLLMToken(sessionId: string, callback: (token: string) => void)
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `onLLMDone(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * onLLMDone 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export function onLLMDone(sessionId: string, callback: (data: LLMDoneEventData) => void): () => void {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -102,6 +134,10 @@ export function onLLMDone(sessionId: string, callback: (data: LLMDoneEventData) 
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `onLLMLog(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * onLLMLog 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export function onLLMLog(callback: (data: LLMLogEventData) => void): () => void {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -114,6 +150,10 @@ export function onLLMLog(callback: (data: LLMLogEventData) => void): () => void 
   return window.electronAPI.onLLMLog(callback)
 }
 
+/**
+ * llmGetLogs 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function llmGetLogs(): Promise<string> {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -137,6 +177,10 @@ export async function llmGetLogs(): Promise<string> {
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `llmAddLog(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * llmAddLog 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export function llmAddLog(data: LLMLogEventData): void {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -149,6 +193,10 @@ export function llmAddLog(data: LLMLogEventData): void {
   window.electronAPI.llmAddLog(data)
 }
 
+/**
+ * llmCheckHealth 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function llmCheckHealth(): Promise<HealthCheckResult> {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -168,6 +216,10 @@ export async function llmCheckHealth(): Promise<HealthCheckResult> {
   }
 }
 
+/**
+ * llmListModels 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function llmListModels(type?: string): Promise<ModelInfo[]> {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -185,6 +237,10 @@ export async function llmListModels(type?: string): Promise<ModelInfo[]> {
   }
 }
 
+/**
+ * llmImportModel 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function llmImportModel(sourcePath: string): Promise<ModelImportResult> {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -203,6 +259,10 @@ export async function llmImportModel(sourcePath: string): Promise<ModelImportRes
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `onModelDownloadProgress(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * onModelDownloadProgress 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export function onModelDownloadProgress(callback: (data: ModelDownloadProgressEvent) => void): () => void {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -215,6 +275,10 @@ export function onModelDownloadProgress(callback: (data: ModelDownloadProgressEv
   return window.electronAPI.onModelDownloadProgress(callback)
 }
 
+/**
+ * llmDownloadModel 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function llmDownloadModel(payload: { url: string; filename: string; type?: 'llm' | 'code' | 'stt' }): Promise<{ success: boolean; error?: string }> {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -235,6 +299,10 @@ export async function llmDownloadModel(payload: { url: string; filename: string;
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `onLLMDownloadProgress(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * onLLMDownloadProgress 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export function onLLMDownloadProgress(callback: (data: ModelDownloadProgressEvent) => void): () => void {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -247,6 +315,10 @@ export function onLLMDownloadProgress(callback: (data: ModelDownloadProgressEven
   return window.electronAPI.onLLMDownloadProgress(callback)
 }
 
+/**
+ * llmRestart 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function llmRestart(modelPath?: string): Promise<{ success: boolean; error?: string }> {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -261,6 +333,10 @@ export async function llmRestart(modelPath?: string): Promise<{ success: boolean
   return window.electronAPI.llmRestart(modelPath)
 }
 
+/**
+ * llmStart 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function llmStart(modelPath: string): Promise<{ success: boolean; error?: string }> {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -275,6 +351,10 @@ export async function llmStart(modelPath: string): Promise<{ success: boolean; e
   return window.electronAPI.llmStart(modelPath)
 }
 
+/**
+ * llmStop 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function llmStop(): Promise<void> {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -287,6 +367,10 @@ export async function llmStop(): Promise<void> {
   return window.electronAPI.llmStop()
 }
 
+/**
+ * llmGetGpuName 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function llmGetGpuName(): Promise<string> {
       /*
        * [ALGORITHM BRANCH / DECISION]

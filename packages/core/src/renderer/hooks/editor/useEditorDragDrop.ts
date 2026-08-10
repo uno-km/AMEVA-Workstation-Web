@@ -38,7 +38,9 @@ import { useCallback, useEffect } from 'react'
 import type { AmevaEditor } from '../../editor/amevaBlockSchema'
 import type { EditorMode } from '../../../shared/types'
 
-import { hwpxParser, type ParsedHwpx } from '../../features/smartdocs/hwpxParser'
+import { FEATURE_FLAGS } from '../../config/features'
+// SmartDocs 의존성
+import { hwpxParser, type ParsedHwpx } from '../../plugins/smartdocs/core/hwpxParser'
 
 /**
  * @hook useEditorDragDrop
@@ -62,21 +64,23 @@ export function useEditorDragDrop(
     if (!editor || editorMode !== 'edit') return
     
     // 0. [NEW] HWPX 파일 드롭 가로채기 (SmartDocs V2)
-    const files = e.dataTransfer.files
-    if (files && files.length > 0) {
-      const file = files[0]
-      if (file.name.toLowerCase().endsWith('.hwpx')) {
-        e.preventDefault()
-        e.stopPropagation()
-        try {
-          // 파일을 즉시 파싱하고 전역 이벤트 발송하여 뷰어 모달을 띄우게 함
-          const parsedData = await hwpxParser.extractText(file)
-          const event = new CustomEvent('app:hwpx-parsed', { detail: { parsedData } })
-          window.dispatchEvent(event)
-        } catch (err) {
-          console.error("HWPX Drop Parsing Error:", err)
+    if (FEATURE_FLAGS.ENABLE_SMARTDOCS) {
+      const files = e.dataTransfer.files
+      if (files && files.length > 0) {
+        const file = files[0]
+        if (file.name.toLowerCase().endsWith('.hwpx')) {
+          e.preventDefault()
+          e.stopPropagation()
+          try {
+            // 파일을 즉시 파싱하고 전역 이벤트 발송하여 뷰어 모달을 띄우게 함
+            const parsedData = await hwpxParser.extractText(file)
+            const event = new CustomEvent('app:hwpx-parsed', { detail: { parsedData } })
+            window.dispatchEvent(event)
+          } catch (err) {
+            console.error("HWPX Drop Parsing Error:", err)
+          }
+          return
         }
-        return
       }
     }
 

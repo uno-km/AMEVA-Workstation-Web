@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file ConfirmModal.tsx
+ * @description ConfirmModal.tsx 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './ConfirmModal';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file ConfirmModal.tsx
  * @system AMEVA OS Desktop Workstation - Client Renderer
  * @location src/renderer/components/ui/modals/ConfirmModal.tsx
@@ -9,8 +25,13 @@
  * - 새로고침, 새 문서, 애플리케이션 종료 등 다양한 상황에서 주입(Injection)되는 제목, 설명, 아이콘만 바꿔 재사용(Inheritance/Composition)한다.
  */
 
+// [외부 패키지 및 라이브러리 임포트: react]
 import React from 'react'
 
+/**
+ * ConfirmModalProps 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface ConfirmModalProps {
   isOpen: boolean
   onClose: () => void
@@ -22,6 +43,10 @@ export interface ConfirmModalProps {
   icon: React.ReactNode
 }
 
+/**
+ * ConfirmModal 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export function ConfirmModal({
   isOpen,
   onClose,

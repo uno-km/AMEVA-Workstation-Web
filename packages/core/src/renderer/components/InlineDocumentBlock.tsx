@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file InlineDocumentBlock.tsx
+ * @description InlineDocumentBlock.tsx 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './InlineDocumentBlock';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file InlineDocumentBlock.tsx
  * @system AMEVA OS Desktop Workstation
  * @location src/renderer/components/InlineDocumentBlock.tsx
@@ -15,12 +31,19 @@
  * - 소비처 B (customSlashMenuItems.tsx): 슬래시 메뉴 항목으로 노출.
  */
 
+// [외부 패키지 및 라이브러리 임포트: react]
 import React, { useState, useRef, useCallback, useEffect } from 'react'
+// [외부 패키지 및 라이브러리 임포트: @blocknote/react]
 import { createReactBlockSpec } from '@blocknote/react'
+// [외부 패키지 및 라이브러리 임포트: lucide-react]
 import { Upload, FileText, FileSpreadsheet, Presentation, FileType2, X, Maximize2, Minimize2, ExternalLink, Dna } from 'lucide-react'
+// [외부 패키지 및 라이브러리 임포트: pdfjs-dist]
 import * as pdfjsLib from 'pdfjs-dist'
+// [내부 프로젝트 의존성 모듈 임포트: ../utils/vfsDatabase]
 import { saveAttachment, getAttachment } from '../utils/vfsDatabase'
+// [내부 프로젝트 의존성 모듈 임포트: ../stores/useDocumentProfilerStore]
 import { useDocumentProfilerStore } from '../stores/useDocumentProfilerStore'
+// [내부 프로젝트 의존성 모듈 임포트: ./DocumentProfileModal]
 import { DocumentProfileModal } from './DocumentProfileModal'
 // @ts-ignore
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url'
@@ -30,8 +53,16 @@ const workerBlob = new Blob([`import '${pdfWorkerUrl}';`], { type: 'application/
 const workerBlobUrl = URL.createObjectURL(workerBlob)
 pdfjsLib.GlobalWorkerOptions.workerPort = new Worker(workerBlobUrl, { type: 'module' })
 
+/**
+ * DocType 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export type DocType = 'pdf' | 'pptx' | 'docx' | 'xlsx' | 'unknown'
 
+/**
+ * detectDocType 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 function detectDocType(fileName: string, mimeType?: string): DocType {
   const ext = fileName.split('.').pop()?.toLowerCase() || ''
   if (ext === 'pdf' || mimeType?.includes('pdf')) return 'pdf'
@@ -41,6 +72,10 @@ function detectDocType(fileName: string, mimeType?: string): DocType {
   return 'unknown'
 }
 
+/**
+ * DOC_TYPE_CONFIG 상태, 변수 또는 상수 선언부입니다.
+ * @type {any} - Typescript 컴파일러에 의한 타입 추론(Inferred)
+ */
 export const DOC_TYPE_CONFIG: Record<DocType, { label: string; color: string; icon: React.ReactNode }> = {
   pdf:     { label: 'PDF',         color: '#ef4444', icon: <FileText size={16} /> },
   pptx:    { label: 'PowerPoint',  color: '#f97316', icon: <Presentation size={16} /> },
@@ -49,6 +84,10 @@ export const DOC_TYPE_CONFIG: Record<DocType, { label: string; color: string; ic
   unknown: { label: '문서',        color: '#8b5cf6', icon: <FileText size={16} /> },
 }
 
+/**
+ * MiniContinuousPageCanvas 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 function MiniContinuousPageCanvas({ pdf, pageNum, isActive, onVisible }: any) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -558,6 +597,10 @@ export function PdfMiniViewer({
 }
 
 
+/**
+ * InlineDocumentBlockComponent 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 function InlineDocumentBlockComponent({ block, editor }: any) {
   const props = block.props as {
     fileName: string
@@ -1178,4 +1221,8 @@ export const InlineDocumentBlockSpec = createReactBlockSpec(
   }
 )
 
+/**
+ * InlineDocumentBlock 상태, 변수 또는 상수 선언부입니다.
+ * @type {any} - Typescript 컴파일러에 의한 타입 추론(Inferred)
+ */
 export const InlineDocumentBlock = InlineDocumentBlockSpec()

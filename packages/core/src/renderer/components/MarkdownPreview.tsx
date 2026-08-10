@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file MarkdownPreview.tsx
+ * @description MarkdownPreview.tsx 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './MarkdownPreview';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file MarkdownPreview.tsx
  * @system AMEVA OS Desktop Workstation
  * @location src/renderer/components/MarkdownPreview.tsx
@@ -17,20 +33,32 @@
  * - MUST NOT: TypeScript any 형식을 우회 수단으로 함부로 선언하지 말 것.
  */
 
+// [외부 패키지 및 라이브러리 임포트: react]
 import { useMemo } from 'react'
+// [외부 패키지 및 라이브러리 임포트: marked]
 import { marked } from 'marked'
+// [내부 프로젝트 의존성 모듈 임포트: ./JupyterCodeViewer]
 import { JupyterCodeViewer } from './JupyterCodeViewer'
+// [내부 프로젝트 의존성 모듈 임포트: ../editor/amevaBlockSchema]
 import { type AmevaEditor } from '../editor/amevaBlockSchema'
+// [내부 프로젝트 의존성 모듈 임포트: ../utils/markdownUtils]
 import { resolveLocalMediaUrl } from '../utils/markdownUtils'
 
 // 찢어낸 마크다운 세그먼트 전용 인라인 렌더러 컴포넌트들 수입
 import { InlineMermaidRenderer } from './markdown/InlineMermaidRenderer'
+// [내부 프로젝트 의존성 모듈 임포트: ./markdown/InlineLinkPreviewRenderer]
 import { InlineLinkPreviewRenderer } from './markdown/InlineLinkPreviewRenderer'
+// [내부 프로젝트 의존성 모듈 임포트: ./markdown/InlineMapRenderer]
 import { InlineMapRenderer } from './markdown/InlineMapRenderer'
+// [내부 프로젝트 의존성 모듈 임포트: ./markdown/InlineKanbanRenderer]
 import { InlineKanbanRenderer } from './markdown/InlineKanbanRenderer'
+// [내부 프로젝트 의존성 모듈 임포트: ./markdown/InlineExcelRenderer]
 import { InlineExcelRenderer } from './markdown/InlineExcelRenderer'
+// [내부 프로젝트 의존성 모듈 임포트: ./markdown/InlineYoutubeRenderer]
 import { InlineYoutubeRenderer } from './markdown/InlineYoutubeRenderer'
+// [내부 프로젝트 의존성 모듈 임포트: ./markdown/InlineDrawingRenderer]
 import { InlineDrawingRenderer } from './markdown/InlineDrawingRenderer'
+// [내부 프로젝트 의존성 모듈 임포트: ./markdown/InlineDocumentRenderer]
 import { InlineDocumentRenderer } from './markdown/InlineDocumentRenderer'
 
       /*
@@ -50,6 +78,10 @@ const MERMAID_PLACEHOLDER_PREFIX = 'MERMAIDPLACEHOLDERINDEX'
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `decodeHtmlEntities(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * decodeHtmlEntities 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 function decodeHtmlEntities(str: string): string {
   return str
     .replace(/&lt;/g, '<')
@@ -65,6 +97,10 @@ function decodeHtmlEntities(str: string): string {
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `buildPreviewSegments(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * buildPreviewSegments 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 function buildPreviewSegments(markdown: string) {
   const customBlocks: { lang: string; code: string }[] = []
 
@@ -292,6 +328,10 @@ function buildPreviewSegments(markdown: string) {
  * - 함수 명: `MarkdownPreview`
  * - 역할: 마크다운 텍스트를 파싱하여 생성된 프리뷰 세그먼트들(HTML, Mermaid, 지도, 유튜브, 링크 프리뷰)을 순차적으로 렌더링함.
  * - 예시: `MarkdownPreview({ markdown: "### Title" })` 형태로 마운트되어 React UI에 최종 문서 트리를 드로잉.
+ */
+/**
+ * MarkdownPreview 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
 export function MarkdownPreview({ markdown, editor }: { markdown: string; editor?: AmevaEditor | null }) {
   /*

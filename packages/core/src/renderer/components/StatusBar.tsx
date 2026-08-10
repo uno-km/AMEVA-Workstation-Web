@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file StatusBar.tsx
+ * @description StatusBar.tsx 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './StatusBar';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file StatusBar.tsx
  * @system AMEVA OS Desktop Workstation - Client Renderer
  * @location src/renderer/components/StatusBar.tsx
@@ -28,6 +44,7 @@
  * [IMPORT SEGMENTATION & CONTRACTS]
  * - React, useState, useRef: 호버 툴팁 가이드 및 렌더 가드 제어용 React API.
  */
+// [외부 패키지 및 라이브러리 임포트: react]
 import React, { useState, useRef } from 'react'
 
 /* 
@@ -36,6 +53,7 @@ import React, { useState, useRef } from 'react'
  * - ZoomIn: 줌 배율 돋보기 아이콘.
  * - WrapText: 가로 스크롤 줄바꿈 상태 아이콘.
  */
+// [외부 패키지 및 라이브러리 임포트: lucide-react]
 import { Settings, ZoomIn, WrapText } from 'lucide-react'
 
 /* 
@@ -45,7 +63,9 @@ import { Settings, ZoomIn, WrapText } from 'lucide-react'
  * - DocStatusIndicator: 저장 여부, 수정중(dirty) 유무 뱃지.
  * - CollabIndicator: 동시 편집실 참여 피어들의 머릿수 뱃지.
  */
+// [내부 프로젝트 의존성 모듈 임포트: ./statusbar/AIStatusIndicator]
 import { AIStatusIndicator } from './statusbar/AIStatusIndicator'
+// [내부 프로젝트 의존성 모듈 임포트: ./statusbar/DocStatusIndicator]
 import { DocStatusIndicator } from './statusbar/DocStatusIndicator'
 
 /* 
@@ -56,12 +76,21 @@ import { DocStatusIndicator } from './statusbar/DocStatusIndicator'
  * - useProcessStore: 모델 다운로드 및 줌 크기 Zustand 스토어.
  * - useAI: AI 설정 및 가용성 훅.
  */
+// [내부 프로젝트 의존성 모듈 임포트: ../contexts/AppContext]
 import { useAppContext } from '../contexts/AppContext'
+// [내부 프로젝트 의존성 모듈 임포트: ../stores/useUIStore]
 import { useUIStore } from '../stores/useUIStore'
+// [내부 프로젝트 의존성 모듈 임포트: ../stores/useWorkspaceStore]
 import { useWorkspaceStore } from '../stores/useWorkspaceStore'
+// [내부 프로젝트 의존성 모듈 임포트: ../stores/useProcessStore]
 import { useProcessStore } from '../stores/useProcessStore'
+// [내부 프로젝트 의존성 모듈 임포트: ../stores/useDocumentProfilerStore]
 import { useDocumentProfilerStore } from '../stores/useDocumentProfilerStore'
 
+/**
+ * StatusBarProps 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface StatusBarProps {}
 
 /**

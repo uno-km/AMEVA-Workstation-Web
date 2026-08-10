@@ -1,30 +1,76 @@
+/**
+ * ============================================================================
+ * @file rulePluginRegistry.ts
+ * @description rulePluginRegistry.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './rulePluginRegistry';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+// [내부 프로젝트 의존성 모듈 임포트: ./types]
 import type { DomainRule, ShapeRule } from './types';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/academicRule]
 import { academicRule } from './builtIn/academicRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/constructionRule]
 import { constructionRule } from './builtIn/constructionRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/softwareRule]
 import { softwareRule } from './builtIn/softwareRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/medicalRule]
 import { medicalRule } from './builtIn/medicalRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/welfareRule]
 import { welfareRule } from './builtIn/welfareRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/financeRule]
 import { financeRule } from './builtIn/financeRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/investmentRule]
 import { investmentRule } from './builtIn/investmentRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/realEstateRule]
 import { realEstateRule } from './builtIn/realEstateRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/hrRule]
 import { hrRule } from './builtIn/hrRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/procurementRule]
 import { procurementRule } from './builtIn/procurementRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/electronicsRule]
 import { electronicsRule } from './builtIn/electronicsRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/electricalRule]
 import { electricalRule } from './builtIn/electricalRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/manufacturingRule]
 import { manufacturingRule } from './builtIn/manufacturingRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/qualityRule]
 import { qualityRule } from './builtIn/qualityRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/logisticsRule]
 import { logisticsRule } from './builtIn/logisticsRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/legalRule]
 import { legalRule } from './builtIn/legalRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/publicAdministrationRule]
 import { publicAdministrationRule } from './builtIn/publicAdministrationRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/publicPolicyRule]
 import { publicPolicyRule } from './builtIn/publicPolicyRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/healthcareRule]
 import { healthcareRule } from './builtIn/healthcareRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/tourismRule]
 import { tourismRule } from './builtIn/tourismRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/foodRule]
 import { foodRule } from './builtIn/foodRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/lifestyleRule]
 import { lifestyleRule } from './builtIn/lifestyleRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/researchRule]
 import { researchRule } from './builtIn/researchRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/securityRule]
 import { securityRule } from './builtIn/securityRule';
+// [내부 프로젝트 의존성 모듈 임포트: ./builtIn/environmentRule]
 import { environmentRule } from './builtIn/environmentRule';
 
+/**
+ * RulePluginRegistry 클래스의 인스턴스를 정의하고 관련 로직을 안전하게 캡슐화합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 class RulePluginRegistry {
   private domainRules: Map<string, DomainRule> = new Map();
   private shapeRules: Map<string, ShapeRule> = new Map();
@@ -132,4 +178,8 @@ class RulePluginRegistry {
   }
 }
 
+/**
+ * ruleRegistry 상태, 변수 또는 상수 선언부입니다.
+ * @type {any} - Typescript 컴파일러에 의한 타입 추론(Inferred)
+ */
 export const ruleRegistry = new RulePluginRegistry();

@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file aiTypes.ts
+ * @description aiTypes.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './aiTypes';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file aiTypes.ts
  * @system AMEVA OS Desktop Workstation
  * @location src/renderer/types/aiTypes.ts
@@ -17,8 +33,13 @@
  * - MUST NOT: TypeScript any 형식을 우회 수단으로 함부로 선언하지 말 것.
  */
 
+// [내부 프로젝트 의존성 모듈 임포트: ../../shared/reasoningTypes]
 import type { ReasoningTraceEvent } from '../../shared/reasoningTypes'
 
+/**
+ * InsertSuggestion 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface InsertSuggestion {
   afterBlockId: string
   blockType: 'heading' | 'paragraph' | 'bulletListItem' | 'numberedListItem' | 'table'
@@ -31,6 +52,10 @@ export interface InsertSuggestion {
   siblingIndex?: number
 }
 
+/**
+ * AIMessage 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface AIMessage {
   id: string
   role: 'user' | 'assistant' | 'system'
@@ -57,6 +82,10 @@ export interface AIMessage {
   modelName?: string
 }
 
+/**
+ * AISettings 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface AISettings {
   modelPath: string
   codeModelPath?: string
@@ -90,6 +119,10 @@ export interface AISettings {
    * - 역할: 유입 인자를 가공하고 비즈니스 계약 조건에 맞춰 최종 객체/바이너리를 생산함.
    * - 예시: `DEFAULT_SETTINGS(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * DEFAULT_SETTINGS 상태, 변수 또는 상수 선언부입니다.
+ * @type {any} - Typescript 컴파일러에 의한 타입 추론(Inferred)
+ */
 export const DEFAULT_SETTINGS: AISettings = {
   modelPath: 'C:\\ameva\\models\\llm\\qwen2.5-3b-instruct-q4_k_m.gguf',
   codeModelPath: '',

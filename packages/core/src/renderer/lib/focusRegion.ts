@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file focusRegion.ts
+ * @description focusRegion.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './focusRegion';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file focusRegion.ts
  * @system AMEVA OS Desktop Workstation
  * @location src/renderer/lib/focusRegion.ts
@@ -50,9 +66,17 @@ export const FOCUS_REGION_ATTR = 'data-focus-region'
    * - 역할: 유입 인자를 가공하고 비즈니스 계약 조건에 맞춰 최종 객체/바이너리를 생산함.
    * - 예시: `FOCUS_REGION_CLASS(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * FOCUS_REGION_CLASS 상태, 변수 또는 상수 선언부입니다.
+ * @type {any} - Typescript 컴파일러에 의한 타입 추론(Inferred)
+ */
 export const FOCUS_REGION_CLASS = 'focus-region-active'
 
 // ── 구독자 타입 ─────────────────────────────────────────────────
+/**
+ * Listener 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 type Listener = (activeId: string | null) => void
 
 // ── 모듈 상태 ───────────────────────────────────────────────────
@@ -67,6 +91,10 @@ let currentActiveId: string | null = null
 const listeners = new Set<Listener>()
 
 // ── 내부 헬퍼 ───────────────────────────────────────────────────
+/**
+ * notify 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 function notify() {
   listeners.forEach(l => l(currentActiveId))
 }
@@ -77,6 +105,10 @@ function notify() {
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `applyClass(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * applyClass 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 function applyClass(id: string | null, add: boolean) {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -158,6 +190,10 @@ export function subscribe(listener: Listener): () => void {
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `handleGlobalMouseDown(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * handleGlobalMouseDown 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 function handleGlobalMouseDown(e: MouseEvent): void {
       /*
        * [RUN-TIME STATE / INVARIANT]
@@ -202,6 +238,10 @@ document.addEventListener('mousedown', handleGlobalMouseDown, true)
 
 // ── 접근성: 키보드 Tab 이동도 추적 ──────────────────────────────
 // Tab 키로 포커스가 이동하면 해당 region도 활성화
+/**
+ * handleGlobalFocusIn 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 function handleGlobalFocusIn(e: FocusEvent): void {
       /*
        * [RUN-TIME STATE / INVARIANT]

@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file useMenuBarShortcuts.ts
+ * @description useMenuBarShortcuts.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './useMenuBarShortcuts';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file useMenuBarShortcuts.ts
  * @system AMEVA OS Desktop Workstation
  * @location src/renderer/hooks/app/useMenuBarShortcuts.ts
@@ -17,9 +33,15 @@
  * - MUST NOT: TypeScript any 형식을 우회 수단으로 함부로 선언하지 말 것.
  */
 
+// [외부 패키지 및 라이브러리 임포트: react]
 import { useEffect } from 'react';
+// [내부 프로젝트 의존성 모듈 임포트: ../../../shared/types]
 import type { EditorMode } from '../../../shared/types';
 
+/**
+ * MenuBarShortcutsOptions 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface MenuBarShortcutsOptions {
   isAltMode: boolean;
   activeMenu: string | null;
@@ -64,6 +86,10 @@ export interface MenuBarShortcutsOptions {
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `useMenuBarShortcuts(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * useMenuBarShortcuts 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export function useMenuBarShortcuts(options: MenuBarShortcutsOptions) {
   useEffect(() => {
       /*

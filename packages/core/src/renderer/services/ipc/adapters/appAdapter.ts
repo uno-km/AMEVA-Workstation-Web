@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file appAdapter.ts
+ * @description appAdapter.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './appAdapter';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file appAdapter.ts
  * @system AMEVA OS Desktop Workstation
  * @location src/renderer/services/ipc/adapters/appAdapter.ts
@@ -35,6 +51,10 @@ export interface MessageBoxOptions {
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `isElectronEnv(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * isElectronEnv 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export function isElectronEnv(): boolean {
   return typeof window !== 'undefined' && !!window.electronAPI
 }
@@ -45,6 +65,10 @@ export function isElectronEnv(): boolean {
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `appReady(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * appReady 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export function appReady(): void {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -63,6 +87,10 @@ export function appReady(): void {
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `setZoomLevel(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * setZoomLevel 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export function setZoomLevel(level: number): void {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -75,6 +103,10 @@ export function setZoomLevel(level: number): void {
   window.electronAPI.setZoomLevel(level)
 }
 
+/**
+ * getZoomLevel 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function getZoomLevel(): Promise<number> {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -87,6 +119,10 @@ export async function getZoomLevel(): Promise<number> {
   return window.electronAPI.getZoomLevel()
 }
 
+/**
+ * getZoomFactor 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function getZoomFactor(): Promise<number> {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -99,6 +135,10 @@ export async function getZoomFactor(): Promise<number> {
   return window.electronAPI.getZoomFactor()
 }
 
+/**
+ * clipboardWriteImage 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function clipboardWriteImage(dataUrl: string): Promise<boolean> {
   if (!window.electronAPI?.clipboardWriteImage) return false
   return window.electronAPI.clipboardWriteImage(dataUrl)
@@ -110,6 +150,10 @@ export async function clipboardWriteImage(dataUrl: string): Promise<boolean> {
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `setZoomFactor(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * setZoomFactor 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export function setZoomFactor(factor: number): void {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -122,6 +166,10 @@ export function setZoomFactor(factor: number): void {
   window.electronAPI.setZoomFactor(factor)
 }
 
+/**
+ * showMessageBox 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function showMessageBox(options: MessageBoxOptions): Promise<{ response: number }> {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -134,6 +182,10 @@ export async function showMessageBox(options: MessageBoxOptions): Promise<{ resp
   return window.electronAPI.showMessageBox(options)
 }
 
+/**
+ * planGetStatus 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function planGetStatus(): Promise<boolean> {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -146,6 +198,10 @@ export async function planGetStatus(): Promise<boolean> {
   return window.electronAPI.planGetStatus()
 }
 
+/**
+ * planSetStatus 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function planSetStatus(isPro: boolean): Promise<{ success: boolean; isPro?: boolean; error?: string }> {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -158,6 +214,10 @@ export async function planSetStatus(isPro: boolean): Promise<{ success: boolean;
   return window.electronAPI.planSetStatus(isPro)
 }
 
+/**
+ * isFreeMode 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function isFreeMode(): Promise<boolean> {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -176,6 +236,10 @@ export async function isFreeMode(): Promise<boolean> {
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `newWindow(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * newWindow 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export function newWindow(): void {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -194,6 +258,10 @@ export function newWindow(): void {
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `closeApp(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * closeApp 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export function closeApp(): void {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -212,6 +280,10 @@ export function closeApp(): void {
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `forceCloseApp(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * forceCloseApp 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export function forceCloseApp(): void {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -230,6 +302,10 @@ export function forceCloseApp(): void {
    * - 역할: 메인 프로세스의 CORS 바이패스 프록시를 경유해 HTTP 요청을 안전하게 비동기 기동하고 응답 결과를 렌더러로 회신한다.
    * - 예시: `httpRequest({ url: '...', method: 'GET' })` 호출 시 비동기 IPC 연동 개시.
    */
+/**
+ * httpRequest 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function httpRequest(payload: { url: string; method: string; headers?: Record<string, string>; body?: string }): Promise<{
   success: boolean
   status?: number

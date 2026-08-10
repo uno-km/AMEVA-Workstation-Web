@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Tabs, Group, ActionIcon, Text, Divider, Tooltip, Collapse, Button, Paper } from '@mantine/core';
 import { Settings, Baseline, FileText, Calculator, Table, Type, LayoutTemplate, AlignCenter, AlignLeft, Bold, Eraser, CheckSquare, Download } from 'lucide-react';
 import { BlockNoteEditor } from '@blocknote/core';
-import { smartDocsUtils } from '../../features/smartdocs/smartDocsUtils';
-import { exportToWord } from '../../utils/exporters';
+import { smartDocsUtils } from '../core/smartDocsUtils';
+import { exportToWord } from '../../../utils/exporters';
 
 interface SmartDocsRibbonProps {
   editor: any;

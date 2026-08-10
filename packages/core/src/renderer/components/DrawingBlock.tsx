@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file DrawingBlock.tsx
+ * @description DrawingBlock.tsx 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './DrawingBlock';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file DrawingBlock.tsx
  * @system AMEVA OS Desktop Workstation
  * @location src/renderer/components/DrawingBlock.tsx
@@ -17,8 +33,11 @@
  * - MUST: 보기 모드(!isEditing) 시 씌워지는 오버레이에 pointer-events: none을 선언하여 에디터 기본 포커스 전파를 훼방놓지 말 것.
  */
 
+// [외부 패키지 및 라이브러리 임포트: react]
 import React, { useState, useEffect, useRef } from 'react'
+// [외부 패키지 및 라이브러리 임포트: @blocknote/react]
 import { createReactBlockSpec } from '@blocknote/react'
+// [외부 패키지 및 라이브러리 임포트: lucide-react]
 import { Check, Edit2, FileImage, RefreshCw, Layers } from 'lucide-react'
 import '@excalidraw/excalidraw/index.css'
 
@@ -87,6 +106,10 @@ try {
   loadExcalidraw()
 }
 
+/**
+ * DrawingBlockSpec 상태, 변수 또는 상수 선언부입니다.
+ * @type {any} - Typescript 컴파일러에 의한 타입 추론(Inferred)
+ */
 export const DrawingBlockSpec = createReactBlockSpec(
   {
     type: 'drawing',
@@ -430,4 +453,8 @@ export const DrawingBlockSpec = createReactBlockSpec(
   }
 )
 
+/**
+ * DrawingBlock 상태, 변수 또는 상수 선언부입니다.
+ * @type {any} - Typescript 컴파일러에 의한 타입 추론(Inferred)
+ */
 export const DrawingBlock = DrawingBlockSpec()

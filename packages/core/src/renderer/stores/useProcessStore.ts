@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file useProcessStore.ts
+ * @description useProcessStore.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './useProcessStore';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file useProcessStore.ts
  * @system AMEVA OS Desktop Workstation - Global State Store
  * @location src/renderer/stores/useProcessStore.ts
@@ -27,13 +43,16 @@
  * [IMPORT SEGMENTATION & CONTRACTS]
  * - create: Zustand 라이브러리의 불변 상태 트리 스토어 생성 빌더 API.
  */
+// [외부 패키지 및 라이브러리 임포트: zustand]
 import { create } from 'zustand'
+// [내부 프로젝트 의존성 모듈 임포트: ../utils/safeJson]
 import { safeJsonParse } from '../utils/safeJson'
 
 /* 
  * [SHARED SCHEMAS]
  * - ExportProgress: 문서 내보내기 진행률, 메세지 및 단계(phase) 메타 구조체.
  */
+// [내부 프로젝트 의존성 모듈 임포트: ../../shared/types]
 import type { ExportProgress } from '../../shared/types'
 
 /**
@@ -46,6 +65,10 @@ export const IDLE_EXPORT_PROGRESS: ExportProgress = {
   message: ''
 }
 
+/**
+ * PermissionScope 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export type PermissionScope = 
   | 'collab:doc_edit'    // 실시간 문서 공동 편집 & 캐럿/프레젠스 공유
   | 'collab:text_chat'   // 실시간 텍스트 채팅 채널
@@ -53,6 +76,10 @@ export type PermissionScope =
   | 'collab:cloud_relay' // AMEVA 클라우드 전용 고성능 중계 서버
   | 'collab:enterprise'; // 엔터프라이즈 맞춤 계약 권한
 
+/**
+ * UserTier 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export type UserTier = 'free' | 'pro' | 'enterprise';
 
 /**
@@ -160,6 +187,10 @@ function loadUserTier(): UserTier {
   }
 }
 
+/**
+ * loadGrantedPermissions 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 function loadGrantedPermissions(): PermissionScope[] {
   try {
     const perms = localStorage.getItem('granted-permissions');

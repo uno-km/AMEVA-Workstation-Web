@@ -1,7 +1,30 @@
+/**
+ * ============================================================================
+ * @file KanbanModal.tsx
+ * @description KanbanModal.tsx 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './KanbanModal';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+// [외부 패키지 및 라이브러리 임포트: react]
 import React, { useState, useEffect } from 'react'
+// [외부 패키지 및 라이브러리 임포트: lucide-react]
 import { X, AlignLeft, User, ChevronUp, Equal, ChevronDown, Tag, Plus, Check } from 'lucide-react'
+// [내부 프로젝트 의존성 모듈 임포트: ./KanbanBlock]
 import type { KanbanCard, KanbanColumn, Assignee, Priority } from './KanbanBlock'
 
+/**
+ * AVAILABLE_AGENTS 상태, 변수 또는 상수 선언부입니다.
+ * @type {any} - Typescript 컴파일러에 의한 타입 추론(Inferred)
+ */
 export const AVAILABLE_AGENTS = [
   { name: 'Claude Agent', type: 'agent', avatarColor: '#d97757' },
   { name: 'Figma Agent', type: 'agent', avatarColor: '#ff7262' },
@@ -10,6 +33,10 @@ export const AVAILABLE_AGENTS = [
   { name: 'Design', type: 'human', avatarColor: '#9c27b0' }
 ]
 
+/**
+ * KanbanModalProps 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 interface KanbanModalProps {
   card: KanbanCard
   currentColId: string
@@ -23,6 +50,10 @@ const PREDEFINED_COLORS = [
   '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef', '#64748b'
 ]
 
+/**
+ * KanbanModal 상태, 변수 또는 상수 선언부입니다.
+ * @type {any} - Typescript 컴파일러에 의한 타입 추론(Inferred)
+ */
 export const KanbanModal: React.FC<KanbanModalProps> = ({ card, currentColId, columns, onClose, onSave }) => {
   const [title, setTitle] = useState(card.title)
   const [description, setDescription] = useState(card.description || '')

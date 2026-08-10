@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file ragUtils.ts
+ * @description ragUtils.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './ragUtils';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file ragUtils.ts
  * @system AMEVA OS Desktop Workstation
  * @location src/renderer/utils/ragUtils.ts
@@ -240,6 +256,10 @@ export function retrieveRelevantBlocks(query: string, flatBlocks: FlatBlock[], t
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `parseEditSuggestion(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * parseEditSuggestion 상태, 변수 또는 상수 선언부입니다.
+ * @type {any} - Typescript 컴파일러에 의한 타입 추론(Inferred)
+ */
 export const parseEditSuggestion = (t: string) => t;
   /*
    * [FUNCTION CONTRACT]
@@ -247,5 +267,9 @@ export const parseEditSuggestion = (t: string) => t;
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `parseInsertSuggestions(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * parseInsertSuggestions 상태, 변수 또는 상수 선언부입니다.
+ * @type {any} - Typescript 컴파일러에 의한 타입 추론(Inferred)
+ */
 export const parseInsertSuggestions = (t: string) => t;
 

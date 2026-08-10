@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file mcpAdapter.ts
+ * @description mcpAdapter.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './mcpAdapter';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file mcpAdapter.ts
  * @system AMEVA OS Desktop Workstation
  * @location src/renderer/services/ipc/adapters/mcpAdapter.ts
@@ -24,6 +40,10 @@ export interface MCPSpawnResult {
   [key: string]: unknown
 }
 
+/**
+ * MCPCallResponse 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface MCPCallResponse {
   result?: {
     tools?: Record<string, unknown>[]
@@ -38,12 +58,20 @@ export interface MCPCallResponse {
   [key: string]: unknown
 }
 
+/**
+ * MCPKillResult 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface MCPKillResult {
   success: boolean
   error?: string
   [key: string]: unknown
 }
 
+/**
+ * mcpSpawn 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function mcpSpawn(serverId: string, command: string, args: string[]): Promise<MCPSpawnResult | null> {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -56,6 +84,10 @@ export async function mcpSpawn(serverId: string, command: string, args: string[]
   return window.electronAPI.mcpSpawn(serverId, command, args)
 }
 
+/**
+ * mcpCall 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function mcpCall(serverId: string, request: Record<string, unknown>): Promise<MCPCallResponse | null> {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -68,6 +100,10 @@ export async function mcpCall(serverId: string, request: Record<string, unknown>
   return window.electronAPI.mcpCall(serverId, request)
 }
 
+/**
+ * mcpKill 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function mcpKill(serverId: string): Promise<MCPKillResult | null> {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -80,6 +116,10 @@ export async function mcpKill(serverId: string): Promise<MCPKillResult | null> {
   return window.electronAPI.mcpKill(serverId)
 }
 
+/**
+ * mcpGetToken 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function mcpGetToken(): Promise<string | null> {
       /*
        * [ALGORITHM BRANCH / DECISION]

@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file cryptoUtils.ts
+ * @description cryptoUtils.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './cryptoUtils';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file cryptoUtils.ts
  * @system AMEVA OS Desktop Workstation
  * @role AES-GCM 256 기반 클라이언트 사이드 파일/데이터 암복호화 유틸리티
@@ -27,8 +43,16 @@ export async function generateKeyFromPassword(password: string, salt: Uint8Array
   )
 }
 
+/**
+ * AMEVA_MAGIC 상태, 변수 또는 상수 선언부입니다.
+ * @type {any} - Typescript 컴파일러에 의한 타입 추론(Inferred)
+ */
 export const AMEVA_MAGIC = new TextEncoder().encode('AMEVA_ENC_V1')
 
+/**
+ * encryptBlob 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function encryptBlob(blob: Blob, password: string): Promise<Blob> {
   const salt = window.crypto.getRandomValues(new Uint8Array(16))
   const iv = window.crypto.getRandomValues(new Uint8Array(12))
@@ -51,6 +75,10 @@ export async function encryptBlob(blob: Blob, password: string): Promise<Blob> {
   return new Blob([finalBuffer], { type: 'application/octet-stream' })
 }
 
+/**
+ * isEncryptedBlob 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function isEncryptedBlob(blob: Blob): Promise<boolean> {
   const slice = blob.slice(0, AMEVA_MAGIC.length)
   const buffer = await slice.arrayBuffer()
@@ -58,6 +86,10 @@ export async function isEncryptedBlob(blob: Blob): Promise<boolean> {
   return uint8.every((val, i) => val === AMEVA_MAGIC[i])
 }
 
+/**
+ * decryptBlob 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function decryptBlob(blob: Blob, password: string): Promise<Blob> {
   const isEnc = await isEncryptedBlob(blob)
   if (!isEnc) throw new Error("암호화된 AMEVA 파일이 아닙니다.")
@@ -82,6 +114,10 @@ export async function decryptBlob(blob: Blob, password: string): Promise<Blob> {
 }
 
 // 비밀번호 단방향 해시 (검증용)
+/**
+ * hashPassword 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function hashPassword(password: string): Promise<string> {
   const enc = new TextEncoder()
   const hash = await window.crypto.subtle.digest('SHA-256', enc.encode(password))

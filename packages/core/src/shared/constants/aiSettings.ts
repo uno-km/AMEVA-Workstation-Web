@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file aiSettings.ts
+ * @description aiSettings.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './aiSettings';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file aiSettings.ts
  * @system AMEVA OS Desktop Workstation
  * @location src/shared/constants/aiSettings.ts
@@ -52,6 +68,10 @@ export const PROVIDER_MODELS = {
    * - 역할: 유입 인자를 가공하고 비즈니스 계약 조건에 맞춰 최종 객체/바이너리를 생산함.
    * - 예시: `API_ENDPOINTS(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * API_ENDPOINTS 상태, 변수 또는 상수 선언부입니다.
+ * @type {any} - Typescript 컴파일러에 의한 타입 추론(Inferred)
+ */
 export const API_ENDPOINTS = {
   gemini: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
   openai: 'https://api.openai.com/v1/chat/completions',
@@ -64,6 +84,10 @@ export const API_ENDPOINTS = {
    * - 역할: 유입 인자를 가공하고 비즈니스 계약 조건에 맞춰 최종 객체/바이너리를 생산함.
    * - 예시: `API_KEY_PATTERNS(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * API_KEY_PATTERNS 상태, 변수 또는 상수 선언부입니다.
+ * @type {any} - Typescript 컴파일러에 의한 타입 추론(Inferred)
+ */
 export const API_KEY_PATTERNS = [
   {
     provider: 'gemini' as const,

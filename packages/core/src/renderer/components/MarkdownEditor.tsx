@@ -124,10 +124,15 @@ try {
 import { PeerBlockHighlightLayer } from './editor/PeerBlockHighlightLayer'
 import { getCustomSlashMenuItems } from './editor/customSlashMenuItems'
 import { WelcomeBanner } from './editor/WelcomeBanner'
+import { AIContextMenu } from './editor/AIContextMenu'
 import { RichStyleToolbar } from './editor/RichStyleToolbar'
 import { ImageLightbox } from './ImageLightbox'
 import { PdfViewer } from './PdfViewer'
 import { HwpxViewerModal } from './editor/HwpxViewerModal'
+// [내부 프로젝트 의존성 모듈 임포트: ../config/features]
+import { FEATURE_FLAGS } from '../config/features'
+// [내부 프로젝트 의존성 모듈 임포트: ../plugins/smartdocs/components/SmartDocsRibbon]
+import { SmartDocsRibbon } from '../plugins/smartdocs/components/SmartDocsRibbon'
 import { useWebLLM } from './useWebLLM'
 import { useLLMAction } from '../hooks/editor/useLLMAction'
 import { useGhostText } from '../hooks/editor/useGhostText'
@@ -373,7 +378,7 @@ export function MarkdownEditor({
    * - setCurrentContent: 원문 텍스트 변경 세터.
    * - tabs: 다중 문서 탭 정보 목록.
    */
-  const { currentContent, setCurrentContent, tabs, filePath, pdfData, pdfFileName } = useWorkspaceStore()
+  const { currentContent, setCurrentContent, tabs, filePath, pdfData, pdfFileName, isSmartDocsMode, setIsSmartDocsMode } = useWorkspaceStore()
 
   const hasPermission = useProcessStore((s) => s.hasPermission)
   const canUseAITagging = false
@@ -542,6 +547,13 @@ export function MarkdownEditor({
           setSelectedFont={setSelectedFont}
           selectedSize={selectedSize}
           setSelectedSize={setSelectedSize}
+        />
+      )}
+      {FEATURE_FLAGS.ENABLE_SMARTDOCS && (
+        <SmartDocsRibbon 
+          editor={editor} 
+          isSmartDocsMode={isSmartDocsMode} 
+          onToggleMode={setIsSmartDocsMode} 
         />
       )}
       <div
@@ -843,248 +855,31 @@ export function MarkdownEditor({
           }}
         />
       )}
-
-      {contextMenuState.isOpen && createPortal(
-        <div
-          style={{
-            position: 'fixed',
-            top: contextMenuState.y,
-            left: contextMenuState.x,
-            zIndex: 9999,
-            background: 'var(--bg-deep)',
-            border: '1px solid var(--border-muted)',
-            borderRadius: '8px',
-            padding: '8px',
-            minWidth: '150px',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '4px'
-          }}
-          onMouseLeave={() => setContextMenuState(prev => ({ ...prev, isOpen: false }))}
-        >
-          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '4px', paddingBottom: '4px', borderBottom: '1px solid var(--border-muted)' }}>
-            클립보드
-          </div>
-          <button
-            className="bn-button"
-            style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'transparent', color: 'var(--text-main)', border: 'none', cursor: 'pointer', fontSize: '12px' }}
-            onClick={() => {
-              if (contextMenuState.selectedText) {
-                navigator.clipboard.writeText(contextMenuState.selectedText)
-              }
-              setContextMenuState(prev => ({ ...prev, isOpen: false }))
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-          >
-            복사
-          </button>
-          <button
-            className="bn-button"
-            style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'transparent', color: 'var(--text-main)', border: 'none', cursor: 'pointer', fontSize: '12px' }}
-            onClick={async () => {
-              try {
-                const text = await navigator.clipboard.readText()
-                if (text && editor) {
-                  const targetBlock = contextMenuState.blockId 
-                    ? editor.getBlock(contextMenuState.blockId) 
-                    : editor.getTextCursorPosition()?.block;
-                  if (targetBlock) {
-                    editor.insertBlocks([{ type: 'paragraph', content: text }], targetBlock, 'after');
-                  } else {
-                    editor.insertInlineContent([{ type: 'text', text, styles: {} as any }]);
-                  }
-                }
-              } catch (e) {
-                console.error('클립보드 권한 거부됨', e)
-                alert("클립보드 접근 권한이 거부되었습니다!\n\n주소창 좌측의 자물쇠(또는 설정) 아이콘을 눌러 '클립보드(Clipboard)' 권한을 '허용'으로 변경한 뒤 다시 시도해주세요.")
-              }
-              setContextMenuState(prev => ({ ...prev, isOpen: false }))
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-          >
-            붙여넣기
-          </button>
-
-          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginTop: '6px', marginBottom: '4px', paddingBottom: '4px', borderBottom: '1px solid var(--border-muted)' }}>
-            블록 관리
-          </div>
-          <button
-            className="bn-button"
-            style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'transparent', color: 'var(--text-main)', border: 'none', cursor: 'pointer', fontSize: '12px' }}
-            onClick={() => {
-              if (contextMenuState.blockId && editor) {
-                const b = editor.getBlock(contextMenuState.blockId)
-                if (b) {
-                  let textToCopy = '';
-                  if (Array.isArray(b.content)) {
-                    textToCopy = b.content.map((c: any) => c.text || '').join('');
-                  }
-                  if (!textToCopy && hoverBlock?.id === b.id) {
-                    textToCopy = hoverBlock.text;
-                  }
-                  navigator.clipboard.writeText(textToCopy);
-                }
-              }
-              setContextMenuState(prev => ({ ...prev, isOpen: false }))
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-          >
-            블록 복사
-          </button>
-          <button
-            className="bn-button"
-            style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer', fontSize: '12px' }}
-            onClick={() => {
-              if (contextMenuState.blockId) {
-                editor?.removeBlocks([contextMenuState.blockId as any])
-              }
-              setContextMenuState(prev => ({ ...prev, isOpen: false }))
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.1)'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-          >
-            블록 삭제
-          </button>
-          
-          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginTop: '6px', marginBottom: '4px', paddingBottom: '4px', borderBottom: '1px solid var(--border-muted)' }}>
-            AI 어시스턴트
-          </div>
-          
-          {!isMainReady ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '0 4px' }}>
-              <select
-                value={pendingModelId}
-                onChange={(e) => setPendingModelId(e.target.value)}
-                style={{
-                  background: 'var(--bg-main)', color: 'var(--text-main)',
-                  border: '1px solid var(--border-muted)', borderRadius: '4px',
-                  padding: '4px 6px', fontSize: '11px', outline: 'none', cursor: 'pointer',
-                  marginBottom: '2px'
-                }}
-              >
-                <option value="Qwen2.5-3B-Instruct-q4f32_1-MLC">Qwen 2.5 (3B) - 기본 (권장)</option>
-                <option value="Qwen2.5-7B-Instruct-q4f16_1-MLC">Qwen 2.5 (7B) - 고성능 (8GB VRAM↑)</option>
-              </select>
-              {pendingModelId.includes('7B') && (
-                <div style={{ fontSize: '10px', color: '#ef4444', marginBottom: '4px', lineHeight: '1.2' }}>
-                  ⚠️ 첫 로딩 시 수 분이 소요되며 브라우저가 버벅일 수 있습니다.
-                </div>
-              )}
-              {isMainLoading || isGhostLoading ? (
-                <div style={{ padding: '8px', fontSize: '12px', color: '#666', borderTop: '1px solid var(--border-muted)', textAlign: 'center' }}>
-                  <div style={{ marginBottom: '6px' }}>AI 모델 병렬 로딩 중...</div>
-                  
-                  {/* Main Model Progress */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#10b981', opacity: 0.9 }}>
-                    <span>Main (3B/7B)</span>
-                    <span>{pMain}%</span>
-                  </div>
-                  <div style={{ width: '100%', height: '4px', background: 'rgba(0,0,0,0.1)', borderRadius: '2px', overflow: 'hidden', marginBottom: '2px' }}>
-                    <div style={{ width: `${pMain}%`, height: '100%', background: 'linear-gradient(90deg, #059669, #10b981)', transition: 'width 0.2s ease-out' }} />
-                  </div>
-                  <div style={{ color: '#10b981', fontSize: '9px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left', marginBottom: '6px' }}>{mainProgressText}</div>
-
-                  {/* Ghost Model Progress */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#8b5cf6', opacity: 0.9 }}>
-                    <span>Ghost (1.5B)</span>
-                    <span>{pGhost}%</span>
-                  </div>
-                  <div style={{ width: '100%', height: '4px', background: 'rgba(0,0,0,0.1)', borderRadius: '2px', overflow: 'hidden', marginBottom: '2px' }}>
-                    <div style={{ width: `${pGhost}%`, height: '100%', background: 'linear-gradient(90deg, #7c3aed, #8b5cf6)', transition: 'width 0.2s ease-out' }} />
-                  </div>
-                  <div style={{ color: '#8b5cf6', fontSize: '9px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left' }}>{ghostProgressText}</div>
-                </div>
-              ) : (
-                <button
-                  className="bn-button"
-                  style={{ display: 'flex', alignItems: 'center', gap: '6px', textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'transparent', color: '#a855f7', border: 'none', cursor: 'pointer', fontSize: '12px' }}
-                  onClick={() => {
-                    if (isMainLoading || isGhostLoading) return;
-                    initModel(pendingModelId)
-                  }}
-                  onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'rgba(168,85,247,0.1)' }}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                >
-                  <Sparkles size={14} /> 
-                  AMEVA AI 활성화하기
-                </button>
-              )}
-            </div>
-          ) : (
-            <>
-              <button
-                className="bn-button"
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'transparent', color: '#10b981', border: 'none', cursor: 'pointer', fontSize: '12px' }}
-                onClick={async () => {
-                  setContextMenuState(prev => ({ ...prev, isOpen: false }))
-                  const targetText = contextMenuState.selectedText || hoverBlock?.text
-                  if (!targetText) return
-                  await executeAction(contextMenuState.blockId, targetText, 'tone');
-                }}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(16,185,129,0.1)'}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              >
-                <Sparkles size={14} />
-                AMEVA AI에게 톤 다듬기 요청
-              </button>
-              <button
-                className="bn-button"
-                style={{ display: 'flex', alignItems: 'center', gap: '6px', textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'transparent', color: '#3b82f6', border: 'none', cursor: 'pointer', fontSize: '12px' }}
-                onClick={async () => {
-                  setContextMenuState(prev => ({ ...prev, isOpen: false }))
-                  const targetText = contextMenuState.selectedText || hoverBlock?.text
-                  if (!targetText) return
-                  await executeAction(contextMenuState.blockId, targetText, 'summary');
-                }}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(59,130,246,0.1)'}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-              >
-                <Sparkles size={14} />
-                AMEVA AI에게 요약 요청
-              </button>
-              </>
-            )}
-
-            {/* Ghost Text 자동완성 ON/OFF 토글 (AI 활성 상태일 때만 노출) */}
-            {isGhostReady && (
-              <div style={{ display: 'flex', flexDirection: 'column', padding: '4px 8px', marginTop: '4px', borderTop: '1px solid var(--border-muted)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>자동완성 (Ghost Text)</span>
-                  <button
-                    style={{
-                      width: '36px', height: '20px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-                      background: ghostTextEnabled ? '#a855f7' : 'var(--border-muted)',
-                      position: 'relative', transition: 'background 0.2s',
-                    }}
-                    onClick={() => setGhostTextEnabled(prev => !prev)}
-                    title={ghostTextEnabled ? '자동완성 비활성화' : '자동완성 활성화'}
-                  >
-                    <span style={{
-                      position: 'absolute', top: '2px', width: '16px', height: '16px', borderRadius: '50%',
-                      background: '#fff', transition: 'left 0.2s',
-                      left: ghostTextEnabled ? '18px' : '2px',
-                    }} />
-                  </button>
-                </div>
-                {ghostTextEnabled && (
-                  <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', opacity: 0.8, marginTop: '6px', lineHeight: 1.4 }}>
-                    💡 <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '1px 3px', borderRadius: '3px' }}>Ctrl+Space</kbd> 즉시 호출<br/>
-                    💡 <kbd style={{ background: 'rgba(255,255,255,0.1)', padding: '1px 3px', borderRadius: '3px' }}>Ctrl+→</kbd> 단어 단위 부분 수락
-                  </div>
-                )}
-              </div>
-            )}
-        </div>,
-        document.body
+      {contextMenuState.isOpen && (
+        <AIContextMenu
+          contextMenuState={contextMenuState}
+          setContextMenuState={setContextMenuState}
+          hoverBlock={hoverBlock}
+          editor={editor}
+          isMainReady={isMainReady}
+          isGhostReady={isGhostReady}
+          isMainLoading={isMainLoading}
+          isGhostLoading={isGhostLoading}
+          mainProgressText={mainProgressText}
+          ghostProgressText={ghostProgressText}
+          pMain={pMain}
+          pGhost={pGhost}
+          pendingModelId={pendingModelId}
+          setPendingModelId={setPendingModelId}
+          initModel={initModel}
+          ghostTextEnabled={ghostTextEnabled}
+          setGhostTextEnabled={setGhostTextEnabled}
+          executeAction={executeAction}
+        />
       )}
     </div>
   )
 }
-
 export { PeerBlockHighlightLayer } from './editor/PeerBlockHighlightLayer'
 export { getCustomSlashMenuItems } from './editor/customSlashMenuItems'
 export { WelcomeBanner } from './editor/WelcomeBanner'

@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file electronApiAdapter.ts
+ * @description electronApiAdapter.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './electronApiAdapter';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file electronApiAdapter.ts
  * @system AMEVA OS Desktop Workstation - IPC Integration Layer
  * @location src/renderer/services/ipc/electronApiAdapter.ts
@@ -44,9 +60,13 @@ import type {
   ModelDownloadProgressEvent
 } from './ipcTypes'
 
+// [내부 프로젝트 의존성 모듈 임포트: ./adapters/appAdapter]
 import type { MessageBoxOptions } from './adapters/appAdapter'
+// [내부 프로젝트 의존성 모듈 임포트: ./adapters/mcpAdapter]
 import type { MCPSpawnResult, MCPCallResponse, MCPKillResult } from './adapters/mcpAdapter'
+// [내부 프로젝트 의존성 모듈 임포트: ./adapters/sandboxAdapter]
 import type { WebSearchResult } from './adapters/sandboxAdapter'
+// [내부 프로젝트 의존성 모듈 임포트: ./adapters/collabAdapter]
 import type { CollabServerStatus, CollabServerStartResult, CollabServerStopResult } from './adapters/collabAdapter'
 
 declare global {
@@ -156,12 +176,20 @@ declare global {
   }
 }
 
+/**
+ * setBypassNativeContextMenu 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export function setBypassNativeContextMenu(bypass: boolean): void {
   if (window.electronAPI?.setBypassNativeContextMenu) {
     window.electronAPI.setBypassNativeContextMenu(bypass);
   }
 }
 
+/**
+ * executeTerminal 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export function executeTerminal(cmd: string, cwd?: string): Promise<{ stdout: string; stderr: string; newCwd: string }> {
   if (window.electronAPI?.executeTerminal) {
     return window.electronAPI.executeTerminal(cmd, cwd);

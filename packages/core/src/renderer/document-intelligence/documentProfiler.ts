@@ -1,17 +1,50 @@
+/**
+ * ============================================================================
+ * @file documentProfiler.ts
+ * @description documentProfiler.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './documentProfiler';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+// [내부 프로젝트 의존성 모듈 임포트: ./analyzers/frequencyAnalyzer]
 import { analyzeFrequency } from './analyzers/frequencyAnalyzer';
+// [내부 프로젝트 의존성 모듈 임포트: ./analyzers/entityExtractor]
 import { extractEntities } from './analyzers/entityExtractor';
+// [내부 프로젝트 의존성 모듈 임포트: ./analyzers/sectionDetector]
 import { detectSections } from './analyzers/sectionDetector';
+// [내부 프로젝트 의존성 모듈 임포트: ./types]
 import type { DocumentProfileResult } from './types';
+// [내부 프로젝트 의존성 모듈 임포트: ./rules/rulePluginRegistry]
 import { ruleRegistry } from './rules/rulePluginRegistry';
+// [내부 프로젝트 의존성 모듈 임포트: ./classifiers/shapeClassifier]
 import { classifyShape } from './classifiers/shapeClassifier';
+// [내부 프로젝트 의존성 모듈 임포트: ./classifiers/domainClassifier]
 import { classifyDomain } from './classifiers/domainClassifier';
+// [내부 프로젝트 의존성 모듈 임포트: ./rules/user/userRuleStore]
 import { userRuleStore } from './rules/user/userRuleStore';
+// [내부 프로젝트 의존성 모듈 임포트: ./classifiers/subDomainClassifier]
 import { classifySubDomain } from './classifiers/subDomainClassifier';
+// [내부 프로젝트 의존성 모듈 임포트: ./classifiers/intentClassifier]
 import { classifyIntent } from './classifiers/intentClassifier';
+// [내부 프로젝트 의존성 모듈 임포트: ./analyzers/topicDiscoveryAnalyzer]
 import { discoverTopics } from './analyzers/topicDiscoveryAnalyzer';
+// [내부 프로젝트 의존성 모듈 임포트: ./classifiers/labelComposer]
 import { composeDisplayLabel } from './classifiers/labelComposer';
+// [내부 프로젝트 의존성 모듈 임포트: ./types]
 import type { DocumentSubDomainResult, TopicCluster } from './types';
 
+/**
+ * profileDocument 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function profileDocument(
   fileMeta: { fileName: string; docType: any; fileSize: number },
   pagesText: { page: number; text: string }[]
@@ -102,6 +135,10 @@ export async function profileDocument(
 }
 
 // 의미론적 중요 페이지 추정 로직
+/**
+ * detectImportantPages 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 function detectImportantPages(
   pagesText: { page: number; text: string }[],
   keywords: any[],

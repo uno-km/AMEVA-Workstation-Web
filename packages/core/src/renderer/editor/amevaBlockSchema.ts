@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file amevaBlockSchema.ts
+ * @description amevaBlockSchema.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './amevaBlockSchema';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file amevaBlockSchema.ts
  * @system AMEVA OS Desktop Workstation - Editor Core
  * @location src/renderer/editor/amevaBlockSchema.ts
@@ -47,18 +63,33 @@ import {
  * - YoutubeBlock: 유튜브 동영상 임베딩 및 플로팅 PIP 플레이어 연동 블록.
  * - MapBlock: 가상 맵/위치 데이터 오버레이 정보 뷰 블록.
  */
+// [내부 프로젝트 의존성 모듈 임포트: ../components/JupyterBlock]
 import { JupyterBlock } from '../components/JupyterBlock'
+// [내부 프로젝트 의존성 모듈 임포트: ../components/DrawingBlock]
 import { DrawingBlock } from '../components/DrawingBlock'
+// [내부 프로젝트 의존성 모듈 임포트: ../components/LinkPreviewBlock]
 import { LinkPreviewBlock } from '../components/LinkPreviewBlock'
+// [내부 프로젝트 의존성 모듈 임포트: ../components/YoutubeBlock]
 import { YoutubeBlock } from '../components/YoutubeBlock'
+// [내부 프로젝트 의존성 모듈 임포트: ../components/MapBlock]
 import { MapBlock } from '../components/MapBlock'
+// [내부 프로젝트 의존성 모듈 임포트: ../components/PresentationBlock]
 import { PresentationBlock } from '../components/PresentationBlock'
+// [내부 프로젝트 의존성 모듈 임포트: ../components/ExcelBlock]
 import { ExcelBlock } from '../components/ExcelBlock'
+// [내부 프로젝트 의존성 모듈 임포트: ../components/KanbanBlock]
 import { KanbanBlock } from '../components/KanbanBlock'
+// [내부 프로젝트 의존성 모듈 임포트: ../components/InlineDocumentBlock]
 import { InlineDocumentBlock } from '../components/InlineDocumentBlock'
-import { SmartDocsTableBlock } from '../components/SmartDocsTableBlock'
+// [내부 프로젝트 의존성 모듈 임포트: ../components/ChartBlock]
 import { ChartBlock } from '../components/ChartBlock'
+// [내부 프로젝트 의존성 모듈 임포트: ../components/AiDiffBlock]
 import { AiDiffBlock } from '../components/AiDiffBlock'
+
+// [내부 프로젝트 의존성 모듈 임포트: ../config/features]
+import { FEATURE_FLAGS } from '../config/features'
+// SmartDocs 플러그인 컴포넌트 동적 로딩 (토글 분리)
+import { SmartDocsTableBlock } from '../plugins/smartdocs/components/SmartDocsTableBlock'
 
 /**
  * [CONTRACT - Root Custom Schema Configuration]
@@ -75,9 +106,9 @@ export const customSpecs = {
   excel: ExcelBlock,
   kanban: KanbanBlock,
   inlineDocument: InlineDocumentBlock,
-  smartDocsTable: SmartDocsTableBlock,
   chart: ChartBlock,
   aiDiff: AiDiffBlock,
+  ...(FEATURE_FLAGS.ENABLE_SMARTDOCS ? { smartDocsTable: SmartDocsTableBlock } : {}),
 }
 
 Object.entries(customSpecs).forEach(([key, value]) => {
@@ -86,6 +117,10 @@ Object.entries(customSpecs).forEach(([key, value]) => {
   }
 })
 
+/**
+ * amevaSchema 상태, 변수 또는 상수 선언부입니다.
+ * @type {any} - Typescript 컴파일러에 의한 타입 추론(Inferred)
+ */
 export const amevaSchema = BlockNoteSchema.create({
   blockSpecs: {
     ...defaultBlockSpecs,
@@ -100,17 +135,33 @@ export const amevaSchema = BlockNoteSchema.create({
  * - AmevaBlock: 스키마가 적용된 개별 단락 블록 노드 타입.
  * - AmevaPartialBlock: 부분 업데이트 및 갱신 패킷 전달용 블록 타입.
  */
+/**
+ * AmevaSchemaType 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export type AmevaSchemaType = typeof amevaSchema
+/**
+ * AmevaEditor 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export type AmevaEditor = BlockNoteEditor<
   BlockSchemaFromSpecs<typeof amevaSchema.blockSpecs>,
   InlineContentSchemaFromSpecs<typeof amevaSchema.inlineContentSpecs>,
   StyleSchemaFromSpecs<typeof amevaSchema.styleSpecs>
 >
+/**
+ * AmevaBlock 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export type AmevaBlock = Block<
   BlockSchemaFromSpecs<typeof amevaSchema.blockSpecs>,
   InlineContentSchemaFromSpecs<typeof amevaSchema.inlineContentSpecs>,
   StyleSchemaFromSpecs<typeof amevaSchema.styleSpecs>
 >
+/**
+ * AmevaPartialBlock 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export type AmevaPartialBlock = PartialBlock<
   BlockSchemaFromSpecs<typeof amevaSchema.blockSpecs>,
   InlineContentSchemaFromSpecs<typeof amevaSchema.inlineContentSpecs>,

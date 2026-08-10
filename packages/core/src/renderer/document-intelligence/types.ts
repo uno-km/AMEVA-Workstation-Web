@@ -1,3 +1,23 @@
+/**
+ * ============================================================================
+ * @file types.ts
+ * @description types.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './types';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
+ * DocumentSourceMeta 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface DocumentSourceMeta {
   fileName: string;
   docType: 'pdf' | 'docx' | 'pptx' | 'xlsx' | 'unknown';
@@ -7,6 +27,10 @@ export interface DocumentSourceMeta {
   slideCount?: number;
 }
 
+/**
+ * KeywordStat 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface KeywordStat {
   term: string;
   count: number;
@@ -14,12 +38,20 @@ export interface KeywordStat {
   pages: number[];
 }
 
+/**
+ * CoOccurrence 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface CoOccurrence {
   terms: [string, string];
   count: number;
   pages: number[];
 }
 
+/**
+ * SectionCandidate 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface SectionCandidate {
   title: string;
   page: number;
@@ -28,6 +60,10 @@ export interface SectionCandidate {
   source: 'outline' | 'pattern' | 'heuristic';
 }
 
+/**
+ * Entities 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface Entities {
   dates: string[];
   money: string[];
@@ -38,6 +74,10 @@ export interface Entities {
   phones: string[];
 }
 
+/**
+ * DocumentSubDomainResult 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface DocumentSubDomainResult {
   primary: string;
   label: string;
@@ -46,6 +86,10 @@ export interface DocumentSubDomainResult {
   evidence: string[];
 }
 
+/**
+ * DocumentIntentResult 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface DocumentIntentResult {
   primary: string;
   label: string;
@@ -53,6 +97,10 @@ export interface DocumentIntentResult {
   evidence: string[];
 }
 
+/**
+ * DocumentClassificationResult 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface DocumentClassificationResult {
   primary: string;
   confidence: number;
@@ -60,6 +108,10 @@ export interface DocumentClassificationResult {
   evidence: string[];
 }
 
+/**
+ * TopicCluster 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface TopicCluster {
   id: string;
   label: string;
@@ -71,6 +123,10 @@ export interface TopicCluster {
   evidence: string[];
 }
 
+/**
+ * DocumentProfileResult 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface DocumentProfileResult {
   version: string;
   source: DocumentSourceMeta;

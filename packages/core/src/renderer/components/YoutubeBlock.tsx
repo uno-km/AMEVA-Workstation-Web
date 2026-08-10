@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file YoutubeBlock.tsx
+ * @description YoutubeBlock.tsx 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './YoutubeBlock';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file YoutubeBlock.tsx
  * @system AMEVA OS Desktop Workstation
  * @location src/renderer/components/YoutubeBlock.tsx
@@ -24,11 +40,19 @@
  * - Video, Play, ExternalLink: 미디어 제어 및 링크 가시성을 표현하기 위해 Lucide React 아이콘 라이브러리 임포트.
  * - AmevaBlock, AmevaEditor: 에디터 스펙과 데이터 계약을 준수하기 위한 타입 정의를 임포트.
  */
+// [외부 패키지 및 라이브러리 임포트: react]
 import { useState, useEffect } from 'react'
+// [외부 패키지 및 라이브러리 임포트: @blocknote/react]
 import { createReactBlockSpec } from '@blocknote/react'
+// [외부 패키지 및 라이브러리 임포트: lucide-react]
 import { Video, Play, ExternalLink } from 'lucide-react'
+// [내부 프로젝트 의존성 모듈 임포트: ../editor/amevaBlockSchema]
 import { type AmevaBlock, type AmevaEditor } from '../editor/amevaBlockSchema'
 
+/**
+ * YoutubeBlockComponentProps 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 interface YoutubeBlockComponentProps {
   block: AmevaBlock
   editor: AmevaEditor
@@ -225,6 +249,10 @@ export const YoutubeBlockComponent = ({ block, editor }: YoutubeBlockComponentPr
  * - 역할: 블록노트 커스텀 유튜브 블록 사양을 선언하고 컴포넌트를 연결함.
  * - 예시: `YoutubeBlockSpec(...)` 호출 시 에러가 없고, 렌더 호출에 컴포넌트 객체를 공급함.
  */
+/**
+ * YoutubeBlockSpec 상태, 변수 또는 상수 선언부입니다.
+ * @type {any} - Typescript 컴파일러에 의한 타입 추론(Inferred)
+ */
 export const YoutubeBlockSpec = createReactBlockSpec(
   {
     type: 'youtube',
@@ -250,6 +278,10 @@ export const YoutubeBlockSpec = createReactBlockSpec(
  * - 함수 명: `YoutubeBlock`
  * - 역할: 유튜브 블록 사양 정의 인스턴스를 즉시 빌드함.
  * - 예시: `YoutubeBlock(...)` 호출 시 런타임 구성 갱신.
+ */
+/**
+ * YoutubeBlock 상태, 변수 또는 상수 선언부입니다.
+ * @type {any} - Typescript 컴파일러에 의한 타입 추론(Inferred)
  */
 export const YoutubeBlock = YoutubeBlockSpec()
 

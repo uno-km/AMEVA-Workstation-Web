@@ -1,3 +1,20 @@
+/**
+ * ============================================================================
+ * @file docxChartInjector.ts
+ * @description docxChartInjector.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './docxChartInjector';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+// [외부 패키지 및 라이브러리 임포트: jszip]
 import JSZip from 'jszip';
 
 /**
@@ -12,6 +29,10 @@ interface ChartSeries {
   values: number[];
 }
 
+/**
+ * ChartData 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface ChartData {
   id: string;
   type: 'pie' | 'doughnut' | 'bar' | 'column' | 'line';
@@ -23,6 +44,10 @@ export interface ChartData {
 // McKinsey-style muted pastel palette
 const COLORS = ['4F81BD', 'C0504D', '9BBB59', '8064A2', '4BACC6', 'F79646', '2C4D75', '772C2A'];
 
+/**
+ * generateSeriesXml 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 function generateSeriesXml(chart: ChartData, isLine: boolean = false): string {
   let xml = '';
   
@@ -234,6 +259,10 @@ function generateChartXml(chart: ChartData): string {
 </c:chartSpace>`;
 }
 
+/**
+ * generateDrawingXml 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 function generateDrawingXml(rId: string, chartId: string): string {
   return `<w:drawing>
     <wp:inline distT="0" distB="0" distL="0" distR="0">
@@ -250,6 +279,10 @@ function generateDrawingXml(rId: string, chartId: string): string {
   </w:drawing>`;
 }
 
+/**
+ * injectNativeCharts 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export async function injectNativeCharts(docxBlob: Blob, charts: ChartData[]): Promise<Blob> {
   if (!charts || charts.length === 0) return docxBlob;
 

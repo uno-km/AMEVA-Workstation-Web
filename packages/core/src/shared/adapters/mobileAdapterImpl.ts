@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file mobileAdapterImpl.ts
+ * @description mobileAdapterImpl.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './mobileAdapterImpl';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file mobileAdapterImpl.ts
  * @system AMEVA OS - Mobile Platform Adapter Implementation
  * @location packages/core/src/shared/adapters/mobileAdapterImpl.ts
@@ -12,6 +28,7 @@
  * [IMPORT SEGMENTATION]
  * - FileSystemAdapter, AIEngineAdapter, PlatformAdapter: 공통 플랫폼 인터페이스 규격.
  */
+// [내부 프로젝트 의존성 모듈 임포트: ./platformAdapter]
 import type { FileSystemAdapter, AIEngineAdapter, PlatformAdapter } from './platformAdapter';
 
 // Capacitor 전역 타이핑 정의
@@ -136,6 +153,10 @@ class MobileAIEngineAdapter implements AIEngineAdapter {
 }
 
 // 싱글톤 모바일 플랫폼 어댑터 번들 객체 생성 및 배포
+/**
+ * mobileAdapter 상태, 변수 또는 상수 선언부입니다.
+ * @type {any} - Typescript 컴파일러에 의한 타입 추론(Inferred)
+ */
 export const mobileAdapter: PlatformAdapter = {
   fs: new MobileFileSystemAdapter(),
   ai: new MobileAIEngineAdapter()

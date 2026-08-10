@@ -1,4 +1,20 @@
 /**
+ * ============================================================================
+ * @file documentIR.ts
+ * @description documentIR.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
+ * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * @example
+ * // 예시 로직 (자동 생성됨)
+ * import { something } from './documentIR';
+ * 
+ * @created 2026-08-10 20:30:36
+ * @updated 2026-08-10 20:30:36
+ * @author uno-km
+ * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * ============================================================================
+ */
+
+/**
  * @file documentIR.ts
  * @system AMEVA OS Desktop Workstation
  * @location src/shared/documentIR.ts
@@ -36,6 +52,10 @@ export type DocumentSourceType =
   | 'txt'
   | 'unknown'
 
+/**
+ * DocumentMetadata 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface DocumentMetadata {
   title?: string
   sourceType: DocumentSourceType
@@ -48,6 +68,10 @@ export interface DocumentMetadata {
   layoutQualityScore?: number
 }
 
+/**
+ * DocumentBlockType 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export type DocumentBlockType =
   | 'heading'
   | 'paragraph'
@@ -64,6 +88,10 @@ export type DocumentBlockType =
   | 'divider'
   | 'unknown'
 
+/**
+ * DocumentBlockLayout 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface DocumentBlockLayout {
   x?: number
   y?: number
@@ -73,16 +101,28 @@ export interface DocumentBlockLayout {
   zIndex?: number
 }
 
+/**
+ * DocumentBlockCode 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface DocumentBlockCode {
   language?: string
   content: string
 }
 
+/**
+ * DocumentTableRow 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface DocumentTableRow {
   cells: string[]
   isHeader?: boolean
 }
 
+/**
+ * DocumentBlock 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface DocumentBlock {
   id: string
   type: DocumentBlockType
@@ -127,6 +167,10 @@ export interface DocumentBlock {
   originalType?: string
 }
 
+/**
+ * DocumentAsset 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface DocumentAsset {
   id: string
   type: 'image' | 'video' | 'audio' | 'file' | 'unknown'
@@ -145,6 +189,10 @@ export interface DocumentAsset {
   warnings?: string[]
 }
 
+/**
+ * DocumentRelation 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface DocumentRelation {
   fromBlockId: string
   toBlockId?: string
@@ -152,6 +200,10 @@ export interface DocumentRelation {
   relationType: 'contains' | 'references' | 'captionFor' | 'precedes'
 }
 
+/**
+ * LayoutHint 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 export interface LayoutHint {
   /** 섹션 제목 블록 ID */
   sectionHeadingId?: string
@@ -188,6 +240,10 @@ let _blockIdCounter = 0
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `genId(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * genId 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 function genId(): string {
   return `ir_${Date.now()}_${++_blockIdCounter}`
 }
@@ -198,6 +254,10 @@ function genId(): string {
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `getPlainText(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * getPlainText 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 function getPlainText(block: any): string {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -234,6 +294,10 @@ function getPlainText(block: any): string {
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `mapBlockType(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * mapBlockType 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 function mapBlockType(type: string): DocumentBlockType {
   const mapping: Record<string, DocumentBlockType> = {
     heading: 'heading',
@@ -259,6 +323,10 @@ function mapBlockType(type: string): DocumentBlockType {
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `convertBlock(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * convertBlock 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 function convertBlock(
   block: any,
   order: number,
@@ -408,6 +476,10 @@ function convertBlock(
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `flattenBlocks(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
+/**
+ * flattenBlocks 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
+ * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ */
 function flattenBlocks(
   blocks: any[],
   result: DocumentBlock[],
