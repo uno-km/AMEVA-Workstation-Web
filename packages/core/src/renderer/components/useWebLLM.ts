@@ -7,6 +7,7 @@ let globalIsLoading = false;
 let globalIsReady = false;
 let globalProgress = 0;
 let globalProgressText = '';
+let globalActiveModelId = 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC';
 
 const listeners = new Set<() => void>();
 const notify = () => listeners.forEach(fn => fn());
@@ -17,6 +18,7 @@ export const useWebLLM = () => {
     isLoading: globalIsLoading,
     progress: globalProgress,
     progressText: globalProgressText,
+    activeModelId: globalActiveModelId,
   });
 
   useEffect(() => {
@@ -26,6 +28,7 @@ export const useWebLLM = () => {
         isLoading: globalIsLoading,
         progress: globalProgress,
         progressText: globalProgressText,
+        activeModelId: globalActiveModelId,
       });
     };
     listeners.add(handler);
@@ -35,6 +38,7 @@ export const useWebLLM = () => {
   const initModel = useCallback(async (modelId: string = 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC') => {
     if (globalEngine || globalIsLoading) return;
     
+    globalActiveModelId = modelId;
     globalIsLoading = true;
     notify();
 

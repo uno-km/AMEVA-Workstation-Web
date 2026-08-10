@@ -225,7 +225,10 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
             <span style={{ fontSize: '12px', fontWeight: 'bold' }}>SmartDocs (공문서) 폼</span>
             <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>자동 레이아웃 및 여백 적용</span>
           </div>
-          <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+          <label 
+            style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
+            onClick={(e) => { e.preventDefault(); setIsSmartDocsMode(!isSmartDocsMode); }}
+          >
             <div style={{
               width: '36px', height: '20px', borderRadius: '10px',
               background: isSmartDocsMode ? 'var(--brand-primary)' : 'var(--bg-surface)',
@@ -242,7 +245,7 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
               type="checkbox" 
               style={{ display: 'none' }}
               checked={isSmartDocsMode}
-              onChange={(e) => setIsSmartDocsMode(e.target.checked)}
+              readOnly
             />
           </label>
         </div>

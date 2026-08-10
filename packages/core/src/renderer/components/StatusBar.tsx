@@ -45,7 +45,7 @@ import { Settings, ZoomIn, WrapText } from 'lucide-react'
  * - DocStatusIndicator: 저장 여부, 수정중(dirty) 유무 뱃지.
  * - CollabIndicator: 동시 편집실 참여 피어들의 머릿수 뱃지.
  */
-import { MCPStatusIndicator } from './statusbar/MCPStatusIndicator'
+import { AIStatusIndicator } from './statusbar/AIStatusIndicator'
 import { DocStatusIndicator } from './statusbar/DocStatusIndicator'
 
 /* 
@@ -257,16 +257,14 @@ export function StatusBar({}: StatusBarProps = {}) {
 
       {/* 2. 우측: 시스템 상태 진단 뱃지 및 설정 컨트롤 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        {/* MCP 서버 동작 상태 */}
-        <MCPStatusIndicator 
-          canUseMCP={canUseMCP}
-          mcpServers={mcpServers || []}
+        {/* AI 서버 동작 상태 (미니 대시보드) */}
+        <AIStatusIndicator 
           activeTooltip={activeTooltip}
           handleMouseEnter={handleMouseEnter}
           handleMouseLeave={handleMouseLeave}
           tooltipStyle={tooltipStyle}
         />
-        {canUseMCP && mcpServers && mcpServers.length > 0 && <div style={{ width: '1px', height: '12px', backgroundColor: 'var(--border-muted)' }} />}
+        <div style={{ width: '1px', height: '12px', backgroundColor: 'var(--border-muted)' }} />
 
 
 

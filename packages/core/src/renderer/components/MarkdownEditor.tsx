@@ -30,6 +30,7 @@
  * - React, useState, useEffect: 상태 바인딩 및 HMR 라이프사이클 구동용 React 코어 API.
  */
 import React, { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 
 /* 
  * [BLOCKNOTE MANTINE WYSIWYG LAYOUT]
@@ -128,6 +129,7 @@ import { ImageLightbox } from './ImageLightbox'
 import { PdfViewer } from './PdfViewer'
 import { HwpxViewerModal } from './editor/HwpxViewerModal'
 import { useWebLLM } from './useWebLLM'
+import { useLLMAction } from '../hooks/editor/useLLMAction'
 
 /* 
  * [INTERACTION HOOKS]
@@ -325,6 +327,10 @@ const SafeCustomSideMenu = () => (
 )
 
 
+// ==========================================
+// AMEVA AI Context Action Handlers
+// ==========================================
+
 /**
  * @component MarkdownEditor
  * @description WYSIWYG 에디터 영역 렌더링 및 사용자 단축 팝업 액션을 통제하는 코어 컴포넌트.
@@ -420,7 +426,9 @@ export function MarkdownEditor({
     blockId: null,
     selectedText: ''
   })
-  const { initModel, generateStream, isReady, isLoading } = useWebLLM()
+  const { initModel, generateStream, isReady, isLoading, activeModelId, progress } = useWebLLM()
+  const { executeAction } = useLLMAction({ editor, activeModelId, generateStream })
+  
 
   useEffect(() => {
     const handleHwpxParsed = (e: Event) => {
@@ -828,7 +836,7 @@ export function MarkdownEditor({
         />
       )}
 
-      {contextMenuState.isOpen && (
+      {contextMenuState.isOpen && createPortal(
         <div
           style={{
             position: 'fixed',
@@ -847,88 +855,146 @@ export function MarkdownEditor({
           }}
           onMouseLeave={() => setContextMenuState(prev => ({ ...prev, isOpen: false }))}
         >
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px', paddingBottom: '4px', borderBottom: '1px solid var(--border-muted)' }}>
-            블록 메뉴
+          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '4px', paddingBottom: '4px', borderBottom: '1px solid var(--border-muted)' }}>
+            클립보드
           </div>
-          
           <button
             className="bn-button"
-            style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '4px', background: 'transparent', color: 'var(--text-main)', border: 'none', cursor: 'pointer' }}
+            style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'transparent', color: 'var(--text-main)', border: 'none', cursor: 'pointer', fontSize: '12px' }}
+            onClick={() => {
+              if (contextMenuState.selectedText) {
+                navigator.clipboard.writeText(contextMenuState.selectedText)
+              }
+              setContextMenuState(prev => ({ ...prev, isOpen: false }))
+            }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+          >
+            복사
+          </button>
+          <button
+            className="bn-button"
+            style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'transparent', color: 'var(--text-main)', border: 'none', cursor: 'pointer', fontSize: '12px' }}
+            onClick={async () => {
+              try {
+                const text = await navigator.clipboard.readText()
+                if (text && editor) {
+                  const targetBlock = contextMenuState.blockId 
+                    ? editor.getBlock(contextMenuState.blockId) 
+                    : editor.getTextCursorPosition()?.block;
+                  if (targetBlock) {
+                    editor.insertBlocks([{ type: 'paragraph', content: text }], targetBlock, 'after');
+                  } else {
+                    editor.insertInlineContent([{ type: 'text', text, styles: {} as any }]);
+                  }
+                }
+              } catch (e) {
+                console.error('클립보드 권한 거부됨', e)
+                alert("클립보드 접근 권한이 거부되었습니다!\n\n주소창 좌측의 자물쇠(또는 설정) 아이콘을 눌러 '클립보드(Clipboard)' 권한을 '허용'으로 변경한 뒤 다시 시도해주세요.")
+              }
+              setContextMenuState(prev => ({ ...prev, isOpen: false }))
+            }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+          >
+            붙여넣기
+          </button>
+
+          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginTop: '6px', marginBottom: '4px', paddingBottom: '4px', borderBottom: '1px solid var(--border-muted)' }}>
+            블록 관리
+          </div>
+          <button
+            className="bn-button"
+            style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'transparent', color: 'var(--text-main)', border: 'none', cursor: 'pointer', fontSize: '12px' }}
+            onClick={() => {
+              if (contextMenuState.blockId && editor) {
+                const b = editor.getBlock(contextMenuState.blockId)
+                if (b) {
+                  let textToCopy = '';
+                  if (Array.isArray(b.content)) {
+                    textToCopy = b.content.map((c: any) => c.text || '').join('');
+                  }
+                  if (!textToCopy && hoverBlock?.id === b.id) {
+                    textToCopy = hoverBlock.text;
+                  }
+                  navigator.clipboard.writeText(textToCopy);
+                }
+              }
+              setContextMenuState(prev => ({ ...prev, isOpen: false }))
+            }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+          >
+            블록 복사
+          </button>
+          <button
+            className="bn-button"
+            style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer', fontSize: '12px' }}
             onClick={() => {
               if (contextMenuState.blockId) {
                 editor?.removeBlocks([contextMenuState.blockId as any])
               }
               setContextMenuState(prev => ({ ...prev, isOpen: false }))
             }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(239,68,68,0.1)'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
-            삭제
+            블록 삭제
           </button>
           
-          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px', marginBottom: '4px', paddingBottom: '4px', borderBottom: '1px solid var(--border-muted)' }}>
-            AI 코파일럿
+          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginTop: '6px', marginBottom: '4px', paddingBottom: '4px', borderBottom: '1px solid var(--border-muted)' }}>
+            AI 어시스턴트
           </div>
           
           {!isReady ? (
             <button
               className="bn-button"
-              style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '4px', background: 'transparent', color: '#a855f7', border: 'none', cursor: 'pointer' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'transparent', color: '#a855f7', border: 'none', cursor: isLoading ? 'default' : 'pointer', fontSize: '12px', pointerEvents: isLoading ? 'none' : 'auto' }}
               onClick={() => {
-                initModel()
+                if (!isLoading) initModel()
               }}
+              onMouseOver={(e) => { if (!isLoading) e.currentTarget.style.backgroundColor = 'rgba(168,85,247,0.1)' }}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
-              {isLoading ? '로딩 중...' : '로컬 AI 켜기'}
+              <Sparkles size={14} /> 
+              {isLoading ? `활성화 중... ${Math.round(progress * 100)}%` : 'AMEVA AI 활성화하기'}
             </button>
           ) : (
             <>
               <button
                 className="bn-button"
-                style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '4px', background: 'transparent', color: '#10b981', border: 'none', cursor: 'pointer' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'transparent', color: '#10b981', border: 'none', cursor: 'pointer', fontSize: '12px' }}
                 onClick={async () => {
                   setContextMenuState(prev => ({ ...prev, isOpen: false }))
                   const targetText = contextMenuState.selectedText || hoverBlock?.text
                   if (!targetText) return
-                  const stream = generateStream(
-                    "당신은 전문 에디터입니다. 주어진 문장의 톤을 더 프로페셔널하고 부드럽게 다듬어주세요.", 
-                    targetText
-                  )
-                  const newBlock = editor?.insertBlocks([{ type: 'paragraph', content: '' }], contextMenuState.blockId ? editor.getDocument().find(b => b.id === contextMenuState.blockId)! : editor.getTextCursorPosition().block, 'after')[0]
-                  if (newBlock) {
-                    let fullText = ""
-                    for await (const chunk of stream) {
-                      fullText += chunk
-                      editor?.updateBlock(newBlock, { content: fullText })
-                    }
-                  }
+                  await executeAction(contextMenuState.blockId, targetText, 'tone');
                 }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(16,185,129,0.1)'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
-                톤 다듬기
+                <Sparkles size={14} />
+                AMEVA AI에게 톤 다듬기 요청
               </button>
               <button
                 className="bn-button"
-                style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '4px', background: 'transparent', color: '#3b82f6', border: 'none', cursor: 'pointer' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'transparent', color: '#3b82f6', border: 'none', cursor: 'pointer', fontSize: '12px' }}
                 onClick={async () => {
                   setContextMenuState(prev => ({ ...prev, isOpen: false }))
                   const targetText = contextMenuState.selectedText || hoverBlock?.text
                   if (!targetText) return
-                  const stream = generateStream(
-                    "당신은 내용 요약 전문가입니다. 주어진 텍스트를 핵심만 3줄로 요약해주세요.", 
-                    targetText
-                  )
-                  const newBlock = editor?.insertBlocks([{ type: 'paragraph', content: '' }], contextMenuState.blockId ? editor.getDocument().find(b => b.id === contextMenuState.blockId)! : editor.getTextCursorPosition().block, 'after')[0]
-                  if (newBlock) {
-                    let fullText = ""
-                    for await (const chunk of stream) {
-                      fullText += chunk
-                      editor?.updateBlock(newBlock, { content: fullText })
-                    }
-                  }
+                  await executeAction(contextMenuState.blockId, targetText, 'summary');
                 }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(59,130,246,0.1)'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
               >
-                요약하기
+                <Sparkles size={14} />
+                AMEVA AI에게 요약 요청
               </button>
             </>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

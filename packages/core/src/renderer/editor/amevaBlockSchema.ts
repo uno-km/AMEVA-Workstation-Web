@@ -58,6 +58,7 @@ import { KanbanBlock } from '../components/KanbanBlock'
 import { InlineDocumentBlock } from '../components/InlineDocumentBlock'
 import { SmartDocsTableBlock } from '../components/SmartDocsTableBlock'
 import { ChartBlock } from '../components/ChartBlock'
+import { AiDiffBlock } from '../components/AiDiffBlock'
 
 /**
  * [CONTRACT - Root Custom Schema Configuration]
@@ -76,6 +77,7 @@ export const customSpecs = {
   inlineDocument: InlineDocumentBlock,
   smartDocsTable: SmartDocsTableBlock,
   chart: ChartBlock,
+  aiDiff: AiDiffBlock,
 }
 
 Object.entries(customSpecs).forEach(([key, value]) => {
