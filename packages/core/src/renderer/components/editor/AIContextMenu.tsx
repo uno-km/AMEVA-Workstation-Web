@@ -14,8 +14,8 @@
  * ============================================================================
  */
 
-// [외부 패키지 및 라이브러리 임포트: react]
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 // [외부 패키지 및 라이브러리 임포트: lucide-react]
 import { Sparkles } from 'lucide-react';
 // [외부 패키지 및 라이브러리 임포트: @tiptap/core]
@@ -83,10 +83,28 @@ export function AIContextMenu({
   setGhostTextEnabled,
   executeAction,
 }: AIContextMenuProps) {
-  if (!contextMenuState.isOpen) return null;
+  const menuRef = React.useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
 
-  return (
+  useEffect(() => {
+    setMounted(true);
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setContextMenuState(prev => ({ ...prev, isOpen: false }));
+      }
+    };
+    // Use capture phase so we catch the click before editor components might stop propagation
+    window.addEventListener('mousedown', handleClick, true);
+    return () => {
+      window.removeEventListener('mousedown', handleClick, true);
+    };
+  }, [setContextMenuState]);
+
+  if (!contextMenuState.isOpen || !mounted) return null;
+
+  const menuElement = (
     <div
+      ref={menuRef}
       className="context-menu"
       style={{
         position: 'fixed',
@@ -407,4 +425,6 @@ export function AIContextMenu({
       )}
     </div>
   );
+
+  return createPortal(menuElement, document.body);
 }

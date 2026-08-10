@@ -653,11 +653,11 @@ export function MenuBar({}: MenuBarProps = {}) {
 
       {/* 2. 중앙 영역: 현재 열린 파일 경로 표기 (Antigravity 스타일 대시 구분선 적용) */}
       <div className="menu-bar-center">
-        <span style={{ color: 'var(--text-dark)' }}>AMEVA Workstation</span>
-        <span style={{ color: 'var(--text-dark)', opacity: 0.6, fontSize: '10px' }}>-</span>
         <span className="file-name">
           {filePath ? filePath.split(/[/\\]/).pop() : '이름없는 문서.md'}
         </span>
+        <span style={{ color: 'var(--text-dark)', opacity: 0.5, fontSize: '11px', margin: '0 4px' }}>-</span>
+        <span style={{ color: 'var(--text-dark)' }}>AMEVA Workstation</span>
       </div>
 
       {/* 3. 우측 영역: Antigravity 레이아웃 구성 + 검색 + 브라우저열기 + 설정 + 구글계정관리 */}
@@ -714,8 +714,7 @@ export function MenuBar({}: MenuBarProps = {}) {
           <Search size={13} />
         </button>
 
-        {/* 세로 구분선 */}
-        <div style={{ width: '1px', height: '14px', backgroundColor: 'var(--border-muted)', margin: '0 2px' }} />
+        {/* 세로 구분선 생략 (Antigravity 스타일 통일) */}
 
         {/* 유틸리티 액션 그룹 (크롬 브라우저, 설정, 구글 계정 아바타) */}
         <div className="toolbar-utility-group" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '2px' }}>

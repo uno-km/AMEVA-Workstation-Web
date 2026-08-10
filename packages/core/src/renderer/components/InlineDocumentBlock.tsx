@@ -673,7 +673,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
       document.body.appendChild(overlay)
 
       const onMove = (mv: MouseEvent) => {
-        const newH = Math.min(1000, Math.max(150, startH + mv.clientY - startY))
+        const newH = Math.max(150, startH + mv.clientY - startY)
         container.style.height = newH + 'px'
         // 내부 빷어 내는 뷰어 높이도 동기화
         const viewer = container.querySelector('[data-viewer-inner]') as HTMLElement | null
@@ -683,7 +683,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
         document.body.removeChild(overlay)
         window.removeEventListener('mousemove', onMove)
         window.removeEventListener('mouseup', onUp)
-        const finalH = Math.min(1000, Math.max(150, startH + up.clientY - startY))
+        const finalH = Math.max(150, startH + up.clientY - startY)
         // React state 전혀 안 쓰고 props만 업데이트 (재렌더가 하이를 돌려준다)
         editor.updateBlock(block.id, { props: { ...props, height: finalH.toString() } })
       }
@@ -704,14 +704,14 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
       document.body.appendChild(overlay)
 
       const onMove = (mv: MouseEvent) => {
-        const newW = Math.min(window.innerWidth - 80, Math.max(300, startW + mv.clientX - startX))
+        const newW = Math.max(300, startW + mv.clientX - startX)
         container.style.width = newW + 'px'
       }
       const onUp = (up: MouseEvent) => {
         document.body.removeChild(overlay)
         window.removeEventListener('mousemove', onMove)
         window.removeEventListener('mouseup', onUp)
-        const finalW = Math.min(window.innerWidth - 80, Math.max(300, startW + up.clientX - startX))
+        const finalW = Math.max(300, startW + up.clientX - startX)
         editor.updateBlock(block.id, { props: { ...props, width: finalW.toString() } })
       }
       window.addEventListener('mousemove', onMove)

@@ -51,6 +51,9 @@
 
 /* 중앙 현재 열려 있는 파일명 영역 */
 .menu-bar-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -63,10 +66,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   background: transparent;
-  padding: 0;
-  border-radius: 0;
-  border: none;
-  cursor: default;
+  pointer-events: none;
 }
 
 .menu-bar-center .file-name {
@@ -78,7 +78,7 @@
 .menu-bar-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   padding-right: 130px; /* Windows 창 제어 오버레이(최소화/최대화/닫기) 영역 회피를 위한 여백 */
   -webkit-app-region: no-drag; /* 클릭 동작 허용 */
 }
@@ -87,19 +87,15 @@
 .layout-btn-group {
   display: flex;
   align-items: center;
-  gap: 4px;
-  background: var(--bg-glass-subtle);
-  padding: 2px;
-  border-radius: 6px;
-  border: 1px solid var(--border-muted);
+  gap: 2px;
 }
 
 .layout-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: 4px;
   background: transparent;
   border: none;
@@ -109,12 +105,11 @@
 }
 
 .layout-btn:hover {
-  background: var(--bg-glass-active);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--text-main);
 }
 
 .layout-btn.active {
-  background: var(--primary-glow);
   color: var(--primary);
 }
 

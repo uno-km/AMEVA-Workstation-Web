@@ -61,9 +61,17 @@ Example 1:
 
   createTranslationPrompt(targetLang: string, contextText?: string): string {
     const contextSection = contextText ? `\n[BACKGROUND CONTEXT]\n${contextText}\n` : '';
-    const isTargetKorean = targetLang.includes('한국어') || targetLang.includes('Korean');
-    const exampleTarget = isTargetKorean ? '안녕하세요.' : 'Hello.';
-    const exampleSource = isTargetKorean ? 'Hello.' : '안녕하세요.';
+    let exampleTarget = 'Hello.';
+    let exampleSource = '안녕하세요.';
+    
+    if (targetLang.includes('한국어') || targetLang.includes('Korean')) {
+       exampleSource = 'Hello.';
+       exampleTarget = '안녕하세요.';
+    } else if (targetLang.includes('중국어') || targetLang.includes('中文') || targetLang.includes('Chinese')) {
+       exampleTarget = '你好。';
+    } else if (targetLang.includes('일본어') || targetLang.includes('日本語') || targetLang.includes('Japanese')) {
+       exampleTarget = 'こんにちは。';
+    }
 
     return `You are an expert translator. You do not converse. You strictly translate text into the requested language.${contextSection}
 TASK: Translate the [TARGET TEXT] into ${targetLang}. Ensure the translation is natural, culturally appropriate, and highly accurate.

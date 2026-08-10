@@ -106,7 +106,11 @@ export function convertJupyterToCodeBlocks(blocks: any[]): any[] {
         legend: copy.props?.legend || '',
         memo: copy.props?.memo || '',
         routeType: copy.props?.routeType || 'none',
-        routingEngine: copy.props?.routingEngine || 'osrm'
+        routingEngine: copy.props?.routingEngine || 'osrm',
+        mapMode: copy.props?.mapMode || 'pin',
+        useUserLocation: copy.props?.useUserLocation || 'false',
+        pins: copy.props?.pins || '[]',
+        routes: copy.props?.routes || '[]'
       })
       copy.content = [{ type: 'text', text: `// [AMEVA_LANG:ameva-map]\n${mapData}`, styles: {} }]
       copy.props = {
@@ -445,7 +449,11 @@ export function cleanCodeBlocks(blocks: any[]) {
             legend: parsed.legend || '',
             memo: parsed.memo || '',
             routeType: parsed.routeType || 'none',
-            routingEngine: parsed.routingEngine || 'osrm'
+            routingEngine: parsed.routingEngine || 'osrm',
+            mapMode: parsed.mapMode || 'pin',
+            useUserLocation: parsed.useUserLocation || 'false',
+            pins: parsed.pins || '[]',
+            routes: parsed.routes || '[]'
           }
         } catch (err) {
           console.error('[cleanCodeBlocks] Failed to parse ameva-map json:', err)

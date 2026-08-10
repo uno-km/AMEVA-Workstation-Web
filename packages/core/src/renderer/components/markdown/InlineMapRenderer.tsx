@@ -3,34 +3,26 @@
  * @file InlineMapRenderer.tsx
  * @description InlineMapRenderer.tsx 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
  * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
- * @example
- * // 예시 로직 (자동 생성됨)
- * import { something } from './InlineMapRenderer';
  * 
- * @created 2026-08-10 20:30:36
- * @updated 2026-08-10 20:30:36
- * @author uno-km
- * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * [책임 범위 - RESPONSIBILITY]
+ * - 본 파일은 AMEVA 시스템 내에서 도메인 목적에 부합하는 연산 및 데이터 처리 흐름을 안전하게 캡슐화한다.
+ * - 외부 라이브러리 및 하위 종속성을 조율하고 결과 규격을 일관되게 제공한다.
  * ============================================================================
  */
 
-/**
- * @file InlineMapRenderer.tsx
- * @system AMEVA OS Desktop Workstation
- * @location src/renderer/components/markdown/InlineMapRenderer.tsx
- * @role Core module helper and integration logic
- * 
- * [소비처 - CONSUMERS / USAGE CONTEXT]
- * - 소비처 A (src/renderer/components/MarkdownPreview.tsx): 마크다운 파싱 시 ameva-map 인라인 세그먼트 전용 지도 렌더러로 소비.
- */
-
-// [외부 패키지 및 라이브러리 임포트: react]
+// [외부 패키지 및 라이브러리 임포트]
 import React from 'react'
+import { MapPin } from 'lucide-react'
+
+// [내부 프로젝트 의존성 모듈 임포트]
+import { AmevaMapViewer } from '../map/AmevaMapViewer'
+import type { MapPinData } from '../map/AmevaMapViewer'
 
   /*
    * [FUNCTION CONTRACT]
    * - 함수 명: `InlineMapRenderer`
-   * - 역할: ameva-map 마크다운 코드블록의 JSON 데이터를 파싱하여 OpenStreetMap 프레임과 메모, 범례 등을 조합해 반응형 지도로 렌더링함.
+   * - 역할: ameva-map 마크다운 코드블록의 JSON 데이터를 파싱하여 AmevaMapViewer 프레임과 메모, 범례 등을 조합해 반응형 지도로 렌더링함.
+   * - 예외 처리: 잘못된 JSON 포맷인 경우 에러 문구를 포함한 <div>를 렌더링.
    */
 /**
  * InlineMapRenderer 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
@@ -40,7 +32,7 @@ export function InlineMapRenderer({ code }: { code: string }) {
   /*
    * [RUN-TIME STATE / INVARIANT]
    * - 변수 명: `data`
-   * - 자료형 / 예상 값: { lat, lng, destLat, destLng, zoom, locationName, destination, legend, memo, routeType, routingEngine }
+   * - 자료형 / 예상 값: { lat, lng, destLat, destLng, zoom, locationName, destination, legend, memo, mapMode, pins, useUserLocation }
    * - 시나리오: JSON 파싱된 지도 설정 객체 데이터 획득.
    */
   let data: any = null
@@ -53,50 +45,19 @@ export function InlineMapRenderer({ code }: { code: string }) {
 
   const lat = parseFloat(data.lat) || 37.5665
   const lng = parseFloat(data.lng) || 126.9780
-  const destLat = data.destLat ? parseFloat(data.destLat) : null
-  const destLng = data.destLng ? parseFloat(data.destLng) : null
+  const destLat = data.destLat ? parseFloat(data.destLat) : undefined
+  const destLng = data.destLng ? parseFloat(data.destLng) : undefined
   const zoom = parseInt(data.zoom, 10) || 14
   const locationName = data.locationName || '서울시'
   const destination = data.destination || ''
   const legend = data.legend || ''
   const memo = data.memo || ''
-  const routeType = data.routeType || 'none'
-  const routingEngine = data.routingEngine || 'osrm'
   
-  /*
-   * [RUN-TIME STATE / INVARIANT]
-   * - 변수 명: `mapSrc`
-   * - 자료형 / 예상 값: string
-   * - 시나리오: 경로 설정 여부에 따라 OSM의 단일 마커 지도 소스 혹은 방향 경로 안내 페이지 소스를 분기 구성함.
-   */
-  let mapSrc = ''
-  
-  /*
-   * [ALGORITHM BRANCH / DECISION]
-   * - 조건 식: `destLat !== null && destLng !== null && !isNaN(destLat) && !isNaN(destLng)`
-   * - 만족 시: 출발지와 목적지 경로 탐색 소스를 빌드.
-   * - 불만족 시: 단일 마커 지도 좌표 bbox 소스를 빌드.
-   */
-  if (destLat !== null && destLng !== null && !isNaN(destLat) && !isNaN(destLng)) {
-    let engineParam = 'fossgis_osrm_car'
-    /*
-     * [ALGORITHM BRANCH / DECISION]
-     * - 조건 식: `routingEngine` 엔진 타입 및 `routeType` 이동 수단 판별
-     * - 만족 분기: osrm, graphhopper, valhalla 각 수단별 파라미터 세팅.
-     */
-    if (routingEngine === 'osrm') {
-      engineParam = routeType === 'car' ? 'fossgis_osrm_car' : routeType === 'bicycle' ? 'fossgis_osrm_bike' : 'fossgis_osrm_foot'
-    } else if (routingEngine === 'graphhopper') {
-      engineParam = routeType === 'car' ? 'graphhopper_car' : routeType === 'bicycle' ? 'graphhopper_bicycle' : 'graphhopper_foot'
-    } else if (routingEngine === 'valhalla') {
-      engineParam = routeType === 'car' ? 'valhalla_car' : routeType === 'bicycle' ? 'valhalla_bicycle' : 'valhalla_foot'
-    }
-    mapSrc = 'https://www.openstreetmap.org/directions?engine=' + engineParam + '&route=' + lat + ',' + lng + ';' + destLat + ',' + destLng
-  } else {
-    const delta = Math.max(0.001, 0.5 / Math.pow(2, zoom - 10))
-    const bbox = `${lng - delta},${lat - delta},${lng + delta},${lat + delta}`
-    mapSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`
-  }
+  // 고도화 필드 파싱
+  const mapMode = data.mapMode || 'pin'
+  const pins: MapPinData[] = typeof data.pins === 'string' ? JSON.parse(data.pins || '[]') : (data.pins || [])
+  const routes = typeof data.routes === 'string' ? JSON.parse(data.routes || '[]') : (data.routes || [])
+  const useUserLocation = data.useUserLocation === 'true'
 
   return (
     <div style={{
@@ -122,8 +83,8 @@ export function InlineMapRenderer({ code }: { code: string }) {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '12px', color: '#10b981' }}>📍</span>
-            {destination ? (
+            <span style={{ fontSize: '12px', color: '#10b981' }}><MapPin size={14} /></span>
+            {destination && mapMode === 'route' ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11.5px', fontWeight: 'bold', color: '#f8fafc' }}>
                 <span style={{ color: '#38bdf8' }}>[출발]</span> {locationName}
                 <span style={{ color: 'var(--text-muted)', fontWeight: 'normal' }}>➔</span>
@@ -155,27 +116,20 @@ export function InlineMapRenderer({ code }: { code: string }) {
           </div>
         )}
       </div>
-      {/* 지도 */}
-      <div style={{ height: '480px', width: '100%', position: 'relative', overflow: 'hidden' }}>
-        <iframe
-          src={mapSrc}
-          width="100%"
-          height="100%"
-          frameBorder="0"
-          style={{
-            position: 'absolute',
-            top: '-50px',
-            left: 0,
-            width: '100%',
-            height: 'calc(100% + 50px)',
-            border: 0,
-            filter: 'invert(0.9) hue-rotate(180deg)'
-          }}
-          allowFullScreen
-          loading="lazy"
-          title={`지도: ${locationName}`}
-        />
-      </div>
+      
+      {/* 지도 렌더러 영역 */}
+      <AmevaMapViewer
+        mapMode={mapMode}
+        pins={pins}
+        routes={routes}
+        startLat={lat}
+        startLng={lng}
+        destLat={destLat}
+        destLng={destLng}
+        useUserLocation={useUserLocation}
+        zoom={zoom}
+      />
+
       {/* 메모 */}
       {memo && (
         <div style={{

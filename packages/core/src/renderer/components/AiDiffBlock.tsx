@@ -33,12 +33,13 @@ export const AiDiffBlockSpec = createReactBlockSpec(
       originalText: { default: '' },
       suggestedText: { default: '' },
       mode: { default: 'tone' }, // 'tone' | 'summary' | 'translate'
+      targetLang: { default: '' },
     },
     content: 'none'
   },
   {
     render: (props) => {
-      const { originalBlockJson, originalText, suggestedText, mode } = props.block.props
+      const { originalBlockJson, originalText, suggestedText, mode, targetLang } = props.block.props
       
       const handleAccept = () => {
         // Replace this block with a standard paragraph containing suggestedText
@@ -86,7 +87,7 @@ export const AiDiffBlockSpec = createReactBlockSpec(
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#a855f7', fontSize: '11px', fontWeight: 600 }}>
             <Sparkles size={12} />
-            {mode === 'tone' ? 'AMEVA AI 톤 다듬기 제안' : mode === 'translate' ? 'AMEVA AI 번역 제안' : 'AMEVA AI 요약 제안'}
+            {mode === 'tone' ? 'AMEVA AI 톤 다듬기 제안' : mode === 'translate' ? `AMEVA AI 번역 제안${targetLang ? ` (${targetLang})` : ''}` : 'AMEVA AI 요약 제안'}
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>

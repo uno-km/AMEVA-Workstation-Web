@@ -36,7 +36,7 @@
 // [외부 패키지 및 라이브러리 임포트: react]
 import { useState, useEffect } from 'react'
 // [외부 패키지 및 라이브러리 임포트: lucide-react]
-import { Settings, Sliders, Monitor, Move, ToyBrick, User, Shield, Keyboard, ShieldAlert, Key } from 'lucide-react'
+import { Settings, Sliders, Monitor, Move, ToyBrick, User, Shield, Keyboard, ShieldAlert, Key, Cpu } from 'lucide-react'
 // [내부 프로젝트 의존성 모듈 임포트: ../services/ipc/electronApiAdapter]
 import * as ipc from '../services/ipc/electronApiAdapter'
 // [내부 프로젝트 의존성 모듈 임포트: ./ui/modals/FreeModal]

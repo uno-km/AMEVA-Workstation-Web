@@ -121,40 +121,33 @@ export function useEditorPaste(
       }
       editor.insertBlocks([newBlock as any], editor.getTextCursorPosition().block, 'after')
 
-      // 2) 백그라운드 OpenGraph Fetch 시도 (CORS 프록시 우회 사용)
+      // 2) 백그라운드 OpenGraph Fetch 시도 (CORS 프록시 폴백 로직 적용)
       try {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `res`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const res = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(text)}`)
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `res.ok`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (res.ok)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-        if (res.ok) {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `data`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const data = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-          const data = await res.json()
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `html`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const html = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-          const html = data.contents
+        const proxies = [
+          `https://api.allorigins.win/get?url=${encodeURIComponent(text)}`,
+          `https://corsproxy.io/?${encodeURIComponent(text)}`,
+          `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(text)}`
+        ];
+
+        let html = '';
+        for (const proxyUrl of proxies) {
+          try {
+            const res = await fetch(proxyUrl)
+            if (res.ok) {
+              if (proxyUrl.includes('allorigins')) {
+                const data = await res.json()
+                html = data.contents || ''
+              } else {
+                html = await res.text()
+              }
+              if (html) break;
+            }
+          } catch (e) {
+            console.warn(`[CORS Proxy] Failed to fetch from ${proxyUrl}:`, e)
+          }
+        }
+
+        if (html) {
           
           // HTML 마크업 내부의 title 및 OpenGraph 메타 태그 정규식 매칭 추출
           const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)

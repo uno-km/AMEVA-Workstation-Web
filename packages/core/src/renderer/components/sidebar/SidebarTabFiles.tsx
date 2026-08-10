@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ============================================================================
  * @file SidebarTabFiles.tsx
  * @description SidebarTabFiles.tsx 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
@@ -228,7 +228,7 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
           <button
             className={`btn btn-glass ${editorMode === 'edit' ? 'active' : ''}`}
-            style={{ flex: '1 1 0', fontSize: '11px', padding: '7px 6px', minWidth: '70px', justifyContent: 'center' }}
+            style={{ flex: '1 1 0', fontSize: '11px', padding: '7px 6px', minWidth: '70px', justifyContent: 'center', whiteSpace: 'nowrap' }}
             onClick={() => handleSwitchMode('edit')}
             title={`에디터 모드 전환 (${formatHotkey(hkeys.toggleMode)})`}
           >
@@ -236,7 +236,7 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
           </button>
           <button
             className={`btn btn-glass ${editorMode === 'preview' ? 'active' : ''}`}
-            style={{ flex: '1 1 0', fontSize: '11px', padding: '7px 6px', minWidth: '70px', justifyContent: 'center' }}
+            style={{ flex: '1 1 0', fontSize: '11px', padding: '7px 6px', minWidth: '70px', justifyContent: 'center', whiteSpace: 'nowrap' }}
             onClick={() => handleSwitchMode('preview')}
             title={`미리보기 모드 전환 (${formatHotkey(hkeys.toggleMode)})`}
           >
@@ -244,7 +244,7 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
           </button>
           <button
             className={`btn btn-glass ${editorMode === 'raw' ? 'active' : ''}`}
-            style={{ flex: '1 1 0', fontSize: '11px', padding: '7px 6px', minWidth: '70px', justifyContent: 'center' }}
+            style={{ flex: '1 1 0', fontSize: '11px', padding: '7px 6px', minWidth: '70px', justifyContent: 'center', whiteSpace: 'nowrap' }}
             onClick={() => handleSwitchMode('raw')}
             title={`원문(Markdown) 보기`}
           >
@@ -298,7 +298,24 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
           </button>
           <button
             className="btn btn-primary"
-            style={{ justifyContent: 'flex-start', fontSize: '13px' }}
+            style={{ 
+              justifyContent: 'flex-start', 
+              fontSize: '13px',
+              fontWeight: 'bold',
+              background: 'linear-gradient(135deg, var(--brand-primary, #3b82f6) 0%, var(--brand-secondary, #2563eb) 100%)',
+              color: '#ffffff',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              boxShadow: '0 2px 10px rgba(59, 130, 246, 0.3)',
+              textShadow: '0 1px 2px rgba(0,0,0,0.2)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-1px)'
+              e.currentTarget.style.boxShadow = '0 4px 15px rgba(59, 130, 246, 0.4)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'none'
+              e.currentTarget.style.boxShadow = '0 2px 10px rgba(59, 130, 246, 0.3)'
+            }}
             onClick={onSaveFile}
             title={`문서 파일 저장 (${formatHotkey(hkeys.save)})`}
           >

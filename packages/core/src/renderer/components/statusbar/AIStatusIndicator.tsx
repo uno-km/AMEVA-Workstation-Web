@@ -17,7 +17,7 @@
 // [외부 패키지 및 라이브러리 임포트: react]
 import React, { useState, useEffect, useRef } from 'react'
 // [외부 패키지 및 라이브러리 임포트: lucide-react]
-import { Bot, Play, Square, Cpu, Clock, Activity, Sparkles } from 'lucide-react'
+import { Bot, Play, Square, Cpu, Clock, Activity, Sparkles, Info } from 'lucide-react'
 // [내부 프로젝트 의존성 모듈 임포트: ../useWebLLM]
 import { useWebLLM } from '../useWebLLM'
 
@@ -160,12 +160,18 @@ export function AIStatusIndicator({
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={12}/>세션 유지 시간</span>
+              <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }} title="AI 엔진이 활성화된 후 경과된 시간입니다. (현재는 UI 시연용 더미 데이터입니다)">
+                <Clock size={12}/>세션 유지 시간
+                <Info size={12} style={{ cursor: 'help', opacity: 0.7 }} />
+              </span>
               <span style={{ fontWeight: 600, color: '#e2e8f0' }}>{isReady ? sessionTime : '-'}</span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}><Activity size={12}/>평균 처리량</span>
+              <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }} title="초당 토큰 생성 속도(Tokens per second)입니다. (현재는 UI 시연용 더미 데이터입니다)">
+                <Activity size={12}/>평균 처리량
+                <Info size={12} style={{ cursor: 'help', opacity: 0.7 }} />
+              </span>
               <span style={{ fontWeight: 600, color: '#e2e8f0' }}>{isReady ? avgTokens : '-'}</span>
             </div>
           </div>

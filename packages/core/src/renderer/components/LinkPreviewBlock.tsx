@@ -38,7 +38,7 @@ import React, { useState } from 'react'
 // [외부 패키지 및 라이브러리 임포트: @blocknote/react]
 import { createReactBlockSpec } from '@blocknote/react'
 // [외부 패키지 및 라이브러리 임포트: lucide-react]
-import { Globe } from 'lucide-react'
+import { Globe, ChevronDown, ChevronRight } from 'lucide-react'
 
 /*
  * [소비처 - CONSUMERS / USAGE CONTEXT]
@@ -48,8 +48,20 @@ import { Globe } from 'lucide-react'
  * LinkPreviewComponent 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
  * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
-function LinkPreviewComponent({ block }: { block: any }) {
-  const { url, title, description, thumbnail } = block.props
+function LinkPreviewComponent({ block, editor }: { block: any, editor: any }) {
+  const { url, title, description, thumbnail, width, height, memo, isMemoFolded } = block.props
+
+  const handleMemoBlur = (newMemo: string) => {
+    if (editor) {
+      editor.updateBlock(block, { props: { ...block.props, memo: newMemo } })
+    }
+  }
+
+  const toggleMemoFold = () => {
+    if (editor) {
+      editor.updateBlock(block, { props: { ...block.props, isMemoFolded: !isMemoFolded } })
+    }
+  }
   
   /*
    * [RUN-TIME STATE / INVARIANT]
@@ -79,9 +91,18 @@ function LinkPreviewComponent({ block }: { block: any }) {
 
   return (
     <div
-      className="bn-block-content-wrapper"
+      className="bn-block-content-wrapper ameva-resizable-block"
+      onMouseUp={(e) => {
+        const el = e.currentTarget
+        if (el.style.width && el.style.width !== width) editor.updateBlock(block, { props: { ...block.props, width: el.style.width } })
+        if (el.style.height && el.style.height !== height) editor.updateBlock(block, { props: { ...block.props, height: el.style.height } })
+      }}
       style={{
-        width: '100%',
+        width: width || '100%',
+        height: height || '120px',
+        minWidth: '200px',
+        minHeight: '80px',
+        resize: 'both',
         backgroundColor: 'rgba(30, 30, 40, 0.45)',
         backdropFilter: 'blur(12px)',
         border: '1px solid var(--border-muted)',
@@ -89,10 +110,11 @@ function LinkPreviewComponent({ block }: { block: any }) {
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+        transition: 'box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
         marginBottom: '12px',
         userSelect: 'none',
         boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+        position: 'relative'
       }}
     >
       {/* 카드 정보 영역 */}
@@ -257,6 +279,57 @@ function LinkPreviewComponent({ block }: { block: any }) {
           />
         </div>
       )}
+      
+      {/* [NEW] 사용자 메모 영역 */}
+      <div style={{
+        padding: '10px 14px',
+        borderTop: '1px solid var(--border-muted)',
+        background: 'rgba(255,255,255,0.01)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '6px',
+        cursor: 'default'
+      }}
+      onMouseDown={(e) => e.stopPropagation()}
+      >
+        <div 
+          style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+          onClick={toggleMemoFold}
+        >
+          {isMemoFolded ? <ChevronRight size={14} color="var(--text-main)" /> : <ChevronDown size={14} color="var(--text-main)" />}
+          <span style={{ fontSize: '10.5px', fontWeight: 'bold', color: 'var(--text-main)' }}>📝 사용자 메모</span>
+          {!isMemoFolded && <span style={{ fontSize: '8.5px', color: 'var(--text-muted)' }}>(입력 후 다른 곳을 클릭하면 본문에 영구 저장됩니다)</span>}
+        </div>
+        
+        {!isMemoFolded && (
+          editor.isEditable ? (
+            <textarea
+              defaultValue={memo}
+              onBlur={e => handleMemoBlur(e.target.value)}
+              placeholder="이 웹사이트에 관한 중요한 메모를 남기세요..."
+              style={{
+                width: '100%', minHeight: '45px', padding: '6px 10px', borderRadius: '6px',
+                background: 'var(--bg-glass)', border: '1px solid var(--border-muted)',
+                color: 'var(--text-main)', fontSize: '11px', lineHeight: '1.4',
+                resize: 'vertical', outline: 'none', cursor: 'text'
+              }}
+            />
+          ) : memo ? (
+            <div style={{
+              width: '100%', padding: '8px 12px', borderRadius: '6px',
+              background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)',
+              color: 'var(--text-main)', fontSize: '11px', lineHeight: '1.5',
+              whiteSpace: 'pre-wrap', textAlign: 'left'
+            }}>
+              {memo}
+            </div>
+          ) : (
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic', textAlign: 'left' }}>
+              남겨진 메모가 없습니다.
+            </div>
+          )
+        )}
+      </div>
     </div>
   )
 }
@@ -278,13 +351,17 @@ export const LinkPreviewBlockSpec = createReactBlockSpec(
       url: { default: '' },
       title: { default: 'Loading preview...' },
       description: { default: '' },
-      thumbnail: { default: '' }
+      thumbnail: { default: '' },
+      width: { default: '100%' },
+      height: { default: '120px' },
+      memo: { default: '' },
+      isMemoFolded: { default: false }
     },
     content: 'none'
   },
   {
-    render: ({ block }) => {
-      return <LinkPreviewComponent block={block} />
+    render: ({ block, editor }) => {
+      return <LinkPreviewComponent block={block} editor={editor} />
     }
   }
 )

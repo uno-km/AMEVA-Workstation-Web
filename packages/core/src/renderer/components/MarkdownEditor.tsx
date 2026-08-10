@@ -565,7 +565,7 @@ export function MarkdownEditor({
         onPasteCapture={onPasteCapture}
         onContextMenu={handleContextMenu}
         className={!wordWrap ? 'wrap-disabled' : ''}
-        style={{ flex: 1, overflowY: 'auto', padding: '40px 60px 45vh 60px', position: 'relative' }}
+        style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: `40px 60px ${editorMode === 'raw' ? '40px' : '45vh'} 60px`, position: 'relative' }}
       >
         <PeerBlockHighlightLayer peers={peers} containerRef={editorContainerRef} />
 
@@ -804,7 +804,7 @@ export function MarkdownEditor({
           /* RAW 마크다운 원문 텍스트 영역 직접 편집 뷰 */
           <div style={{
             width: '100%',
-            height: '100%',
+            flex: 1,
             display: 'flex',
             flexDirection: 'column',
             padding: '16px 24px',
@@ -816,8 +816,7 @@ export function MarkdownEditor({
               placeholder="여기에 마크다운 원문이 표시됩니다. 직접 수정할 수도 있습니다."
               style={{
                 width: '100%',
-                height: 'calc(100vh - 120px)',
-                minHeight: '400px',
+                flex: 1,
                 background: 'rgba(5, 5, 10, 0.4)',
                 border: '1px solid var(--border-muted)',
                 borderRadius: '8px',
@@ -883,3 +882,4 @@ export function MarkdownEditor({
 export { PeerBlockHighlightLayer } from './editor/PeerBlockHighlightLayer'
 export { getCustomSlashMenuItems } from './editor/customSlashMenuItems'
 export { WelcomeBanner } from './editor/WelcomeBanner'
+

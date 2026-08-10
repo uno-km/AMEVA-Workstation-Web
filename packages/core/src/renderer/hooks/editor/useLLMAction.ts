@@ -81,7 +81,7 @@ export function useLLMAction({ editor, activeModelId, generateStream, taggedBloc
     // Initial placeholder block
     editor.updateBlock(targetBlock.id, { 
       type: 'aiDiff', 
-      props: { originalBlockJson, originalText, suggestedText: '', mode } as any 
+      props: { originalBlockJson, originalText, suggestedText: '', mode, targetLang: targetLang || '' } as any 
     });
 
     let fullText = "";
@@ -92,7 +92,7 @@ export function useLLMAction({ editor, activeModelId, generateStream, taggedBloc
       const displayContent = parser.parseStream(fullText);
 
       editor.updateBlock(targetBlock.id, { 
-        props: { originalBlockJson, originalText, mode, suggestedText: displayContent } as any 
+        props: { originalBlockJson, originalText, mode, targetLang: targetLang || '', suggestedText: displayContent } as any 
       });
     }
   }, [editor, activeModelId, generateStream, parser, taggedBlocks]);

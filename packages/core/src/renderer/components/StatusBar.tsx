@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ============================================================================
  * @file StatusBar.tsx
  * @description StatusBar.tsx 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
@@ -223,13 +223,13 @@ export function StatusBar({}: StatusBarProps = {}) {
     <div
       className="glass-panel"
       style={{
-        height: '28px',
+        height: '24px',
         width: '100%',
         borderTop: '1px solid var(--border-muted)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 16px',
+        padding: '0 12px', fontSize: '11px',
         backgroundColor: 'var(--bg-main)',
         color: 'var(--text-main)',
         zIndex: 101,

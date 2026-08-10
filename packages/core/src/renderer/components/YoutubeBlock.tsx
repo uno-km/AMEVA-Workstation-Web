@@ -41,11 +41,11 @@
  * - AmevaBlock, AmevaEditor: 에디터 스펙과 데이터 계약을 준수하기 위한 타입 정의를 임포트.
  */
 // [외부 패키지 및 라이브러리 임포트: react]
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 // [외부 패키지 및 라이브러리 임포트: @blocknote/react]
 import { createReactBlockSpec } from '@blocknote/react'
 // [외부 패키지 및 라이브러리 임포트: lucide-react]
-import { Video, Play, ExternalLink } from 'lucide-react'
+import { Video, Play, ExternalLink, ChevronDown, ChevronRight } from 'lucide-react'
 // [내부 프로젝트 의존성 모듈 임포트: ../editor/amevaBlockSchema]
 import { type AmevaBlock, type AmevaEditor } from '../editor/amevaBlockSchema'
 
@@ -77,7 +77,63 @@ export const YoutubeBlockComponent = ({ block, editor }: YoutubeBlockComponentPr
     description: string
     thumbnail: string
   }
-  const { videoId, url, title, description, thumbnail } = props
+  const { videoId, url, title, description, thumbnail, width, height, memo, timeline, isTimelineFolded, isMemoFolded } = props
+
+  const handleMemoBlur = (newMemo: string) => {
+    editor.updateBlock(block, { props: { ...props, memo: newMemo } })
+  }
+
+  const toggleTimelineFold = () => {
+    editor.updateBlock(block, { props: { ...props, isTimelineFolded: !isTimelineFolded } })
+  }
+
+  const toggleMemoFold = () => {
+    editor.updateBlock(block, { props: { ...props, isMemoFolded: !isMemoFolded } })
+  }
+
+  // 타임라인 추가 함수
+  const [timelineInputTime, setTimelineInputTime] = useState('')
+  const [timelineInputNote, setTimelineInputNote] = useState('')
+
+  const handleAddTimeline = () => {
+    if (!timelineInputTime) return
+    let currentTimeline = []
+    try { 
+      currentTimeline = typeof timeline === 'string' ? JSON.parse(timeline || '[]') : (timeline || [])
+    } catch (e) {}
+    const newTimeline = [...currentTimeline, { time: timelineInputTime, note: timelineInputNote }]
+    // 시간순 정렬
+    newTimeline.sort((a, b) => {
+      const aSec = a.time.split(':').reduce((acc, time) => (60 * acc) + +time, 0)
+      const bSec = b.time.split(':').reduce((acc, time) => (60 * acc) + +time, 0)
+      return aSec - bSec
+    })
+    editor.updateBlock(block, { props: { ...props, timeline: JSON.stringify(newTimeline) } })
+    setTimelineInputTime('')
+    setTimelineInputNote('')
+  }
+
+  // 타임라인 클릭 이벤트 (postMessage로 seekTo 호출)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const handleSeek = (timeStr: string) => {
+    if (!iframeRef.current || !iframeRef.current.contentWindow) return
+    // "03:00" -> 180초 계산
+    const seconds = timeStr.split(':').reduce((acc, time) => (60 * acc) + +time, 0)
+    iframeRef.current.contentWindow.postMessage(JSON.stringify({
+      event: 'command',
+      func: 'seekTo',
+      args: [seconds, true]
+    }), '*')
+  }
+
+  const handleDeleteTimeline = (index: number) => {
+    let currentTimeline: any[] = []
+    try { 
+      currentTimeline = typeof timeline === 'string' ? JSON.parse(timeline || '[]') : (timeline || [])
+    } catch (e) {}
+    currentTimeline.splice(index, 1)
+    editor.updateBlock(block, { props: { ...props, timeline: JSON.stringify(currentTimeline) } })
+  }
 
   /*
    * [RUN-TIME STATE / INVARIANT]
@@ -94,6 +150,55 @@ export const YoutubeBlockComponent = ({ block, editor }: YoutubeBlockComponentPr
    * - 시나리오: 사용자가 재생 버튼 오버레이를 클릭하면 true로 상태 전이되어 유튜브 iframe을 렌더링함.
    */
   const [isPlaying, setIsPlaying] = useState(isViewMode)
+
+  // 유튜브 IFrame API 연동 (현재 재생 시간 및 전체 길이 획득)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent) => {
+      try {
+        const data = JSON.parse(e.data)
+        if (data.event === 'infoDelivery' && data.info) {
+          if (data.info.currentTime !== undefined) setCurrentTime(data.info.currentTime)
+          if (data.info.duration !== undefined) setDuration(data.info.duration)
+        }
+      } catch (err) {}
+    }
+    window.addEventListener('message', handleMessage)
+    
+    // IFrame에 infoDelivery 이벤트를 쏘라고 반복 요청 (listening 모드 활성화)
+    // isPlaying과 상관없이 한 번 로드된 iframe은 항상 리스닝하게 만듦
+    const interval = setInterval(() => {
+      if (iframeRef.current?.contentWindow) {
+        iframeRef.current.contentWindow.postMessage(JSON.stringify({event: 'listening'}), '*')
+      }
+    }, 1000)
+
+    return () => {
+      window.removeEventListener('message', handleMessage)
+      clearInterval(interval)
+    }
+  }, [])
+
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sec = parseInt(e.target.value)
+    setCurrentTime(sec)
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(JSON.stringify({
+        event: 'command',
+        func: 'seekTo',
+        args: [sec, true]
+      }), '*')
+    }
+  }
+
+  const handleFetchCurrent = () => {
+    const sec = Math.floor(currentTime)
+    const m = Math.floor(sec / 60).toString().padStart(2, '0')
+    const s = (sec % 60).toString().padStart(2, '0')
+    setTimelineInputTime(`${m}:${s}`)
+  }
 
   /*
    * [RUN-TIME STATE / INVARIANT]
@@ -166,11 +271,30 @@ export const YoutubeBlockComponent = ({ block, editor }: YoutubeBlockComponentPr
 
   return (
     <div
-      className="bn-block-content-wrapper"
+      className="bn-block-content-wrapper ameva-resizable-block"
+      onMouseUp={(e) => {
+        const el = e.currentTarget
+        if (el.style.width && el.style.width !== width) editor.updateBlock(block, { props: { ...props, width: el.style.width } })
+        if (el.style.height && el.style.height !== height) editor.updateBlock(block, { props: { ...props, height: el.style.height } })
+      }}
       style={{
-        width: '100%', backgroundColor: '#18181c', border: '1px solid var(--border-muted)',
-        borderRadius: '12px', overflow: 'hidden', display: 'flex', flexDirection: 'column', marginBottom: '12px',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+        width: width || '100%',
+        height: height || '315px',
+        minWidth: '200px',
+        minHeight: '120px',
+        resize: 'both',
+        position: 'relative',
+        backgroundColor: 'rgba(30, 30, 40, 0.45)',
+        backdropFilter: 'blur(12px)',
+        border: '1px solid var(--border-muted)',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        marginBottom: '12px',
+        userSelect: 'none',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+        transition: 'box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
     >
       {/* 헤더 바 */}
@@ -187,7 +311,7 @@ export const YoutubeBlockComponent = ({ block, editor }: YoutubeBlockComponentPr
         </a>
       </div>
 
-      <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', backgroundColor: '#000' }}>
+      <div style={{ position: 'relative', width: '100%', flex: 1, backgroundColor: '#000' }}>
         {/*
          * [ALGORITHM BRANCH / DECISION]
          * - 조건 식: !isPlaying
@@ -223,6 +347,7 @@ export const YoutubeBlockComponent = ({ block, editor }: YoutubeBlockComponentPr
           </div>
         ) : (
           <iframe
+            ref={iframeRef}
             /*
              * [FIX-YOUTUBE-001] youtube-nocookie.com 도메인 사용으로 Electron 내 X-Frame-Options 차단 우회.
              * - 기존 youtube.com/embed 은 Electron WebView 보안 정책에 의해 재생이 차단된다.
@@ -230,7 +355,7 @@ export const YoutubeBlockComponent = ({ block, editor }: YoutubeBlockComponentPr
              * - autoplay=1&mute=1: 클릭 시 즉시 자동재생, 브라우저 autoplay 정책 회피를 위해 mute=1로 시작.
              * - sandbox 속성은 명시하지 않아야 allow-scripts가 동작한다.
              */
-            src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
+            src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
             title="YouTube video player"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
@@ -238,6 +363,151 @@ export const YoutubeBlockComponent = ({ block, editor }: YoutubeBlockComponentPr
             style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
           />
         )}
+      </div>
+      
+      {/* 타임라인 및 메모 섹션 */}
+      <div style={{
+        borderTop: '1px solid var(--border-muted)',
+        background: 'rgba(255,255,255,0.01)',
+        display: 'flex',
+        flexDirection: 'column',
+        cursor: 'default'
+      }}
+      onMouseDown={(e) => e.stopPropagation()}
+      >
+        {/* 타임라인 영역 */}
+        <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div 
+            style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+            onClick={toggleTimelineFold}
+          >
+            {isTimelineFolded ? <ChevronRight size={14} color="var(--text-main)" /> : <ChevronDown size={14} color="var(--text-main)" />}
+            <span style={{ fontSize: '10.5px', fontWeight: 'bold', color: 'var(--text-main)' }}>⏱️ 타임라인</span>
+            {!isTimelineFolded && <span style={{ fontSize: '8.5px', color: 'var(--text-muted)' }}>(시간을 클릭하면 영상이 이동합니다)</span>}
+          </div>
+
+          {!isTimelineFolded && (
+            <>
+              {/* 등록된 타임라인 리스트 */}
+              {timeline && timeline !== '[]' && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {((typeof timeline === 'string' ? JSON.parse(timeline || '[]') : timeline) as {time: string, note: string}[]).map((t, idx) => (
+                    <div key={idx} style={{
+                      display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(139, 92, 246, 0.1)',
+                      border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: '4px', padding: '2px 6px',
+                    }}>
+                      <button
+                        onClick={() => handleSeek(t.time)}
+                        style={{ background: 'none', border: 'none', color: '#a78bfa', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer', padding: 0 }}
+                      >
+                        {t.time}
+                      </button>
+                      {t.note && <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>- {t.note}</span>}
+                      {editor.isEditable && (
+                        <button onClick={() => handleDeleteTimeline(idx)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: '10px', cursor: 'pointer', padding: '0 0 0 4px' }}>✕</button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* 타임라인 추가 폼 */}
+              {editor.isEditable && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      placeholder="03:00"
+                      value={timelineInputTime}
+                      onChange={e => setTimelineInputTime(e.target.value)}
+                      style={{ width: '50px', background: 'var(--bg-surface)', border: '1px solid var(--border-muted)', color: 'var(--text-main)', fontSize: '10px', padding: '4px 6px', borderRadius: '4px' }}
+                    />
+                    <input
+                      type="text"
+                      placeholder="타임라인 내용..."
+                      value={timelineInputNote}
+                      onChange={e => setTimelineInputNote(e.target.value)}
+                      style={{ flex: 1, background: 'var(--bg-surface)', border: '1px solid var(--border-muted)', color: 'var(--text-main)', fontSize: '10px', padding: '4px 6px', borderRadius: '4px' }}
+                    />
+                    <button
+                      onClick={handleAddTimeline}
+                      className="btn btn-primary"
+                      style={{ fontSize: '10px', padding: '4px 8px' }}
+                    >추가</button>
+                  </div>
+
+                  {/* 재생 중일 때만 슬라이더 및 현재 위치 지정 버튼 노출 */}
+                  {duration > 0 && (
+                    <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px', background: 'rgba(0,0,0,0.2)', padding: '4px 8px', borderRadius: '4px' }}>
+                      <span style={{ fontSize: '9px', color: 'var(--text-muted)', width: '30px', textAlign: 'center' }}>
+                        {Math.floor(currentTime / 60).toString().padStart(2, '0')}:{(Math.floor(currentTime) % 60).toString().padStart(2, '0')}
+                      </span>
+                      <input
+                        type="range"
+                        min="0"
+                        max={Math.floor(duration)}
+                        value={Math.floor(currentTime)}
+                        onChange={handleSliderChange}
+                        style={{ flex: 1, accentColor: '#a78bfa', cursor: 'pointer' }}
+                      />
+                      <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>
+                        {Math.floor(duration / 60).toString().padStart(2, '0')}:{(Math.floor(duration) % 60).toString().padStart(2, '0')}
+                      </span>
+                      <button
+                        onClick={handleFetchCurrent}
+                        className="btn btn-glass"
+                        style={{ fontSize: '9.5px', padding: '2px 6px', color: '#38bdf8', fontWeight: 'bold' }}
+                        title="현재 재생 중인 영상 위치를 가져옵니다"
+                      >
+                        📌 현재 위치
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* 사용자 메모 영역 */}
+        <div style={{ padding: '10px 14px', borderTop: '1px dashed var(--border-muted)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div 
+            style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}
+            onClick={toggleMemoFold}
+          >
+            {isMemoFolded ? <ChevronRight size={14} color="var(--text-main)" /> : <ChevronDown size={14} color="var(--text-main)" />}
+            <span style={{ fontSize: '10.5px', fontWeight: 'bold', color: 'var(--text-main)' }}>📝 사용자 메모</span>
+          </div>
+
+          {!isMemoFolded && (
+            editor.isEditable ? (
+              <textarea
+                defaultValue={memo}
+                onBlur={e => handleMemoBlur(e.target.value)}
+                placeholder="영상에 관한 중요한 메모를 남기세요..."
+                style={{
+                  width: '100%', minHeight: '45px', padding: '6px 10px', borderRadius: '6px',
+                  background: 'var(--bg-glass)', border: '1px solid var(--border-muted)',
+                  color: 'var(--text-main)', fontSize: '11px', lineHeight: '1.4',
+                  resize: 'vertical', outline: 'none', cursor: 'text'
+                }}
+              />
+            ) : memo ? (
+              <div style={{
+                width: '100%', padding: '8px 12px', borderRadius: '6px',
+                background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)',
+                color: 'var(--text-main)', fontSize: '11px', lineHeight: '1.5',
+                whiteSpace: 'pre-wrap', textAlign: 'left'
+              }}>
+                {memo}
+              </div>
+            ) : (
+              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic', textAlign: 'left' }}>
+                남겨진 메모가 없습니다.
+              </div>
+            )
+          )}
+        </div>
       </div>
     </div>
   )
@@ -261,7 +531,13 @@ export const YoutubeBlockSpec = createReactBlockSpec(
       videoId: { default: '' },
       title: { default: 'YouTube Video' },
       description: { default: '동영상 설명을 불러오려면 클릭하세요.' },
-      thumbnail: { default: '' }
+      thumbnail: { default: '' },
+      width: { default: '100%' },
+      height: { default: '315px' },
+      memo: { default: '' },
+      timeline: { default: '[]' },
+      isTimelineFolded: { default: false },
+      isMemoFolded: { default: false }
     },
     content: 'none'
   },

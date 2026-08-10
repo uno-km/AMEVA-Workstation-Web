@@ -251,6 +251,264 @@ export function useAppEditorInit({
 
 ---
 
+### 🆕 [2026-08-11 개선사항] 🚀 지도 및 미디어 컴포넌트 메이저 업데이트
+- **🗺️ 지도 V3.5 (공유 & 스마트 검색):** 한국형 Vworld 검색엔진 탑재로 '교회, 상호명' 등 로컬 장소 검색 완벽 지원! 네이버/카카오/구글 지도 다이렉트 딥링크(공유하기) 기능 및 경로 상세 턴바이턴 안내가 추가되었습니다. (핀 및 경로 저장 버그 100% 수정 완료)
+- **▶️ 유튜브 타임라인 안정화:** 에디터 및 미리보기 환경에서 \`01:00\` 등 유튜브 타임라인 텍스트 클릭 시, 즉시 해당 영상 위치로 점프하는 기능이 정교하게 개선되었습니다.
+
+---
+
+### 🆕 [2026-08-10 신기능] 🌟 AMEVA AI 어시스턴트: 스마트 문서 교정 및 번역
+새로운 **AMEVA AI 어시스턴트**가 에디터에 직접 통합되었습니다! 텍스트를 드래그하고 마법 같은 AI 제안을 즉석에서 받아보세요. 
+
+<details open>
+<summary><b>🔥 AI 번역 (다국어 지원)</b></summary>
+텍스트를 드래그하고 메뉴를 누르면 문서 문맥을 파악해 중국어, 일본어, 영어 등으로 자연스럽게 번역합니다.
+
+\`\`\`diff
+- 어제 말씀드린 프로젝트 기획서 초안입니다. 검토 부탁드립니다.
++ 这是昨天提到的项目策划书草案。请您审阅。
+\`\`\`
+</details>
+
+<details>
+<summary><b>✨ AI 톤 다듬기 (비즈니스 폼)</b></summary>
+대충 쓴 메모를 즉시 세련되고 정중한 비즈니스 이메일 톤으로 교정해줍니다!
+
+\`\`\`diff
+- 이거 내일까지 빨리 좀 해줘. 안그러면 일정 밀림.
++ 요청드린 건에 대해 내일까지 처리 가능하신지 확인 부탁드립니다. 일정이 지연되지 않도록 협조 부탁드립니다.
+\`\`\`
+</details>
+
+<details>
+<summary><b>📝 AI 3줄 요약</b></summary>
+길고 복잡한 회의록이나 장문의 글을 단 3줄의 요약본으로 깔끔하게 정리해 줍니다.
+</details>
+
+<br/>
+
+### 💡 실제 사용 방법
+1. **텍스트 선택**: 에디터 본문에서 번역, 요약, 또는 다듬고 싶은 **텍스트를 마우스로 드래그(블록 지정)** 합니다.
+2. **우클릭 메뉴 호출**: 드래그한 영역 위에서 **마우스 오른쪽 버튼**을 클릭하여 컨텍스트 메뉴를 엽니다.
+3. **AI 액션 선택**: 메뉴에 나타난 \`✨ AMEVA AI 번역 제안\`, \`✨ AMEVA AI 톤 다듬기\`, \`📝 AMEVA AI 요약\` 중 원하는 기능을 클릭합니다.
+4. **결과 적용하기**: 텍스트 아래에 나타난 'AI 제안 박스(Diff Box)'를 확인하고, 결과가 마음에 들면 \`✓ 수락\`을, 원본과 함께 쓰고 싶다면 \`↓ 둘 다 쓰기\`를 클릭하세요!
+
+---
+
+### 🎬 인터랙티브 튜토리얼 (AI 톤 다듬기 시뮬레이션)
+위의 실제 사용 방법이 어떻게 화면에 나타나는지 궁금하신가요? 아래 HTML 코드 블록 우측 상단의 **[▶ 실행]** 또는 **[미리보기]** 버튼을 클릭하여 애니메이션으로 직접 확인해보세요!
+
+\`\`\`html
+<div class="demo-container">
+  <div class="editor-content">
+    <div class="text-content">
+      어제 말씀드린 프로젝트 기획서 초안입니다. <span class="highlight">검토 부탁드립니다.</span>
+    </div>
+    
+    <div class="diff-block">
+      <div class="diff-header">✨ AMEVA AI 톤 다듬기 제안</div>
+      <div class="diff-body">
+        <div class="diff-old">검토 부탁드립니다.</div>
+        <div class="diff-new">요청드린 건에 대해 꼼꼼한 검토를 부탁드립니다.</div>
+      </div>
+      <div class="diff-actions">
+        <span class="btn-accept">✓ 수락</span>
+        <span class="btn-keep">↓ 둘 다 쓰기</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="cursor"></div>
+  
+  <div class="context-menu">
+    <div class="menu-item">✨ AMEVA AI 번역 제안</div>
+    <div class="menu-item ai-hover">✨ AMEVA AI 톤 다듬기</div>
+    <div class="menu-item">📝 AMEVA AI 요약</div>
+  </div>
+</div>
+
+<style>
+.demo-container {
+  position: relative;
+  width: 100%;
+  height: 380px;
+  background: #1e1e24;
+  border-radius: 8px;
+  overflow: hidden;
+  font-family: 'Pretendard', sans-serif;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+  box-sizing: border-box;
+}
+.editor-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+.text-content {
+  font-size: 16px;
+  line-height: 1.6;
+}
+.highlight {
+  position: relative;
+  z-index: 1;
+}
+.highlight::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -2px; bottom: 0; right: 100%;
+  background: rgba(59, 130, 246, 0.4);
+  z-index: -1;
+  animation: selectText 8s infinite;
+}
+
+/* Diff Block (Hidden initially, appears after click) */
+.diff-block {
+  background: rgba(24, 24, 27, 0.8);
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: showDiff 8s infinite;
+}
+.diff-header {
+  color: #a855f7;
+  font-size: 12px;
+  font-weight: 600;
+}
+.diff-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.diff-old {
+  padding: 6px 10px;
+  background: rgba(239, 68, 68, 0.05);
+  border-left: 3px solid #ef4444;
+  color: rgba(255,255,255,0.5);
+  text-decoration: line-through;
+  font-size: 14px;
+}
+.diff-new {
+  padding: 6px 10px;
+  background: rgba(16, 185, 129, 0.05);
+  border-left: 3px solid #10b981;
+  color: #fff;
+  font-size: 14px;
+}
+.diff-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 4px;
+}
+.btn-accept {
+  padding: 4px 10px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #10b981;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+}
+.btn-keep {
+  padding: 4px 10px;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  color: #3b82f6;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+/* Context Menu */
+.context-menu {
+  position: absolute;
+  top: 60px;
+  left: calc(50% + 40px);
+  background: #2a2a35;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  opacity: 0;
+  transform: scale(0.9);
+  animation: showMenu 8s infinite;
+  z-index: 5;
+}
+.menu-item {
+  padding: 8px 12px;
+  font-size: 12px;
+  border-radius: 4px;
+  color: #ddd;
+}
+.ai-hover {
+  animation: hoverMenu 8s infinite;
+}
+
+/* Mouse Cursor */
+.cursor {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>');
+  background-size: contain;
+  background-repeat: no-repeat;
+  z-index: 10;
+  animation: moveCursor 8s infinite;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+/* Animations */
+@keyframes selectText {
+  0%, 10% { right: 100%; }
+  20%, 90% { right: -2px; }
+  100% { right: 100%; }
+}
+@keyframes showMenu {
+  0%, 25% { opacity: 0; transform: scale(0.9); }
+  27%, 45% { opacity: 1; transform: scale(1); }
+  47%, 100% { opacity: 0; transform: scale(0.9); }
+}
+@keyframes hoverMenu {
+  0%, 35% { background: transparent; }
+  37%, 45% { background: #3b82f6; color: #fff; }
+  47%, 100% { background: transparent; }
+}
+@keyframes showDiff {
+  0%, 48% { opacity: 0; transform: translateY(-10px); }
+  52%, 90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+@keyframes moveCursor {
+  0% { top: 200px; left: 30%; transform: scale(1); }
+  10% { top: 45px; left: 55%; transform: scale(1); } /* Move to text start */
+  20% { top: 45px; left: 75%; transform: scale(1); } /* Drag to select */
+  25% { top: 45px; left: 75%; transform: scale(0.9); } /* Right click */
+  27% { top: 45px; left: 75%; transform: scale(1); } 
+  35% { top: 105px; left: calc(50% + 80px); transform: scale(1); } /* Move to menu item */
+  42% { top: 105px; left: calc(50% + 80px); transform: scale(0.9); } /* Click menu item */
+  45% { top: 105px; left: calc(50% + 80px); transform: scale(1); }
+  60% { top: 190px; left: 70%; transform: scale(1); } /* Move to accept button */
+  80% { top: 190px; left: 70%; transform: scale(1); } /* Wait */
+  90% { top: 190px; left: 70%; transform: scale(0.9); } /* Click accept */
+  100% { top: 250px; left: 30%; transform: scale(1); } /* Reset */
+}
+</style>
+\`\`\`
+
+---
+
 ### 🆕 [2026-08-05 신기능] 문서 속의 문서 (Doc in Doc)
 이제 PDF, PPT, Word 문서를 마크다운 문서 내부에 직접 포함시키고 조회할 수 있습니다! 아래는 내장된 샘플 문서 예시입니다.
 
@@ -368,11 +626,13 @@ graph TD
 {"lat":"37.4042","lng":"127.1472","zoom":"17","locationName":"성남장안초등학교","memo":"이곳이 성남장안초등학교입니다."}
 \`\`\`
 
-### 📺 YouTube 플레이어
+
+### 📺 YouTube 플레이어 & 스마트 타임라인 메모
 유튜브 동영상을 문서 내에서 직접 재생하거나 플로팅 화면(PIP)으로 띄워놓고 작업할 수 있습니다.
+**[신기능]** 영상 하단의 제어 바를 조작해 원하는 시점을 찾고, **타임라인 북마크**와 **메모**를 남겨보세요. 저장된 영상의 특정 시점과 코멘트 정보는 문서 자체 메타데이터에 안전하게 기록되므로, 팀원들과 문서를 공유할 때 더욱 직관적이고 강력한 협업이 가능해집니다!
 
 \`\`\`ameva-youtube
-{"url":"https://www.youtube.com/watch?v=UOxkGD8qRB4","videoId":"UOxkGD8qRB4","title":"Golden - HUNTR/X (K-Pop Demon Hunters OST)","description":"넷플릭스 애니메이션 영화 'K-Pop Demon Hunters (케데헌)'의 글로벌 히트곡 'Golden' 공식 리릭 비디오입니다!","thumbnail":""}
+{"url":"https://www.youtube.com/watch?v=UOxkGD8qRB4","videoId":"UOxkGD8qRB4","title":"Golden - HUNTR/X (K-Pop Demon Hunters OST)","description":"넷플릭스 애니메이션 영화 'K-Pop Demon Hunters (케데헌)'의 글로벌 히트곡 'Golden' 공식 리릭 비디오입니다!","thumbnail":"","timeline":[{"time":"01:00","note":"뭐 보러가기"},{"time":"01:30","note":"2절시작"}],"memo":"메모입니다! 즐감하세요!","isTimeLineFolded":false}
 \`\`\`
 
 ### 🔗 링크 미리보기 (Link Preview)

@@ -25,7 +25,7 @@
  */
 
 // [외부 패키지 및 라이브러리 임포트: react]
-import React from 'react'
+import React, { useRef } from 'react'
 
   /*
    * [FUNCTION CONTRACT]
@@ -45,7 +45,7 @@ export function InlineYoutubeRenderer({ code }: { code: string }) {
    */
   let data: any = null
   try {
-    data = JSON.parse(code)
+    data = typeof code === 'string' ? JSON.parse(code) : code
   } catch (err) {
     console.error('[InlineYoutubeRenderer] JSON parse failed:', err)
     return <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>동영상 정보를 해석할 수 없습니다.</div>
@@ -55,6 +55,18 @@ export function InlineYoutubeRenderer({ code }: { code: string }) {
   const videoId = data.videoId || ''
   const title = data.title || 'YouTube Video'
   const description = data.description || '동영상 설명을 불러오려면 클릭하세요.'
+
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+
+  const handleSeek = (timeStr: string) => {
+    if (!iframeRef.current || !iframeRef.current.contentWindow) return
+    const seconds = timeStr.split(':').reduce((acc, time) => (60 * acc) + +time, 0)
+    iframeRef.current.contentWindow.postMessage(JSON.stringify({
+      event: 'command',
+      func: 'seekTo',
+      args: [seconds, true]
+    }), '*')
+  }
 
   return (
     <div style={{ margin: '16px 0', width: '100%' }}>
@@ -104,11 +116,12 @@ export function InlineYoutubeRenderer({ code }: { code: string }) {
 
         <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9', backgroundColor: '#000' }}>
           <iframe
+            ref={iframeRef}
             /*
              * [FIX-YOUTUBE-001] youtube-nocookie.com 도메인 사용으로 Electron 내 X-Frame-Options 차단 우회.
              * - 뷰모드(미리보기)에서는 클릭 이벤트 전파가 원활하지 않을 수 있으므로, 즉시 자동 재생 대기 iframe을 마운트함.
              */
-            src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1`}
+            src={`https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&enablejsapi=1`}
             title="YouTube video player"
             frameBorder="0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
@@ -117,6 +130,57 @@ export function InlineYoutubeRenderer({ code }: { code: string }) {
           />
         </div>
       </div>
+
+      {/* 타임라인 메타데이터 표시 (읽기 전용) */}
+      {data.timeline && data.timeline.length > 0 && (
+        <div style={{
+          padding: '8px 12px',
+          borderBottom: '1px solid var(--border-muted)',
+          background: 'var(--bg-glass)',
+          borderTop: '1px dashed rgba(255,255,255,0.1)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+            <span style={{ fontSize: '10.5px', fontWeight: 'bold', color: 'var(--text-main)' }}>⏱️ 타임라인</span>
+            <span style={{ fontSize: '8.5px', color: 'var(--text-muted)' }}>(시간을 클릭하면 영상이 이동합니다)</span>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            {data.timeline.map((t: any, idx: number) => (
+              <div key={idx} style={{
+                display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(139, 92, 246, 0.1)',
+                border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: '4px', padding: '2px 6px',
+              }}>
+                <button
+                  onClick={() => handleSeek(t.time)}
+                  style={{ background: 'none', border: 'none', color: '#a78bfa', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer', padding: 0 }}
+                >
+                  {t.time}
+                </button>
+                {t.note && <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>- {t.note}</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 메모 표시 (읽기 전용) */}
+      {data.memo && (
+        <div style={{
+          padding: '8px 12px',
+          background: 'var(--bg-glass)',
+          borderTop: '1px dashed rgba(255,255,255,0.1)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+            <span style={{ fontSize: '10.5px', fontWeight: 'bold', color: 'var(--text-main)' }}>📝 사용자 메모</span>
+          </div>
+          <div style={{
+            background: 'var(--bg-surface)', border: '1px solid var(--border-muted)',
+            borderRadius: '4px', padding: '8px', fontSize: '11px', color: 'var(--text-main)',
+            whiteSpace: 'pre-wrap', lineHeight: '1.4'
+          }}>
+            {data.memo}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
