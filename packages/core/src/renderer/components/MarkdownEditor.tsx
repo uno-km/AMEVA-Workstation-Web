@@ -51,7 +51,10 @@ import {
   SuggestionMenuController,
   SideMenuController,
   SideMenu,
+  AddBlockButton,
   DragHandleButton,
+  DragHandleMenu,
+  RemoveBlockItem,
   useBlockNoteEditor,
   useExtension,
   useExtensionState,
@@ -123,6 +126,8 @@ import { WelcomeBanner } from './editor/WelcomeBanner'
 import { RichStyleToolbar } from './editor/RichStyleToolbar'
 import { ImageLightbox } from './ImageLightbox'
 import { PdfViewer } from './PdfViewer'
+import { HwpxViewerModal } from './editor/HwpxViewerModal'
+import { useWebLLM } from './useWebLLM'
 
 /* 
  * [INTERACTION HOOKS]
@@ -160,7 +165,6 @@ export interface MarkdownEditorProps {
   onSelectedTextChange?: (text: string) => void
   taggedBlocks?: { id: string; text: string }[]
   setTaggedBlocks?: (blocks: { id: string; text: string }[]) => void
-  isSplitViewInstance?: boolean
 }
 
 /**
@@ -289,6 +293,37 @@ const CustomAddBlockButton = () => {
   )
 }
 
+/**
+ * @component SafeDragHandleMenu
+ * @description 기본 DragHandleMenu에서 BlockColorsItem을 제거한 안전한 버전.
+ * [WHY] @blocknote/mantine 0.51.x의 BlockColorsItem은 Mantine 8.x의 Menu.Sub API를
+ * 사용하지만, 현재 프로젝트에는 Mantine 7.x가 설치되어 있어 Menu.Sub가 undefined임.
+ * 빈 블록에서 :: 클릭 시 해당 컴포넌트가 서브메뉴를 렌더링하려다 undefined 에러로 자폭.
+ * 따라서 BlockColorsItem만 제거하고 RemoveBlockItem(삭제)만 남긴 안전한 메뉴를 사용.
+ * [CONTRACT] Mantine을 8.x로 업그레이드하면 이 컴포넌트를 제거하고
+ * 기본 <SideMenuController />로 복원 가능.
+ */
+const SafeDragHandleMenu = () => (
+  <DragHandleMenu>
+    <RemoveBlockItem>블록 삭제</RemoveBlockItem>
+  </DragHandleMenu>
+)
+
+/**
+ * @component SafeCustomSideMenu
+ * @description + 버튼은 기본 AddBlockButton을 그대로 사용하고,
+ * :: 버튼만 SafeDragHandleMenu로 교체한 SideMenu 컴포넌트.
+ * [CONTRACT] 이 컴포넌트는 BlockNoteView 내부(BlockNote Context) 안에서만 렌더링되어야 함.
+ * [CONTRACT] 인라인 함수로 sideMenu prop에 전달하면 리렌더링마다 언마운트/리마운트 flickering 발생.
+ * 반드시 이렇게 파일 스코프 수준에서 별도 컴포넌트로 분리해야 함.
+ */
+const SafeCustomSideMenu = () => (
+  <SideMenu>
+    <AddBlockButton />
+    <DragHandleButton dragHandleMenu={SafeDragHandleMenu} />
+  </SideMenu>
+)
+
 
 /**
  * @component MarkdownEditor
@@ -305,14 +340,13 @@ export function MarkdownEditor({
    * - taggedBlocks: 지시용 태그 블록 정보 목록.
    * - setTaggedBlocks: 지시용 태그 블록 갱신 세터.
    */
-  onMouseMove = () => {},
-  onSelectionChange = () => {},
-  onBlockHighlight = () => {},
+  onMouseMove = () => { },
+  onSelectionChange = () => { },
+  onBlockHighlight = () => { },
   editorContainerRef,
   onSelectedTextChange,
   taggedBlocks = [],
-  setTaggedBlocks = () => {},
-  isSplitViewInstance = false,
+  setTaggedBlocks = () => { },
 }: MarkdownEditorProps) {
   /*
    * [CONTEXT VALUES]
@@ -324,10 +358,8 @@ export function MarkdownEditor({
    * - handleStartWelcomeEdit: 웰컴 화면 종료 및 에디터 로드 콜백.
    * - handleStartNewDocument: 새 문서 생성 콜백.
    */
-  const appContext = useAppContext()
-  const { editorMode, peers, settings, handleOpenFile, handleStartWelcomeEdit, handleStartNewDocument, loadMarkdownIntoEditor } = appContext
-  const editor = isSplitViewInstance ? appContext.splitEditor : appContext.editor
-  
+  const { editor, editorMode, peers, settings, handleOpenFile, handleStartWelcomeEdit, handleStartNewDocument, loadMarkdownIntoEditor } = useAppContext()
+
   /*
    * [ZUSTAND STORE PROPERTIES]
    * - currentContent: 원문 텍스트 버퍼.
@@ -335,10 +367,10 @@ export function MarkdownEditor({
    * - tabs: 다중 문서 탭 정보 목록.
    */
   const { currentContent, setCurrentContent, tabs, filePath, pdfData, pdfFileName } = useWorkspaceStore()
-  
+
   const hasPermission = useProcessStore((s) => s.hasPermission)
   const canUseAITagging = false
-  
+
   /*
    * [LOCAL CONFIG VARIABLES]
    * - wordWrap: 줄바꿈 허용 세팅 여부.
@@ -376,6 +408,46 @@ export function MarkdownEditor({
    * - hasRichStyling: 리치 폰트 커스텀 툴바 입점 여부.
    */
   const hasRichStyling = installedPlugins.includes('rich-styling')
+
+  /*
+   * [RESTORED STATES: HWPX Modal, Context Menu, and WebLLM]
+   */
+  const [hwpxModalData, setHwpxModalData] = useState<any>(null)
+  const [contextMenuState, setContextMenuState] = useState<{ isOpen: boolean; x: number; y: number; blockId: string | null; selectedText: string }>({
+    isOpen: false,
+    x: 0,
+    y: 0,
+    blockId: null,
+    selectedText: ''
+  })
+  const { initModel, generateStream, isReady, isLoading } = useWebLLM()
+
+  useEffect(() => {
+    const handleHwpxParsed = (e: Event) => {
+      const customEvent = e as CustomEvent
+      if (customEvent.detail?.parsedData) {
+        setHwpxModalData(customEvent.detail.parsedData)
+      }
+    }
+    window.addEventListener('app:hwpx-parsed', handleHwpxParsed)
+    return () => {
+      window.removeEventListener('app:hwpx-parsed', handleHwpxParsed)
+    }
+  }, [])
+
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    if (editorMode !== 'edit') return
+    e.preventDefault()
+    const selection = window.getSelection()
+    const text = selection ? selection.toString() : ''
+    setContextMenuState({
+      isOpen: true,
+      x: e.clientX,
+      y: e.clientY,
+      blockId: hoverBlock?.id || null,
+      selectedText: text
+    })
+  }, [editorMode, hoverBlock])
 
   /**
    * [SIDE EFFECT - Font Style Injection]
@@ -463,6 +535,7 @@ export function MarkdownEditor({
         onKeyUp={handleSelection}
         onDropCapture={onDropCapture}
         onPasteCapture={onPasteCapture}
+        onContextMenu={handleContextMenu}
         className={!wordWrap ? 'wrap-disabled' : ''}
         style={{ flex: 1, overflowY: 'auto', padding: '40px 60px 45vh 60px', position: 'relative' }}
       >
@@ -577,8 +650,18 @@ export function MarkdownEditor({
             editor={editor}
           />
         ) : editorMode === 'edit' ? (
-          <BlockNoteView editor={editor} theme={theme === 'white' ? 'light' : 'dark'} editable slashMenu={false}>
-            <SideMenuController />
+          <BlockNoteView editor={editor} theme={theme === 'white' ? 'light' : 'dark'} editable slashMenu={false} sideMenu={false}>
+            {/* SafeCustomSideMenu: BlockColorsItem 제거로 Mantine 7.x 호환 :: 메뉴 사용
+              * floatingUIOptions: placement 'left'로 블록 세로 중앙에 버튼 정렬
+              * (기본 'left-start'는 블록 상단 기준이라 큰 제목 블록에서 버튼이 위에 뜸) */}
+            <SideMenuController
+              sideMenu={SafeCustomSideMenu}
+              floatingUIOptions={{
+                useFloatingOptions: {
+                  placement: 'left',
+                }
+              }}
+            />
             {/* 1. 슬래시(/) 명령어 단축 팝업 제어 */}
             <SuggestionMenuController
               triggerCharacter="/"
@@ -611,20 +694,20 @@ export function MarkdownEditor({
                     icon: <FileText size={14} color="#3b82f6" />,
                     onItemClick: () => {
                       editor.insertInlineContent([
-                        { 
-                          type: 'text', 
-                          text: `[doc:${title}]`, 
-                          styles: { underline: true } as any 
+                        {
+                          type: 'text',
+                          text: `[doc:${title}]`,
+                          styles: { underline: true } as any
                         }
                       ])
                     }
                   }
                 })
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `allItems`
-       * - 자료형 / 예상 값: 피어와 탭 문서를 합친 단축 메뉴 통합 배열.
-       */
+                /*
+                 * [RUN-TIME STATE / INVARIANT]
+                 * - 변수 명: `allItems`
+                 * - 자료형 / 예상 값: 피어와 탭 문서를 합친 단축 메뉴 통합 배열.
+                 */
                 const allItems = [...peerItems, ...docItems]
                 return allItems.filter(item => item.title.toLowerCase().includes(query.toLowerCase()))
               }}
@@ -633,37 +716,37 @@ export function MarkdownEditor({
             <SuggestionMenuController
               triggerCharacter="#"
               getItems={async (query) => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `!editor`
-       * - 만족 시: 에디터 미지정 시 빈 배열 즉시 반환.
-       */
+                /*
+                 * [ALGORITHM BRANCH / DECISION]
+                 * - 조건 식: `!editor`
+                 * - 만족 시: 에디터 미지정 시 빈 배열 즉시 반환.
+                 */
                 if (!editor) return []
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `headingBlocks`
-       * - 자료형 / 예상 값: 전체 문서 내 제목(heading) 타입 블록 필터링 배열.
-       */
+                /*
+                 * [RUN-TIME STATE / INVARIANT]
+                 * - 변수 명: `headingBlocks`
+                 * - 자료형 / 예상 값: 전체 문서 내 제목(heading) 타입 블록 필터링 배열.
+                 */
                 const headingBlocks = editor.document.filter(b => b.type === 'heading')
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `items`
-       * - 자료형 / 예상 값: H1~H6 헤더 참조 링크 리스트 배열.
-       */
+                /*
+                 * [RUN-TIME STATE / INVARIANT]
+                 * - 변수 명: `items`
+                 * - 자료형 / 예상 값: H1~H6 헤더 참조 링크 리스트 배열.
+                 */
                 const items = headingBlocks.map(b => {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `textContent`
-       * - 자료형 / 예상 값: 제목 블록 내부 텍스트 콘텐츠의 병합 문자열.
-       */
-                  const textContent = b.content && Array.isArray(b.content) 
-                    ? b.content.map((c: any) => c.text).join('') 
+                  /*
+                   * [RUN-TIME STATE / INVARIANT]
+                   * - 변수 명: `textContent`
+                   * - 자료형 / 예상 값: 제목 블록 내부 텍스트 콘텐츠의 병합 문자열.
+                   */
+                  const textContent = b.content && Array.isArray(b.content)
+                    ? b.content.map((c: any) => c.text).join('')
                     : '제목 없음'
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `level`
-       * - 자료형 / 예상 값: 헤더 수준 정수값 (1~6).
-       */
+                  /*
+                   * [RUN-TIME STATE / INVARIANT]
+                   * - 변수 명: `level`
+                   * - 자료형 / 예상 값: 헤더 수준 정수값 (1~6).
+                   */
                   const level = b.props?.level || 1
 
                   return {
@@ -730,6 +813,122 @@ export function MarkdownEditor({
 
       {selectedImg && (
         <ImageLightbox url={selectedImg} onClose={() => setSelectedImg(null)} />
+      )}
+
+      {hwpxModalData && (
+        <HwpxViewerModal
+          opened={!!hwpxModalData}
+          onClose={() => setHwpxModalData(null)}
+          parsedData={hwpxModalData}
+          onInsertToEditor={(paragraphs) => {
+            if (!editor) return
+            const blocks = paragraphs.map((p: string) => ({ type: 'paragraph', content: p }))
+            editor.insertBlocks(blocks as any, editor.getTextCursorPosition().block, 'after')
+          }}
+        />
+      )}
+
+      {contextMenuState.isOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: contextMenuState.y,
+            left: contextMenuState.x,
+            zIndex: 9999,
+            background: 'var(--bg-deep)',
+            border: '1px solid var(--border-muted)',
+            borderRadius: '8px',
+            padding: '8px',
+            minWidth: '150px',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px'
+          }}
+          onMouseLeave={() => setContextMenuState(prev => ({ ...prev, isOpen: false }))}
+        >
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px', paddingBottom: '4px', borderBottom: '1px solid var(--border-muted)' }}>
+            블록 메뉴
+          </div>
+          
+          <button
+            className="bn-button"
+            style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '4px', background: 'transparent', color: 'var(--text-main)', border: 'none', cursor: 'pointer' }}
+            onClick={() => {
+              if (contextMenuState.blockId) {
+                editor?.removeBlocks([contextMenuState.blockId as any])
+              }
+              setContextMenuState(prev => ({ ...prev, isOpen: false }))
+            }}
+          >
+            삭제
+          </button>
+          
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '8px', marginBottom: '4px', paddingBottom: '4px', borderBottom: '1px solid var(--border-muted)' }}>
+            AI 코파일럿
+          </div>
+          
+          {!isReady ? (
+            <button
+              className="bn-button"
+              style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '4px', background: 'transparent', color: '#a855f7', border: 'none', cursor: 'pointer' }}
+              onClick={() => {
+                initModel()
+              }}
+            >
+              {isLoading ? '로딩 중...' : '로컬 AI 켜기'}
+            </button>
+          ) : (
+            <>
+              <button
+                className="bn-button"
+                style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '4px', background: 'transparent', color: '#10b981', border: 'none', cursor: 'pointer' }}
+                onClick={async () => {
+                  setContextMenuState(prev => ({ ...prev, isOpen: false }))
+                  const targetText = contextMenuState.selectedText || hoverBlock?.text
+                  if (!targetText) return
+                  const stream = generateStream(
+                    "당신은 전문 에디터입니다. 주어진 문장의 톤을 더 프로페셔널하고 부드럽게 다듬어주세요.", 
+                    targetText
+                  )
+                  const newBlock = editor?.insertBlocks([{ type: 'paragraph', content: '' }], contextMenuState.blockId ? editor.getDocument().find(b => b.id === contextMenuState.blockId)! : editor.getTextCursorPosition().block, 'after')[0]
+                  if (newBlock) {
+                    let fullText = ""
+                    for await (const chunk of stream) {
+                      fullText += chunk
+                      editor?.updateBlock(newBlock, { content: fullText })
+                    }
+                  }
+                }}
+              >
+                톤 다듬기
+              </button>
+              <button
+                className="bn-button"
+                style={{ textAlign: 'left', padding: '6px 8px', borderRadius: '4px', background: 'transparent', color: '#3b82f6', border: 'none', cursor: 'pointer' }}
+                onClick={async () => {
+                  setContextMenuState(prev => ({ ...prev, isOpen: false }))
+                  const targetText = contextMenuState.selectedText || hoverBlock?.text
+                  if (!targetText) return
+                  const stream = generateStream(
+                    "당신은 내용 요약 전문가입니다. 주어진 텍스트를 핵심만 3줄로 요약해주세요.", 
+                    targetText
+                  )
+                  const newBlock = editor?.insertBlocks([{ type: 'paragraph', content: '' }], contextMenuState.blockId ? editor.getDocument().find(b => b.id === contextMenuState.blockId)! : editor.getTextCursorPosition().block, 'after')[0]
+                  if (newBlock) {
+                    let fullText = ""
+                    for await (const chunk of stream) {
+                      fullText += chunk
+                      editor?.updateBlock(newBlock, { content: fullText })
+                    }
+                  }
+                }}
+              >
+                요약하기
+              </button>
+            </>
+          )}
+        </div>
       )}
     </div>
   )
