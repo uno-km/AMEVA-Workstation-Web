@@ -1,39 +1,67 @@
 /**
  * ============================================================================
  * @file graphWorker.ts
- * @description graphWorker.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
- * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
- * @example
- * // 예시 로직 (자동 생성됨)
- * import { something } from './graphWorker';
- * 
- * @created 2026-08-11 08:57:45
- * @updated 2026-08-11 08:57:45
- * @author uno-km
- * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * @description Force-Directed Physics Worker
  * ============================================================================
  */
+self.onmessage = (e) => {
+  if (e.data.type === 'TICK') {
+    const nodes = JSON.parse(JSON.stringify(e.data.nodes))
+    const edges = e.data.edges
+    const k = 0.01
+    const L = 100
+    const damping = 0.85
+    const width = 800
+    const height = 400
 
-import type { GraphNode, GraphEdge } from './types'
+    // Repulsion
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const dx = nodes[i].x - nodes[j].x
+        const dy = nodes[i].y - nodes[j].y
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1
+        const force = 2000 / (dist * dist)
+        const fx = (dx / dist) * force
+        const fy = (dy / dist) * force
+        nodes[i].vx += fx
+        nodes[i].vy += fy
+        nodes[j].vx -= fx
+        nodes[j].vy -= fy
+      }
+    }
 
-self.onmessage = (e: MessageEvent) => {
-  const { type, nodes, edges } = e.data
-  
-  if (type === 'TICK') {
-    // Simple force-directed iteration (dummy calculation for now)
-    const newNodes = (nodes as GraphNode[]).map(node => {
-      // add small random velocity
-      const vx = node.vx + (Math.random() - 0.5) * 0.1
-      const vy = node.vy + (Math.random() - 0.5) * 0.1
-      return {
-        ...node,
-        x: node.x + vx,
-        y: node.y + vy,
-        vx: vx * 0.9, // friction
-        vy: vy * 0.9
+    // Spring
+    edges.forEach((edge: any) => {
+      const source = nodes.find((n: any) => n.id === edge.source)
+      const target = nodes.find((n: any) => n.id === edge.target)
+      if (source && target) {
+        const dx = target.x - source.x
+        const dy = target.y - source.y
+        const dist = Math.sqrt(dx * dx + dy * dy) || 1
+        const force = k * (dist - L)
+        const fx = (dx / dist) * force
+        const fy = (dy / dist) * force
+        source.vx += fx
+        source.vy += fy
+        target.vx -= fx
+        target.vy -= fy
       }
     })
-    
-    self.postMessage({ type: 'TICK_DONE', nodes: newNodes })
+
+    // Update and boundary
+    nodes.forEach((node: any) => {
+      node.vx *= damping
+      node.vy *= damping
+      node.x += node.vx
+      node.y += node.vy
+      
+      // 울타리
+      if (node.x < 20) { node.x = 20; node.vx *= -1 }
+      if (node.x > width - 20) { node.x = width - 20; node.vx *= -1 }
+      if (node.y < 20) { node.y = 20; node.vy *= -1 }
+      if (node.y > height - 20) { node.y = height - 20; node.vy *= -1 }
+    })
+
+    self.postMessage({ type: 'TICK_DONE', nodes })
   }
 }

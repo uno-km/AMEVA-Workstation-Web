@@ -206,6 +206,38 @@ export function convertJupyterToCodeBlocks(blocks: any[]): any[] {
       copy.props = {
         language: 'ameva-document'
       }
+    } else if (copy.type === 'media-editor') {
+      copy.type = 'codeBlock'
+      const mediaData = JSON.stringify({
+        clips: copy.props?.clips || '[]',
+        tracks: copy.props?.tracks || '[]'
+      })
+      copy.content = [{ type: 'text', text: `// [AMEVA_LANG:ameva-media-editor]\n${mediaData}`, styles: {} }]
+      copy.props = {
+        language: 'ameva-media-editor'
+      }
+    } else if (copy.type === 'knowledge-graph') {
+      copy.type = 'codeBlock'
+      const graphData = JSON.stringify({
+        nodes: copy.props?.nodes || '[]',
+        edges: copy.props?.edges || '[]',
+        title: copy.props?.title || '지식 그래프'
+      })
+      copy.content = [{ type: 'text', text: `// [AMEVA_LANG:ameva-knowledge-graph]\n${graphData}`, styles: {} }]
+      copy.props = {
+        language: 'ameva-knowledge-graph'
+      }
+    } else if (copy.type === 'mini-colab') {
+      copy.type = 'codeBlock'
+      const colabData = JSON.stringify({
+        cells: copy.props?.cells || '[]',
+        title: copy.props?.title || '미니 콜랩',
+        gpuEnabled: copy.props?.gpuEnabled || 'false'
+      })
+      copy.content = [{ type: 'text', text: `// [AMEVA_LANG:ameva-mini-colab]\n${colabData}`, styles: {} }]
+      copy.props = {
+        language: 'ameva-mini-colab'
+      }
     } else if (copy.children) {
       copy.children = convertJupyterToCodeBlocks(copy.children)
     }
@@ -306,7 +338,7 @@ export function cleanCodeBlocks(blocks: any[]) {
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const supportedLangs = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-  const supportedLangs = ['python', 'py', 'javascript', 'js', 'html', 'css', 'c', 'cpp', 'java', 'xml', 'json', 'text', 'txt', 'plaintext', 'mermaid', 'bash', 'sh', 'typescript', 'ts', 'sql', 'ameva-drawing', 'ameva-map', 'ameva-youtube', 'ameva-link', 'ameva-presentation', 'ameva-excel', 'ameva-kanban', 'ameva-document']
+  const supportedLangs = ['python', 'py', 'javascript', 'js', 'html', 'css', 'c', 'cpp', 'java', 'xml', 'json', 'text', 'txt', 'plaintext', 'mermaid', 'bash', 'sh', 'typescript', 'ts', 'sql', 'ameva-drawing', 'ameva-map', 'ameva-youtube', 'ameva-link', 'ameva-presentation', 'ameva-excel', 'ameva-kanban', 'ameva-document', 'ameva-media-editor', 'ameva-knowledge-graph', 'ameva-mini-colab']
   blocks.forEach(block => {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -574,10 +606,74 @@ export function cleanCodeBlocks(blocks: any[]) {
         return
       }
 
+      if (lang === 'ameva-media-editor') {
+        block.type = 'media-editor'
+        try {
+          const parsed = JSON.parse(finalCode)
+          block.props = {
+            clips: parsed.clips || '[]',
+            tracks: parsed.tracks || '[]'
+          }
+        } catch (err) {
+          console.error('[cleanCodeBlocks] Failed to parse ameva-media-editor json:', err)
+          block.props = { clips: '[]', tracks: '[]' }
+        }
+        block.content = undefined
+        return
+      }
+
       if (lang === 'ameva-kanban') {
         block.type = 'kanban'
         block.props = {
           data: finalCode
+        }
+        block.content = undefined
+        return
+      }
+
+      if (lang === 'ameva-media-editor') {
+        block.type = 'media-editor'
+        try {
+          const parsed = JSON.parse(finalCode)
+          block.props = {
+            clips: parsed.clips || '[]',
+            tracks: parsed.tracks || '[]',
+            gpuMode: parsed.gpuMode || 'auto'
+          }
+        } catch (err) {
+          block.props = { clips: '[]', tracks: '[]', gpuMode: 'auto' }
+        }
+        block.content = undefined
+        return
+      }
+
+      if (lang === 'ameva-knowledge-graph') {
+        block.type = 'knowledge-graph'
+        try {
+          const parsed = JSON.parse(finalCode)
+          block.props = {
+            nodes: parsed.nodes || '[]',
+            edges: parsed.edges || '[]',
+            title: parsed.title || '지식 그래프'
+          }
+        } catch (err) {
+          block.props = { nodes: '[]', edges: '[]', title: '지식 그래프' }
+        }
+        block.content = undefined
+        return
+      }
+
+      if (lang === 'ameva-mini-colab') {
+        block.type = 'mini-colab'
+        try {
+          const parsed = JSON.parse(finalCode)
+          block.props = {
+            cells: parsed.cells || '[]',
+            title: parsed.title || '미니 콜랩',
+            gpuEnabled: parsed.gpuEnabled || 'false'
+          }
+        } catch (err) {
+          block.props = { cells: '[]', title: '미니 콜랩', gpuEnabled: 'false' }
         }
         block.content = undefined
         return

@@ -1,30 +1,38 @@
 /**
  * ============================================================================
  * @file colabWorker.ts
- * @description colabWorker.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
- * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
- * @example
- * // 예시 로직 (자동 생성됨)
- * import { something } from './colabWorker';
- * 
- * @created 2026-08-11 08:57:45
- * @updated 2026-08-11 08:57:45
- * @author uno-km
- * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * @description Mini Colab Worker
  * ============================================================================
  */
+let pyodide: any = null;
 
-self.onmessage = (e: MessageEvent) => {
-  const { type, code, sql, id } = e.data
-  
-  if (type === 'EXEC_PYTHON') {
-    // Simulate execution delay
-    setTimeout(() => {
-      self.postMessage({ type: 'EXEC_RESULT', id, output: '[파이일로드 보류 예정: Pyodide 연동 진행 중]', status: 'success' })
-    }, 500)
-  } else if (type === 'EXEC_SQL') {
-    setTimeout(() => {
-      self.postMessage({ type: 'EXEC_RESULT', id, output: '[SQL 실행 보류: wasm-sqlite 연동 진행 중]', status: 'success' })
-    }, 500)
+self.addEventListener('message', async (e) => {
+  if (e.data.type === 'EXEC_PYTHON') {
+    if (!pyodide) {
+      self.postMessage({ type: 'LOADING', msg: 'Pyodide 로딩 중...' });
+      const pyodideModule = await import('https://cdn.jsdelivr.net/pyodide/v0.27.0/full/pyodide.mjs');
+      pyodide = await pyodideModule.loadPyodide();
+    }
+    try {
+      const output: string[] = [];
+      pyodide.setStdout({ batched: (s: string) => output.push(s) });
+      pyodide.setStderr({ batched: (s: string) => output.push('[stderr] ' + s) });
+      const result = await pyodide.runPythonAsync(e.data.code);
+      output.push(result !== undefined ? String(result) : '');
+      self.postMessage({ type: 'EXEC_RESULT', output: output.filter(Boolean).join('\n') });
+    } catch(err) {
+      self.postMessage({ type: 'EXEC_ERROR', error: String(err) });
+    }
   }
-}
+  if (e.data.type === 'EXEC_JS') {
+    try {
+      const logs: string[] = [];
+      const fn = new Function('console', e.data.code);
+      fn({ log: (...a: any[]) => logs.push(a.map(String).join(' ')), error: (...a: any[]) => logs.push('[error] ' + a.join(' ')) });
+      self.postMessage({ type: 'EXEC_RESULT', output: logs.join('\n') });
+    } catch(err) { self.postMessage({ type: 'EXEC_ERROR', error: String(err) }); }
+  }
+  if (e.data.type === 'EXEC_SQL') {
+    self.postMessage({ type: 'EXEC_RESULT', output: '[SQL 엔진] sql.js 연동 예정' });
+  }
+});

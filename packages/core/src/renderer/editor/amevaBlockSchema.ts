@@ -85,17 +85,18 @@ import { InlineDocumentBlock } from '../components/InlineDocumentBlock'
 import { ChartBlock } from '../components/ChartBlock'
 // [내부 프로젝트 의존성 모듈 임포트: ../components/AiDiffBlock]
 import { AiDiffBlock } from '../components/AiDiffBlock'
+// [내부 프로젝트 의존성 모듈 임포트: ../features/media-editor]
+import { MediaCutEditorBlock } from '../features/media-editor'
+// [내부 프로젝트 의존성 모듈 임포트: ../features/knowledge-graph]
+import { KnowledgeGraphBlock } from '../features/knowledge-graph'
+// [내부 프로젝트 의존성 모듈 임포트: ../features/mini-colab]
+import { MiniColabBlock } from '../features/mini-colab'
 
 // [내부 프로젝트 의존성 모듈 임포트: ../config/features]
 import { FEATURE_FLAGS } from '../config/features'
 // SmartDocs 플러그인 컴포넌트 동적 로딩 (토글 분리)
 import { SmartDocsTableBlock } from '../plugins/smartdocs/components/SmartDocsTableBlock'
 
-/**
- * [CONTRACT - Root Custom Schema Configuration]
- * - amevaSchema: 커스텀 사양이 병합된 중앙 스키마 인스턴스.
- * - Rationale: 이 사양에 선언된 키값(jupyter, drawing 등)으로 마크다운 파서 및 플러그인이 동작한다.
- */
 export const customSpecs = {
   jupyter: JupyterBlock,
   drawing: DrawingBlock,
@@ -108,6 +109,9 @@ export const customSpecs = {
   inlineDocument: InlineDocumentBlock,
   chart: ChartBlock,
   aiDiff: AiDiffBlock,
+  mediaEditor: MediaCutEditorBlock,
+  knowledgeGraph: KnowledgeGraphBlock,
+  miniColab: MiniColabBlock,
   ...(FEATURE_FLAGS.ENABLE_SMARTDOCS ? { smartDocsTable: SmartDocsTableBlock } : {}),
 }
 

@@ -60,6 +60,8 @@ import { InlineYoutubeRenderer } from './markdown/InlineYoutubeRenderer'
 import { InlineDrawingRenderer } from './markdown/InlineDrawingRenderer'
 // [내부 프로젝트 의존성 모듈 임포트: ./markdown/InlineDocumentRenderer]
 import { InlineDocumentRenderer } from './markdown/InlineDocumentRenderer'
+// [내부 프로젝트 의존성 모듈 임포트: ./markdown/InlineMediaEditorRenderer]
+import { InlineMediaEditorRenderer } from './markdown/InlineMediaEditorRenderer'
 
       /*
        * [RUN-TIME STATE / INVARIANT]

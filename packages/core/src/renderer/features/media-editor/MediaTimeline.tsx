@@ -1,88 +1,81 @@
-/**
- * ============================================================================
- * @file MediaTimeline.tsx
- * @description MediaTimeline.tsx 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
- * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
- * @example
- * // 예시 로직 (자동 생성됨)
- * import { something } from './MediaTimeline';
- * 
- * @created 2026-08-11 08:57:45
- * @updated 2026-08-11 08:57:45
- * @author uno-km
- * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
- * ============================================================================
- */
-
 import React from 'react'
-import { useMediaCutEditor } from './useMediaCutEditor'
+import type { MediaTrack } from './types'
 
-export const MediaTimeline: React.FC = () => {
-  const { state, addClip, removeClip } = useMediaCutEditor()
+interface MediaTimelineProps {
+  tracks: MediaTrack[]
+  currentTime: number
+  duration: number
+  onSeek: (t: number) => void
+  onClipSelect: (clipId: string) => void
+}
 
+export const MediaTimeline: React.FC<MediaTimelineProps> = ({ tracks, currentTime, duration, onSeek, onClipSelect }) => {
   return (
-    <div style={{ padding: '16px', background: '#1e1e1e', color: 'white', borderRadius: '8px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-        <h3>Media Timeline</h3>
-        <div>
-          {state.gpuAvailable ? (
-            <span style={{ color: '#10b981', fontWeight: 'bold' }}>🟢 GPU</span>
-          ) : (
-            <span style={{ color: '#ef4444', fontWeight: 'bold' }}>🔴 CPU</span>
-          )}
-        </div>
+    <div style={{ padding: '16px', background: '#1e1e1e', color: 'white', borderRadius: '8px', position: 'relative' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+        <span style={{ fontSize: '12px' }}>0s</span>
+        <span style={{ fontSize: '12px' }}>{duration}s</span>
       </div>
       
-      <div style={{ border: '1px solid #333', padding: '8px', minHeight: '100px' }}>
-        {state.tracks.map(track => (
+      <div 
+        style={{ position: 'relative', border: '1px solid #333', padding: '8px', minHeight: '100px', cursor: 'pointer' }}
+        onClick={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect()
+          const x = e.clientX - rect.left
+          const ratio = Math.max(0, Math.min(1, x / rect.width))
+          onSeek(ratio * duration)
+        }}
+      >
+        {tracks.map(track => (
           <div key={track.id} style={{ display: 'flex', borderBottom: '1px solid #444', paddingBottom: '4px', marginBottom: '4px' }}>
-            <div style={{ width: '80px', borderRight: '1px solid #555', paddingRight: '8px', marginRight: '8px' }}>
+            <div style={{ width: '60px', borderRight: '1px solid #555', paddingRight: '8px', marginRight: '8px', fontSize: '12px' }}>
               {track.id}
             </div>
             <div style={{ flex: 1, position: 'relative', height: '40px', background: '#2a2a2a' }}>
-              {track.clips.map(clip => (
-                <div 
-                  key={clip.id}
-                  onClick={() => removeClip(clip.id)}
-                  style={{
-                    position: 'absolute',
-                    left: `${clip.startTime * 10}px`,
-                    width: `${(clip.endTime - clip.startTime) * 10}px`,
-                    height: '100%',
-                    background: clip.type === 'video' ? '#3b82f6' : '#8b5cf6',
-                    borderRadius: '4px',
-                    padding: '4px',
-                    fontSize: '10px',
-                    overflow: 'hidden',
-                    whiteSpace: 'nowrap',
-                    cursor: 'pointer'
-                  }}
-                  title="Click to remove"
-                >
-                  {clip.name}
-                </div>
-              ))}
+              {track.clips.map(clip => {
+                const leftPercent = (clip.startTime / duration) * 100
+                const widthPercent = ((clip.endTime - clip.startTime) / duration) * 100
+                return (
+                  <div 
+                    key={clip.id}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onClipSelect(clip.id)
+                    }}
+                    style={{
+                      position: 'absolute',
+                      left: `${leftPercent}%`,
+                      width: `${widthPercent}%`,
+                      height: '100%',
+                      background: clip.type === 'video' ? '#3b82f6' : '#8b5cf6',
+                      borderRadius: '4px',
+                      padding: '4px',
+                      fontSize: '10px',
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap',
+                      border: '1px solid rgba(255,255,255,0.2)'
+                    }}
+                  >
+                    {clip.name}
+                  </div>
+                )
+              })}
             </div>
           </div>
         ))}
+
+        {/* 재생 위치 표시선 */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          bottom: 0,
+          left: `${(currentTime / duration) * 100}%`,
+          width: '2px',
+          background: 'red',
+          pointerEvents: 'none',
+          zIndex: 10
+        }} />
       </div>
-      
-      <button 
-        onClick={() => addClip({
-          id: `clip-${Date.now()}`,
-          name: 'New Clip',
-          src: '',
-          type: 'video',
-          duration: 10,
-          startTime: 0,
-          endTime: 10,
-          trimStart: 0,
-          trimEnd: 10
-        })}
-        style={{ marginTop: '12px', padding: '8px 16px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-      >
-        Add Test Clip
-      </button>
     </div>
   )
 }

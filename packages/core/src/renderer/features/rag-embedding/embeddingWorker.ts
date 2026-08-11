@@ -11,9 +11,7 @@ self.addEventListener('message', async (event: MessageEvent) => {
 
   if (type === 'LOAD_MODEL') {
     try {
-      // [@xenova/transformers 동적 임포트]
-      // @ts-ignore
-      const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.14.0');
+      const { pipeline, env } = await import('@xenova/transformers');
 
       // [WebGPU 또는 WASM 설정]
       // WebGPU 지원 여부 확인
@@ -74,6 +72,18 @@ self.addEventListener('message', async (event: MessageEvent) => {
       self.postMessage({ type: 'DONE' });
     } catch (error) {
       console.error('임베딩 처리 실패:', error);
+      self.postMessage({ type: 'ERROR', errorMsg: error instanceof Error ? error.message : 'Unknown error' });
+    }
+  }
+
+  if (type === 'EMBED_QUERY' && pipelineInstance) {
+    const { query, queryId } = event.data;
+    try {
+      const output = await pipelineInstance(query, { pooling: 'mean', normalize: true });
+      const vector = Array.from(output.data) as number[];
+      self.postMessage({ type: 'QUERY_EMBEDDED', queryId, vector });
+    } catch (error) {
+      console.error('쿼리 임베딩 실패:', error);
       self.postMessage({ type: 'ERROR', errorMsg: error instanceof Error ? error.message : 'Unknown error' });
     }
   }

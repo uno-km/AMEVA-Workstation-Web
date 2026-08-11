@@ -5,3 +5,4 @@
 
 export type { EmbeddingStatus, EmbeddingChunk, EmbeddingState } from './types';
 export { useEmbeddingEngine } from './useEmbeddingEngine';
+export * as vectorStore from './vectorStore';

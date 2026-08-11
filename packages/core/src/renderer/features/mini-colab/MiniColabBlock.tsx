@@ -1,125 +1,153 @@
 /**
  * ============================================================================
  * @file MiniColabBlock.tsx
- * @description MiniColabBlock.tsx 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
- * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
- * @example
- * // 예시 로직 (자동 생성됨)
- * import { something } from './MiniColabBlock';
- * 
- * @created 2026-08-11 08:57:45
- * @updated 2026-08-11 08:57:45
- * @author uno-km
- * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * @description 미니 콜랩 블록 (다크테마, JupyterBlock 스타일)
  * ============================================================================
  */
+import React, { useState, useEffect, useRef } from 'react'
+import { createReactBlockSpec } from '@blocknote/react'
 
-import React, { useEffect, useRef, useState } from 'react'
-import { colabStore } from './colabStore'
-import type { ColabState, ColabCellType } from './types'
+export const MiniColabBlock = createReactBlockSpec(
+  {
+    type: 'mini-colab',
+    propSchema: {
+      cells: { default: '[]' },
+      title: { default: '미니 콜랩' },
+      gpuEnabled: { default: 'false' }
+    },
+    content: 'none'
+  },
+  {
+    render: (props) => {
+      const workerRef = useRef<Worker | null>(null)
+      const [outputs, setOutputs] = useState<Record<string, string>>({})
+      const [loading, setLoading] = useState(false)
 
-export const MiniColabBlock: React.FC = () => {
-  const workerRef = useRef<Worker | null>(null)
-  const [state, setState] = useState<ColabState>(colabStore.getState())
+      const title = props.block.props.title
+      const gpuEnabled = props.block.props.gpuEnabled === 'true'
+      const cells = (() => {
+        try { return JSON.parse(props.block.props.cells) } catch { return [] }
+      })()
 
-  useEffect(() => {
-    if ('gpu' in navigator) {
-      colabStore.setGpuEnabled(!!navigator.gpu)
-    }
+      useEffect(() => {
+        workerRef.current = new Worker(new URL('./colabWorker.ts', import.meta.url), { type: 'module' })
+        
+        workerRef.current.onmessage = (e) => {
+          if (e.data.type === 'LOADING') {
+            setLoading(true)
+          } else if (e.data.type === 'EXEC_RESULT' || e.data.type === 'EXEC_ERROR') {
+            setLoading(false)
+            setOutputs(prev => ({
+              ...prev,
+              [e.data.cellId]: e.data.type === 'EXEC_RESULT' ? e.data.output : e.data.error
+            }))
+          }
+        }
+        return () => workerRef.current?.terminate()
+      }, [])
 
-    workerRef.current = new Worker(new URL('./colabWorker.ts', import.meta.url), { type: 'module' })
-    colabStore.setKernelReady(true)
-
-    workerRef.current.onmessage = (e) => {
-      if (e.data.type === 'EXEC_RESULT') {
-        colabStore.updateCellOutput(e.data.id, e.data.output, e.data.status)
+      const updateCells = (newCells: any[]) => {
+        props.editor.updateBlock(props.block, {
+          type: 'mini-colab',
+          props: { ...props.block.props, cells: JSON.stringify(newCells) }
+        })
       }
-    }
 
-    const unsubscribe = colabStore.subscribe(setState)
-    return () => {
-      unsubscribe()
-      workerRef.current?.terminate()
-    }
-  }, [])
+      const addCell = (lang: string) => {
+        const newCells = [...cells, { id: `cell-${Date.now()}`, lang, code: '' }]
+        updateCells(newCells)
+      }
 
-  const addCell = (type: ColabCellType = 'python') => {
-    colabStore.addCell({
-      id: `cell-${Date.now()}`,
-      type,
-      code: '',
-      output: '',
-      status: 'idle',
-      executionCount: 0
-    })
-  }
+      const removeCell = (id: string) => {
+        updateCells(cells.filter((c: any) => c.id !== id))
+      }
 
-  const runCell = (id: string, type: ColabCellType, code: string) => {
-    colabStore.updateCell(id, { status: 'running' })
-    if (type === 'python') {
-      workerRef.current?.postMessage({ type: 'EXEC_PYTHON', id, code })
-    } else if (type === 'sql') {
-      workerRef.current?.postMessage({ type: 'EXEC_SQL', id, sql: code })
-    } else {
-      colabStore.updateCellOutput(id, code, 'success') // markdown just returns code
-    }
-  }
+      const runCell = (cell: any) => {
+        if (!workerRef.current) return
+        const typeMap: Record<string, string> = {
+          'python': 'EXEC_PYTHON',
+          'javascript': 'EXEC_JS',
+          'sql': 'EXEC_SQL'
+        }
+        workerRef.current.postMessage({
+          type: typeMap[cell.lang],
+          code: cell.code,
+          cellId: cell.id
+        })
+        const tempHandler = (e: MessageEvent) => {
+          if (e.data.cellId === undefined) {
+             e.data.cellId = cell.id
+          }
+        }
+        workerRef.current.addEventListener('message', tempHandler, { once: true })
+      }
 
-  return (
-    <div style={{ padding: '16px', background: '#1e1e1e', color: 'white', borderRadius: '8px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', borderBottom: '1px solid #333', paddingBottom: '8px' }}>
-        <h3>Mini Colab</h3>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <span style={{ fontSize: '12px', color: '#888' }}>Total Execs: {state.totalExecutions}</span>
-          {state.kernelReady && <span style={{ color: '#3b82f6', fontSize: '12px' }}>Kernel Ready</span>}
-          {state.gpuEnabled ? (
-            <span style={{ color: '#10b981', fontWeight: 'bold', fontSize: '12px' }}>🟢 GPU</span>
-          ) : (
-            <span style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '12px' }}>🔴 CPU</span>
+      const runAll = () => {
+        cells.forEach(runCell)
+      }
+
+      const updateCode = (id: string, code: string) => {
+        const newCells = cells.map((c: any) => c.id === id ? { ...c, code } : c)
+        updateCells(newCells)
+      }
+
+      const toggleGpu = () => {
+        props.editor.updateBlock(props.block, {
+          type: 'mini-colab',
+          props: { ...props.block.props, gpuEnabled: gpuEnabled ? 'false' : 'true' }
+        })
+      }
+
+      return (
+        <div style={{ background: '#18181c', padding: '16px', borderRadius: '8px', border: '1px solid #333', color: '#fff', fontFamily: 'monospace' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ margin: 0, fontSize: '16px' }}>{title}</h3>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={toggleGpu} style={{ background: gpuEnabled ? '#10b981' : '#4b5563', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}>
+                {gpuEnabled ? 'GPU On' : 'GPU Off'}
+              </button>
+              <button onClick={() => addCell('python')} style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}>+ Python</button>
+              <button onClick={() => addCell('javascript')} style={{ background: '#f59e0b', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}>+ JavaScript</button>
+              <button onClick={() => addCell('sql')} style={{ background: '#8b5cf6', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}>+ SQL</button>
+            </div>
+          </div>
+
+          {loading && <div style={{ color: '#aaa', marginBottom: '8px' }}>Pyodide 로딩 중...</div>}
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {cells.map((cell: any, i: number) => (
+              <div key={cell.id} style={{ background: '#000', border: '1px solid #444', borderRadius: '6px', overflow: 'hidden' }}>
+                <div style={{ background: '#222', padding: '4px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+                  <span style={{ color: '#aaa' }}>[{i + 1}] {cell.lang}</span>
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <button onClick={() => runCell(cell)} style={{ background: '#10b981', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', padding: '2px 8px' }}>실행</button>
+                    <button onClick={() => removeCell(cell.id)} style={{ background: '#ef4444', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', padding: '2px 8px' }}>삭제</button>
+                  </div>
+                </div>
+                <textarea 
+                  value={cell.code}
+                  onChange={(e) => updateCode(cell.id, e.target.value)}
+                  style={{ width: '100%', minHeight: '60px', background: 'transparent', color: '#fff', border: 'none', padding: '8px', resize: 'vertical', outline: 'none' }}
+                  placeholder="코드를 입력하세요..."
+                />
+                {outputs[cell.id] && (
+                  <div style={{ background: '#111', padding: '8px', borderTop: '1px solid #333', whiteSpace: 'pre-wrap' }}>
+                    {outputs[cell.id]}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {cells.length > 0 && (
+            <div style={{ marginTop: '16px', textAlign: 'center' }}>
+              <button onClick={runAll} style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>
+                ⬆️ 모두 실행
+              </button>
+            </div>
           )}
         </div>
-      </div>
-      
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {state.cells.map(cell => (
-          <div key={cell.id} style={{ border: '1px solid #333', borderRadius: '4px', overflow: 'hidden' }}>
-            <div style={{ background: '#2a2a2a', padding: '8px', display: 'flex', justifyContent: 'space-between' }}>
-              <select 
-                value={cell.type} 
-                onChange={(e) => colabStore.updateCell(cell.id, { type: e.target.value as ColabCellType })}
-                style={{ background: '#1e1e1e', color: 'white', border: '1px solid #444', borderRadius: '4px' }}
-              >
-                <option value="python">Python</option>
-                <option value="sql">SQL</option>
-                <option value="markdown">Markdown</option>
-              </select>
-              <div>
-                <button onClick={() => runCell(cell.id, cell.type, cell.code)} disabled={cell.status === 'running'} style={{ marginRight: '4px', cursor: 'pointer' }}>
-                  {cell.status === 'running' ? 'Running...' : 'Run'}
-                </button>
-                <button onClick={() => colabStore.removeCell(cell.id)} style={{ cursor: 'pointer' }}>Delete</button>
-              </div>
-            </div>
-            <textarea 
-              value={cell.code}
-              onChange={(e) => colabStore.updateCell(cell.id, { code: e.target.value })}
-              style={{ width: '100%', minHeight: '60px', background: '#000', color: '#fff', border: 'none', padding: '8px', fontFamily: 'monospace', resize: 'vertical' }}
-              placeholder={`Enter ${cell.type} code...`}
-            />
-            {cell.output && (
-              <div style={{ background: '#111', padding: '8px', borderTop: '1px solid #333', fontFamily: 'monospace', color: cell.status === 'error' ? '#ef4444' : '#e5e5e5' }}>
-                <div style={{ fontSize: '10px', color: '#666', marginBottom: '4px' }}>[{cell.executionCount}]</div>
-                {cell.output}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-      
-      <div style={{ marginTop: '16px', display: 'flex', gap: '8px' }}>
-        <button onClick={() => addCell('python')} style={{ padding: '8px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>+ Python Cell</button>
-        <button onClick={() => addCell('markdown')} style={{ padding: '8px', background: '#8b5cf6', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>+ Markdown Cell</button>
-      </div>
-    </div>
-  )
-}
+      )
+    }
+  }
+)
