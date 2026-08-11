@@ -81,3 +81,15 @@ all_extracted_files.txt
 phase1_7_extracted_files.txt
 phase1_7_file_list.md
 AMEVA_WORKSTATION_DOCS/
+scripts/scratch/
+all_files_to_audit.txt
+analysis_result.txt
+block.txt
+depth_trace.txt
+diff.txt
+vitest_out*.txt
+*_bad.*
+*_old.*
+old_*
+scratch_*
+
