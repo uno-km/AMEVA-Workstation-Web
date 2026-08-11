@@ -3,6 +3,7 @@
  * @file MediaCutEditorBlock.tsx
  * @description 미디어 컷 편집기 블록
  * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
+ * // Force Vite HMR reload
  * ============================================================================
  */
 import React, { useState, useEffect, useRef } from 'react'

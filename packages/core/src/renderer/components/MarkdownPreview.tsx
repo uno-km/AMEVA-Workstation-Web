@@ -492,6 +492,14 @@ export function MarkdownPreview({ markdown, editor }: { markdown: string; editor
             )
           }
 
+          if (seg.language === 'ameva-media-editor') {
+            return (
+              <div key={idx} style={{ margin: '16px 0', width: '100%' }}>
+                <InlineMediaEditorRenderer code={seg.code} />
+              </div>
+            )
+          }
+
           if (editor) {
             /*
              * [RUN-TIME STATE / INVARIANT]

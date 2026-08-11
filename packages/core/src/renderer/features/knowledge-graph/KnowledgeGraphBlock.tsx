@@ -2,6 +2,7 @@
  * ============================================================================
  * @file KnowledgeGraphBlock.tsx
  * @description KnowledgeGraphBlock
+ * // Force Vite HMR reload
  * ============================================================================
  */
 import React, { useState } from 'react'

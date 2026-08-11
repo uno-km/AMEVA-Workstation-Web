@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getState, subscribe, setStatus, setProgress, setError, addChunk, clearChunks, setState } from './embeddingStore';
-import { EmbeddingChunk, EmbeddingState } from './types';
+import type { EmbeddingChunk, EmbeddingState } from './types';
 import * as vectorStore from './vectorStore';
 
 export const useEmbeddingEngine = () => {

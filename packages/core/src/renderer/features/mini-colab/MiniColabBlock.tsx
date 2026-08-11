@@ -2,6 +2,7 @@
  * ============================================================================
  * @file MiniColabBlock.tsx
  * @description 미니 콜랩 블록 (다크테마, JupyterBlock 스타일)
+ * // Force Vite HMR reload
  * ============================================================================
  */
 import React, { useState, useEffect, useRef } from 'react'

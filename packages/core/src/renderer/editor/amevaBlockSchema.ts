@@ -85,12 +85,12 @@ import { InlineDocumentBlock } from '../components/InlineDocumentBlock'
 import { ChartBlock } from '../components/ChartBlock'
 // [내부 프로젝트 의존성 모듈 임포트: ../components/AiDiffBlock]
 import { AiDiffBlock } from '../components/AiDiffBlock'
-// [내부 프로젝트 의존성 모듈 임포트: ../features/media-editor]
-import { MediaCutEditorBlock } from '../features/media-editor'
-// [내부 프로젝트 의존성 모듈 임포트: ../features/knowledge-graph]
-import { KnowledgeGraphBlock } from '../features/knowledge-graph'
-// [내부 프로젝트 의존성 모듈 임포트: ../features/mini-colab]
-import { MiniColabBlock } from '../features/mini-colab'
+// [내부 프로젝트 의존성 모듈 임포트: ../features/media-editor/MediaCutEditorBlock]
+import { MediaCutEditorBlock } from '../features/media-editor/MediaCutEditorBlock'
+// [내부 프로젝트 의존성 모듈 임포트: ../features/knowledge-graph/KnowledgeGraphBlock]
+import { KnowledgeGraphBlock } from '../features/knowledge-graph/KnowledgeGraphBlock'
+// [내부 프로젝트 의존성 모듈 임포트: ../features/mini-colab/MiniColabBlock]
+import { MiniColabBlock } from '../features/mini-colab/MiniColabBlock'
 
 // [내부 프로젝트 의존성 모듈 임포트: ../config/features]
 import { FEATURE_FLAGS } from '../config/features'
@@ -109,17 +109,21 @@ export const customSpecs = {
   inlineDocument: InlineDocumentBlock,
   chart: ChartBlock,
   aiDiff: AiDiffBlock,
-  mediaEditor: MediaCutEditorBlock,
-  knowledgeGraph: KnowledgeGraphBlock,
-  miniColab: MiniColabBlock,
+  'media-editor': MediaCutEditorBlock,
+  'knowledge-graph': KnowledgeGraphBlock,
+  'mini-colab': MiniColabBlock,
   ...(FEATURE_FLAGS.ENABLE_SMARTDOCS ? { smartDocsTable: SmartDocsTableBlock } : {}),
 }
 
-Object.entries(customSpecs).forEach(([key, value]) => {
-  if (!value) {
-    console.error(`[AMEVA SCHEMA ERROR] Block spec for '${key}' is undefined! This indicates a missing export or circular dependency.`);
-  }
-})
+const validCustomSpecs = Object.fromEntries(
+  Object.entries(customSpecs).filter(([key, value]) => {
+    if (!value || typeof value !== 'object' || Object.keys(value).length === 0) {
+      console.error(`[AMEVA SCHEMA ERROR] Block spec for '${key}' is invalid/empty! Removing from schema.`);
+      return false;
+    }
+    return true;
+  })
+)
 
 /**
  * amevaSchema 상태, 변수 또는 상수 선언부입니다.
@@ -128,7 +132,7 @@ Object.entries(customSpecs).forEach(([key, value]) => {
 export const amevaSchema = BlockNoteSchema.create({
   blockSpecs: {
     ...defaultBlockSpecs,
-    ...customSpecs
+    ...validCustomSpecs
   }
 })
 

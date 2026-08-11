@@ -3,7 +3,7 @@
  * 역할: RAG 임베딩 엔진의 전역 상태 관리
  */
 
-import { EmbeddingState, EmbeddingStatus, EmbeddingChunk } from './types';
+import type { EmbeddingState, EmbeddingStatus, EmbeddingChunk } from './types';
 
 // [초기 상태]
 let state: EmbeddingState = {

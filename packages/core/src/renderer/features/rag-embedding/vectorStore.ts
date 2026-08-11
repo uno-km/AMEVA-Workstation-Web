@@ -3,7 +3,7 @@
  * 역할: IndexedDB를 이용한 임베딩 벡터 영구 저장소
  */
 
-import { EmbeddingChunk } from './types';
+import type { EmbeddingChunk } from './types';
 
 const DB_NAME = 'ameva-rag-vectors';
 const STORE_NAME = 'chunks';
