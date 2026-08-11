@@ -176,4 +176,4 @@ export const MediaCutEditorBlock = createReactBlockSpec(
       )
     }
   }
-)
+)()
