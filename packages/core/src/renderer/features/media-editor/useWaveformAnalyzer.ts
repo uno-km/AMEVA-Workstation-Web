@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file useWaveformAnalyzer.ts
  * @location packages/core/src/renderer/features/media-editor/useWaveformAnalyzer.ts
  * @description Web Audio API 기반 오디오 파형 분석 및 지능형 무음 구간 탐지 훅
@@ -24,6 +24,24 @@ export interface WaveformResult {
   waveformData: Float32Array
   silenceSegments: SilenceSegment[]
   duration: number
+}
+
+/** 겹치는 컷 구간들을 병합하는 유틸리티 */
+export function mergeCutRegions(regions: SilenceSegment[]): SilenceSegment[] {
+  if (regions.length === 0) return []
+  const sorted = [...regions].sort((a, b) => a.start - b.start)
+  const merged: SilenceSegment[] = [sorted[0]]
+  
+  for (let i = 1; i < sorted.length; i++) {
+    const current = sorted[i]
+    const last = merged[merged.length - 1]
+    if (current.start <= last.end) {
+      last.end = Math.max(last.end, current.end)
+    } else {
+      merged.push(current)
+    }
+  }
+  return merged
 }
 
 interface UseWaveformAnalyzerOptions {

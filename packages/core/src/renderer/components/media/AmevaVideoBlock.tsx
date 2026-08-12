@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file AmevaVideoBlock.tsx
  * @location packages/core/src/renderer/components/media/AmevaVideoBlock.tsx
  * @description BlockNote 기본 video 블록을 오버라이드하는 인라인 비디오 편집 블록
@@ -15,7 +15,7 @@
  */
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { createReactBlockSpec } from '@blocknote/react'
-import { useWaveformAnalyzer, SilenceSegment } from '../../features/media-editor/useWaveformAnalyzer'
+import { useWaveformAnalyzer, type SilenceSegment, mergeCutRegions } from '../../features/media-editor/useWaveformAnalyzer'
 
 // ─── 내부 컴포넌트: 파형 캔버스 렌더러 ──────────────────────────────────────
 interface WaveformCanvasProps {
@@ -32,13 +32,13 @@ interface WaveformCanvasProps {
 function WaveformCanvas({
   waveformData,
   duration,
-  currentTime,
   cutRegions,
   silenceSegments,
   onSeek,
   width = 800,
   height = 60,
-}: WaveformCanvasProps) {
+  videoRef,
+}: WaveformCanvasProps & { videoRef: React.RefObject<HTMLVideoElement> }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -51,62 +51,68 @@ function WaveformCanvas({
     canvas.width = width * dpr
     canvas.height = height * dpr
     ctx.scale(dpr, dpr)
-    ctx.clearRect(0, 0, width, height)
+    // 재생 헤드를 requestAnimationFrame으로 직접 렌더링
+    let animationFrameId: number
+    const renderPlayhead = () => {
+      // 파형과 컷 영역을 매번 다시 그릴 필요 없이, 캔버스를 저장/복원하거나 지우고 전부 다시 그려야 함
+      // 여기서는 캔버스 상태를 관리하기 위해 매 프레임마다 파형도 다시 그림
+      ctx.clearRect(0, 0, width, height)
+      ctx.fillStyle = '#111'
+      ctx.fillRect(0, 0, width, height)
 
-    // 배경
-    ctx.fillStyle = '#111'
-    ctx.fillRect(0, 0, width, height)
+      silenceSegments.forEach(seg => {
+        const x1 = (seg.start / duration) * width
+        const x2 = (seg.end / duration) * width
+        ctx.fillStyle = 'rgba(239,68,68,0.3)'
+        ctx.fillRect(x1, 0, x2 - x1, height)
+        ctx.strokeStyle = 'rgba(239,68,68,0.5)'
+        ctx.lineWidth = 1
+        for (let x = x1; x < x2; x += 8) {
+          ctx.beginPath()
+          ctx.moveTo(x, 0)
+          ctx.lineTo(x + 8, height)
+          ctx.stroke()
+        }
+      })
 
-    // 무음 구간 빗금 표시 (붉은색)
-    silenceSegments.forEach(seg => {
-      const x1 = (seg.start / duration) * width
-      const x2 = (seg.end / duration) * width
-      ctx.fillStyle = 'rgba(239,68,68,0.3)'
-      ctx.fillRect(x1, 0, x2 - x1, height)
-      // 빗금 패턴
-      ctx.strokeStyle = 'rgba(239,68,68,0.5)'
-      ctx.lineWidth = 1
-      for (let x = x1; x < x2; x += 8) {
+      cutRegions.forEach(r => {
+        const x1 = (r.start / duration) * width
+        const x2 = (r.end / duration) * width
+        ctx.fillStyle = 'rgba(30,30,30,0.85)'
+        ctx.fillRect(x1, 0, x2 - x1, height)
+        ctx.strokeStyle = '#ef4444'
+        ctx.lineWidth = 1.5
+        ctx.setLineDash([4, 4])
+        ctx.strokeRect(x1, 0, x2 - x1, height)
+        ctx.setLineDash([])
+      })
+
+      const barWidth = width / waveformData.length
+      const midY = height / 2
+      ctx.fillStyle = '#4ade80'
+      for (let i = 0; i < waveformData.length; i++) {
+        const barH = waveformData[i] * height
+        ctx.fillRect(i * barWidth, midY - barH / 2, Math.max(barWidth - 0.5, 0.5), barH)
+      }
+
+      if (duration > 0 && videoRef.current) {
+        const ct = videoRef.current.currentTime
+        const playX = (ct / duration) * width
+        ctx.strokeStyle = '#fff'
+        ctx.lineWidth = 1.5
         ctx.beginPath()
-        ctx.moveTo(x, 0)
-        ctx.lineTo(x + 8, height)
+        ctx.moveTo(playX, 0)
+        ctx.lineTo(playX, height)
         ctx.stroke()
       }
-    })
 
-    // 컷 삭제 구간 표시 (회색 덮개)
-    cutRegions.forEach(r => {
-      const x1 = (r.start / duration) * width
-      const x2 = (r.end / duration) * width
-      ctx.fillStyle = 'rgba(30,30,30,0.85)'
-      ctx.fillRect(x1, 0, x2 - x1, height)
-      ctx.strokeStyle = '#ef4444'
-      ctx.lineWidth = 1.5
-      ctx.setLineDash([4, 4])
-      ctx.strokeRect(x1, 0, x2 - x1, height)
-      ctx.setLineDash([])
-    })
-
-    // 파형
-    const barWidth = width / waveformData.length
-    const midY = height / 2
-    ctx.fillStyle = '#4ade80'
-    for (let i = 0; i < waveformData.length; i++) {
-      const barH = waveformData[i] * height
-      ctx.fillRect(i * barWidth, midY - barH / 2, Math.max(barWidth - 0.5, 0.5), barH)
+      animationFrameId = requestAnimationFrame(renderPlayhead)
     }
 
-    // 재생 헤드
-    if (duration > 0) {
-      const playX = (currentTime / duration) * width
-      ctx.strokeStyle = '#fff'
-      ctx.lineWidth = 1.5
-      ctx.beginPath()
-      ctx.moveTo(playX, 0)
-      ctx.lineTo(playX, height)
-      ctx.stroke()
-    }
-  }, [waveformData, duration, currentTime, cutRegions, silenceSegments, width, height])
+    renderPlayhead()
+
+    return () => cancelAnimationFrame(animationFrameId)
+  }, [waveformData, duration, cutRegions, silenceSegments, width, height, videoRef])
 
   const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!duration) return
@@ -118,7 +124,7 @@ function WaveformCanvas({
   return (
     <canvas
       ref={canvasRef}
-      style={{ width: '100%', height: ${height}px, cursor: 'crosshair', display: 'block' }}
+      style={{ width: '100%', height: `${height}px`, cursor: 'crosshair', display: 'block' }}
       onClick={handleClick}
     />
   )
@@ -163,14 +169,14 @@ export const AmevaVideoBlock = createReactBlockSpec(
       useEffect(() => {
         const video = videoRef.current
         if (!video) return
-        const onTime = () => setCurrentTime(video.currentTime)
+        // const onTime = () => setCurrentTime(video.currentTime) // 성능 최적화를 위해 상태 의존 제거
         const onLoad = () => setDuration(video.duration)
         const onEnd = () => setIsPlaying(false)
-        video.addEventListener('timeupdate', onTime)
+        // video.addEventListener('timeupdate', onTime)
         video.addEventListener('loadedmetadata', onLoad)
         video.addEventListener('ended', onEnd)
         return () => {
-          video.removeEventListener('timeupdate', onTime)
+          // video.removeEventListener('timeupdate', onTime)
           video.removeEventListener('loadedmetadata', onLoad)
           video.removeEventListener('ended', onEnd)
         }
@@ -193,22 +199,14 @@ export const AmevaVideoBlock = createReactBlockSpec(
       }
 
       const applyDetectedSilences = () => {
-        setCutRegions(prev => {
-          const merged = [...prev]
-          silenceSegments.forEach(seg => {
-            if (!merged.some(r => r.start === seg.start && r.end === seg.end)) {
-              merged.push({ start: seg.start, end: seg.end })
-            }
-          })
-          return merged
-        })
+        setCutRegions(prev => mergeCutRegions([...prev, ...silenceSegments]))
       }
 
       const handleCutAtPlayhead = () => {
         if (duration <= 0) return
-        // 재생 헤드 앞 2초 구간을 컷 (단순 컷 시연)
-        const cutEnd = Math.min(currentTime + 0.1, duration)
-        setCutRegions(prev => [...prev, { start: currentTime, end: cutEnd }])
+        const ct = videoRef.current ? videoRef.current.currentTime : 0
+        const cutEnd = Math.min(ct + 0.1, duration)
+        setCutRegions(prev => mergeCutRegions([...prev, { start: ct, end: cutEnd }]))
       }
 
       const removeCutRegion = (idx: number) => {
@@ -242,11 +240,19 @@ export const AmevaVideoBlock = createReactBlockSpec(
           video.currentTime = 0
 
           await new Promise<void>((resolve) => {
-            const onTimeUpdate = () => {
+            const onEnded = () => {
+              video.removeEventListener('ended', onEnded)
+              resolve()
+            }
+            video.addEventListener('ended', onEnded)
+
+            // WebCodecs 렌더링 폴백 전 프론트엔드 최선의 방어책: requestVideoFrameCallback 
+            let frameHandle: number
+            const processFrame = () => {
+              if (video.ended) return
               const ct = video.currentTime
               setExportProgress(Math.round((ct / duration) * 100))
 
-              // 컷 구간 진입 시 건너뛰기
               if (nextCutIdx < sortedCuts.length) {
                 const cut = sortedCuts[nextCutIdx]
                 if (ct >= cut.start) {
@@ -254,14 +260,20 @@ export const AmevaVideoBlock = createReactBlockSpec(
                   nextCutIdx++
                 }
               }
-
-              if (ct >= duration) {
-                video.removeEventListener('timeupdate', onTimeUpdate)
-                resolve()
+              if ('requestVideoFrameCallback' in video) {
+                frameHandle = (video as any).requestVideoFrameCallback(processFrame)
+              } else {
+                frameHandle = requestAnimationFrame(processFrame) as any
               }
             }
-            video.addEventListener('timeupdate', onTimeUpdate)
-            video.play()
+            
+            video.play().then(() => {
+              if ('requestVideoFrameCallback' in video) {
+                frameHandle = (video as any).requestVideoFrameCallback(processFrame)
+              } else {
+                frameHandle = requestAnimationFrame(processFrame) as any
+              }
+            })
           })
 
           recorder.stop()
@@ -284,7 +296,7 @@ export const AmevaVideoBlock = createReactBlockSpec(
       const formatTime = (t: number) => {
         const m = Math.floor(t / 60).toString().padStart(2, '0')
         const s = (t % 60).toFixed(1).padStart(4, '0')
-        return ${m}:
+        return `${m}:${s}`
       }
 
       if (!src) {
@@ -347,7 +359,7 @@ export const AmevaVideoBlock = createReactBlockSpec(
                   {isPlaying ? '⏸' : '▶️'}
                 </button>
                 <span style={{ fontSize: '12px', color: '#aaa', minWidth: '90px' }}>
-                  {formatTime(currentTime)} / {formatTime(duration)}
+                  {formatTime(videoRef.current ? videoRef.current.currentTime : 0)} / {formatTime(duration)}
                 </span>
                 <button
                   onClick={handleCutAtPlayhead}
@@ -366,7 +378,7 @@ export const AmevaVideoBlock = createReactBlockSpec(
                     opacity: cutRegions.length === 0 ? 0.5 : 1,
                   }}
                 >
-                  {isExporting ? ⏳ % : '📤 내보내기'}
+                  {isExporting ? `⏳ ${exportProgress}%` : '📤 내보내기'}
                 </button>
               </div>
 
@@ -407,7 +419,7 @@ export const AmevaVideoBlock = createReactBlockSpec(
                     padding: '5px 12px', cursor: 'pointer', fontSize: '11px',
                   }}
                 >
-                  {isAnalyzing ? 분석 중 %... : '🔍 파형 분석'}
+                  {isAnalyzing ? `분석 중 ${analyzeProgress}%...` : '🔍 파형 분석'}
                 </button>
                 {silenceSegments.length > 0 && (
                   <button
@@ -433,9 +445,9 @@ export const AmevaVideoBlock = createReactBlockSpec(
                     silenceSegments={silenceSegments}
                     onSeek={(t) => {
                       if (videoRef.current) videoRef.current.currentTime = t
-                      setCurrentTime(t)
                     }}
                     height={72}
+                    videoRef={videoRef}
                   />
                 ) : (
                   <div style={{

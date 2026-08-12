@@ -11,5 +11,8 @@
   "dependencies": {
     "pptx-preview": "^1.0.7",
     "react-is": "^19.2.8"
+  },
+  "devDependencies": {
+    "@webgpu/types": "^0.1.71"
   }
 }

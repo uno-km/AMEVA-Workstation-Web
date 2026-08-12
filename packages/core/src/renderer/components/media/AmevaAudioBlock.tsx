@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file AmevaAudioBlock.tsx
  * @location packages/core/src/renderer/components/media/AmevaAudioBlock.tsx
  * @description BlockNote 기본 audio 블록을 오버라이드하는 인라인 오디오 편집 블록
@@ -15,7 +15,7 @@
  */
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { createReactBlockSpec } from '@blocknote/react'
-import { useWaveformAnalyzer, SilenceSegment } from '../../features/media-editor/useWaveformAnalyzer'
+import { useWaveformAnalyzer, type SilenceSegment, mergeCutRegions } from '../../features/media-editor/useWaveformAnalyzer'
 
 // ─── 오디오 파형 캔버스 ──────────────────────────────────────────────────────
 interface AudioWaveformProps {
@@ -28,8 +28,8 @@ interface AudioWaveformProps {
 }
 
 function AudioWaveformCanvas({
-  waveformData, duration, currentTime, cutRegions, silenceSegments, onSeek
-}: AudioWaveformProps) {
+  waveformData, duration, cutRegions, silenceSegments, onSeek, audioRef
+}: AudioWaveformProps & { audioRef: React.RefObject<HTMLAudioElement> }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const HEIGHT = 80
 
@@ -44,79 +44,84 @@ function AudioWaveformCanvas({
     canvas.width = W * dpr
     canvas.height = HEIGHT * dpr
     ctx.scale(dpr, dpr)
-    ctx.clearRect(0, 0, W, HEIGHT)
 
-    // 배경 그라디언트
-    const grad = ctx.createLinearGradient(0, 0, 0, HEIGHT)
-    grad.addColorStop(0, '#0a0a14')
-    grad.addColorStop(1, '#111122')
-    ctx.fillStyle = grad
-    ctx.fillRect(0, 0, W, HEIGHT)
+    let animationFrameId: number
+    const renderPlayhead = () => {
+      ctx.clearRect(0, 0, W, HEIGHT)
+      
+      const grad = ctx.createLinearGradient(0, 0, 0, HEIGHT)
+      grad.addColorStop(0, '#0a0a14')
+      grad.addColorStop(1, '#111122')
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, W, HEIGHT)
 
-    // 무음 구간 빗금
-    silenceSegments.forEach(seg => {
-      const x1 = (seg.start / duration) * W
-      const x2 = (seg.end / duration) * W
-      ctx.fillStyle = 'rgba(239,68,68,0.25)'
-      ctx.fillRect(x1, 0, x2 - x1, HEIGHT)
-      ctx.strokeStyle = 'rgba(239,68,68,0.5)'
-      ctx.lineWidth = 1
-      for (let x = x1; x < x2; x += 6) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + 6, HEIGHT); ctx.stroke()
+      silenceSegments.forEach(seg => {
+        const x1 = (seg.start / duration) * W
+        const x2 = (seg.end / duration) * W
+        ctx.fillStyle = 'rgba(239,68,68,0.25)'
+        ctx.fillRect(x1, 0, x2 - x1, HEIGHT)
+        ctx.strokeStyle = 'rgba(239,68,68,0.5)'
+        ctx.lineWidth = 1
+        for (let x = x1; x < x2; x += 6) {
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + 6, HEIGHT); ctx.stroke()
+        }
+      })
+
+      cutRegions.forEach(r => {
+        const x1 = (r.start / duration) * W
+        const x2 = (r.end / duration) * W
+        ctx.fillStyle = 'rgba(20,20,20,0.8)'
+        ctx.fillRect(x1, 0, x2 - x1, HEIGHT)
+        ctx.strokeStyle = '#ef4444'
+        ctx.lineWidth = 1.5
+        ctx.setLineDash([4, 3])
+        ctx.strokeRect(x1, 0, x2 - x1, HEIGHT)
+        ctx.setLineDash([])
+      })
+
+      const barW = W / waveformData.length
+      const midY = HEIGHT / 2
+      for (let i = 0; i < waveformData.length; i++) {
+        const barH = waveformData[i] * HEIGHT * 0.9
+        const x = i * barW
+        const waveGrad = ctx.createLinearGradient(0, midY - barH / 2, 0, midY + barH / 2)
+        waveGrad.addColorStop(0, '#818cf8')
+        waveGrad.addColorStop(0.5, '#4ade80')
+        waveGrad.addColorStop(1, '#818cf8')
+        ctx.fillStyle = waveGrad
+        ctx.fillRect(x, midY - barH / 2, Math.max(barW - 0.5, 0.5), barH)
       }
-    })
 
-    // 컷 삭제 구간 표시
-    cutRegions.forEach(r => {
-      const x1 = (r.start / duration) * W
-      const x2 = (r.end / duration) * W
-      ctx.fillStyle = 'rgba(20,20,20,0.8)'
-      ctx.fillRect(x1, 0, x2 - x1, HEIGHT)
-      ctx.strokeStyle = '#ef4444'
-      ctx.lineWidth = 1.5
-      ctx.setLineDash([4, 3])
-      ctx.strokeRect(x1, 0, x2 - x1, HEIGHT)
-      ctx.setLineDash([])
-    })
-
-    // 파형 그리기 (그라디언트 색상)
-    const barW = W / waveformData.length
-    const midY = HEIGHT / 2
-    for (let i = 0; i < waveformData.length; i++) {
-      const barH = waveformData[i] * HEIGHT * 0.9
-      const x = i * barW
-      const waveGrad = ctx.createLinearGradient(0, midY - barH / 2, 0, midY + barH / 2)
-      waveGrad.addColorStop(0, '#818cf8')
-      waveGrad.addColorStop(0.5, '#4ade80')
-      waveGrad.addColorStop(1, '#818cf8')
-      ctx.fillStyle = waveGrad
-      ctx.fillRect(x, midY - barH / 2, Math.max(barW - 0.5, 0.5), barH)
-    }
-
-    // 재생 헤드
-    if (duration > 0) {
-      const px = (currentTime / duration) * W
-      ctx.strokeStyle = '#f0f0ff'
-      ctx.lineWidth = 1.5
-      ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, HEIGHT); ctx.stroke()
-      ctx.fillStyle = '#fff'
-      ctx.beginPath(); ctx.arc(px, HEIGHT / 2, 4, 0, Math.PI * 2); ctx.fill()
-    }
-
-    // 격자 눈금 (5초 간격)
-    if (duration > 0) {
-      ctx.strokeStyle = 'rgba(255,255,255,0.06)'
-      ctx.lineWidth = 1
-      const step = 5
-      for (let t = step; t < duration; t += step) {
-        const x = (t / duration) * W
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, HEIGHT); ctx.stroke()
-        ctx.fillStyle = 'rgba(255,255,255,0.3)'
-        ctx.font = '9px monospace'
-        ctx.fillText(${t}s, x + 2, HEIGHT - 4)
+      if (duration > 0 && audioRef.current) {
+        const ct = audioRef.current.currentTime
+        const px = (ct / duration) * W
+        ctx.strokeStyle = '#f0f0ff'
+        ctx.lineWidth = 1.5
+        ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, HEIGHT); ctx.stroke()
+        ctx.fillStyle = '#fff'
+        ctx.beginPath(); ctx.arc(px, HEIGHT / 2, 4, 0, Math.PI * 2); ctx.fill()
       }
+
+      if (duration > 0) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)'
+        ctx.lineWidth = 1
+        const step = 5
+        for (let t = step; t < duration; t += step) {
+          const x = (t / duration) * W
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, HEIGHT); ctx.stroke()
+          ctx.fillStyle = 'rgba(255,255,255,0.3)'
+          ctx.font = '9px monospace'
+          ctx.fillText(`${t}s`, x + 2, HEIGHT - 4)
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(renderPlayhead)
     }
-  }, [waveformData, duration, currentTime, cutRegions, silenceSegments])
+
+    renderPlayhead()
+
+    return () => cancelAnimationFrame(animationFrameId)
+  }, [waveformData, duration, cutRegions, silenceSegments, audioRef])
 
   const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!duration) return
@@ -127,7 +132,7 @@ function AudioWaveformCanvas({
   return (
     <canvas
       ref={canvasRef}
-      style={{ width: '100%', height: ${HEIGHT}px, cursor: 'crosshair', display: 'block', borderRadius: '6px' }}
+      style={{ width: '100%', height: `${HEIGHT}px`, cursor: 'crosshair', display: 'block', borderRadius: '6px' }}
       onClick={handleClick}
     />
   )
@@ -169,14 +174,14 @@ export const AmevaAudioBlock = createReactBlockSpec(
       useEffect(() => {
         const audio = audioRef.current
         if (!audio) return
-        const onTime = () => setCurrentTime(audio.currentTime)
+        // const onTime = () => setCurrentTime(audio.currentTime)
         const onLoad = () => setDuration(audio.duration)
         const onEnd = () => setIsPlaying(false)
-        audio.addEventListener('timeupdate', onTime)
+        // audio.addEventListener('timeupdate', onTime)
         audio.addEventListener('loadedmetadata', onLoad)
         audio.addEventListener('ended', onEnd)
         return () => {
-          audio.removeEventListener('timeupdate', onTime)
+          // audio.removeEventListener('timeupdate', onTime)
           audio.removeEventListener('loadedmetadata', onLoad)
           audio.removeEventListener('ended', onEnd)
         }
@@ -199,15 +204,7 @@ export const AmevaAudioBlock = createReactBlockSpec(
       }
 
       const applyDetectedSilences = () => {
-        setCutRegions(prev => {
-          const merged = [...prev]
-          silenceSegments.forEach(seg => {
-            if (!merged.some(r => r.start === seg.start && r.end === seg.end)) {
-              merged.push({ start: seg.start, end: seg.end })
-            }
-          })
-          return merged
-        })
+        setCutRegions(prev => mergeCutRegions([...prev, ...silenceSegments]))
       }
 
       const handleExportAudio = async () => {
@@ -276,7 +273,7 @@ export const AmevaAudioBlock = createReactBlockSpec(
       const formatTime = (t: number) => {
         const m = Math.floor(t / 60).toString().padStart(2, '0')
         const s = (t % 60).toFixed(1).padStart(4, '0')
-        return ${m}:
+        return `${m}:${s}`
       }
 
       if (!src) {
@@ -360,12 +357,12 @@ export const AmevaAudioBlock = createReactBlockSpec(
               <div style={{
                 height: '100%', borderRadius: '2px',
                 background: 'linear-gradient(90deg, #7c3aed, #818cf8)',
-                width: duration > 0 ? ${(currentTime / duration) * 100}% : '0%',
+                width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%',
                 transition: 'width 0.05s',
               }} />
             </div>
             <span style={{ fontSize: '11px', color: '#aaa', whiteSpace: 'nowrap' }}>
-              {formatTime(currentTime)} / {formatTime(duration)}
+              {formatTime(audioRef.current ? audioRef.current.currentTime : 0)} / {formatTime(duration)}
             </span>
           </div>
 
@@ -409,7 +406,7 @@ export const AmevaAudioBlock = createReactBlockSpec(
                     padding: '5px 12px', cursor: 'pointer', fontSize: '11px',
                   }}
                 >
-                  {isAnalyzing ? 분석 중 %... : '🔍 파형 분석'}
+                  {isAnalyzing ? `분석 중 ${analyzeProgress}%...` : '🔍 파형 분석'}
                 </button>
                 {silenceSegments.length > 0 && (
                   <button
@@ -439,17 +436,17 @@ export const AmevaAudioBlock = createReactBlockSpec(
 
               {/* 파형 캔버스 */}
               {waveformData.length > 0 ? (
-                <AudioWaveformCanvas
-                  waveformData={waveformData}
-                  duration={duration}
-                  currentTime={currentTime}
-                  cutRegions={cutRegions}
-                  silenceSegments={silenceSegments}
-                  onSeek={(t) => {
-                    if (audioRef.current) audioRef.current.currentTime = t
-                    setCurrentTime(t)
-                  }}
-                />
+                  <AudioWaveformCanvas
+                    waveformData={waveformData}
+                    duration={duration}
+                    currentTime={currentTime}
+                    cutRegions={cutRegions}
+                    silenceSegments={silenceSegments}
+                    onSeek={(t) => {
+                      if (audioRef.current) audioRef.current.currentTime = t
+                    }}
+                    audioRef={audioRef}
+                  />
               ) : (
                 <div style={{
                   height: '80px', background: '#0a0a14', borderRadius: '6px',
