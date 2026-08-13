@@ -91,9 +91,10 @@ import { MediaCutEditorBlock } from '../features/media-editor/MediaCutEditorBloc
 import { KnowledgeGraphBlock } from '../features/knowledge-graph/KnowledgeGraphBlock'
 // [내부 프로젝트 의존성 모듈 임포트: ../features/mini-colab/MiniColabBlock]
 import { MiniColabBlock } from '../features/mini-colab/MiniColabBlock'
-// [AMEVA V4.1 미디어 블록 오버라이드: 기본 video/audio 블록을 인라인 컷편집 블록으로 교체]
+// [AMEVA V4.1 미디어 블록 오버라이드: 기본 video/audio/image 블록을 인라인 컷편집 블록으로 교체]
 import { AmevaVideoBlock } from '../components/media/AmevaVideoBlock'
 import { AmevaAudioBlock } from '../components/media/AmevaAudioBlock'
+import { AmevaImageBlock } from '../components/media/AmevaImageBlock'
 
 // [내부 프로젝트 의존성 모듈 임포트: ../config/features]
 import { FEATURE_FLAGS } from '../config/features'
@@ -115,9 +116,10 @@ export const customSpecs = {
   'media-editor': MediaCutEditorBlock,
   'knowledge-graph': KnowledgeGraphBlock,
   'mini-colab': MiniColabBlock,
-  // AMEVA V4.1: 기본 video/audio 블록을 인라인 컷편집 블록으로 오버라이드
+  // AMEVA V4.1: 기본 video/audio/image 블록을 인라인 편집 블록으로 오버라이드
   video: AmevaVideoBlock,
   audio: AmevaAudioBlock,
+  image: AmevaImageBlock,
   ...(FEATURE_FLAGS.ENABLE_SMARTDOCS ? { smartDocsTable: SmartDocsTableBlock } : {}),
 }
 

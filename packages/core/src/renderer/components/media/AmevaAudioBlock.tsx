@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file AmevaAudioBlock.tsx
  * @location packages/core/src/renderer/components/media/AmevaAudioBlock.tsx
  * @description BlockNote 기본 audio 블록을 오버라이드하는 인라인 오디오 편집 블록
@@ -15,7 +15,8 @@
  */
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { createReactBlockSpec } from '@blocknote/react'
-import { useWaveformAnalyzer, SilenceSegment } from '../../features/media-editor/useWaveformAnalyzer'
+import { useWaveformAnalyzer, type SilenceSegment, mergeCutRegions } from '../../features/media-editor/useWaveformAnalyzer'
+import { saveAttachment, getAttachment } from '../../utils/vfsDatabase'
 
 // ─── 오디오 파형 캔버스 ──────────────────────────────────────────────────────
 interface AudioWaveformProps {
@@ -28,8 +29,8 @@ interface AudioWaveformProps {
 }
 
 function AudioWaveformCanvas({
-  waveformData, duration, currentTime, cutRegions, silenceSegments, onSeek
-}: AudioWaveformProps) {
+  waveformData, duration, cutRegions, silenceSegments, onSeek, audioRef
+}: AudioWaveformProps & { audioRef: React.RefObject<HTMLAudioElement> }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const HEIGHT = 80
 
@@ -44,79 +45,84 @@ function AudioWaveformCanvas({
     canvas.width = W * dpr
     canvas.height = HEIGHT * dpr
     ctx.scale(dpr, dpr)
-    ctx.clearRect(0, 0, W, HEIGHT)
 
-    // 배경 그라디언트
-    const grad = ctx.createLinearGradient(0, 0, 0, HEIGHT)
-    grad.addColorStop(0, '#0a0a14')
-    grad.addColorStop(1, '#111122')
-    ctx.fillStyle = grad
-    ctx.fillRect(0, 0, W, HEIGHT)
+    let animationFrameId: number
+    const renderPlayhead = () => {
+      ctx.clearRect(0, 0, W, HEIGHT)
+      
+      const grad = ctx.createLinearGradient(0, 0, 0, HEIGHT)
+      grad.addColorStop(0, '#0a0a14')
+      grad.addColorStop(1, '#111122')
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, W, HEIGHT)
 
-    // 무음 구간 빗금
-    silenceSegments.forEach(seg => {
-      const x1 = (seg.start / duration) * W
-      const x2 = (seg.end / duration) * W
-      ctx.fillStyle = 'rgba(239,68,68,0.25)'
-      ctx.fillRect(x1, 0, x2 - x1, HEIGHT)
-      ctx.strokeStyle = 'rgba(239,68,68,0.5)'
-      ctx.lineWidth = 1
-      for (let x = x1; x < x2; x += 6) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + 6, HEIGHT); ctx.stroke()
+      silenceSegments.forEach(seg => {
+        const x1 = (seg.start / duration) * W
+        const x2 = (seg.end / duration) * W
+        ctx.fillStyle = 'rgba(239,68,68,0.25)'
+        ctx.fillRect(x1, 0, x2 - x1, HEIGHT)
+        ctx.strokeStyle = 'rgba(239,68,68,0.5)'
+        ctx.lineWidth = 1
+        for (let x = x1; x < x2; x += 6) {
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + 6, HEIGHT); ctx.stroke()
+        }
+      })
+
+      cutRegions.forEach(r => {
+        const x1 = (r.start / duration) * W
+        const x2 = (r.end / duration) * W
+        ctx.fillStyle = 'rgba(20,20,20,0.8)'
+        ctx.fillRect(x1, 0, x2 - x1, HEIGHT)
+        ctx.strokeStyle = '#ef4444'
+        ctx.lineWidth = 1.5
+        ctx.setLineDash([4, 3])
+        ctx.strokeRect(x1, 0, x2 - x1, HEIGHT)
+        ctx.setLineDash([])
+      })
+
+      const barW = W / waveformData.length
+      const midY = HEIGHT / 2
+      for (let i = 0; i < waveformData.length; i++) {
+        const barH = waveformData[i] * HEIGHT * 0.9
+        const x = i * barW
+        const waveGrad = ctx.createLinearGradient(0, midY - barH / 2, 0, midY + barH / 2)
+        waveGrad.addColorStop(0, '#818cf8')
+        waveGrad.addColorStop(0.5, '#4ade80')
+        waveGrad.addColorStop(1, '#818cf8')
+        ctx.fillStyle = waveGrad
+        ctx.fillRect(x, midY - barH / 2, Math.max(barW - 0.5, 0.5), barH)
       }
-    })
 
-    // 컷 삭제 구간 표시
-    cutRegions.forEach(r => {
-      const x1 = (r.start / duration) * W
-      const x2 = (r.end / duration) * W
-      ctx.fillStyle = 'rgba(20,20,20,0.8)'
-      ctx.fillRect(x1, 0, x2 - x1, HEIGHT)
-      ctx.strokeStyle = '#ef4444'
-      ctx.lineWidth = 1.5
-      ctx.setLineDash([4, 3])
-      ctx.strokeRect(x1, 0, x2 - x1, HEIGHT)
-      ctx.setLineDash([])
-    })
-
-    // 파형 그리기 (그라디언트 색상)
-    const barW = W / waveformData.length
-    const midY = HEIGHT / 2
-    for (let i = 0; i < waveformData.length; i++) {
-      const barH = waveformData[i] * HEIGHT * 0.9
-      const x = i * barW
-      const waveGrad = ctx.createLinearGradient(0, midY - barH / 2, 0, midY + barH / 2)
-      waveGrad.addColorStop(0, '#818cf8')
-      waveGrad.addColorStop(0.5, '#4ade80')
-      waveGrad.addColorStop(1, '#818cf8')
-      ctx.fillStyle = waveGrad
-      ctx.fillRect(x, midY - barH / 2, Math.max(barW - 0.5, 0.5), barH)
-    }
-
-    // 재생 헤드
-    if (duration > 0) {
-      const px = (currentTime / duration) * W
-      ctx.strokeStyle = '#f0f0ff'
-      ctx.lineWidth = 1.5
-      ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, HEIGHT); ctx.stroke()
-      ctx.fillStyle = '#fff'
-      ctx.beginPath(); ctx.arc(px, HEIGHT / 2, 4, 0, Math.PI * 2); ctx.fill()
-    }
-
-    // 격자 눈금 (5초 간격)
-    if (duration > 0) {
-      ctx.strokeStyle = 'rgba(255,255,255,0.06)'
-      ctx.lineWidth = 1
-      const step = 5
-      for (let t = step; t < duration; t += step) {
-        const x = (t / duration) * W
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, HEIGHT); ctx.stroke()
-        ctx.fillStyle = 'rgba(255,255,255,0.3)'
-        ctx.font = '9px monospace'
-        ctx.fillText(${t}s, x + 2, HEIGHT - 4)
+      if (duration > 0 && audioRef.current) {
+        const ct = audioRef.current.currentTime
+        const px = (ct / duration) * W
+        ctx.strokeStyle = '#f0f0ff'
+        ctx.lineWidth = 1.5
+        ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, HEIGHT); ctx.stroke()
+        ctx.fillStyle = '#fff'
+        ctx.beginPath(); ctx.arc(px, HEIGHT / 2, 4, 0, Math.PI * 2); ctx.fill()
       }
+
+      if (duration > 0) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.06)'
+        ctx.lineWidth = 1
+        const step = 5
+        for (let t = step; t < duration; t += step) {
+          const x = (t / duration) * W
+          ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, HEIGHT); ctx.stroke()
+          ctx.fillStyle = 'rgba(255,255,255,0.3)'
+          ctx.font = '9px monospace'
+          ctx.fillText(`${t}s`, x + 2, HEIGHT - 4)
+        }
+      }
+
+      animationFrameId = requestAnimationFrame(renderPlayhead)
     }
-  }, [waveformData, duration, currentTime, cutRegions, silenceSegments])
+
+    renderPlayhead()
+
+    return () => cancelAnimationFrame(animationFrameId)
+  }, [waveformData, duration, cutRegions, silenceSegments, audioRef])
 
   const handleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!duration) return
@@ -127,14 +133,14 @@ function AudioWaveformCanvas({
   return (
     <canvas
       ref={canvasRef}
-      style={{ width: '100%', height: ${HEIGHT}px, cursor: 'crosshair', display: 'block', borderRadius: '6px' }}
+      style={{ width: '100%', height: `${HEIGHT}px`, cursor: 'crosshair', display: 'block', borderRadius: '6px' }}
       onClick={handleClick}
     />
   )
 }
 
 // ─── 메인 블록 정의 ───────────────────────────────────────────────────────────
-export const AmevaAudioBlock = createReactBlockSpec(
+export const AmevaAudioBlockSpec = createReactBlockSpec(
   {
     type: 'audio',
     propSchema: {
@@ -154,6 +160,8 @@ export const AmevaAudioBlock = createReactBlockSpec(
       const [waveformData, setWaveformData] = useState<Float32Array>(new Float32Array(0))
       const [silenceSegments, setSilenceSegments] = useState<SilenceSegment[]>([])
       const [cutRegions, setCutRegions] = useState<{ start: number; end: number }[]>([])
+      const [cutIn, setCutIn] = useState<number | null>(null)
+      const [cutOut, setCutOut] = useState<number | null>(null)
       const [silenceThreshold, setSilenceThreshold] = useState(0.01)
       const [minSilenceDuration, setMinSilenceDuration] = useState(0.5)
       const [isExporting, setIsExporting] = useState(false)
@@ -164,19 +172,35 @@ export const AmevaAudioBlock = createReactBlockSpec(
         minSilenceDuration,
       })
 
-      const src = props.block.props.url
+      const rawUrl = props.block.props.url
+      const [src, setSrc] = useState<string>('')
+
+      useEffect(() => {
+        if (!rawUrl) {
+          setSrc('')
+          return
+        }
+        if (rawUrl.startsWith('ameva-vfs://')) {
+          const fileId = rawUrl.replace('ameva-vfs://', '')
+          getAttachment(fileId).then(blob => {
+            if (blob) setSrc(URL.createObjectURL(blob))
+          }).catch(err => console.error("Failed to load VFS blob:", err))
+        } else {
+          setSrc(rawUrl)
+        }
+      }, [rawUrl])
 
       useEffect(() => {
         const audio = audioRef.current
         if (!audio) return
-        const onTime = () => setCurrentTime(audio.currentTime)
+        // const onTime = () => setCurrentTime(audio.currentTime)
         const onLoad = () => setDuration(audio.duration)
         const onEnd = () => setIsPlaying(false)
-        audio.addEventListener('timeupdate', onTime)
+        // audio.addEventListener('timeupdate', onTime)
         audio.addEventListener('loadedmetadata', onLoad)
         audio.addEventListener('ended', onEnd)
         return () => {
-          audio.removeEventListener('timeupdate', onTime)
+          // audio.removeEventListener('timeupdate', onTime)
           audio.removeEventListener('loadedmetadata', onLoad)
           audio.removeEventListener('ended', onEnd)
         }
@@ -199,18 +223,26 @@ export const AmevaAudioBlock = createReactBlockSpec(
       }
 
       const applyDetectedSilences = () => {
-        setCutRegions(prev => {
-          const merged = [...prev]
-          silenceSegments.forEach(seg => {
-            if (!merged.some(r => r.start === seg.start && r.end === seg.end)) {
-              merged.push({ start: seg.start, end: seg.end })
-            }
-          })
-          return merged
-        })
+        setCutRegions(prev => mergeCutRegions([...prev, ...silenceSegments]))
       }
 
-      const handleExportAudio = async () => {
+      const handleSetIn = () => setCutIn(audioRef.current ? audioRef.current.currentTime : null)
+      const handleSetOut = () => setCutOut(audioRef.current ? audioRef.current.currentTime : null)
+      const handleAddCut = () => {
+        if (cutIn !== null && cutOut !== null && cutIn < cutOut) {
+          setCutRegions(prev => mergeCutRegions([...prev, { start: cutIn, end: cutOut }]))
+          setCutIn(null)
+          setCutOut(null)
+        } else {
+          alert('시작점과 끝점을 올바르게 설정해주세요.')
+        }
+      }
+
+      const removeCutRegion = (idx: number) => {
+        setCutRegions(prev => prev.filter((_, i) => i !== idx))
+      }
+
+      const handleApplyAudio = async () => {
         if (!src) return
         setIsExporting(true)
         try {
@@ -260,14 +292,18 @@ export const AmevaAudioBlock = createReactBlockSpec(
           const renderedBuffer = await offlineCtx.startRendering()
           await audioCtx.close()
 
-          // WAV 변환 및 다운로드
+          // WAV 변환 및 적용
           const wavBlob = audioBufferToWav(renderedBuffer)
-          const url = URL.createObjectURL(wavBlob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download = 'ameva_audio_export.wav'
-          a.click()
-          URL.revokeObjectURL(url)
+          const fileId = `media-export-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+          await saveAttachment(fileId, wavBlob)
+          const url = `ameva-vfs://${fileId}`
+          
+          props.editor.updateBlock(props.block.id, {
+            type: 'audio',
+            props: { ...props.block.props, url }
+          } as any)
+          
+          setIsEditMode(false)
         } finally {
           setIsExporting(false)
         }
@@ -276,17 +312,40 @@ export const AmevaAudioBlock = createReactBlockSpec(
       const formatTime = (t: number) => {
         const m = Math.floor(t / 60).toString().padStart(2, '0')
         const s = (t % 60).toFixed(1).padStart(4, '0')
-        return ${m}:
+        return `${m}:${s}`
       }
 
       if (!src) {
         return (
-          <div style={{
-            border: '2px dashed #333', borderRadius: '8px', padding: '24px',
-            textAlign: 'center', color: '#888', background: '#0f0f0f',
-          }}>
-            <div style={{ fontSize: '28px', marginBottom: '8px' }}>🎵</div>
-            <div>오디오 파일을 드래그하거나 /audio 슬래시 명령으로 추가하세요</div>
+          <div 
+            style={{
+              border: '2px dashed #3a3a4a', borderRadius: '10px', padding: '30px',
+              textAlign: 'center', color: '#888', background: '#0d0d1a', cursor: 'pointer'
+            }}
+            onClick={() => document.getElementById(`audio-upload-${props.block.id}`)?.click()}
+          >
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎵</div>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: '#e2e8f0', marginBottom: '6px' }}>클릭하여 오디오 파일 업로드</div>
+            <div style={{ fontSize: '11px' }}>또는 오디오 파일을 이곳으로 드래그하세요</div>
+            <input
+              id={`audio-upload-${props.block.id}`}
+              type="file"
+              accept="audio/*,.mp3,.wav,.ogg,.flac,.m4a,.wma,.aac"
+              style={{ display: 'none' }}
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) {
+                  const fileId = `media-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+                  saveAttachment(fileId, file).then(() => {
+                    const url = `ameva-vfs://${fileId}`
+                    props.editor.updateBlock(props.block.id, {
+                      type: 'audio',
+                      props: { ...props.block.props, url }
+                    } as any)
+                  })
+                }
+              }}
+            />
           </div>
         )
       }
@@ -360,12 +419,12 @@ export const AmevaAudioBlock = createReactBlockSpec(
               <div style={{
                 height: '100%', borderRadius: '2px',
                 background: 'linear-gradient(90deg, #7c3aed, #818cf8)',
-                width: duration > 0 ? ${(currentTime / duration) * 100}% : '0%',
+                width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%',
                 transition: 'width 0.05s',
               }} />
             </div>
             <span style={{ fontSize: '11px', color: '#aaa', whiteSpace: 'nowrap' }}>
-              {formatTime(currentTime)} / {formatTime(duration)}
+              {formatTime(audioRef.current ? audioRef.current.currentTime : 0)} / {formatTime(duration)}
             </span>
           </div>
 
@@ -409,7 +468,7 @@ export const AmevaAudioBlock = createReactBlockSpec(
                     padding: '5px 12px', cursor: 'pointer', fontSize: '11px',
                   }}
                 >
-                  {isAnalyzing ? 분석 중 %... : '🔍 파형 분석'}
+                  {isAnalyzing ? `분석 중 ${analyzeProgress}%...` : '🔍 파형 분석'}
                 </button>
                 {silenceSegments.length > 0 && (
                   <button
@@ -422,9 +481,39 @@ export const AmevaAudioBlock = createReactBlockSpec(
                     ✂️ 무음 {silenceSegments.length}개 삭제
                   </button>
                 )}
+                <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginLeft: '10px' }}>
+                  <button
+                    onClick={handleSetIn}
+                    style={{ background: '#4b5563', border: 'none', color: '#fff', borderRadius: '5px', padding: '5px 8px', cursor: 'pointer', fontSize: '11px' }}
+                  >
+                    [ In
+                  </button>
+                  <button
+                    onClick={handleSetOut}
+                    style={{ background: '#4b5563', border: 'none', color: '#fff', borderRadius: '5px', padding: '5px 8px', cursor: 'pointer', fontSize: '11px' }}
+                  >
+                    Out ]
+                  </button>
+                  <button
+                    onClick={handleAddCut}
+                    disabled={cutIn === null || cutOut === null}
+                    style={{ 
+                      background: (cutIn !== null && cutOut !== null) ? '#dc2626' : '#374151', 
+                      border: 'none', color: '#fff', borderRadius: '5px', padding: '5px 10px', cursor: 'pointer', fontSize: '11px',
+                      opacity: (cutIn !== null && cutOut !== null) ? 1 : 0.5
+                    }}
+                  >
+                    ✂️ 구간 자르기
+                  </button>
+                  {(cutIn !== null || cutOut !== null) && (
+                    <span style={{ fontSize: '10px', color: '#fca5a5', marginLeft: '4px' }}>
+                      {cutIn !== null ? formatTime(cutIn) : '--:--'} ~ {cutOut !== null ? formatTime(cutOut) : '--:--'}
+                    </span>
+                  )}
+                </div>
                 <div style={{ flex: 1 }} />
                 <button
-                  onClick={handleExportAudio}
+                  onClick={handleApplyAudio}
                   disabled={isExporting || cutRegions.length === 0}
                   style={{
                     background: isExporting ? '#374151' : '#059669',
@@ -433,23 +522,23 @@ export const AmevaAudioBlock = createReactBlockSpec(
                     opacity: cutRegions.length === 0 ? 0.5 : 1,
                   }}
                 >
-                  {isExporting ? '⏳ 내보내는 중...' : '📤 WAV 내보내기'}
+                  {isExporting ? '⏳ 처리 중...' : '💾 적용하기'}
                 </button>
               </div>
 
               {/* 파형 캔버스 */}
               {waveformData.length > 0 ? (
-                <AudioWaveformCanvas
-                  waveformData={waveformData}
-                  duration={duration}
-                  currentTime={currentTime}
-                  cutRegions={cutRegions}
-                  silenceSegments={silenceSegments}
-                  onSeek={(t) => {
-                    if (audioRef.current) audioRef.current.currentTime = t
-                    setCurrentTime(t)
-                  }}
-                />
+                  <AudioWaveformCanvas
+                    waveformData={waveformData}
+                    duration={duration}
+                    currentTime={currentTime}
+                    cutRegions={cutRegions}
+                    silenceSegments={silenceSegments}
+                    onSeek={(t) => {
+                      if (audioRef.current) audioRef.current.currentTime = t
+                    }}
+                    audioRef={audioRef}
+                  />
               ) : (
                 <div style={{
                   height: '80px', background: '#0a0a14', borderRadius: '6px',
@@ -486,6 +575,9 @@ export const AmevaAudioBlock = createReactBlockSpec(
     }
   }
 )
+
+export const AmevaAudioBlock = AmevaAudioBlockSpec()
+
 
 // ─── WAV 인코더 유틸리티 ─────────────────────────────────────────────────────
 function audioBufferToWav(buffer: AudioBuffer): Blob {
