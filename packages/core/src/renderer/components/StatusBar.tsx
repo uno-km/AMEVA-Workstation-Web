@@ -66,8 +66,8 @@ import { Settings, ZoomIn, WrapText } from 'lucide-react'
 // [내부 프로젝트 의존성 모듈 임포트: ./statusbar/AIStatusIndicator]
 import { AIStatusIndicator } from './statusbar/AIStatusIndicator'
 import { EmbeddingStatusIndicator } from './statusbar/EmbeddingStatusIndicator'
-// [내부 프로젝트 의존성 모듈 임포트: ./statusbar/DocStatusIndicator]
 import { DocStatusIndicator } from './statusbar/DocStatusIndicator'
+import { DependencyStatusIndicator } from './statusbar/DependencyStatusIndicator'
 
 /* 
  * [CONTEXT & STORES]
@@ -303,9 +303,14 @@ export function StatusBar({}: StatusBarProps = {}) {
           editorContent={currentContent}
         />
         <div style={{ width: '1px', height: '12px', backgroundColor: 'var(--border-muted)' }} />
-
-
-
+        
+        <DependencyStatusIndicator
+          activeTooltip={activeTooltip}
+          handleMouseEnter={handleMouseEnter}
+          handleMouseLeave={handleMouseLeave}
+          tooltipStyle={tooltipStyle}
+        />
+        <div style={{ width: '1px', height: '12px', backgroundColor: 'var(--border-muted)' }} />
         {/* 가로 스크롤 강제 줄바꿈 비활성화 단추 */}
         <label
           style={{

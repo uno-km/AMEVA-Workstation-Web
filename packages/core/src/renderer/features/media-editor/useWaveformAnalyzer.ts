@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file useWaveformAnalyzer.ts
  * @location packages/core/src/renderer/features/media-editor/useWaveformAnalyzer.ts
  * @description Web Audio API 기반 오디오 파형 분석 및 지능형 무음 구간 탐지 훅
@@ -116,4 +116,24 @@ export function useWaveformAnalyzer(options: UseWaveformAnalyzerOptions = {}) {
   }, [silenceThreshold, minSilenceDuration, waveformResolution])
 
   return { analyzeMedia, isAnalyzing, progress }
+}
+
+/** 겹치거나 인접한 무음 구간을 병합하는 유틸리티 */
+export function mergeCutRegions(regions: SilenceSegment[]): SilenceSegment[] {
+  if (regions.length <= 1) return regions
+  const sorted = [...regions].sort((a, b) => a.start - b.start)
+  const merged: SilenceSegment[] = [sorted[0]]
+  
+  for (let i = 1; i < sorted.length; i++) {
+    const current = sorted[i]
+    const lastMerged = merged[merged.length - 1]
+    
+    // 0.1초 정도의 오차는 겹친 것으로 판단
+    if (current.start <= lastMerged.end + 0.1) {
+      lastMerged.end = Math.max(lastMerged.end, current.end)
+    } else {
+      merged.push(current)
+    }
+  }
+  return merged
 }

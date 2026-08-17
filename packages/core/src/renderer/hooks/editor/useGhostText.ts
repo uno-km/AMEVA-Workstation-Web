@@ -272,8 +272,26 @@ export function useGhostText({
     throttleRef.current = throttledShow;
 
     try {
+      // [RAG Smart Copilot Context Lookup]
+      let referenceContext = '';
+      try {
+        const { loadAllChunks, searchKeywordOnly } = await import('../../features/rag-embedding/vectorStore');
+        const allChunks = await loadAllChunks();
+        if (allChunks && allChunks.length > 0) {
+          const beforeTextSample = getTextBeforeCursor(view.state, pos, 60);
+          const matched = searchKeywordOnly(beforeTextSample, 1, allChunks);
+          if (matched.length > 0 && (matched[0].score || 0) > 10) {
+            const topChunk = matched[0];
+            const headingPrefix = topChunk.heading ? `[${topChunk.heading}] ` : '';
+            referenceContext = `${headingPrefix}${topChunk.text.slice(0, 150)}`;
+          }
+        }
+      } catch {
+        // RAG 저장소 조회 실패 시 기존 컨텍스트로 무중단 진행
+      }
+
       const stream = generateStream(
-        buildSystemPrompt(),
+        buildSystemPrompt(referenceContext),
         `[CONTEXT]\n${context}`,
         {
           signal: ac.signal,

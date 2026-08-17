@@ -96,6 +96,29 @@ AMEVA OS is a serverless local AI & WASM hybrid operating system that executes c
 - **WorkbenchSessionManager**: Coordinates snapshot preparation, runs diff analysis, and evaluates verification rules before atomic commit.
 - **WorkbenchCommandExecutor**: Interprets network isolation policy and evaluates command execution requests against allowed rules.
 
+### 2.12 RAG & Semantic Retrieval Layer
+- **`useEmbeddingEngine.ts` (Facade Hook)**: RAG 엔진 생명주기 관리, 지능형 청킹 트리거, RRF 하이브리드 검색 및 `searchAndBuildPrompt` 통합 제어.
+- **`vectorStore.ts` (Persistence & Strategy)**: IndexedDB 기반 청크 저장소 및 Reciprocal Rank Fusion (`searchHybrid`), 전략 패턴(`IRetrievalStrategy`: `HybridRetrievalStrategy`, `VectorRetrievalStrategy`, `KeywordRetrievalStrategy`) 캡슐화.
+- **`embeddingWorker.ts` (Background Worker)**: WebGPU / WASM 가속 기반 `@xenova/transformers` (`Xenova/all-MiniLM-L6-v2`) 384차원 단위 벡터 추론 및 `ContextualChunkPayload` 비차단 임베딩.
+- **`ragUtils.ts` (Core IR & Chunking)**: BlockNote 트리 및 마크다운 헤딩 브레드크럼 보존 지능형 청킹(`chunkBlocksWithContext`), 어휘 스코어러(`scoreLexicalMatch`), 공통 RRF 수학 연산자(`calculateRRFScore`).
+- **`PromptFactory.ts` & Factories (`DPlan`, `Large`, `Small`)**: RAG 검색 결과 컨텍스트(`formatRAGContext`)를 시스템 프롬프트에 자동 주입하는 `createRAGPrompt` 표준화.
+- **`GhostTextPlugin.ts` & `useGhostText.ts` (RAG Copilot)**: 커서 위치 기준 RAG 청크 경량 매칭을 통한 `[RELEVANT REFERENCE CONTEXT]` 주입 및 컨텍스트 인지 스마트 자동완성.
+
+### 2.13 Knowledge Graph & GraphRAG Layer
+- **`graphStore.ts`**: RAG 청크 기반 계층 트리(Root -> Section -> Chunk) 및 의미적 코사인 유사도 엣지($\ge 0.72$) 자동 구축 엔진(`buildGraphFromChunks`).
+- **`KnowledgeGraphViewer.tsx`**: Web Worker 물리 시뮬레이션(`graphWorker.ts`) 기반 Canvas 렌더러, 노드 클릭 히트테스트 및 호버 툴팁.
+- **`KnowledgeGraphBlock.tsx`**: 에디터 내 인터랙티브 지식 그래프 블록 렌더러 및 노드 클릭 시 에디터 해당 블록 스크롤/하이라이트 연동.
+
+### 2.14 Hexagonal AI Agent, SemanticCache & Smart Router Layer
+- **`features/ai-agent/types.ts` (Ports)**: 플랫폼 독립적인 `IAIEngineAdapter`, `IRAGRetriever`, `IToolRegistry` 포트 인터페이스 선언.
+- **`features/ai-agent/adapters/` (Adapters)**: `WebLLMEngineAdapter` (WebGPU 추론 및 단일 엔진 멀티플렉싱), `RemoteHttpEngineAdapter` (OpenAI/Ollama 호환 SSE 스트리밍), `LocalRAGRetrieverAdapter` (RRF 하이브리드 + GraphRAG 지식 융합 검색), `EditorToolAdapter` (BlockNote DOM 조작).
+- **`features/ai-agent/core/semanticCache.ts`**: In-Memory LRU + IndexedDB 영구 시맨틱 캐시 ($\text{Cosine} \ge 0.95$, 0.001s Instant Hit).
+- **`features/ai-agent/core/SmartHybridRouter.ts`**: 질의 복잡도/토큰 길이 기반 WebGPU 로컬 vs Remote HTTP 백엔드 동적 라우팅 엔진.
+- **`features/ai-agent/core/AgentOrchestrator.ts`**: ReAct 추론 루프, CoT `<think>` 사고 과정 분리 추출, `<insert>` XML 블록 삽입 제안 파서.
+- **`features/ai-agent/core/useAIAgentStore.ts`**: 에이전트 대화 및 실시간 제안 상태 관리 Zustand 스토어.
+- **`components/ai-panel/` (`ChatBubble.tsx`, `InsertPreviewCard.tsx`, `WebGPUBanner.tsx`, `EngineSettingsModal.tsx`)**: 완전 모듈화된 서브 컴포넌트 아키텍처.
+- **`components/useWebLLM.ts`**: 10분 유휴 자동 VRAM 회수 및 3분 백그라운드 탭 절전 수명주기 관리자.
+
 ## 3. Mermaid Architecture Diagram
 
 ```mermaid

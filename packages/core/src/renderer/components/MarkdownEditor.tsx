@@ -87,9 +87,8 @@ import { X, Users, FileText, Sparkles } from 'lucide-react'
 
 /* 
  * [MERMAID GRAPH ENGINE]
- * - mermaid: Jupyter 및 마크다운 내부 텍스트 플로우차트 다이어그램 실시간 컴파일러.
+ * - mermaid (Lazily loaded in InlineMermaidRenderer)
  */
-import mermaid from 'mermaid'
 
 /* 
  * [SUB-HOOKS FOR SEPARATE LOGICS]
@@ -100,17 +99,6 @@ import mermaid from 'mermaid'
 import { useBacktickFence } from './useBacktickFence'
 import { useCollaborationHighlight } from './useCollaborationHighlight'
 import { useNativeUploadIntercept } from './useNativeUploadIntercept'
-
-// Mermaid 초기화 시도
-try {
-  mermaid.initialize({
-    startOnLoad: false,
-    theme: 'dark',
-    securityLevel: 'loose',
-  })
-} catch (e) {
-  console.error('Failed to initialize mermaid:', e)
-}
 
 /* 
  * [COMPONENTS]
@@ -127,8 +115,9 @@ import { WelcomeBanner } from './editor/WelcomeBanner'
 import { AIContextMenu } from './editor/AIContextMenu'
 import { RichStyleToolbar } from './editor/RichStyleToolbar'
 import { ImageLightbox } from './ImageLightbox'
-import { PdfViewer } from './PdfViewer'
-import { HwpxViewerModal } from './editor/HwpxViewerModal'
+
+const PdfViewer = React.lazy(() => import('./PdfViewer').then(m => ({ default: m.PdfViewer })))
+const HwpxViewerModal = React.lazy(() => import('./editor/HwpxViewerModal').then(m => ({ default: m.HwpxViewerModal })))
 // [내부 프로젝트 의존성 모듈 임포트: ../config/features]
 import { FEATURE_FLAGS } from '../config/features'
 // [내부 프로젝트 의존성 모듈 임포트: ../plugins/smartdocs/components/SmartDocsRibbon]
@@ -657,17 +646,19 @@ export function MarkdownEditor({
         {/* PDF 뷰어 모드: pdfData가 있는 경우 Canvas 직접 렌더링 (모드 전환 후에도 pdfData로 보존) */}
         {pdfData ? (
           <div style={{ position: 'absolute', inset: 0, zIndex: 10, background: 'var(--bg-deep)' }}>
-            <PdfViewer
-              pdfData={pdfData}
-              fileName={pdfFileName || filePath?.split(/[\\/]/).pop() || 'document.pdf'}
-              onConvertToAmeva={async () => {
-                if (!editor) return
-                // loadMarkdownIntoEditor 내부에서 pdfData(rawContent)를 파싱하여 에디터에 주입하고 모드를 전환함
-                await loadMarkdownIntoEditor(editor, pdfData, true, pdfFileName || filePath || 'document.pdf')
-                setPdfData(null)
-                setPdfFileName(null)
-              }}
-            />
+            <React.Suspense fallback={<div style={{ padding: '20px', color: '#fff' }}>PDF 뷰어 로딩 중...</div>}>
+              <PdfViewer
+                pdfData={pdfData}
+                fileName={pdfFileName || filePath?.split(/[\\/]/).pop() || 'document.pdf'}
+                onConvertToAmeva={async () => {
+                  if (!editor) return
+                  // loadMarkdownIntoEditor 내부에서 pdfData(rawContent)를 파싱하여 에디터에 주입하고 모드를 전환함
+                  await loadMarkdownIntoEditor(editor, pdfData, true, pdfFileName || filePath || 'document.pdf')
+                  setPdfData(null)
+                  setPdfFileName(null)
+                }}
+              />
+            </React.Suspense>
           </div>
         ) : editorMode === 'welcome' ? (
           <WelcomeBanner
@@ -843,16 +834,18 @@ export function MarkdownEditor({
       )}
 
       {hwpxModalData && (
-        <HwpxViewerModal
-          opened={!!hwpxModalData}
-          onClose={() => setHwpxModalData(null)}
-          parsedData={hwpxModalData}
-          onInsertToEditor={(paragraphs) => {
-            if (!editor) return
-            const blocks = paragraphs.map((p: string) => ({ type: 'paragraph', content: p }))
-            editor.insertBlocks(blocks as any, editor.getTextCursorPosition().block, 'after')
-          }}
-        />
+        <React.Suspense fallback={null}>
+          <HwpxViewerModal
+            opened={!!hwpxModalData}
+            onClose={() => setHwpxModalData(null)}
+            parsedData={hwpxModalData}
+            onInsertToEditor={(paragraphs) => {
+              if (!editor) return
+              const blocks = paragraphs.map((p: string) => ({ type: 'paragraph', content: p }))
+              editor.insertBlocks(blocks as any, editor.getTextCursorPosition().block, 'after')
+            }}
+          />
+        </React.Suspense>
       )}
       {contextMenuState.isOpen && (
         <AIContextMenu

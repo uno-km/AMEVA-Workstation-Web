@@ -171,38 +171,27 @@ export function useEditorDragDrop(
 
       // 2) 백그라운드 OpenGraph Fetch 시도 (CORS 프록시 우회 사용)
       try {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `res`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const res = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`)
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `res.ok`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (res.ok)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-        if (res.ok) {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `data`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const data = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-          const data = await res.json()
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `html`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const html = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-          const html = data.contents
+        let html = ''
+        if (window.electronAPI?.fetchUrlMetadata) {
+          const meta = await window.electronAPI.fetchUrlMetadata(url)
+          if (meta && (meta.title || meta.description)) {
+            editor.updateBlock(newBlock as any, {
+              props: {
+                title: meta.title || titleFromUrl,
+                description: meta.description || '',
+                siteName: meta.siteName || '',
+                previewImage: meta.image || '',
+                favicon: meta.favicon || '',
+              }
+            } as any)
+            return
+          }
+        } else {
+          const res = await fetch(url, { mode: 'cors' }).catch(() => null)
+          if (res && res.ok) {
+            html = await res.text()
+          }
+        }
           
           // HTML 마크업 내부의 title 및 OpenGraph 메타 태그 정규식 매칭 추출
           const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i)
@@ -306,7 +295,6 @@ export function useEditorDragDrop(
           if (targetBlock) {
             editor.updateBlock(targetBlock, { props: { ...targetBlock.props, title, description, thumbnail } as any })
           }
-        }
       } catch (err) {
         console.error('Failed to fetch link preview:', err)
       }

@@ -11,12 +11,13 @@
  */
 
 // [외부 패키지 및 라이브러리 임포트]
-import React from 'react'
+import React, { Suspense } from 'react'
 import { MapPin } from 'lucide-react'
 
 // [내부 프로젝트 의존성 모듈 임포트]
-import { AmevaMapViewer } from '../map/AmevaMapViewer'
-import type { MapPinData } from '../map/AmevaMapViewer'
+import type { MapPinData, MapRouteData } from '../map/AmevaMapViewer'
+
+const AmevaMapViewer = React.lazy(() => import('../map/AmevaMapViewer').then(m => ({ default: m.AmevaMapViewer })))
 
   /*
    * [FUNCTION CONTRACT]

@@ -36,7 +36,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react'
 // [외부 패키지 및 라이브러리 임포트: @blocknote/react]
 import { createReactBlockSpec } from '@blocknote/react'
 // [외부 패키지 및 라이브러리 임포트: lucide-react]
-import { Upload, FileText, FileSpreadsheet, Presentation, FileType2, X, Maximize2, Minimize2, ExternalLink, Dna } from 'lucide-react'
+import { Upload, FileText, FileSpreadsheet, Presentation, FileType2, X, Maximize2, Minimize2, ExternalLink, Dna, List } from 'lucide-react'
 // [외부 패키지 및 라이브러리 임포트: pdfjs-dist]
 import * as pdfjsLib from 'pdfjs-dist'
 // [내부 프로젝트 의존성 모듈 임포트: ../utils/vfsDatabase]
@@ -45,13 +45,12 @@ import { saveAttachment, getAttachment } from '../utils/vfsDatabase'
 import { useDocumentProfilerStore } from '../stores/useDocumentProfilerStore'
 // [내부 프로젝트 의존성 모듈 임포트: ./DocumentProfileModal]
 import { DocumentProfileModal } from './DocumentProfileModal'
+// [내부 프로젝트 의존성 모듈 임포트: ./ResizableBlockContainer]
+import { ResizableBlockContainer } from './ResizableBlockContainer'
 // @ts-ignore
-import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url'
+import PdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?worker'
 
-// Worker CSP 대응 (Blob Module Worker)
-const workerBlob = new Blob([`import '${pdfWorkerUrl}';`], { type: 'application/javascript' })
-const workerBlobUrl = URL.createObjectURL(workerBlob)
-pdfjsLib.GlobalWorkerOptions.workerPort = new Worker(workerBlobUrl, { type: 'module' })
+pdfjsLib.GlobalWorkerOptions.workerPort = new PdfWorker()
 
 /**
  * DocType 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
@@ -190,8 +189,11 @@ export function PdfMiniViewer({
           const objectUrl = URL.createObjectURL(blob)
           objectUrlToRevoke = objectUrl
           getDocumentArg = { url: objectUrl }
-        } else if (sourceUrl.startsWith('data:')) {
-          const cleanBase64 = sourceUrl.split(',')[1] || ''
+        } else if (sourceUrl.startsWith('http://') || sourceUrl.startsWith('https://') || sourceUrl.startsWith('blob:')) {
+          getDocumentArg = { url: sourceUrl }
+        } else {
+          // data:application/pdf;base64,... 또는 raw base64
+          const cleanBase64 = sourceUrl.includes(',') ? sourceUrl.split(',')[1] : sourceUrl
           const binaryString = atob(cleanBase64.replace(/\s/g, ''))
           const len = binaryString.length
           const bytes = new Uint8Array(len)
@@ -614,28 +616,63 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
   }
 
   const [isDragging, setIsDragging] = useState(false)
-  const [localHeight, setLocalHeight] = useState<number | null>(null)
-  const [localWidth, setLocalWidth] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
-  const bottomResizerRef = useRef<HTMLDivElement>(null)
-  const rightResizerRef = useRef<HTMLDivElement>(null)
-  const height = localHeight ?? parseInt(props.height || '420', 10)
-  // width: '100%'이면 null(full), 숫자면 px
-  const widthStr = props.width || '100%'
-  const localWidthNum = localWidth ?? (widthStr === '100%' ? null : parseInt(widthStr, 10))
+
   const isExpanded = props.isExpanded === 'true'
   const [showDNA, setShowDNA] = useState(false)
+  const [pdfMode, setPdfMode] = useState<'native' | 'canvas'>('native')
+  const [resolvedBlobUrl, setResolvedBlobUrl] = useState<string | null>(null)
 
   const { profiles, enqueue } = useDocumentProfilerStore()
-  const fileId = props.sourceUrl?.replace('ameva-vfs://', '')
-  const profile = profiles[fileId || '']
+  const fileId = props.sourceUrl?.startsWith('ameva-vfs://') ? props.sourceUrl.replace('ameva-vfs://', '') : null
+  const profile = fileId ? profiles[fileId] : undefined
   const docType = (props.docType as DocType) || 'unknown'
-  const config = DOC_TYPE_CONFIG[docType]
+  const config = DOC_TYPE_CONFIG[docType] || DOC_TYPE_CONFIG.unknown
 
   const isLocalMemory = props.sourceUrl?.startsWith('blob:') || props.sourceUrl?.startsWith('ameva-vfs://') || props.sourceUrl?.startsWith('data:')
-  const hasFile = !!props.sourceUrl && isLocalMemory
+  const hasFile = (!!props.sourceUrl && isLocalMemory) || !!props.fileBase64
   const hasUrl = !!props.sourceUrl && !isLocalMemory
+
+  // PDF용 Blob URL 사전 해석 (Chromium/Edge 내장 PDF 뷰어 연동)
+  useEffect(() => {
+    let active = true
+    let createdUrl: string | null = null
+
+    if (docType === 'pdf' && props.sourceUrl) {
+      if (props.sourceUrl.startsWith('ameva-vfs://')) {
+        const id = props.sourceUrl.replace('ameva-vfs://', '')
+        getAttachment(id).then(blob => {
+          if (!active) return
+          if (blob) {
+            createdUrl = URL.createObjectURL(blob)
+            setResolvedBlobUrl(createdUrl)
+          }
+        }).catch(console.error)
+      } else if (props.sourceUrl.startsWith('blob:') || props.sourceUrl.startsWith('http')) {
+        setResolvedBlobUrl(props.sourceUrl)
+      } else if (props.sourceUrl.startsWith('data:') || props.fileBase64) {
+        try {
+          const raw = props.sourceUrl.startsWith('data:') ? props.sourceUrl : props.fileBase64
+          const cleanBase64 = raw.includes(',') ? raw.split(',')[1] : raw
+          const binary = atob(cleanBase64.replace(/\s/g, ''))
+          const bytes = new Uint8Array(binary.length)
+          for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+          const blob = new Blob([bytes], { type: 'application/pdf' })
+          createdUrl = URL.createObjectURL(blob)
+          setResolvedBlobUrl(createdUrl)
+        } catch (e) {
+          console.error(e)
+        }
+      }
+    } else {
+      setResolvedBlobUrl(null)
+    }
+
+    return () => {
+      active = false
+      if (createdUrl) URL.revokeObjectURL(createdUrl)
+    }
+  }, [docType, props.sourceUrl, props.fileBase64])
 
   useEffect(() => {
     if (docType === 'pdf' && hasFile && fileId && !profile) {
@@ -647,86 +684,6 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
       }).catch(console.error)
     }
   }, [docType, hasFile, fileId, profile, props.fileName, enqueue])
-
-  // ── 리사이저: native capture 이벤트 + DOM 직접 조작 (리액트 재렌더 없이 실시간 스무스 리사이즈)
-  useEffect(() => {
-    const bottomEl = bottomResizerRef.current
-    const rightEl = rightResizerRef.current
-    const container = containerRef.current
-    if (!bottomEl || !container) return
-
-    const stopAll = (e: Event) => {
-      e.stopPropagation()
-      e.stopImmediatePropagation()
-    }
-
-    // ── 상하 리사이저 ──
-    const onBottomMouseDown = (e: MouseEvent) => {
-      e.preventDefault()
-      stopAll(e)
-      const startY = e.clientY
-      const startH = container.getBoundingClientRect().height
-
-      // iframe 이벤트 스덕 방지 오버레이
-      const overlay = document.createElement('div')
-      overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;cursor:ns-resize;'
-      document.body.appendChild(overlay)
-
-      const onMove = (mv: MouseEvent) => {
-        const newH = Math.max(150, startH + mv.clientY - startY)
-        container.style.height = newH + 'px'
-        // 내부 빷어 내는 뷰어 높이도 동기화
-        const viewer = container.querySelector('[data-viewer-inner]') as HTMLElement | null
-        if (viewer) viewer.style.height = newH + 'px'
-      }
-      const onUp = (up: MouseEvent) => {
-        document.body.removeChild(overlay)
-        window.removeEventListener('mousemove', onMove)
-        window.removeEventListener('mouseup', onUp)
-        const finalH = Math.max(150, startH + up.clientY - startY)
-        // React state 전혀 안 쓰고 props만 업데이트 (재렌더가 하이를 돌려준다)
-        editor.updateBlock(block.id, { props: { ...props, height: finalH.toString() } })
-      }
-      window.addEventListener('mousemove', onMove)
-      window.addEventListener('mouseup', onUp)
-    }
-
-    // ── 좌우 리사이저 ──
-    const onRightMouseDown = (e: MouseEvent) => {
-      if (!rightEl) return
-      e.preventDefault()
-      stopAll(e)
-      const startX = e.clientX
-      const startW = container.getBoundingClientRect().width
-
-      const overlay = document.createElement('div')
-      overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;cursor:ew-resize;'
-      document.body.appendChild(overlay)
-
-      const onMove = (mv: MouseEvent) => {
-        const newW = Math.max(300, startW + mv.clientX - startX)
-        container.style.width = newW + 'px'
-      }
-      const onUp = (up: MouseEvent) => {
-        document.body.removeChild(overlay)
-        window.removeEventListener('mousemove', onMove)
-        window.removeEventListener('mouseup', onUp)
-        const finalW = Math.max(300, startW + up.clientX - startX)
-        editor.updateBlock(block.id, { props: { ...props, width: finalW.toString() } })
-      }
-      window.addEventListener('mousemove', onMove)
-      window.addEventListener('mouseup', onUp)
-    }
-
-    bottomEl.addEventListener('mousedown', onBottomMouseDown, { capture: true })
-    rightEl?.addEventListener('mousedown', onRightMouseDown, { capture: true })
-    return () => {
-      bottomEl.removeEventListener('mousedown', onBottomMouseDown, { capture: true })
-      rightEl?.removeEventListener('mousedown', onRightMouseDown, { capture: true })
-    }
-  // props 객체는 매렌더마다 업데이트되므로 block.id와 editor만 deps로 추적
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [block.id, editor])
 
   const handleFileUpload = useCallback(async (file: File) => {
     const docT = detectDocType(file.name, file.type)
@@ -762,19 +719,6 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
     })
   }, [block.id, editor, props])
 
-  const containerStyle: React.CSSProperties = {
-    position: 'relative',
-    border: `1px solid ${isDragging ? config.color : 'rgba(255,255,255,0.1)'}`,
-    borderRadius: 8,
-    overflow: 'hidden',
-    background: 'var(--bg-panel, #0f0f1a)',
-    margin: '4px 0',
-    transition: 'border-color 0.2s, width 0.05s',
-    userSelect: 'none',
-    width: localWidthNum ? `${localWidthNum}px` : '100%',
-    maxWidth: '100%',
-  }
-
   // 헤더 바
   const headerBar = (
     <div style={{
@@ -787,24 +731,48 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
       <span style={{ fontSize: 12, fontWeight: 600, color: '#e2e8f0', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {props.fileName || `${config.label} 문서`}
       </span>
-          {docType === 'pdf' && profile && (
-            <button
-              onClick={() => setShowDNA(true)}
-              style={{
-                marginLeft: '8px', padding: '4px 10px', background: 'rgba(168, 85, 247, 0.2)', border: '1px solid rgba(168, 85, 247, 0.4)', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: '#d8b4fe', fontSize: '11px', fontWeight: 600,
-              }}
-            >
-              <Dna size={12} />
-              분석 결과
-            </button>
-          )}
+      {docType === 'pdf' && (hasFile || hasUrl) && (
+        <button
+          onClick={() => setPdfMode(prev => prev === 'native' ? 'canvas' : 'native')}
+          style={{
+            marginLeft: '8px', padding: '3px 8px', background: 'rgba(239, 68, 68, 0.18)',
+            border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '4px', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: '4px', color: '#fca5a5', fontSize: '11px', fontWeight: 600,
+          }}
+          title={pdfMode === 'native' ? '커스텀 캔버스 뷰어로 전환' : 'Edge/Chrome 브라우저 기본 PDF 리더로 전환'}
+        >
+          {pdfMode === 'native' ? '🖥️ 브라우저 뷰어' : '📑 캔버스 뷰어'}
+        </button>
+      )}
+      {docType === 'pdf' && profile && (
+        <button
+          onClick={() => setShowDNA(true)}
+          style={{
+            marginLeft: '4px', padding: '3px 8px', background: 'rgba(168, 85, 247, 0.2)', border: '1px solid rgba(168, 85, 247, 0.4)', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: '#d8b4fe', fontSize: '11px', fontWeight: 600,
+          }}
+        >
+          <Dna size={12} />
+          분석 결과
+        </button>
+      )}
 
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
+      <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
         {(hasFile || hasUrl) && (
           <button
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 2 }}
-            onClick={() => editor.updateBlock(block.id, { props: { ...props, isExpanded: isExpanded ? 'false' : 'true' } })}
-            title={isExpanded ? '축소' : '확대'}
+            onClick={() => {
+              const nextExpanded = !isExpanded
+              const currentH = parseInt(props.height || '450', 10)
+              const nextH = nextExpanded ? Math.max(850, Math.round(currentH * 1.5)) : 450
+              editor.updateBlock(block.id, {
+                props: {
+                  ...props,
+                  isExpanded: nextExpanded ? 'true' : 'false',
+                  height: nextH.toString()
+                }
+              })
+            }}
+            title={isExpanded ? '축소 (기본 높이로)' : '확대 (850px+ 로)'}
           >
             {isExpanded ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
           </button>
@@ -834,11 +802,15 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
     return (
       <div
         style={{
-          ...containerStyle,
+          position: 'relative',
+          borderRadius: 8,
           border: `2px dashed ${isDragging ? config.color : 'rgba(255,255,255,0.15)'}`,
           padding: 24,
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12,
           cursor: 'pointer', minHeight: 120,
+          background: 'var(--bg-panel, #0f0f1a)',
+          margin: '8px 0',
+          width: props.width || '100%',
         }}
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
         onDragLeave={() => setIsDragging(false)}
@@ -885,115 +857,184 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
     )
   }
 
-  const viewHeight = isExpanded ? Math.min(height * 1.6, 800) : height
-
   return (
-    <div ref={containerRef} style={containerStyle}>
-      {headerBar}
-      <div data-viewer-inner style={{ height: viewHeight, overflow: 'hidden', position: 'relative' }}>
-        {showDNA && profile && (
-          <DocumentProfileModal 
-            fileId={fileId || ''}
-            profile={profile} 
-            onClose={() => setShowDNA(false)} 
-          />
-        )}
-        {docType === 'pdf' && hasFile && (
-          <PdfMiniViewer 
-            sourceUrl={props.sourceUrl} 
-            height={viewHeight} 
-            savedBookmarks={(() => { try { return JSON.parse(props.bookmarks || '[]') } catch { return [] } })()}
-            onBookmarksChange={(b) => editor.updateBlock(block.id, { props: { ...props, bookmarks: JSON.stringify(b) } })}
-          />
-        )}
-        {docType === 'pdf' && hasUrl && (
-          <iframe
-            src={props.sourceUrl}
-            style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-            title={props.fileName || 'PDF'}
-            allowFullScreen
-          />
-        )}
-        {docType !== 'pdf' && docType !== 'pptx' && hasFile && (
-          <OfficeDocViewer
-            sourceUrl={props.sourceUrl}
-            fileBase64={props.fileBase64}
-            docType={docType}
-            fileName={props.fileName}
-            height={viewHeight}
-          />
-        )}
-        {docType === 'pptx' && hasFile && (
-          <PptxMiniViewer
-            sourceUrl={props.sourceUrl}
-            fileBase64={props.fileBase64}
-            height={viewHeight}
-          />
-        )}
-        {docType !== 'pdf' && hasUrl && (
-          <iframe
-            src={`https://docs.google.com/viewer?url=${encodeURIComponent(props.sourceUrl)}&embedded=true`}
-            style={{ width: '100%', height: '100%', border: 'none' }}
-            title={props.fileName || '문서'}
-          />
-        )}
-      </div>
+    <ResizableBlockContainer
+      initialWidth={props.width || '100%'}
+      initialHeight={parseInt(props.height || '450', 10)}
+      minHeight={150}
+      maxHeight={4000}
+      minWidth={280}
+      maxWidth={3200}
+      accentColor={config.color}
+      header={headerBar}
+      onResizeEnd={({ width, height }) => {
+        editor.updateBlock(block.id, {
+          props: {
+            ...props,
+            width,
+            height: height.toString(),
+          }
+        })
+      }}
+    >
+      {({ height: blockHeight }) => {
+        const viewHeight = blockHeight
 
-      {/* 하단 리사이저 (상하 높이 조절) — native capture 이벤트로 stopImmediatePropagation 적용 */}
-      <div
-        ref={bottomResizerRef}
-        contentEditable={false}
-        style={{
-          width: '100%',
-          height: '12px',
-          background: 'transparent',
-          cursor: 'ns-resize',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-        title="위아래로 드래그하여 높이 조절"
-      >
-        <div style={{ width: '48px', height: '4px', background: 'rgba(255,255,255,0.2)', borderRadius: '2px' }} />
-      </div>
-
-      {/* 우측 리사이저 (좌우 폭 조절) */}
-      <div
-        ref={rightResizerRef}
-        contentEditable={false}
-        style={{
-          position: 'absolute',
-          top: 0,
-          right: 0,
-          width: '8px',
-          height: '100%',
-          cursor: 'ew-resize',
-          zIndex: 20,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-        title="좌우로 드래그하여 폭 조절 (더블클릭 → 100% 리셋)"
-        onDoubleClick={() => {
-          editor.updateBlock(block.id, { props: { ...props, width: '100%' } })
-        }}
-      >
-        <div style={{ width: '3px', height: '32px', background: 'rgba(255,255,255,0.15)', borderRadius: '2px' }} />
-      </div>
-    </div>
+        return (
+          <div data-viewer-inner style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}>
+            {showDNA && profile && (
+              <DocumentProfileModal 
+                fileId={fileId || ''}
+                profile={profile} 
+                onClose={() => setShowDNA(false)} 
+              />
+            )}
+            {docType === 'pdf' && pdfMode === 'native' && (resolvedBlobUrl || props.sourceUrl.startsWith('http')) ? (
+              <iframe
+                src={resolvedBlobUrl || props.sourceUrl}
+                style={{ width: '100%', height: '100%', border: 'none', display: 'block', background: '#525659' }}
+                title={props.fileName || 'PDF'}
+                allowFullScreen
+              />
+            ) : docType === 'pdf' && pdfMode === 'native' ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8', fontSize: 12 }}>
+                PDF 문서 로딩 중...
+              </div>
+            ) : null}
+            {docType === 'pdf' && pdfMode === 'canvas' && hasFile && (
+              <PdfMiniViewer 
+                sourceUrl={props.sourceUrl} 
+                height={viewHeight} 
+                savedBookmarks={(() => { try { return JSON.parse(props.bookmarks || '[]') } catch { return [] } })()}
+                onBookmarksChange={(b) => editor.updateBlock(block.id, { props: { ...props, bookmarks: JSON.stringify(b) } })}
+              />
+            )}
+            {docType === 'pdf' && pdfMode === 'canvas' && hasUrl && (
+              <iframe
+                src={props.sourceUrl}
+                style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+                title={props.fileName || 'PDF'}
+                allowFullScreen
+              />
+            )}
+            {docType !== 'pdf' && docType !== 'pptx' && hasFile && (
+              <OfficeDocViewer
+                sourceUrl={props.sourceUrl}
+                fileBase64={props.fileBase64}
+                docType={docType}
+                fileName={props.fileName}
+                height={viewHeight}
+              />
+            )}
+            {docType === 'pptx' && hasFile && (
+              <PptxMiniViewer
+                sourceUrl={props.sourceUrl}
+                fileBase64={props.fileBase64}
+                height={viewHeight}
+              />
+            )}
+            {docType !== 'pdf' && hasUrl && (
+              <iframe
+                src={`https://docs.google.com/viewer?url=${encodeURIComponent(props.sourceUrl)}&embedded=true`}
+                style={{ width: '100%', height: '100%', border: 'none' }}
+                title={props.fileName || '문서'}
+              />
+            )}
+          </div>
+        )
+      }}
+    </ResizableBlockContainer>
   )
 }
 
-/** PPTX Viewer (pptx-preview 기반 렌더링) */
+/** PPTX Viewer (pptx-preview 기반 렌더링 + 슬라이드 쪽수 및 목차/TOC) */
 export function PptxMiniViewer({ sourceUrl, fileBase64, height }: { sourceUrl: string; fileBase64?: string; height: number }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [slides, setSlides] = useState<{ index: number; title: string; element: HTMLElement }[]>([])
+  const [currentSlide, setCurrentSlide] = useState(1)
+  const [showToc, setShowToc] = useState(false)
+
+  // 렌더링 후 최상위 슬라이드 및 대표 텍스트 파싱 (하위 요소 중복 카운트 방지)
+  const parseSlides = useCallback(() => {
+    if (!containerRef.current) return
+    const container = containerRef.current
+
+    // pptx-preview가 생성한 슬라이드 래퍼 또는 직계 자식 요소 탐색
+    const wrapper = container.querySelector('.slides, .pptx-wrapper') || container.firstElementChild || container
+    const directChildren = Array.from(wrapper.children) as HTMLElement[]
+
+    // 실제 최상위 슬라이드 요소만 필터링 (크기 및 최상위 구조 검증)
+    let slideEls = directChildren.filter(el => {
+      const rect = el.getBoundingClientRect()
+      return (rect.width > 80 && rect.height > 80) || el.classList.contains('slide') || el.id?.startsWith('slide')
+    })
+
+    // 직계 자식으로 안 묶여있을 경우: 중첩되지 않은 최상위 .slide 요소만 추출
+    if (slideEls.length === 0) {
+      const allSlides = Array.from(container.querySelectorAll('.slide, section.slide')) as HTMLElement[]
+      slideEls = allSlides.filter(el => !el.parentElement?.closest('.slide, section.slide'))
+    }
+
+    if (slideEls.length > 0) {
+      const items = slideEls.map((el, i) => {
+        const titleEl = el.querySelector('h1, h2, h3, h4, .title, p, span')
+        const textContent = (titleEl?.textContent || el.textContent || '').replace(/\s+/g, ' ').trim()
+        const titleSnippet = textContent.slice(0, 35) || `슬라이드 ${i + 1}`
+        return { index: i + 1, title: titleSnippet, element: el }
+      })
+      setSlides(items)
+    }
+  }, [])
+
+  const scrollToSlide = useCallback((el: HTMLElement, idx: number) => {
+    const container = containerRef.current
+    if (!container || !el) return
+    const containerRect = container.getBoundingClientRect()
+    const elemRect = el.getBoundingClientRect()
+    const offset = elemRect.top - containerRect.top + container.scrollTop
+    container.scrollTo({ top: offset, behavior: 'smooth' })
+    setCurrentSlide(idx)
+  }, [])
+
+  // 스크롤 시 현재 슬라이드 추적 (중심점 거리 기반 + capture 옵션)
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container || slides.length === 0) return
+
+    const handleScroll = () => {
+      const containerRect = container.getBoundingClientRect()
+      const containerCenter = containerRect.top + containerRect.height / 2
+
+      let closestIdx = 1
+      let minDistance = Infinity
+
+      for (let i = 0; i < slides.length; i++) {
+        const rect = slides[i].element.getBoundingClientRect()
+        const slideCenter = rect.top + rect.height / 2
+        const dist = Math.abs(slideCenter - containerCenter)
+        if (dist < minDistance) {
+          minDistance = dist
+          closestIdx = slides[i].index
+        }
+      }
+      setCurrentSlide(closestIdx)
+    }
+
+    container.addEventListener('scroll', handleScroll, { passive: true, capture: true })
+    window.addEventListener('resize', handleScroll, { passive: true })
+    return () => {
+      container.removeEventListener('scroll', handleScroll, true)
+      window.removeEventListener('resize', handleScroll)
+    }
+  }, [slides])
 
   useEffect(() => {
     let cancelled = false
     setLoading(true)
     setError(null)
+    setSlides([])
 
     const loadPptx = async () => {
       try {
@@ -1034,7 +1075,10 @@ export function PptxMiniViewer({ sourceUrl, fileBase64, height }: { sourceUrl: s
         })
         
         await previewer.preview(arrayBuffer)
-        setLoading(false)
+        if (!cancelled) {
+          setLoading(false)
+          setTimeout(parseSlides, 350)
+        }
       } catch (e: any) {
         if (!cancelled) {
           setError(e.message === 'VFS_EXPIRED' ? '임시 파일이 만료되었거나 로드에 실패했습니다.' : 'PPTX 로드 실패')
@@ -1045,29 +1089,192 @@ export function PptxMiniViewer({ sourceUrl, fileBase64, height }: { sourceUrl: s
 
     if (sourceUrl) loadPptx()
     return () => { cancelled = true }
-  }, [sourceUrl])
+  }, [sourceUrl, parseSlides])
 
   return (
-    <div style={{ position: 'relative', width: '100%', height, background: '#f8fafc', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      {loading && <div style={{ color: '#94a3b8', fontSize: 13 }}>PowerPoint 로드 중...</div>}
-      {error && <div style={{ color: '#ef4444', fontSize: 13 }}>{error}</div>}
-      <div 
-        ref={containerRef} 
-        style={{ width: '100%', height: '100%', display: (loading || error) ? 'none' : 'block' }}
-        onMouseMove={e => e.stopPropagation()}
-        onMouseDown={e => e.stopPropagation()}
-        onMouseUp={e => e.stopPropagation()}
-      />
+    <div style={{ position: 'relative', width: '100%', height, background: '#f8fafc', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      {/* PPT 상단 툴바: 현재 슬라이드 번호 및 목차 버튼 */}
+      {!loading && !error && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '4px 12px', background: 'rgba(15, 23, 42, 0.95)', borderBottom: '1px solid rgba(255,255,255,0.1)',
+          color: '#e2e8f0', fontSize: 11, fontWeight: 600, zIndex: 15, flexShrink: 0
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ padding: '2px 6px', background: '#f9731633', color: '#f97316', borderRadius: 4, fontSize: 10 }}>
+              📊 Slide {currentSlide} / {slides.length || 1}
+            </span>
+          </div>
+          {slides.length > 0 && (
+            <button
+              onClick={() => setShowToc(!showToc)}
+              style={{
+                background: showToc ? '#f9731622' : 'transparent',
+                border: '1px solid ' + (showToc ? '#f9731666' : 'rgba(255,255,255,0.2)'),
+                color: showToc ? '#f97316' : '#94a3b8',
+                borderRadius: 4, padding: '2px 8px', fontSize: 11, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 4
+              }}
+            >
+              <List size={12} />
+              {showToc ? '목차 닫기' : '슬라이드 목차'}
+            </button>
+          )}
+        </div>
+      )}
+
+      <div style={{ position: 'relative', flex: 1, overflow: 'hidden', display: 'flex' }}>
+        {loading && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', color: '#94a3b8', fontSize: 13 }}>PowerPoint 로드 중...</div>}
+        {error && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', color: '#ef4444', fontSize: 13 }}>{error}</div>}
+        
+        <div 
+          ref={containerRef} 
+          style={{ flex: 1, height: '100%', overflow: 'auto', display: (loading || error) ? 'none' : 'block' }}
+          onMouseMove={e => e.stopPropagation()}
+          onMouseDown={e => e.stopPropagation()}
+          onMouseUp={e => e.stopPropagation()}
+        />
+
+        {/* PPT 목차 사이드 드로어 */}
+        {showToc && slides.length > 0 && (
+          <div style={{
+            width: 220, height: '100%', background: '#0f172a', borderLeft: '1px solid rgba(255,255,255,0.1)',
+            overflowY: 'auto', padding: 8, zIndex: 20, flexShrink: 0
+          }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#f97316', marginBottom: 8, paddingBottom: 4, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+              📋 슬라이드 목차 ({slides.length})
+            </div>
+            {slides.map(item => (
+              <div
+                key={item.index}
+                onClick={() => scrollToSlide(item.element, item.index)}
+                style={{
+                  padding: '6px 8px', borderRadius: 4, marginBottom: 4, cursor: 'pointer', fontSize: 11,
+                  background: currentSlide === item.index ? 'rgba(249, 115, 22, 0.2)' : 'transparent',
+                  color: currentSlide === item.index ? '#fb923c' : '#cbd5e1',
+                  borderLeft: currentSlide === item.index ? '3px solid #f97316' : '3px solid transparent',
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
+                }}
+                title={item.title}
+              >
+                <span style={{ fontWeight: 700, marginRight: 6, opacity: 0.7 }}>#{item.index}</span>
+                {item.title}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
 
-/** Office 문서 뷰어 (DOCX → mammoth.js HTML, XLSX → exceljs HTML) */
+/** Office 문서 뷰어 (DOCX → docx-preview / mammoth.js HTML + 페이지 및 목차/TOC, XLSX → exceljs HTML) */
 export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, height }: {
   sourceUrl: string; fileBase64?: string; docType: DocType; fileName: string; height: number
 }) {
   const [htmlContent, setHtmlContent] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const docxContainerRef = useRef<HTMLDivElement>(null)
+  const [tocHeadings, setTocHeadings] = useState<{ id: string; text: string; level: number; element: HTMLElement }[]>([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [showToc, setShowToc] = useState(false)
+
+  // Word 렌더링 완료 후 구조(섹션/페이지, Heading 목차) 파싱
+  const parseWordStructure = useCallback(() => {
+    const container = docxContainerRef.current
+    if (!container) return
+
+    // 1) docx-preview 섹션/페이지 수 파싱
+    const sections = Array.from(container.querySelectorAll('section.docx, .docx-wrapper > section, .docx')) as HTMLElement[]
+    if (sections.length > 0) {
+      setTotalPages(sections.length)
+    }
+
+    // 2) Headings (h1, h2, h3, docx heading classes) 목차 파싱
+    const headingElements = Array.from(container.querySelectorAll(
+      'h1, h2, h3, h4, h5, h6, .heading, [class*="heading"], [class*="Heading"], [class*="title"], [class*="Title"]'
+    )) as HTMLElement[]
+
+    const validHeadings = headingElements.filter(el => {
+      const text = el.textContent?.trim() || ''
+      return text.length > 0 && text.length < 150
+    })
+
+    if (validHeadings.length > 0) {
+      const headings = validHeadings.map((el, i) => {
+        let level = 1
+        const tagName = el.tagName.toLowerCase()
+        if (tagName.startsWith('h') && tagName.length === 2) {
+          level = parseInt(tagName[1], 10) || 1
+        } else {
+          const className = el.className || ''
+          const match = className.match(/[1-6]/)
+          if (match) level = parseInt(match[0], 10)
+        }
+        return {
+          id: `word-heading-${i}`,
+          text: el.textContent?.trim() || `제목 ${i + 1}`,
+          level: isNaN(level) ? 1 : level,
+          element: el
+        }
+      })
+      setTocHeadings(headings)
+    } else if (sections.length > 1) {
+      // 헤딩 태그가 없는 다중 페이지 문서인 경우: 페이지별 바로가기 목차 생성
+      const pageHeadings = sections.map((sec, i) => ({
+        id: `word-page-${i}`,
+        text: `📄 ${i + 1}페이지 바로가기`,
+        level: 1,
+        element: sec
+      }))
+      setTocHeadings(pageHeadings)
+    }
+  }, [])
+
+  const scrollToHeading = useCallback((el: HTMLElement) => {
+    const container = docxContainerRef.current
+    if (!container || !el) return
+    const containerRect = container.getBoundingClientRect()
+    const elemRect = el.getBoundingClientRect()
+    const offset = elemRect.top - containerRect.top + container.scrollTop
+    container.scrollTo({ top: Math.max(0, offset - 12), behavior: 'smooth' })
+  }, [])
+
+  // 스크롤 시 현재 페이지 추적
+  useEffect(() => {
+    const container = docxContainerRef.current
+    if (!container) return
+
+    const handleScroll = () => {
+      const sections = Array.from(container.querySelectorAll('section.docx, .docx-wrapper > section')) as HTMLElement[]
+      if (sections.length === 0) return
+
+      const containerRect = container.getBoundingClientRect()
+      const containerCenter = containerRect.top + containerRect.height / 2
+
+      let closestPage = 1
+      let minDistance = Infinity
+
+      sections.forEach((sec, idx) => {
+        const rect = sec.getBoundingClientRect()
+        const secCenter = rect.top + rect.height / 2
+        const dist = Math.abs(secCenter - containerCenter)
+        if (dist < minDistance) {
+          minDistance = dist
+          closestPage = idx + 1
+        }
+      })
+      setCurrentPage(closestPage)
+    }
+
+    container.addEventListener('scroll', handleScroll, { passive: true, capture: true })
+    window.addEventListener('resize', handleScroll, { passive: true })
+    return () => {
+      container.removeEventListener('scroll', handleScroll, true)
+      window.removeEventListener('resize', handleScroll)
+    }
+  }, [totalPages])
 
   useEffect(() => {
     if (docType !== 'docx' && docType !== 'xlsx') {
@@ -1098,22 +1305,48 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
         }
 
         if (docType === 'docx') {
+          // 1) docx-preview를 활용하여 고품질 MS Word 문서 렌더링 시도
+          try {
+            const docxPreview = await import('docx-preview')
+            if (docxContainerRef.current) {
+              docxContainerRef.current.innerHTML = ''
+              await docxPreview.renderAsync(arrayBuffer, docxContainerRef.current, undefined, {
+                className: 'docx-preview-container',
+                inBreak: true,
+                ignoreWidth: false,
+                ignoreHeight: false,
+                ignoreFonts: false,
+                breakPages: true,
+                useBase64URL: true,
+              })
+              setLoading(false)
+              setTimeout(parseWordStructure, 400)
+              return
+            }
+          } catch (previewErr) {
+            console.warn('[OfficeDocViewer] docx-preview 렌더링 실패, mammoth 폴백 사용:', previewErr)
+          }
+
+          // 2) mammoth.js HTML 변환 폴백 (스타일링 보정)
           const mammoth = await import('mammoth')
           const result = await mammoth.convertToHtml({ arrayBuffer })
           setHtmlContent(result.value)
+          setTimeout(parseWordStructure, 400)
         } else if (docType === 'xlsx') {
           const ExcelJS = await import('exceljs')
           const wb = new ExcelJS.Workbook()
           await wb.xlsx.load(arrayBuffer)
+          const escapeHtml = (str: string) => str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;')
           let html = ''
           wb.eachSheet((worksheet) => {
-            html += `<h3 style="margin-top: 1em; border-bottom: 1px solid #eee; padding-bottom: 8px;">${worksheet.name}</h3>`
-            html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 1em;">`
+            html += `<h3 style="margin-top: 1em; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px; color: #1e293b;">${escapeHtml(worksheet.name)}</h3>`
+            html += `<table style="width: 100%; border-collapse: collapse; margin-bottom: 1.5em; font-size: 13px;">`
             worksheet.eachRow((row) => {
               html += '<tr>'
               const cells = (row.values as any[]).slice(1)
               cells.forEach((v) => {
-                html += `<td style="border: 1px solid #e2e8f0; padding: 6px 12px;">${v != null ? String(v) : ''}</td>`
+                const cellText = v != null ? (typeof v === 'object' && 'result' in v ? String(v.result ?? '') : String(v)) : ''
+                html += `<td style="border: 1px solid #cbd5e1; padding: 6px 12px; font-family: sans-serif;">${escapeHtml(cellText)}</td>`
               })
               html += '</tr>'
             })
@@ -1132,30 +1365,175 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
       }
     }
     loadDoc()
-  }, [sourceUrl, docType])
+  }, [sourceUrl, docType, fileBase64, parseWordStructure])
 
   if (docType === 'docx' || docType === 'xlsx') {
     if (loading) return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height, color: '#94a3b8', fontSize: 12 }}>
-        문서 변환 중...
+        문서 변환 및 렌더링 중...
       </div>
     )
+
     return (
-      <div
-        contentEditable={false}
-        ref={(el) => {
-          if (el) {
-            el.addEventListener('mousemove', e => e.stopPropagation())
-            el.addEventListener('mousedown', e => e.stopPropagation())
-            el.addEventListener('mouseup', e => e.stopPropagation())
-          }
-        }}
-        style={{
-          height, overflow: 'auto', padding: '16px 24px',
-          background: '#fff', color: '#1a1a1a', fontSize: 13, lineHeight: 1.6,
-        }}
-        dangerouslySetInnerHTML={{ __html: htmlContent || '' }}
-      />
+      <div style={{ position: 'relative', width: '100%', height, background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+        {/* Word 상단 툴바: 현재 페이지 번호 및 목차 버튼 */}
+        {docType === 'docx' && (
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '4px 12px', background: 'rgba(15, 23, 42, 0.95)', borderBottom: '1px solid rgba(255,255,255,0.1)',
+            color: '#e2e8f0', fontSize: 11, fontWeight: 600, zIndex: 15, flexShrink: 0
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ padding: '2px 6px', background: '#3b82f633', color: '#60a5fa', borderRadius: 4, fontSize: 10 }}>
+                📄 {currentPage} / {totalPages} 페이지
+              </span>
+            </div>
+            {tocHeadings.length > 0 && (
+              <button
+                onClick={() => setShowToc(!showToc)}
+                style={{
+                  background: showToc ? '#3b82f622' : 'transparent',
+                  border: '1px solid ' + (showToc ? '#3b82f666' : 'rgba(255,255,255,0.2)'),
+                  color: showToc ? '#60a5fa' : '#94a3b8',
+                  borderRadius: 4, padding: '2px 8px', fontSize: 11, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 4
+                }}
+              >
+                <List size={12} />
+                {showToc ? '목차 닫기' : '문서 목차'}
+              </button>
+            )}
+          </div>
+        )}
+
+        <div style={{ position: 'relative', flex: 1, overflow: 'hidden', display: 'flex' }}>
+          <div
+            ref={docxContainerRef}
+            contentEditable={false}
+            onMouseMove={e => e.stopPropagation()}
+            onMouseDown={e => e.stopPropagation()}
+            onMouseUp={e => e.stopPropagation()}
+            style={{
+              flex: 1,
+              height: '100%',
+              overflow: 'auto',
+              background: '#f8fafc',
+              color: '#0f172a',
+              fontSize: 13,
+              lineHeight: 1.6,
+              position: 'relative',
+            }}
+          >
+            <style>{`
+              .docx-preview-container {
+                background: #f1f5f9 !important;
+                padding: 20px !important;
+              }
+              .docx-preview-container .docx-wrapper {
+                background: transparent !important;
+                padding: 0 !important;
+              }
+              .docx-preview-container section.docx {
+                background: #ffffff !important;
+                box-shadow: 0 4px 16px rgba(0,0,0,0.1) !important;
+                margin: 0 auto 20px auto !important;
+                padding: 40px !important;
+                color: #0f172a !important;
+              }
+              .docx-styled-html {
+                padding: 24px 32px;
+                background: #ffffff;
+                min-height: 100%;
+                font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+              }
+              .docx-styled-html table {
+                border-collapse: collapse !important;
+                width: 100% !important;
+                margin: 1.2em 0 !important;
+                border: 1px solid #cbd5e1 !important;
+                font-size: 13px !important;
+              }
+              .docx-styled-html th, .docx-styled-html td {
+                border: 1px solid #cbd5e1 !important;
+                padding: 8px 12px !important;
+                text-align: left !important;
+                vertical-align: top !important;
+                color: #1e293b !important;
+              }
+              .docx-styled-html th {
+                background-color: #f1f5f9 !important;
+                font-weight: 600 !important;
+              }
+              .docx-styled-html tr:nth-child(even) td {
+                background-color: #f8fafc !important;
+              }
+              .docx-styled-html p {
+                margin: 0.6em 0 !important;
+                line-height: 1.65 !important;
+              }
+              .docx-styled-html h1, .docx-styled-html h2, .docx-styled-html h3 {
+                color: #0f172a !important;
+                margin-top: 1.2em !important;
+                margin-bottom: 0.5em !important;
+                font-weight: 700 !important;
+              }
+            `}</style>
+            
+            {docType === 'docx' ? (
+              <div style={{ width: '100%', minHeight: '100%' }}>
+                {htmlContent && (
+                  <div
+                    className="docx-styled-html"
+                    dangerouslySetInnerHTML={{ __html: htmlContent }}
+                  />
+                )}
+              </div>
+            ) : (
+              <div
+                className="docx-styled-html"
+                dangerouslySetInnerHTML={{ __html: htmlContent || '' }}
+              />
+            )}
+          </div>
+
+          {/* Word 목차 사이드 드로어 */}
+          {showToc && tocHeadings.length > 0 && (
+            <div style={{
+              width: 220, height: '100%', background: '#0f172a', borderLeft: '1px solid rgba(255,255,255,0.1)',
+              overflowY: 'auto', padding: 8, zIndex: 20, flexShrink: 0
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#60a5fa', marginBottom: 8, paddingBottom: 4, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                📋 문서 목차 ({tocHeadings.length})
+              </div>
+              {tocHeadings.map(item => (
+                <div
+                  key={item.id}
+                  onClick={() => scrollToHeading(item.element)}
+                  style={{
+                    padding: '6px 8px', borderRadius: 4, marginBottom: 3, cursor: 'pointer', fontSize: 11,
+                    paddingLeft: `${Math.min(24, (item.level - 1) * 10 + 8)}px`,
+                    background: 'transparent',
+                    color: '#cbd5e1',
+                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'
+                    e.currentTarget.style.color = '#60a5fa'
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = 'transparent'
+                    e.currentTarget.style.color = '#cbd5e1'
+                  }}
+                  title={item.text}
+                >
+                  {item.text}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
     )
   }
 

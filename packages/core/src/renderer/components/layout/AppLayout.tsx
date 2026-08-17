@@ -54,10 +54,8 @@ import { PanelLeft, Sparkles } from 'lucide-react'
  * - FloatingPiPVideo: PIP 화면 띄우기 비디오 오버레이.
  * - ModalManager: 전역 공용 모달(설정, 정보창 등) 렌더링 라우터.
  */
-import { MarkdownEditor } from '../MarkdownEditor'
 import { StatusBar } from '../StatusBar'
 import { MenuBar } from '../MenuBar'
-import { Minimap } from '../Minimap'
 import { RightTabStrip } from '../RightTabStrip'
 import { ResizeHandle } from '../ResizeHandle'
 import { FloatingChat } from '../FloatingChat'
@@ -74,6 +72,8 @@ import { ChatPanel } from '../ChatPanel'
  * - 앱 최초 마운팅 시의 번들 해석 및 자바스크립트 엔진 평가 blocking을 방지하여 에디터 화면의 노출 속도를 가속화하기 위해 lazy 로딩을 도입합니다.
  */
 const Sidebar = React.lazy(() => import('../Sidebar').then(m => ({ default: m.Sidebar })))
+const MarkdownEditor = React.lazy(() => import('../MarkdownEditor').then(m => ({ default: m.MarkdownEditor })))
+const Minimap = React.lazy(() => import('../Minimap').then(m => ({ default: m.Minimap })))
 
 
 /* 
@@ -305,29 +305,8 @@ export const AppLayout: React.FC<AppLayoutProps> = (props) => {
         >
           {/* PRIMARY EDITOR PANE */}
           <div style={{ flex: 1, position: 'relative', borderRight: isSplitView ? '1px solid var(--border-muted)' : 'none', minWidth: 0, height: '100%' }}>
-            <MarkdownEditor
-              onMouseMove={handleMouseMove}
-              onSelectionChange={updateDragSelection}
-              onBlockHighlight={updateBlockHighlight}
-              editorContainerRef={editorContainerRef}
-              onSelectedTextChange={setSelectedText}
-              taggedBlocks={taggedBlocks}
-              setTaggedBlocks={setTaggedBlocks}
-            />
-            {settings.showMinimap && (settings.installedPlugins || []).includes('minimap') && editor && (
-              <Minimap
-                editor={editor}
-                editorContainerRef={editorContainerRef}
-                blocks={editor.document}
-              />
-            )}
-          </div>
-
-          {/* SPLIT (SECONDARY) EDITOR PANE */}
-          {isSplitView && (
-            <div style={{ flex: 1, position: 'relative', minWidth: 0, height: '100%' }}>
+            <React.Suspense fallback={<div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>에디터 로딩 중...</div>}>
               <MarkdownEditor
-                isSplitViewInstance={true}
                 onMouseMove={handleMouseMove}
                 onSelectionChange={updateDragSelection}
                 onBlockHighlight={updateBlockHighlight}
@@ -336,6 +315,31 @@ export const AppLayout: React.FC<AppLayoutProps> = (props) => {
                 taggedBlocks={taggedBlocks}
                 setTaggedBlocks={setTaggedBlocks}
               />
+              {settings.showMinimap && (settings.installedPlugins || []).includes('minimap') && editor && (
+                <Minimap
+                  editor={editor}
+                  editorContainerRef={editorContainerRef}
+                  blocks={editor.document}
+                />
+              )}
+            </React.Suspense>
+          </div>
+
+          {/* SPLIT (SECONDARY) EDITOR PANE */}
+          {isSplitView && (
+            <div style={{ flex: 1, position: 'relative', minWidth: 0, height: '100%' }}>
+              <React.Suspense fallback={<div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>에디터 로딩 중...</div>}>
+                <MarkdownEditor
+                  isSplitViewInstance={true}
+                  onMouseMove={handleMouseMove}
+                  onSelectionChange={updateDragSelection}
+                  onBlockHighlight={updateBlockHighlight}
+                  editorContainerRef={editorContainerRef}
+                  onSelectedTextChange={setSelectedText}
+                  taggedBlocks={taggedBlocks}
+                  setTaggedBlocks={setTaggedBlocks}
+                />
+              </React.Suspense>
             </div>
           )}
 

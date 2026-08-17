@@ -149,6 +149,10 @@ export interface WorkspaceState {
   setTaggedBlocks: (blocks: TaggedBlock[]) => void
   addTaggedBlock: (block: TaggedBlock) => void
   removeTaggedBlock: (id: string) => void
+  clearTaggedBlocks: () => void
+
+  activeEditorInstance: any | null
+  setActiveEditorInstance: (editor: any | null) => void
 
   /*
    * [SNAPSHOT COMPARE SPEC]
@@ -267,6 +271,10 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
     set((state) => ({
       taggedBlocks: state.taggedBlocks.filter((b) => b.id !== id)
     })),
+  clearTaggedBlocks: () => set({ taggedBlocks: [] }),
+
+  activeEditorInstance: null,
+  setActiveEditorInstance: (editor) => set({ activeEditorInstance: editor }),
 
   selectedSnapshot: null,
   setSelectedSnapshot: (snapshot) => set({ selectedSnapshot: snapshot }),

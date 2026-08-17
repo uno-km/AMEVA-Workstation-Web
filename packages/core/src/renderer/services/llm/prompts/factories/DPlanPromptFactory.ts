@@ -1,26 +1,27 @@
 /**
  * ============================================================================
  * @file DPlanPromptFactory.ts
- * @description DPlanPromptFactory.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
- * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
- * @example
- * // 예시 로직 (자동 생성됨)
- * import { something } from './DPlanPromptFactory';
+ * @system AMEVA OS Desktop Workstation
+ * @location packages/core/src/renderer/services/llm/prompts/factories/DPlanPromptFactory.ts
+ * @role Standardized Prompt Factory for 3B+ Parameter Models (Qwen2.5-3B 등)
  * 
- * @created 2026-08-10 20:30:36
- * @updated 2026-08-10 20:30:36
- * @author uno-km
- * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * [소비처 - CONSUMERS / USAGE CONTEXT]
+ * - 소비처 A (PromptManager.ts): DPlan 기본 프롬프트 팩토리 구현체로 인스턴스화.
+ * - 소비처 B (hooks/editor/useLLMAction.ts): 에디터 인라인 AI 및 RAG 파이프라인에서 소비.
+ * 
+ * [책임 범위 - RESPONSIBILITY]
+ * - 3B 파라미터 이상 모델에 최적화된 XML 태그(`<answer>`) 및 마크다운 기반 시스템 프롬프트를 생성한다.
+ * - RAG 검색 결과 컨텍스트를 주입하여 사실 기반의 정확한 질의응답을 유도한다.
+ * 
+ * [절대 깨면 안 되는 계약 - CONTRACT]
+ * - MUST: 모든 응답은 `<answer>`와 `</answer>` 태그로 감싸지도록 프롬프트를 구성할 것.
  * ============================================================================
  */
 
-// [내부 프로젝트 의존성 모듈 임포트: ../PromptFactory]
 import type { PromptFactory } from '../PromptFactory';
+import { formatRAGContext } from '../PromptFactory';
+import type { EmbeddingChunk } from '../../../../features/rag-embedding/types';
 
-/**
- * DPlanPromptFactory 클래스의 인스턴스를 정의하고 관련 로직을 안전하게 캡슐화합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 export class DPlanPromptFactory implements PromptFactory {
   createTonePrompt(contextText?: string): string {
     const contextSection = contextText ? `\n[BACKGROUND CONTEXT]\n${contextText}\n` : '';
@@ -85,5 +86,30 @@ Example:
 [TARGET TEXT]
 ${exampleSource}
 -> <answer>${exampleTarget}</answer>`;
+  }
+
+  createRAGPrompt(
+    query: string,
+    contextChunks: Array<EmbeddingChunk | { text: string; heading?: string; section?: string; score?: number }> | string,
+    userInstructions?: string
+  ): string {
+    const formattedContext = formatRAGContext(contextChunks);
+    const customInstruction = userInstructions ? `\n[ADDITIONAL USER INSTRUCTIONS]\n${userInstructions}\n` : '';
+
+    return `You are an intelligent knowledge-assistant embedded in AMEVA OS.
+Your task is to answer the user's question accurately, concisely, and factually based strictly on the provided [RELEVANT RETRIEVED KNOWLEDGE CONTEXT].
+
+[RELEVANT RETRIEVED KNOWLEDGE CONTEXT]
+${formattedContext}
+${customInstruction}
+[USER QUESTION]
+${query}
+
+CRITICAL RULES:
+1. You MUST wrap your final answer inside <answer> and </answer> tags.
+2. Answer in professional and clear Korean.
+3. Base your answer strictly on the facts in the retrieved context. If the context does not contain enough information to answer, state that clearly and provide the best related explanation.
+4. If relevant, cite the section or document title mentioned in the context.
+5. NEVER fabricate or hallucinate ungrounded facts.`;
   }
 }

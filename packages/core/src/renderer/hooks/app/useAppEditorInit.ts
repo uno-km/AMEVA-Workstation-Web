@@ -33,33 +33,8 @@ import { useEffect, useRef } from 'react'
  * [BLOCKNOTE CORE BUILDER]
  * - BlockNoteEditor: 블록노트 WYSIWYG 에디터를 기동 생성하기 위한 코어 팩토리.
  */
-import { BlockNoteEditor } from "@blocknote/core"
-
-/* 
- * [CUSTOM BLOCK SCHEMAS]
- * - schema: Jupyter 코드블록, Live HTML Sandbox, Drawing 캔버스를 포함한 AMEVA 커스텀 스키마.
- * - AppEditor: 스키마가 반영된 최종 에디터 타입 시그니처.
- */
-import { en as localeEn } from '@blocknote/core/locales'
 import { Code, PenTool, Link, Video, Map, Presentation, Table, Kanban, FileText } from 'lucide-react'
-import { amevaSchema as schema, type AmevaEditor as AppEditor } from '../../editor/amevaBlockSchema'
-
-// 커스텀 블록 Dictionary 확장을 통해 드래그 핸들(::) 메뉴 렌더링 시 React #130 에러(아이콘 undefined) 방지
-const customDictionary = {
-  ...localeEn,
-  slash_menu: {
-    ...localeEn.slash_menu,
-    jupyter: { title: 'Jupyter Code', subtext: 'Interactive code block', aliases: ['jupyter', 'code'], group: 'AMEVA', icon: Code },
-    drawing: { title: 'Drawing Canvas', subtext: 'Excalidraw canvas', aliases: ['drawing', 'canvas'], group: 'AMEVA', icon: PenTool },
-    linkPreview: { title: 'Link Preview', subtext: 'URL preview card', aliases: ['link', 'url'], group: 'AMEVA', icon: Link },
-    youtube: { title: 'YouTube Video', subtext: 'Embed YouTube video', aliases: ['youtube', 'video'], group: 'AMEVA', icon: Video },
-    map: { title: 'Interactive Map', subtext: 'OpenStreetMap embed', aliases: ['map', 'location'], group: 'AMEVA', icon: Map },
-    presentation: { title: 'Presentation', subtext: 'Slide deck', aliases: ['pptx', 'slides'], group: 'AMEVA', icon: Presentation },
-    excel: { title: 'Excel Table', subtext: 'Spreadsheet', aliases: ['excel', 'table'], group: 'AMEVA', icon: Table },
-    kanban: { title: 'Kanban Board', subtext: 'Task board', aliases: ['kanban', 'board'], group: 'AMEVA', icon: Kanban },
-    inlineDocument: { title: 'Inline Document', subtext: 'PDF/Word viewer', aliases: ['pdf', 'document'], group: 'AMEVA', icon: FileText },
-  }
-} as any
+import type { AmevaEditor as AppEditor } from '../../editor/amevaBlockSchema'
 import * as ipc from '../../services/ipc/electronApiAdapter'
 import { resolveLocalMediaUrl } from '../../utils/markdownUtils'
 
@@ -114,7 +89,6 @@ export function useAppEditorInit({
    * - Rationale: 협업 플래그 활성화 유무에 따라 인스턴스를 다르게 분기 생성하고, 초기 마운트 시 웰컴 문서를 세팅한다.
    */
   useEffect(() => {
-    console.log("useAppEditorInit: initializing editor", { ydoc, provider, isActive, username, userColor })
     /*
      * [LOCAL VARIABLES]
      * - activeEditor: 빌드 완료된 에디터 인스턴스 임시 보존 변수.
@@ -198,30 +172,55 @@ export function useAppEditorInit({
       })
     }
 
-    // 1. 실시간 Yjs 협업 구동 조건 시, collaboration 프롭스를 포함하여 인스턴스 생성
-    if (ydoc && provider && isActive) {
-      activeEditor = BlockNoteEditor.create({
-        schema,
-        dictionary: customDictionary,
-        collaboration: {
-          provider,
-          fragment: ydoc.getXmlFragment('document-store'),
-          user: { name: username, color: userColor },
-        },
-        uploadFile: uploadFileHandler,
-      })
-    }
-    // 2. 단독 편집(Offline) 조건 시, 기본 스키마만 엮어 생성
-    else {
-      activeEditor = BlockNoteEditor.create({
-        schema,
-        dictionary: customDictionary,
-        uploadFile: uploadFileHandler,
-      })
+    // 동적 임포트로 초기 로딩 속도를 최적화
+    const initEditorAsync = async () => {
+      const { BlockNoteEditor } = await import('@blocknote/core')
+      const { en: localeEn } = await import('@blocknote/core/locales')
+      const { amevaSchema: schema } = await import('../../editor/amevaBlockSchema')
+
+      const customDictionary = {
+        ...localeEn,
+        slash_menu: {
+          ...localeEn.slash_menu,
+          jupyter: { title: 'Jupyter Code', subtext: 'Interactive code block', aliases: ['jupyter', 'code'], group: 'AMEVA', icon: Code },
+          drawing: { title: 'Drawing Canvas', subtext: 'Excalidraw canvas', aliases: ['drawing', 'canvas'], group: 'AMEVA', icon: PenTool },
+          linkPreview: { title: 'Link Preview', subtext: 'URL preview card', aliases: ['link', 'url'], group: 'AMEVA', icon: Link },
+          youtube: { title: 'YouTube Video', subtext: 'Embed YouTube video', aliases: ['youtube', 'video'], group: 'AMEVA', icon: Video },
+          map: { title: 'Interactive Map', subtext: 'OpenStreetMap embed', aliases: ['map', 'location'], group: 'AMEVA', icon: Map },
+          presentation: { title: 'Presentation', subtext: 'Slide deck', aliases: ['pptx', 'slides'], group: 'AMEVA', icon: Presentation },
+          excel: { title: 'Excel Table', subtext: 'Spreadsheet', aliases: ['excel', 'table'], group: 'AMEVA', icon: Table },
+          kanban: { title: 'Kanban Board', subtext: 'Task board', aliases: ['kanban', 'board'], group: 'AMEVA', icon: Kanban },
+          inlineDocument: { title: 'Inline Document', subtext: 'PDF/Word viewer', aliases: ['pdf', 'document'], group: 'AMEVA', icon: FileText },
+        }
+      } as any
+
+      // 1. 실시간 Yjs 협업 구동 조건 시, collaboration 프롭스를 포함하여 인스턴스 생성
+      if (ydoc && provider && isActive) {
+        activeEditor = BlockNoteEditor.create({
+          schema,
+          dictionary: customDictionary,
+          collaboration: {
+            provider,
+            fragment: ydoc.getXmlFragment('document-store'),
+            user: { name: username, color: userColor },
+          },
+          uploadFile: uploadFileHandler,
+        }) as AppEditor
+      }
+      // 2. 단독 편집(Offline) 조건 시, 기본 스키마만 엮어 생성
+      else {
+        activeEditor = BlockNoteEditor.create({
+          schema,
+          dictionary: customDictionary,
+          uploadFile: uploadFileHandler,
+        }) as AppEditor
+      }
+
+      // 전역 상태에 에디터 이식
+      setEditor(activeEditor)
     }
 
-    // 전역 상태에 에디터 이식
-    setEditor(activeEditor)
+    initEditorAsync().catch(console.error)
 
     // 3. 최초 부팅 단계인 경우 가이드 웰컴 마크다운(welcomeMD) 주입
     if (isInitialLoad.current && (!isActive || !provider)) {

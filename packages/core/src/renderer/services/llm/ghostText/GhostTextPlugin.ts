@@ -153,10 +153,14 @@ export function postProcessSuggestion(raw: string, afterText: string, beforeText
   return text;
 }
 
-/** LLM 시스템 프롬프트 */
-export function buildSystemPrompt(): string {
-  return `You are an inline text completion engine embedded in a document editor.
-Continue the text at the cursor position with a short completion phrase.
+/** LLM 시스템 프롬프트 (RAG 지능형 컨텍스트 지원) */
+export function buildSystemPrompt(referenceContext?: string): string {
+  const refSection = referenceContext && referenceContext.trim()
+    ? `\n[RELEVANT REFERENCE CONTEXT]\n${referenceContext.trim()}\n`
+    : '';
+
+  return `You are an inline text completion engine embedded in a document editor.${refSection}
+Continue the text at the cursor position with a short completion phrase grounded in the context.
 
 STRICT RULES:
 - Output ONLY the completion text. No explanation, no preamble.

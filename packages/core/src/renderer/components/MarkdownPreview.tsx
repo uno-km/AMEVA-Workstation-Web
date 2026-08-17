@@ -346,7 +346,6 @@ export function MarkdownPreview({ markdown, editor }: { markdown: string; editor
   const segments = useMemo(() => {
     try {
       const parsed = buildPreviewSegments(markdown)
-      console.log(`[MarkdownPreview] Successfully parsed markdown into ${parsed.length} segments.`)
       return parsed
     } catch (err) {
       console.error('[MarkdownPreview] Failed to parse markdown segments:', err)
@@ -519,7 +518,16 @@ export function MarkdownPreview({ markdown, editor }: { markdown: string; editor
           }
         }
 
-        return <div key={idx} dangerouslySetInnerHTML={{ __html: 'html' in seg ? seg.html : '' }} />
+        /** HTML Sanitizer helper to prevent XSS injection in raw markdown HTML segments */
+        const rawHtml = 'html' in seg ? seg.html : ''
+        const cleanHtml = rawHtml
+          .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+          .replace(/on\w+\s*=\s*(["'])[\s\S]*?\1/gi, '')
+          .replace(/on\w+\s*=\s*[^>\s]+/gi, '')
+          .replace(/href\s*=\s*(["'])\s*javascript:[\s\S]*?\1/gi, 'href="#"')
+          .replace(/src\s*=\s*(["'])\s*javascript:[\s\S]*?\1/gi, 'src=""')
+
+        return <div key={idx} dangerouslySetInnerHTML={{ __html: cleanHtml }} />
       })}
     </div>
   )

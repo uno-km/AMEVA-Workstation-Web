@@ -8,7 +8,7 @@ import { useEmbeddingEngine } from '../../features/rag-embedding';
 
 interface EmbeddingStatusIndicatorProps {
   activeTooltip: string | null;
-  handleMouseEnter: (e: React.MouseEvent<HTMLDivElement>, tooltipId: string) => void;
+  handleMouseEnter: (tooltipId: string) => void;
   handleMouseLeave: () => void;
   tooltipStyle: CSSProperties;
   editorContent?: string;
@@ -58,7 +58,7 @@ export const EmbeddingStatusIndicator: React.FC<EmbeddingStatusIndicatorProps> =
   return (
     <div
       className="statusbar-item"
-      onMouseEnter={(e) => handleMouseEnter(e, 'embedding')}
+      onMouseEnter={() => handleMouseEnter('embedding')}
       onMouseLeave={handleMouseLeave}
       onClick={handleClick}
       style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}

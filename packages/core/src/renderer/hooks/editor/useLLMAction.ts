@@ -1,30 +1,28 @@
 /**
  * ============================================================================
  * @file useLLMAction.ts
- * @description useLLMAction.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
- * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
- * @example
- * // 예시 로직 (자동 생성됨)
- * import { something } from './useLLMAction';
+ * @system AMEVA OS Desktop Workstation
+ * @location packages/core/src/renderer/hooks/editor/useLLMAction.ts
+ * @role Editor Inline AI Action & RAG-Assisted Generation Hook
  * 
- * @created 2026-08-10 20:30:36
- * @updated 2026-08-10 20:30:36
- * @author uno-km
- * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * [소비처 - CONSUMERS / USAGE CONTEXT]
+ * - 소비처 A (components/MarkdownEditor.tsx): 에디터 팝업 메뉴 및 인라인 AI 블록 치환 연동.
+ * 
+ * [책임 범위 - RESPONSIBILITY]
+ * - PromptFactory를 통해 모델별 시스템 프롬프트(톤 변환, 요약, 번역, RAG 질의응답)를 획득한다.
+ * - WebLLM 스트림 토큰을 `XmlTagParser`로 실시간 파싱하여 `aiDiff` 블록에 스트리밍 렌더링한다.
+ * 
+ * [절대 깨면 안 되는 계약 - CONTRACT]
+ * - MUST: `XmlTagParser`를 통과한 순수 `<answer>` 내부 텍스트만 에디터 블록에 반영할 것.
+ * - MUST: 스트리밍 도중 발생한 에러는 기존 블록을 훼손하지 않고 복원 가능하도록 `originalBlockJson`을 유지할 것.
  * ============================================================================
  */
 
-// [외부 패키지 및 라이브러리 임포트: react]
 import React, { useCallback } from 'react';
-// [내부 프로젝트 의존성 모듈 임포트: ../../services/llm/prompts/PromptManager]
 import { PromptManager } from '../../services/llm/prompts/PromptManager';
-// [내부 프로젝트 의존성 모듈 임포트: ../../services/llm/parsers/XmlTagParser]
 import { XmlTagParser } from '../../services/llm/parsers/XmlTagParser';
+import type { EmbeddingChunk } from '../../features/rag-embedding/types';
 
-/**
- * LLMActionParams 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 interface LLMActionParams {
   editor: any;
   activeModelId: string;
@@ -32,18 +30,15 @@ interface LLMActionParams {
   taggedBlocks?: any[];
 }
 
-/**
- * useLLMAction 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 export function useLLMAction({ editor, activeModelId, generateStream, taggedBlocks }: LLMActionParams) {
   const parser = React.useMemo(() => new XmlTagParser('answer'), []);
 
   const executeAction = useCallback(async (
     targetBlockId: string | null,
     targetText: string,
-    mode: 'tone' | 'summary' | 'translate',
-    targetLang?: string
+    mode: 'tone' | 'summary' | 'translate' | 'rag',
+    targetLang?: string,
+    ragChunks?: EmbeddingChunk[]
   ) => {
     if (!editor || !targetText) return;
 
@@ -53,12 +48,15 @@ export function useLLMAction({ editor, activeModelId, generateStream, taggedBloc
 
     const factory = PromptManager.getFactory(activeModelId);
     let systemPrompt = '';
+
     if (mode === 'tone') {
       systemPrompt = factory.createTonePrompt(contextText);
     } else if (mode === 'summary') {
       systemPrompt = factory.createSummaryPrompt(contextText);
     } else if (mode === 'translate' && targetLang) {
       systemPrompt = factory.createTranslationPrompt(targetLang, contextText);
+    } else if (mode === 'rag') {
+      systemPrompt = factory.createRAGPrompt(targetText, ragChunks || contextText || '');
     }
 
     const stream = generateStream(systemPrompt, `[TARGET TEXT]\n${targetText}`);

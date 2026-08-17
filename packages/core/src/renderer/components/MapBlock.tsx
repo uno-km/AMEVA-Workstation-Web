@@ -14,10 +14,12 @@ import { createReactBlockSpec } from '@blocknote/react'
 import { MapPin, Search, Map as MapIcon, X, ChevronDown, ChevronUp, Navigation, Circle, Type } from 'lucide-react'
 import React, { useState, useEffect } from 'react'
 
-// [내부 프로젝트 의존성 모듈 임포트]
-import { AmevaMapViewer } from './map/AmevaMapViewer'
+import { AsyncBlockWrapper } from './AsyncBlockWrapper'
 import type { MapPinData, MapRouteData } from './map/AmevaMapViewer'
 
+const AmevaMapViewer = React.lazy(() => 
+  import('./map/AmevaMapViewer').then(m => ({ default: m.AmevaMapViewer }))
+)
 const RouteDetails = ({ route }: { route: MapRouteData }) => {
   const [info, setInfo] = useState<{ duration: number, distance: number, steps: any[] } | null>(null)
   const [loading, setLoading] = useState(false)
@@ -520,16 +522,18 @@ export const MapBlockSpec = createReactBlockSpec(
           )}
 
           {/* 지도 렌더러 영역 */}
-          <AmevaMapViewer
-            mapMode={mapMode}
-            pins={pins}
-            routes={routes}
-            startLat={parseFloat(props.lat)}
-            startLng={parseFloat(props.lng)}
-            destLat={props.destLat ? parseFloat(props.destLat) : undefined}
-            destLng={props.destLng ? parseFloat(props.destLng) : undefined}
-            useUserLocation={useUserLocation}
-          />
+          <AsyncBlockWrapper name="지도">
+            <AmevaMapViewer
+              mapMode={mapMode}
+              pins={pins}
+              routes={routes}
+              startLat={parseFloat(props.lat)}
+              startLng={parseFloat(props.lng)}
+              destLat={props.destLat ? parseFloat(props.destLat) : undefined}
+              destLng={props.destLng ? parseFloat(props.destLng) : undefined}
+              useUserLocation={useUserLocation}
+            />
+          </AsyncBlockWrapper>
 
           {/* 메모 영역 (글로벌) */}
           <div style={{ padding: '12px', background: '#121215', borderTop: '1px solid var(--border-muted)' }}>

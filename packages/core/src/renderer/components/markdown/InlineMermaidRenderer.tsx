@@ -26,8 +26,8 @@
 
 // [외부 패키지 및 라이브러리 임포트: react]
 import { useState, useEffect, useRef } from 'react'
-// [외부 패키지 및 라이브러리 임포트: mermaid]
 import mermaid from 'mermaid'
+
 
   /*
    * [FUNCTION CONTRACT]
@@ -64,6 +64,11 @@ export function InlineMermaidRenderer({ code }: { code: string }) {
   const elementId = useRef(`mermaid-preview-${Math.random().toString(36).substr(2, 9)}`)
 
   useEffect(() => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'dark',
+      securityLevel: 'loose',
+    })
     /*
      * [RUN-TIME STATE / INVARIANT]
      * - 변수 명: `active`

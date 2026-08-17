@@ -83,6 +83,8 @@ import { useAppAISuggestions } from './hooks/app/useAppAISuggestions'
  */
 import { useCollaboration } from './hooks/useCollaboration'
 import { useHistory } from './hooks/useHistory'
+import { useWebLLM } from './components/useWebLLM'
+import { PwaReloadPrompt } from './components/ui/PwaReloadPrompt'
 
 /* 
  * [AI INTERACTION & COMMUNICATION HOOKS]
@@ -157,7 +159,11 @@ const randomUsername = `User_${Math.random().toString(36).substring(2, 7).toUppe
  * @description 워크스테이션 렌더러의 최상위 Composition Root 컴포넌트.
  * 외부 상태 및 도메인 전용 훅들을 하나의 단일 리액트 컴포넌트 컨텍스트 내에서 조립 및 구동한다.
  */
+import { useBackgroundInit } from './stores/useBackgroundInit'
+
 export default function App() {
+  useBackgroundInit()
+  
   /* 
    * [ADR - React Local State vs Zustand Store]
    * - documentId: 현재 열려있는 주 문서의 고유 식별자. 로컬 세션 종속.
@@ -586,6 +592,7 @@ export default function App() {
         handleScrollToBlock={handleScrollToBlock}
         findReplaceMode={findReplaceMode}
       />
+      <PwaReloadPrompt />
     </AppProvider>
   )
 }

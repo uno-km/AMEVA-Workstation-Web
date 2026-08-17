@@ -1,8 +1,21 @@
 /**
- * 파일명: index.ts
- * 역할: RAG 임베딩 엔진 모듈 익스포트
+ * ============================================================================
+ * @file index.ts
+ * @system AMEVA OS Desktop Workstation
+ * @location packages/core/src/renderer/features/rag-embedding/index.ts
+ * @role RAG Embedding & Hybrid Retrieval Module Public Entry Point
+ * ============================================================================
  */
 
-export type { EmbeddingStatus, EmbeddingChunk, EmbeddingState } from './types';
+export type {
+  EmbeddingStatus,
+  EmbeddingChunk,
+  EmbeddingState,
+  ContextualChunkPayload,
+  HybridSearchOptions,
+  RetrievalSearchMode,
+  IRetrievalStrategy
+} from './types';
+
 export { useEmbeddingEngine } from './useEmbeddingEngine';
 export * as vectorStore from './vectorStore';

@@ -1,29 +1,26 @@
 /**
  * ============================================================================
  * @file LargeModelPromptFactory.ts
- * @description LargeModelPromptFactory.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
- * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
- * @example
- * // 예시 로직 (자동 생성됨)
- * import { something } from './LargeModelPromptFactory';
+ * @system AMEVA OS Desktop Workstation
+ * @location packages/core/src/renderer/services/llm/prompts/factories/LargeModelPromptFactory.ts
+ * @role Prompt Factory for Large Scale LLM Models (7B+ Parameters)
  * 
- * @created 2026-08-10 20:30:36
- * @updated 2026-08-10 20:30:36
- * @author uno-km
- * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * [소비처 - CONSUMERS / USAGE CONTEXT]
+ * - 소비처 A (PromptManager.ts): 대형 모델 전용 프롬프트 생성기로 소비.
+ * 
+ * [책임 범위 - RESPONSIBILITY]
+ * - 복잡한 추론 능력을 가진 대형 모델에 적합한 심층 RAG 및 텍스트 변환 프롬프트를 생성한다.
  * ============================================================================
  */
 
-// [내부 프로젝트 의존성 모듈 임포트: ../PromptFactory]
 import type { PromptFactory } from '../PromptFactory';
+import { formatRAGContext } from '../PromptFactory';
+import type { EmbeddingChunk } from '../../../../features/rag-embedding/types';
 
-/**
- * LargeModelPromptFactory 클래스의 인스턴스를 정의하고 관련 로직을 안전하게 캡슐화합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 export class LargeModelPromptFactory implements PromptFactory {
-  createTonePrompt(): string {
-    return `You are a strict text-processing API endpoint. You do not converse.
+  createTonePrompt(contextText?: string): string {
+    const contextSection = contextText ? `\n[BACKGROUND CONTEXT]\n${contextText}\n` : '';
+    return `You are a strict text-processing API endpoint. You do not converse.${contextSection}
 TASK: Rewrite the [TARGET TEXT] into a highly professional and polite Korean business tone.
 
 CRITICAL RULES:
@@ -42,8 +39,9 @@ Example 2:
 -> <answer>1+1</answer>`;
   }
 
-  createSummaryPrompt(): string {
-    return `You are a strict text-processing API endpoint. You do not converse.
+  createSummaryPrompt(contextText?: string): string {
+    const contextSection = contextText ? `\n[BACKGROUND CONTEXT]\n${contextText}\n` : '';
+    return `You are a strict text-processing API endpoint. You do not converse.${contextSection}
 TASK: Summarize the [TARGET TEXT] into 3 bullet points or fewer in Korean.
 
 CRITICAL RULES:
@@ -56,8 +54,37 @@ Example 1:
 -> <answer>- A안건 통과
 - B안건 보류 및 내일 재논의</answer>`;
   }
+
+  createTranslationPrompt(targetLang: string, contextText?: string): string {
+    const contextSection = contextText ? `\n[BACKGROUND CONTEXT]\n${contextText}\n` : '';
+    return `You are an expert translator. You do not converse. You strictly translate text into ${targetLang}.${contextSection}
+TASK: Translate the [TARGET TEXT] into ${targetLang} with high fidelity and natural phrasing.
+
+CRITICAL RULES:
+1. You MUST wrap your final translation inside <answer> and </answer> tags.
+2. NEVER output conversational filler or notes outside the tags.`;
+  }
+
+  createRAGPrompt(
+    query: string,
+    contextChunks: Array<EmbeddingChunk | { text: string; heading?: string; section?: string; score?: number }> | string,
+    userInstructions?: string
+  ): string {
+    const formattedContext = formatRAGContext(contextChunks);
+    const customInstruction = userInstructions ? `\n[ADDITIONAL USER INSTRUCTIONS]\n${userInstructions}\n` : '';
+
+    return `You are an advanced knowledge assistant in AMEVA OS.
+Analyze the following retrieved knowledge context thoroughly and synthesize a precise, comprehensive answer to the user question.
+
+[RELEVANT RETRIEVED KNOWLEDGE CONTEXT]
+${formattedContext}
+${customInstruction}
+[USER QUESTION]
+${query}
+
+CRITICAL RULES:
+1. Wrap your entire final response inside <answer> and </answer> tags.
+2. Provide a well-structured response in Korean using markdown headings or bullet points where appropriate.
+3. Ground all statements in the provided context. If the context is insufficient, explicitly state the limitation.`;
+  }
 }
-
-
-
-

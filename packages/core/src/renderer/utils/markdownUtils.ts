@@ -290,8 +290,8 @@ export function normalizeMarkdown(raw: string): string {
        */
     if (parts[i]) {
       parts[i] = parts[i].replace(/\n\s*\n/g, '\n\u200B\n')
-      parts[i] = parts[i].replace(/</g, '__LT_TEMP__')
-      parts[i] = parts[i].replace(/>/g, '__GT_TEMP__')
+      parts[i] = parts[i].replace(/</g, 'LT_TEMP_XYZ')
+      parts[i] = parts[i].replace(/>/g, 'GT_TEMP_XYZ')
     }
   }
   content = parts.join('```')
@@ -356,14 +356,7 @@ export function cleanCodeBlocks(blocks: any[]) {
        * - 예시 코드: `const text = ...` 형태로 안전 캐싱 후 가공 기동.
        */
       const text = block.content ? block.content.map((c: any) => c.text).join('') : ''
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `cleaned`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const cleaned = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-      let cleaned = text.replace(/\u200B/g, '').replace(/__LT_TEMP__/g, '<').replace(/__GT_TEMP__/g, '>')
+      let cleaned = text.replace(/\u200B/g, '').replace(/LT_TEMP_XYZ/g, '<').replace(/GT_TEMP_XYZ/g, '>')
       /*
        * [RUN-TIME STATE / INVARIANT]
        * - 변수 명: `lines`

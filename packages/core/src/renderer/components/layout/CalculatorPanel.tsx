@@ -41,12 +41,61 @@ export function CalculatorPanel() {
     setDisplay('0')
   }
 
+  /** 안전한 산술 수식 평가 함수 (eval / new Function 미사용) */
+  const safeEvaluateMath = (expr: string): number => {
+    const normalized = expr.replace(/×/g, '*').replace(/÷/g, '/')
+    if (!/^[0-9\s+\-*/%.()]+$/.test(normalized)) {
+      throw new Error('Invalid math expression')
+    }
+    const tokens = normalized.match(/(\d+(?:\.\d+)?|[+\-*/%()])/g)
+    if (!tokens) throw new Error('Empty expression')
+
+    const numbers: number[] = []
+    const ops: string[] = []
+    const precedence = (op: string) => (op === '+' || op === '-' ? 1 : op === '*' || op === '/' || op === '%' ? 2 : 0)
+
+    const applyOp = () => {
+      const op = ops.pop()
+      const b = numbers.pop()
+      const a = numbers.pop()
+      if (a === undefined || b === undefined || !op) throw new Error('Syntax error')
+      switch (op) {
+        case '+': numbers.push(a + b); break
+        case '-': numbers.push(a - b); break
+        case '*': numbers.push(a * b); break
+        case '/':
+          if (b === 0) throw new Error('Division by zero')
+          numbers.push(a / b)
+          break
+        case '%': numbers.push(a % b); break
+      }
+    }
+
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i]
+      if (!isNaN(Number(token))) {
+        numbers.push(Number(token))
+      } else if (token === '(') {
+        ops.push(token)
+      } else if (token === ')') {
+        while (ops.length && ops[ops.length - 1] !== '(') applyOp()
+        ops.pop()
+      } else {
+        while (ops.length && precedence(ops[ops.length - 1]) >= precedence(token)) applyOp()
+        ops.push(token)
+      }
+    }
+
+    while (ops.length) applyOp()
+    if (numbers.length !== 1) throw new Error('Invalid evaluation')
+    return numbers[0]
+  }
+
   const handleCalc = () => {
     if (!equation || display === 'Error') return
     try {
       const full = equation + ' ' + display
-      // eval 대용 안전한 수식 계산
-      const result = new Function(`return ${full.replace('×', '*').replace('÷', '/')}`)()
+      const result = safeEvaluateMath(full)
       setDisplay(String(result))
       setEquation('')
     } catch {

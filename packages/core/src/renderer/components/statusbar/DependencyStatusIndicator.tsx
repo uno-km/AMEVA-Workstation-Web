@@ -51,7 +51,7 @@ export function DependencyStatusIndicator({
       </div>
 
       {activeTooltip === 'dependency' && (
-        <div style={{ ...tooltipStyle, minWidth: '200px' }}>
+        <div style={{ ...tooltipStyle, minWidth: '250px', whiteSpace: 'nowrap' }}>
           <div style={{ fontSize: '11.5px', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px', marginBottom: '6px' }}>
             시스템 백그라운드 모듈 상태
           </div>
@@ -67,11 +67,11 @@ export function DependencyStatusIndicator({
 
                 return (
                   <div key={dep.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
-                    <span style={{ color: 'var(--text-main)' }}>{dep.name}</span>
+                    <span style={{ color: 'var(--text-main)', marginRight: '16px' }}>{dep.name}</span>
                     <span style={{ color, fontWeight: 600 }}>
-                      {dep.status === 'loading' ? '로딩 중...' : 
-                       dep.status === 'ready' ? '활성' : 
-                       dep.status === 'error' ? '오류' : '대기'}
+                      {dep.status === 'loading' ? '🟡' : 
+                       dep.status === 'ready' ? '🟢' : 
+                       dep.status === 'error' ? '🔴' : '⚪'}
                     </span>
                     {dep.error && (
                       <div style={{ fontSize: '10px', color: 'var(--danger)', marginTop: '2px', gridColumn: 'span 2' }}>

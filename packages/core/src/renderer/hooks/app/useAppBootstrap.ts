@@ -227,22 +227,13 @@ export function useAppBootstrap(
          */
         const PREMIUM_IDS = new Set([
           'DatabaseExplorerPlugin', 'FinanceDashboardView', 'GoogleMapsView',
+          'google-maps', 'google-map', 'google-maps-view', 'map',
           'KanbanBoard', 'MindMapPlugin', 'PdfRagPlugin', 'PomodoroPlugin',
           'PresentationPlugin', 'RestClientPlugin', 'SmartSearchScrap',
           'VoiceDictationPlugin', 'WireframePlugin'
         ])
 
         settings.installedPlugins.forEach(async (id) => {
-          /*
-           * [ALGORITHM BRANCH / DECISION]
-           * - 조건 식: `pluginMeta?.scriptUrl`
-           * - 만족 시: plugins.json에서 정확한 scriptUrl을 찾은 경우 그 URL 사용.
-           * - 불만족 시 (PREMIUM_IDS 포함): .tsx fallback → handleInstallPlugin의 .tsx 분기로 라우팅.
-           * - 불만족 시 (일반 플러그인): .js fallback URL 사용.
-           *
-           * [BUG-FIX] 이전 코드: 모든 미등록 플러그인이 `plugins/${id}.js` (404)로 fallback했음.
-           *           수정 후: premium ID는 .tsx URL로 fallback → JS 다운로드 시도 없이 설치 목록에 바로 등록.
-           */
           const pluginMeta = processedData.find((p: any) => p.id === id)
           let scriptUrl: string
           if (pluginMeta?.scriptUrl) {
@@ -261,22 +252,16 @@ export function useAppBootstrap(
       } catch (err) {
         console.error('[useAppBootstrap] 마켓플레이스 플러그인 정보 로드 실패:', err)
 
-        // 네트워크 에러 시 기존 localStorage url-map 방식으로 fallback
         if (!settings.installedPlugins || settings.installedPlugins.length === 0) return
         let urlMap: Record<string, string> = {}
         try {
           urlMap = safeJsonParse(localStorage.getItem('plugin-urls'), {})
         } catch (e) {}
 
-        /*
-         * [RUN-TIME STATE / INVARIANT]
-         * - 변수 명: `FALLBACK_BASE`
-         * - 시나리오: raw.githubusercontent.com fetch 자체가 실패한 경우 GitHub Pages URL을 fallback baseUrl로 사용한다.
-         *             PREMIUM_IDS 집합은 위와 동일하게 적용된다.
-         */
         const FALLBACK_BASE = 'https://raw.githubusercontent.com/uno-km/AMEVA-Workstation-Market-Place/main/public/'
         const PREMIUM_IDS_FALLBACK = new Set([
           'DatabaseExplorerPlugin', 'FinanceDashboardView', 'GoogleMapsView',
+          'google-maps', 'google-map', 'google-maps-view', 'map',
           'KanbanBoard', 'MindMapPlugin', 'PdfRagPlugin', 'PomodoroPlugin',
           'PresentationPlugin', 'RestClientPlugin', 'SmartSearchScrap',
           'VoiceDictationPlugin', 'WireframePlugin'

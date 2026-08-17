@@ -3,62 +3,11 @@
  * @file usePanelResize.ts
  * @description usePanelResize.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
  * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
- * @example
- * // 예시 로직 (자동 생성됨)
- * import { something } from './usePanelResize';
- * 
- * @created 2026-08-10 20:30:36
- * @updated 2026-08-10 20:30:36
- * @author uno-km
- * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
  * ============================================================================
  */
 
-/**
- * @file usePanelResize.ts
- * @system AMEVA OS Desktop Workstation
- * @location src/renderer/hooks/usePanelResize.ts
- * @role Core module helper and integration logic
- * 
- * [소비처 - CONSUMERS / USAGE CONTEXT]
- * - 소비처 A (src/renderer/App.tsx): 최상위 Facade 구조에 통합 마운트.
- * - 소비처 B (src/renderer/contexts/AppContext.tsx): 리액트 Context 훅 목록에 바인딩되어 하위 뷰에 전파.
- * 
- * [책임 범위 - RESPONSIBILITY]
- * - 본 파일은 AMEVA 시스템 내에서 도메인 목적에 부합하는 연산 및 데이터 처리 흐름을 안전하게 캡슐화한다.
- * - 외부 라이브러리 및 하위 종속성을 조율하고 결과 규격을 일관되게 제공한다.
- * 
- * [절대 깨면 안 되는 계약 - CONTRACT]
- * - MUST: 모든 예외 발생 시 에러를 침묵시키지 말고 에러 로그를 명확하게 남길 것.
- * - MUST NOT: TypeScript any 형식을 우회 수단으로 함부로 선언하지 말 것.
- */
-
-/**
- * usePanelResize.ts
- * ─────────────────────────────────────────────────────────────
- * 패널 가로 크기 조절을 위한 범용 훅
- *
- * 사용법:
- *   const { width, handleMouseDown } = usePanelResize({
- *     storageKey: 'sidebar-width',
- *     defaultWidth: 280,
- *     minWidth: 160,
- *     maxWidth: 520,
- *     direction: 'right',  // 핸들이 패널의 오른쪽 경계
- *   })
- *
- * direction:
- *   'right' — 핸들을 오른쪽에 놓고 드래그하면 패널이 넓어짐 (사이드바)
- *   'left'  — 핸들을 왼쪽에 놓고 드래그하면 패널이 넓어짐 (AI 패널)
- * ─────────────────────────────────────────────────────────────
- */
-// [외부 패키지 및 라이브러리 임포트: react]
 import { useState, useCallback, useEffect, useRef } from 'react'
 
-/**
- * Options 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 interface Options {
   storageKey: string
   defaultWidth: number
@@ -68,10 +17,6 @@ interface Options {
   direction: 'right' | 'left'
 }
 
-/**
- * Result 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 interface Result {
   width: number
   isDragging: boolean
@@ -79,16 +24,6 @@ interface Result {
   setWidth: React.Dispatch<React.SetStateAction<number>>
 }
 
-  /*
-   * [FUNCTION CONTRACT]
-   * - 함수 명: `usePanelResize`
-   * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
-   * - 예시: `usePanelResize(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
-   */
-/**
- * usePanelResize 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 export function usePanelResize({
   storageKey,
   defaultWidth,
@@ -99,37 +34,9 @@ export function usePanelResize({
   // localStorage에서 복원, 없으면 defaultWidth
   const [width, setWidth] = useState<number>(() => {
     try {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `stored`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const stored = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
       const stored = localStorage.getItem(`panel-resize-${storageKey}`)
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `stored`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (stored)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
       if (stored) {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `parsed`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const parsed = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
         const parsed = Number(stored)
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `!isNaN(parsed) && parsed >= minWidth && parsed <= maxWidth`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (!isNaN(parsed) && parsed >= minWidth && parsed <= maxWidth)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
         if (!isNaN(parsed) && parsed >= minWidth && parsed <= maxWidth) return parsed
       }
     } catch {}
@@ -140,13 +47,6 @@ export function usePanelResize({
 
   // 드래그 시작 시점의 마우스 X와 패널 너비를 ref로 보존 (closure 문제 방지)
   const startXRef = useRef(0)
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `startWidthRef`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const startWidthRef = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const startWidthRef = useRef(width)
 
       /*
@@ -207,37 +107,31 @@ export function usePanelResize({
 
   // 드래그 중에는 document 레벨 이벤트를 캡처 (빠른 마우스 이동도 놓치지 않도록)
   useEffect(() => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `!isDragging`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (!isDragging)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
     if (!isDragging) return
     // body class 추가 → 드래그 중 iframe 등이 mouse 이벤트 가로채지 않도록
     document.body.classList.add('is-resizing')
     document.body.style.cursor = 'col-resize'
     document.body.style.userSelect = 'none'
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
+
+    // iframe 위로 마우스 이동 시 이벤트 유실 방지 오버레이
+    const overlay = document.createElement('div')
+    overlay.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999999;cursor:col-resize;user-select:none;'
+    document.body.appendChild(overlay)
+
+    window.addEventListener('mousemove', handleMouseMove, true)
+    window.addEventListener('mouseup', handleMouseUp, true)
     return () => {
       document.body.classList.remove('is-resizing')
       document.body.style.cursor = ''
       document.body.style.userSelect = ''
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
+      if (document.body.contains(overlay)) {
+        document.body.removeChild(overlay)
+      }
+      window.removeEventListener('mousemove', handleMouseMove, true)
+      window.removeEventListener('mouseup', handleMouseUp, true)
     }
   }, [isDragging, handleMouseMove, handleMouseUp])
 
-
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `handleMouseDown`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const handleMouseDown = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     startXRef.current = e.clientX
@@ -247,4 +141,3 @@ export function usePanelResize({
 
   return { width, isDragging, handleMouseDown, setWidth }
 }
-

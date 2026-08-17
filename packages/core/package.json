@@ -5,7 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 8888",
-    "build": "tsc && vite build"
+    "build": "tsc && vite build",
+    "test": "npx tsx test/runAllTests.ts && npx tsx test/e2e/deterministic-ui.test.ts && npx tsx test/e2e/all-buttons-full-suite.test.ts",
+    "test:unit": "npx tsx test/runAllTests.ts",
+    "test:e2e": "npx tsx test/e2e/deterministic-ui.test.ts",
+    "test:full": "npx tsx test/e2e/all-buttons-full-suite.test.ts"
   },
   "dependencies": {
     "@babel/standalone": "^8.0.4",
@@ -22,6 +26,7 @@
     "@xenova/transformers": "^2.17.2",
     "canvas-confetti": "^1.9.4",
     "docx": "^9.7.1",
+    "docx-preview": "^0.4.0",
     "es-toolkit": "^1.50.0",
     "exceljs": "^4.4.0",
     "fabric": "^5.3.0",

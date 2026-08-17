@@ -1,25 +1,65 @@
 /**
  * ============================================================================
  * @file PromptFactory.ts
- * @description PromptFactory.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
- * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
- * @example
- * // 예시 로직 (자동 생성됨)
- * import { something } from './PromptFactory';
+ * @system AMEVA OS Desktop Workstation
+ * @location packages/core/src/renderer/services/llm/prompts/PromptFactory.ts
+ * @role Abstract Prompt Factory & RAG Context Formatting Interface
  * 
- * @created 2026-08-10 20:30:36
- * @updated 2026-08-10 20:30:36
- * @author uno-km
- * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * [소비처 - CONSUMERS / USAGE CONTEXT]
+ * - 소비처 A (PromptManager.ts): 모델별 팩토리 인스턴스 반환 시 인터페이스 규격으로 소비.
+ * - 소비처 B (hooks/editor/useLLMAction.ts): 톤/요약/번역/RAG 질의 프롬프트 생성 호출.
+ * - 소비처 C (features/rag-embedding/useEmbeddingEngine.ts): RAG 검색 결과 연동 프롬프트 조립에 소비.
+ * 
+ * [책임 범위 - RESPONSIBILITY]
+ * - LLM 추론 엔진에 전달될 시스템 프롬프트(System Prompt) 규격을 추상화한다.
+ * - RAG 검색 결과 청크 컬렉션을 AI가 이해하기 쉬운 정형화된 컨텍스트 마크다운으로 직렬화하는 공통 유틸리티를 제공한다.
+ * 
+ * [절대 깨면 안 되는 계약 - CONTRACT]
+ * - MUST: 모든 RAG 프롬프트는 전달된 참조 컨텍스트(`[RELEVANT RETRIEVED KNOWLEDGE CONTEXT]`)를 명확한 구획으로 포함해야 한다.
  * ============================================================================
  */
 
+import type { EmbeddingChunk } from '../../../features/rag-embedding/types';
+
 /**
- * PromptFactory 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
+ * formatRAGContext 공통 헬퍼 함수
+ * 다수의 RAG 임베딩 청크 또는 단일 문자열을 AI 모델이 파싱하기 쉬운 마크다운 문서 컨텍스트 블록으로 직렬화합니다.
+ */
+export function formatRAGContext(
+  contextChunks: Array<EmbeddingChunk | { text: string; heading?: string; section?: string; score?: number }> | string
+): string {
+  if (typeof contextChunks === 'string') {
+    return contextChunks.trim();
+  }
+
+  if (!Array.isArray(contextChunks) || contextChunks.length === 0) {
+    return '제공된 참조 문서 정보가 없습니다.';
+  }
+
+  return contextChunks.map((chunk, idx) => {
+    const text = typeof chunk === 'string' ? chunk : chunk.text;
+    const heading = typeof chunk === 'object' && chunk.heading ? ` [위치/섹션: ${chunk.heading}]` : '';
+    const scoreInfo = typeof chunk === 'object' && chunk.score !== undefined && chunk.score > 0
+      ? ` (관련도 점수: ${(chunk.score * 100).toFixed(1)}%)`
+      : '';
+    return `### [참조 문서 ${idx + 1}${heading}${scoreInfo}]\n${text.trim()}`;
+  }).join('\n\n');
+}
+
+/**
+ * PromptFactory 인터페이스
  */
 export interface PromptFactory {
+  /** 비즈니스/경어체 어조 변환 프롬프트 생성 */
   createTonePrompt(contextText?: string): string;
+  /** 핵심 요약 프롬프트 생성 */
   createSummaryPrompt(contextText?: string): string;
+  /** 다국어 번역 프롬프트 생성 */
   createTranslationPrompt(targetLang: string, contextText?: string): string;
+  /** RAG 검색 기반 문서 질의응답 시스템 프롬프트 생성 */
+  createRAGPrompt(
+    query: string,
+    contextChunks: Array<EmbeddingChunk | { text: string; heading?: string; section?: string; score?: number }> | string,
+    userInstructions?: string
+  ): string;
 }

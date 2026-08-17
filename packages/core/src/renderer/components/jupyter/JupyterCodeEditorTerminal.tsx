@@ -98,6 +98,11 @@ export function JupyterCodeEditorTerminal({
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   useEffect(() => {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'dark',
+      securityLevel: 'loose',
+    })
       /*
        * [ALGORITHM BRANCH / DECISION]
        * - 조건 식: `language !== 'mermaid' || !showMermaidPreview || !code.trim()`

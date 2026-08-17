@@ -26,6 +26,7 @@ import { PdfAnnotationLayer } from './PdfAnnotationLayer'
 import { usePdfAnnotations } from '../hooks/usePdfAnnotations'
 import type { AnnotationTool } from '../hooks/usePdfAnnotations'
 import { uint8ArrayToBase64 } from '../utils/pdfAnnotationWriter'
+import { getAttachment } from '../utils/vfsDatabase'
 
 
 // [NEW] 50페이지 제한을 없애고 레이지 로딩을 지원하는 썸네일 컴포넌트
@@ -295,11 +296,23 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
       try {
         let pdfSource: any
 
-        if (pdfData.startsWith('data:') || pdfData.startsWith('http')) {
+        if (pdfData.startsWith('http://') || pdfData.startsWith('https://') || pdfData.startsWith('blob:')) {
           pdfSource = { url: pdfData }
+        } else if (pdfData.startsWith('ameva-vfs://')) {
+          const fileId = pdfData.replace('ameva-vfs://', '')
+          const blob = await getAttachment(fileId)
+          if (!blob) throw new Error('VFS_EXPIRED')
+          const arrayBuffer = await blob.arrayBuffer()
+          pdfSource = {
+            data: new Uint8Array(arrayBuffer),
+            standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/standard_fonts/`,
+            cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/cmaps/`,
+            cMapPacked: true
+          }
         } else {
-          // base64 → Uint8Array
-          const binaryStr = window.atob(pdfData.replace(/\s/g, ''))
+          // data:application/pdf;base64,... 또는 순수 base64 데이터
+          const cleanBase64 = pdfData.includes(',') ? pdfData.split(',')[1] : pdfData
+          const binaryStr = window.atob(cleanBase64.replace(/\s/g, ''))
           const bytes = new Uint8Array(binaryStr.length)
           for (let i = 0; i < binaryStr.length; i++) {
             bytes[i] = binaryStr.charCodeAt(i)
@@ -329,14 +342,13 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
         }
       } catch (err: any) {
         if (isMounted) {
-          setError(`PDF 로드 실패: ${err.message}`)
+          setError(`PDF 로드 실패: ${err.message || '파일이 손상되었거나 해석할 수 없습니다.'}`)
           setLoading(false)
         }
       }
     }
 
     loadPdf()
-    // PDF 변경 시 캐시 초기화
     return () => {
       isMounted = false
       pageCacheRef.current.clear()
@@ -568,6 +580,21 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
     const handler = () => setIsFullscreen(!!document.fullscreenElement)
     document.addEventListener('fullscreenchange', handler)
     return () => document.removeEventListener('fullscreenchange', handler)
+  }, [])
+
+  // [FIX-WHEEL-001] Native non-passive wheel listener for Ctrl+scroll zoom
+  useEffect(() => {
+    const el = scrollAreaRef.current
+    if (!el) return
+    const handleNativeWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        e.preventDefault()
+        if (e.deltaY < 0) setScale(s => Math.min(s + 0.25, 5.0))
+        else setScale(s => Math.max(s - 0.25, 0.25))
+      }
+    }
+    el.addEventListener('wheel', handleNativeWheel, { passive: false })
+    return () => el.removeEventListener('wheel', handleNativeWheel)
   }, [])
 
   // 키보드 단축키
@@ -1142,22 +1169,15 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
               <ChevronLeft size={20} />
             </button>
           )}
-
           {/* 스크롤 컴테이너 */}
           <div
             ref={scrollAreaRef}
             style={{ width: '100%', height: '100%', overflow: 'auto', background: '#1a1a24', willChange: 'transform', transform: 'translateZ(0)' }}
-            onWheel={(e) => {
-              if (e.ctrlKey) {
-                e.preventDefault()
-                if (e.deltaY < 0) handleZoomIn()
-                else handleZoomOut()
-              }
-            }}
             onPointerDown={handlePointerDown}
             onPointerUp={handlePointerUp}
             onPointerCancel={(e) => { dragStartRef.current = null }}
           >
+
             {continuousScroll ? (
               <div style={{ padding: '20px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 {Array.from({ length: numPages }).map((_, idx) => (
