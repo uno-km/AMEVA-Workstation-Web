@@ -280,7 +280,10 @@ export class PdfMapReduceService {
     });
     onLog?.(this.createLog('synthesizing', `✨ [3/3 단계] 최고 수석 분석가 모드로 종합 마크다운 표 & 액션 리포트 작성 시작!`));
 
-    const contextText = reducedSummaries.join('\n\n');
+    // Stage 2와 Stage 3 사이 GPU TDR 방지 쿨다운
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    const contextText = reducedSummaries.join('\n\n').slice(0, 1500);
 
     const synthesisSystemPrompt = `당신은 최고 경영진을 위한 수석 문서 분석가입니다.
 제공된 섹션별 요약 데이터를 종합하여 전문적이고 완성도 높은 [최종 종합 분석 리포트]를 작성하십시오.
