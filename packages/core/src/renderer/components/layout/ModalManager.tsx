@@ -171,7 +171,7 @@ export function ModalManager({}: ModalManagerProps = {}) {
       <DiffModal
         isOpen={isDiffOpen}
         onClose={() => setIsDiffOpen(false)}
-        snapshot={selectedSnapshot}
+        snapshot={selectedSnapshot as any}
         currentContent={currentContent}
         getLineDiff={getLineDiff}
         onRollback={handleRollback}
@@ -185,17 +185,11 @@ export function ModalManager({}: ModalManagerProps = {}) {
         }}
         settings={settings}
         onUpdateSettings={handleUpdateSettings}
-        aiSettings={aiSettings}
-        onUpdateAISettings={updateAISettings}
         username={username}
         userColor={userColor}
         onUpdateUser={(name, color) => {
           setUsername(name)
           setUserColor(color)
-        }}
-        onOpenModelHub={() => {
-          setIsSettingsOpen(false)
-          setShowModelHub(true)
         }}
       />
       <AboutModal
