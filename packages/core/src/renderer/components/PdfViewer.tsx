@@ -600,27 +600,31 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
   // 키보드 단축키
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement) return
-      const eKey = e.key.toLowerCase()
+      const eKey = e.key ? e.key.toLowerCase() : ''
       const eCode = e.code ? e.code.toLowerCase() : ''
+
+      // [PDF-SEARCH] Ctrl+F / Cmd+F 누르면 PDF 전용 검색창 활성화 & 인풋 자동 포커스
+      if ((e.ctrlKey || e.metaKey) && (eKey === 'f' || eCode === 'keyf')) {
+        e.preventDefault()
+        e.stopPropagation()
+        if (e.repeat) return
+        setShowSearch(true)
+        setTimeout(() => {
+          const searchInput = document.querySelector('input[placeholder*="PDF 내 텍스트 검색"]') as HTMLInputElement
+          if (searchInput) {
+            searchInput.focus()
+            searchInput.select()
+          }
+        }, 40)
+        return
+      }
+
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
 
       if (eKey === 'arrowright' || eKey === 'arrowdown') goToPage(currentPage + 1)
       if (eKey === 'arrowleft' || eKey === 'arrowup') goToPage(currentPage - 1)
       if (eKey === '+' || eKey === '=') handleZoomIn()
       if (eKey === '-') handleZoomOut()
-      
-      if ((e.ctrlKey || e.metaKey) && e.shiftKey && (eKey === 'f' || eCode === 'keyf')) {
-        e.preventDefault()
-        e.stopPropagation()
-        alert('PdfViewer: Ctrl+Shift+F')
-        if (e.repeat) return
-        setShowSearch(true)
-        // 만약 검색창이 이미 열려있고 포커스가 없으면 인풋으로 포커스
-        setTimeout(() => {
-          const searchInput = document.querySelector('input[placeholder*="PDF 내 텍스트 검색"]') as HTMLInputElement
-          if (searchInput) searchInput.focus()
-        }, 50)
-      }
       
       if (eKey === 'c' || eCode === 'keyc') {
         if (!e.repeat) setContinuousScroll(s => !s)
@@ -995,6 +999,19 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
                 if (e.key === 'Escape') {
                   e.preventDefault()
                   setShowSearch(false)
+                } else if (e.key === 'Enter') {
+                  e.preventDefault()
+                  if (searchResults.length > 0) {
+                    if (e.shiftKey) {
+                      const prev = (searchResultIdx - 1 + searchResults.length) % searchResults.length
+                      setSearchResultIdx(prev)
+                      goToPage(searchResults[prev].page)
+                    } else {
+                      const next = (searchResultIdx + 1) % searchResults.length
+                      setSearchResultIdx(next)
+                      goToPage(searchResults[next].page)
+                    }
+                  }
                 }
               }}
               placeholder={isIndexing ? `인덱싱 중... (${Object.keys(searchIndex).length}/${numPages}p)` : 'PDF 내 텍스트 검색...'}

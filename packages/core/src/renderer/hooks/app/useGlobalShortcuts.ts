@@ -227,8 +227,6 @@ export function useGlobalShortcuts(params: GlobalShortcutsParams) {
     } else if (matchHotkey(e, hotkeys.zoomReset || 'Control+0')) {
       e.preventDefault()
       onZoomReset()
-    } else if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'f') {
-      alert('Global: Ctrl+Shift+F')
     } else if (e.ctrlKey && e.key === ',') {
       e.preventDefault()
       useUIStore.getState().toggleSettings()
