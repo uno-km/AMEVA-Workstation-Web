@@ -10,7 +10,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   Sparkles, Send, Square, Trash2, FileText, Wand2, Table, BookOpen,
-  ArrowRight, Settings, Cpu
+  ArrowRight, Settings, Cpu, X
 } from 'lucide-react';
 import { useAIAgentStore } from '../features/ai-agent/core/useAIAgentStore';
 import { AgentOrchestrator } from '../features/ai-agent/core/AgentOrchestrator';
@@ -25,6 +25,8 @@ import type { InsertSuggestion } from '../features/ai-agent/types';
 import { ChatBubble } from './ai-panel/ChatBubble';
 import { WebGPUBanner } from './ai-panel/WebGPUBanner';
 import { EngineSettingsModal } from './ai-panel/EngineSettingsModal';
+
+import { OllamaWizardService } from '../services/llm/OllamaWizardService';
 
 const QUICK_ACTIONS = [
   { id: 'summarize', icon: FileText, label: '3줄 요약', prompt: '현재 문서의 핵심 내용을 3가지 항목으로 명확하게 요약해줘.' },
@@ -56,8 +58,16 @@ export function AIPanel() {
   const [input, setInput] = useState('');
   const [activeTab, setActiveTab] = useState<'chat' | 'outline'>('chat');
   const [engineMode, setEngineMode] = useState<'webgpu' | 'api'>('webgpu');
-  const [webgpuModel, setWebgpuModel] = useState(DEFAULT_WEBGPU_MODEL);
+  const [webgpuModel, setWebgpuModel] = useState(() => {
+    const saved = localStorage.getItem('ameva_selected_llm_model');
+    if (!saved || saved.includes('q4f16')) {
+      return DEFAULT_WEBGPU_MODEL;
+    }
+    return saved;
+  });
   const [showSettings, setShowSettings] = useState(false);
+  const [showOllamaPrompt, setShowOllamaPrompt] = useState(false);
+  const [ollamaPromptMsg, setOllamaPromptMsg] = useState('');
 
   // API Config State
   const [apiEndpoint, setApiEndpoint] = useState('http://localhost:11434/v1/chat/completions');
@@ -69,6 +79,22 @@ export function AIPanel() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const orchestratorRef = useRef<AgentOrchestrator | null>(null);
   const httpAdapterRef = useRef<RemoteHttpEngineAdapter>(new RemoteHttpEngineAdapter());
+
+  const handleEngineModeToggle = async () => {
+    if (engineMode === 'webgpu') {
+      // 로컬 엔드포인트일 때 Ollama 헬스체크
+      if (apiEndpoint.includes('localhost') || apiEndpoint.includes('127.0.0.1')) {
+        const isAlive = await OllamaWizardService.checkOllamaHealth();
+        if (!isAlive) {
+          setShowOllamaPrompt(true);
+          return;
+        }
+      }
+      setEngineMode('api');
+    } else {
+      setEngineMode('webgpu');
+    }
+  };
 
   // Sync editor with EditorToolAdapter
   useEffect(() => {
@@ -221,7 +247,7 @@ export function AIPanel() {
               AMEVA AI 에이전트
               <button
                 data-testid="ai-engine-mode-toggle"
-                onClick={() => setEngineMode(engineMode === 'webgpu' ? 'api' : 'webgpu')}
+                onClick={handleEngineModeToggle}
                 style={{
                   fontSize: '9px',
                   padding: '1px 5px',
@@ -305,7 +331,115 @@ export function AIPanel() {
         </div>
       </div>
 
-      {/* 2. Engine Settings Modal */}
+      {/* 2. Ollama Auto-Install Prompt Modal */}
+      {showOllamaPrompt && (
+        <div style={{
+          position: 'absolute',
+          top: '48px',
+          left: '8px',
+          right: '8px',
+          background: '#0f172a',
+          border: '1px solid #38bdf8',
+          borderRadius: '8px',
+          padding: '12px',
+          zIndex: 200,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
+          fontSize: '11px'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+            <span style={{ fontWeight: 700, color: '#38bdf8', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Sparkles size={14} /> 로컬 Ollama 자동 설치 & 실행
+            </span>
+            <button onClick={() => setShowOllamaPrompt(false)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+              <X size={12} />
+            </button>
+          </div>
+          <div style={{ fontSize: '10px', color: '#cbd5e1', lineHeight: '1.4', marginBottom: '8px' }}>
+            컴퓨터에 Ollama가 실행되어 있지 않습니다.<br />
+            <strong>[원클릭 자동 설치 & 실행]</strong>을 누르면 1초 만에 설치 스크립트를 받아 Qwen 3B 모델을 백그라운드에서 자동 기동합니다!
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            <button
+              onClick={() => {
+                const result = OllamaWizardService.triggerAutoSetup(apiModel || 'qwen2.5:3b');
+                if (result.isMobile) {
+                  setOllamaPromptMsg('📱 모바일은 [⚡ WebGPU 모드] 또는 클라우드 API Key를 사용해 주세요!');
+                  return;
+                }
+                const osLabel = result.os === 'mac' ? 'macOS (.command)' : result.os === 'linux' ? 'Linux (.sh)' : 'Windows (.bat)';
+                setOllamaPromptMsg(`📥 ${osLabel} 스크립트 발급 완료! 실행하시면 자동 감지됩니다.`);
+                OllamaWizardService.startAutoConnectPolling(
+                  () => {
+                    setOllamaPromptMsg('🎉 연결 성공! API 모드로 전환합니다.');
+                    setEngineMode('api');
+                    setTimeout(() => setShowOllamaPrompt(false), 1200);
+                  },
+                  (msg) => setOllamaPromptMsg(msg)
+                );
+              }}
+              style={{
+                background: 'linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '4px',
+                padding: '7px 10px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontSize: '11px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px'
+              }}
+            >
+              📥 1초 원클릭 자동 설치 & 실행
+            </button>
+            <div style={{ display: 'flex', gap: '5px' }}>
+              <button
+                onClick={() => {
+                  setEngineMode('api');
+                  setShowOllamaPrompt(false);
+                  setShowSettings(true);
+                }}
+                style={{
+                  flex: 1,
+                  background: 'rgba(255,255,255,0.06)',
+                  color: '#94a3b8',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '4px',
+                  padding: '4px',
+                  fontSize: '9px',
+                  cursor: 'pointer'
+                }}
+              >
+                ⚙️ 다른 API Key 입력
+              </button>
+              <button
+                onClick={() => setShowOllamaPrompt(false)}
+                style={{
+                  flex: 1,
+                  background: 'rgba(139, 92, 246, 0.15)',
+                  color: '#a78bfa',
+                  border: '1px solid rgba(139, 92, 246, 0.3)',
+                  borderRadius: '4px',
+                  padding: '4px',
+                  fontSize: '9px',
+                  cursor: 'pointer'
+                }}
+              >
+                ⚡ WebGPU 모드 유지
+              </button>
+            </div>
+          </div>
+          {ollamaPromptMsg && (
+            <div style={{ fontSize: '10px', color: '#38bdf8', marginTop: '6px', textAlign: 'center', fontWeight: 600 }}>
+              {ollamaPromptMsg}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 3. Engine Settings Modal */}
       {showSettings && (
         <EngineSettingsModal
           engineMode={engineMode}
@@ -327,7 +461,7 @@ export function AIPanel() {
         />
       )}
 
-      {/* 3. WebGPU VRAM Banner */}
+      {/* 4. WebGPU VRAM Banner */}
       {engineMode === 'webgpu' && (
         <WebGPUBanner
           isLLMReady={isLLMReady}

@@ -90,6 +90,7 @@ export interface AppSettings {
   theme: 'dark' | 'gray' | 'white' | 'hacker' | 'nature' | 'win98'
   wordWrap: boolean
   showMinimap: boolean
+  autoLoadAI?: boolean
   installedPlugins?: string[]
   securityPreset?: 'paranoiac' | 'turbo' | 'restricted'
   artifactReviewPolicy?: 'always' | 'never' | 'ask'
@@ -98,10 +99,6 @@ export interface AppSettings {
   codeModelPath?: string
 }
 
-/**
- * DEFAULT_SETTINGS 상태, 변수 또는 상수 선언부입니다.
- * @type {any} - Typescript 컴파일러에 의한 타입 추론(Inferred)
- */
 export const DEFAULT_SETTINGS: AppSettings = {
   showPeersPointer: true,
   showPeersDrag: false,
@@ -110,6 +107,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
   wordWrap: true,
   showMinimap: false,
+  autoLoadAI: false,
   hotkeys: {
     save: 'Control+s',
     open: 'Control+o',

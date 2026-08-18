@@ -9,12 +9,18 @@
 
 import type { EmbeddingChunk, HybridSearchOptions } from '../rag-embedding/types';
 
+export interface HistoryMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 /** 추론 제어 옵션 */
 export interface InferenceOptions {
   signal?: AbortSignal;
   max_tokens?: number;
   temperature?: number;
   stop?: string[];
+  history?: HistoryMessage[];
 }
 
 /** 블록 삽입 제안 (AI가 에디터에 새 블록을 추가하도록 추천) */
@@ -56,7 +62,7 @@ export interface AgentMessage {
   thought?: string;
   /** RAG 참조 청크 출처 */
   citations?: Array<{
-    chunkId: string;
+    chunkId?: string;
     heading?: string;
     section?: string;
     text: string;

@@ -6,8 +6,8 @@
  * @role High-Performance WebGPU VRAM-Optimized Engine Manager with DX12 TDR Fault-Tolerance
  * 
  * [Optimization Architecture]
- * 1. Default Ultra-Lightweight Model: Qwen2.5-0.5B (q4f16_1, ~380MB VRAM) - 100% immune to DX12 TDR Device Lost.
- * 2. Single-Engine Multiplexing: Uses 0.5B/1.5B for both Chat & GhostText by default.
+ * 1. Default Ultra-Lightweight Model: Qwen2.5-3B (q4f32_1, 4K KV-Cache, ~1.8GB VRAM)
+ * 2. Single-Engine Multiplexing: Uses 0.5B/1.5B/3B for both Chat & GhostText by default.
  * 3. Fault-Tolerant Auto-Recovery: Catches GPUDeviceLostInfo / Disposed objects and resets gracefully.
  * 4. Smart Eco-Lifecycle: 10-minute Idle Auto-Unload & 3-minute Tab-Hidden Sleep.
  * ============================================================================
@@ -17,14 +17,14 @@ import { useState, useCallback, useEffect } from 'react';
 import type { MLCEngine, InitProgressReport } from '@mlc-ai/web-llm';
 
 export const SUPPORTED_WEBGPU_MODELS = [
-  { id: 'Qwen2.5-0.5B-Instruct-q4f32_1-MLC', label: 'Qwen2.5 0.5B (기본 추천·초경량·TDR 충돌 0%·390MB)', vram: '390MB' },
-  { id: 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC', label: 'Qwen2.5 1.5B (균형잡힌 고품질·890MB VRAM)', vram: '890MB' },
-  { id: 'Qwen2.5-3B-Instruct-q4f32_1-MLC', label: 'Qwen2.5 3B (고성능 외장 GPU 전용·2.2GB)', vram: '2.2GB' },
+  { id: 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC', label: 'Qwen2.5 1.5B (초안정·고품질 추천·890MB)', vram: '890MB' },
+  { id: 'Qwen2.5-3B-Instruct-q4f32_1-MLC', label: 'Qwen2.5 3B (고성능 요약·1.8GB)', vram: '1.8GB' },
+  { id: 'Qwen2.5-0.5B-Instruct-q4f32_1-MLC', label: 'Qwen2.5 0.5B (초경량 모델·390MB)', vram: '390MB' },
   { id: 'Llama-3.2-1B-Instruct-q4f32_1-MLC', label: 'Llama-3.2 1B (Meta 공식·790MB)', vram: '790MB' },
   { id: 'SmolLM2-1.7B-Instruct-q4f32_1-MLC', label: 'SmolLM2 1.7B (HuggingFace 고속 모델·920MB)', vram: '920MB' }
 ];
 
-export const DEFAULT_WEBGPU_MODEL = 'Qwen2.5-0.5B-Instruct-q4f32_1-MLC';
+export const DEFAULT_WEBGPU_MODEL = 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC';
 
 let globalMainEngine: MLCEngine | null = null;
 let globalGhostEngine: MLCEngine | null = null;
@@ -163,17 +163,20 @@ export const useWebLLM = () => {
   }, []);
 
   /**
-   * Main Model Loader (Qwen2.5-0.5B by default)
+   * Main Model Loader
    * Only loads the targeted main model into VRAM on-demand.
    */
-  const initModel = useCallback(async (modelId?: string, loadGhostSeparately: boolean = false) => {
-    const targetModelId = modelId || globalActiveModelId || DEFAULT_WEBGPU_MODEL;
+  const initModel = useCallback(async (modelId?: string, forceReload: boolean = false) => {
+    const targetModelId = modelId || localStorage.getItem('ameva_selected_llm_model') || DEFAULT_WEBGPU_MODEL;
     
-    // If different model is requested or already ready, reload clean
-    if (globalMainEngine && globalActiveModelId !== targetModelId) {
-      await performUnload('main');
-    } else if (globalMainEngine && globalIsMainReady) {
+    // 이미 로드된 엔진이 있고 모델이 같으며 정상 준비 상태일 때만 early return
+    if (globalMainEngine && globalIsMainReady && globalActiveModelId === targetModelId && !forceReload) {
       return;
+    }
+
+    // 엔진이 손상되었거나 모델이 변경된 경우 기존 인스턴스 완전 정리
+    if (globalMainEngine) {
+      await performUnload('all');
     }
 
     if (globalIsMainLoading) return;
@@ -187,14 +190,24 @@ export const useWebLLM = () => {
     try {
       const { CreateMLCEngine } = await import('@mlc-ai/web-llm');
 
-      // 1. Load Main Model into GPU VRAM
-      const engine = await CreateMLCEngine(targetModelId, {
-        initProgressCallback: (report: InitProgressReport) => {
-          globalMainProgressText = report.text;
-          if (report.progress != null) globalMainProgress = report.progress;
-          notify();
+      // 1. Load Main Model into GPU VRAM with 4K Bounded KV-cache
+      const engine = await CreateMLCEngine(
+        targetModelId,
+        {
+          initProgressCallback: (report: InitProgressReport) => {
+            globalMainProgressText = report.text;
+            if (report.progress != null) globalMainProgress = report.progress;
+            notify();
+          },
+          logLevel: 'WARN'
+        },
+        {
+          context_window_size: 2048,
+          sliding_window_size: -1,
+          temperature: 0.3,
+          top_p: 0.85
         }
-      });
+      );
 
       globalMainEngine = engine;
       globalIsMainReady = true;
@@ -203,34 +216,23 @@ export const useWebLLM = () => {
       globalMainProgressText = `${modelMeta?.label.split(' ')[0] || 'WebGPU'} VRAM 로드 완료`;
       touchEngineActivity();
       notify();
-
-      // 2. Load Ghost Model ONLY if explicitly requested
-      if (loadGhostSeparately && !globalGhostEngine && !globalIsGhostLoading) {
-        globalIsGhostLoading = true;
-        notify();
-        CreateMLCEngine(GHOST_MODEL_ID, {
-          initProgressCallback: (report: InitProgressReport) => {
-            globalGhostProgressText = report.text;
-            if (report.progress != null) globalGhostProgress = report.progress;
-            notify();
-          }
-        }).then(ghostEng => {
-          globalGhostEngine = ghostEng;
-          globalIsGhostReady = true;
-        }).catch(err => {
-          console.warn('[WebLLM] Optional Ghost model init skipped:', err);
-        }).finally(() => {
-          globalIsGhostLoading = false;
-          notify();
-        });
-      }
     } catch (error: any) {
       console.error('[WebLLM] Failed to initialize WebGPU model:', error);
       globalIsMainReady = false;
       globalMainEngine = null;
+      globalActiveModelId = '';
       const errMsg = error?.message || String(error);
-      if (errMsg.includes('DXGI_ERROR_DEVICE_REMOVED') || errMsg.includes('requestDevice') || errMsg.includes('Device was lost')) {
-        globalMainProgressText = 'GPU 디바이스 재설정 필요 (브라우저 새 탭 또는 API 모드 사용 권장)';
+      if (
+        errMsg.includes('DXGI_ERROR_DEVICE_REMOVED') ||
+        errMsg.includes('requestDevice') ||
+        errMsg.includes('Device was lost') ||
+        errMsg.includes('Device failed at creation')
+      ) {
+        console.warn('[WebLLM] GPU channel disconnected by OS. Performing seamless recovery with Qwen2.5 0.5B...');
+        localStorage.setItem('ameva_selected_llm_model', 'Qwen2.5-0.5B-Instruct-q4f32_1-MLC');
+        sessionStorage.setItem('ameva_auto_init_webgpu', '1');
+        window.location.reload();
+        return;
       } else {
         globalMainProgressText = '초기화 실패 (0.5B 초경량 모델 또는 API 모드 권장)';
       }
@@ -241,6 +243,25 @@ export const useWebLLM = () => {
       notify();
     }
   }, []);
+
+  // Startup Auto-Load Trigger (initModel 정의 이후에 안전하게 선언)
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('app-settings');
+      let autoLoad = localStorage.getItem('ameva_auto_load_llm') === 'true';
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.autoLoadAI !== undefined) autoLoad = Boolean(parsed.autoLoadAI);
+      }
+
+      if (autoLoad && !globalIsMainReady && !globalIsMainLoading && !globalMainEngine) {
+        const targetModel = localStorage.getItem('ameva_selected_llm_model') || DEFAULT_WEBGPU_MODEL;
+        initModel(targetModel).catch(e => console.warn('[WebLLM AutoLoad] Skipped:', e));
+      }
+    } catch (e) {
+      console.warn('[WebLLM] AutoLoad check failed:', e);
+    }
+  }, [initModel]);
 
   /**
    * Unload Model from VRAM and free GPU textures/buffers
@@ -265,11 +286,26 @@ export const useWebLLM = () => {
     touchEngineActivity();
 
     try {
+      try {
+        await globalMainEngine.resetChat();
+      } catch (rErr) {
+        console.debug('[WebLLM] resetChat debug:', rErr);
+      }
+
+      // 멀티턴 대화 히스토리 (System + 이전 대화들 + 현재 질문)
+      const historyMessages = (options?.history || []).map((h: any) => ({
+        role: h.role === 'assistant' ? 'assistant' : 'user',
+        content: h.content
+      }));
+
+      const fullMessages = [
+        { role: 'system', content: systemPrompt },
+        ...historyMessages,
+        { role: 'user', content: userPrompt }
+      ];
+
       const chunks = await globalMainEngine.chat.completions.create({
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
+        messages: fullMessages as any,
         stream: true,
         temperature: options?.temperature ?? 0.3,
         max_tokens: options?.max_tokens ?? 512,
@@ -297,6 +333,7 @@ export const useWebLLM = () => {
       ) {
         globalMainEngine = null;
         globalIsMainReady = false;
+        globalActiveModelId = '';
         notify();
         throw new Error(
           'GPU VRAM 한계 또는 Windows 드라이버 재설정으로 인해 WebGPU 모델이 초기화되었습니다. 브라우저 탭을 완전히 닫고 새 탭으로 열거나, 상단 [엔진 설정(⚙️)]에서 [Qwen2.5 0.5B] 초경량 모델 또는 [HTTP API 모드]를 사용해 주세요.'
@@ -311,14 +348,10 @@ export const useWebLLM = () => {
    */
   const generateGhostStream = useCallback(async function* (
     systemPrompt: string,
-    userPrompt: string,
-    options?: any
+    userPrompt: string
   ): AsyncGenerator<string, void, unknown> {
     const activeEngine = globalGhostEngine || globalMainEngine;
-
-    if (!activeEngine) {
-      throw new Error('[WebLLM] No active engine available for ghost text');
-    }
+    if (!activeEngine) return;
 
     touchEngineActivity();
 
@@ -329,9 +362,9 @@ export const useWebLLM = () => {
           { role: 'user', content: userPrompt }
         ],
         stream: true,
-        temperature: options?.temperature ?? 0.2,
-        max_tokens: options?.max_tokens ?? 32,
-        stop: options?.stop,
+        temperature: 0.2,
+        max_tokens: 64,
+        stop: ['\n\n', '```']
       });
 
       for await (const chunk of chunks) {
@@ -342,8 +375,55 @@ export const useWebLLM = () => {
       }
 
       touchEngineActivity();
-    } catch (err: any) {
-      console.warn('[WebLLM Ghost] Generation error:', err);
+    } catch (err) {
+      console.debug('[WebLLM Ghost] Generation skipped:', err);
+    }
+  }, []);
+
+  /**
+   * GhostText Model Loader
+   */
+  const initGhostModel = useCallback(async () => {
+    if (globalGhostEngine || globalIsGhostLoading) return;
+    if (globalMainEngine && globalIsMainReady) {
+      globalIsGhostReady = true;
+      notify();
+      return;
+    }
+
+    globalIsGhostLoading = true;
+    notify();
+
+    try {
+      const { CreateMLCEngine } = await import('@mlc-ai/web-llm');
+      const engine = await CreateMLCEngine(
+        GHOST_MODEL_ID,
+        {
+          initProgressCallback: (report: InitProgressReport) => {
+            globalGhostProgressText = report.text;
+            if (report.progress != null) globalGhostProgress = report.progress;
+            notify();
+          },
+          logLevel: 'WARN'
+        },
+        {
+          context_window_size: 1024,
+          sliding_window_size: -1,
+          temperature: 0.2,
+          top_p: 0.8
+        }
+      );
+
+      globalGhostEngine = engine;
+      globalIsGhostReady = true;
+      touchEngineActivity();
+      notify();
+    } catch (err) {
+      console.warn('[WebLLM Ghost] Ghost model init failed, fallback to main engine:', err);
+      globalIsGhostReady = globalIsMainReady;
+    } finally {
+      globalIsGhostLoading = false;
+      notify();
     }
   }, []);
 
@@ -352,6 +432,8 @@ export const useWebLLM = () => {
     initModel,
     unloadModel,
     generateStream,
-    generateGhostStream
+    initGhostModel,
+    generateGhostStream,
+    activeModelId: state.activeModelId,
   };
 };

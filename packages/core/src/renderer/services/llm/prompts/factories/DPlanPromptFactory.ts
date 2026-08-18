@@ -94,22 +94,10 @@ ${exampleSource}
     userInstructions?: string
   ): string {
     const formattedContext = formatRAGContext(contextChunks);
-    const customInstruction = userInstructions ? `\n[ADDITIONAL USER INSTRUCTIONS]\n${userInstructions}\n` : '';
+    const customInstruction = userInstructions ? `\n[추가 지침]\n${userInstructions}\n` : '';
 
-    return `You are an intelligent knowledge-assistant embedded in AMEVA OS.
-Your task is to answer the user's question accurately, concisely, and factually based strictly on the provided [RELEVANT RETRIEVED KNOWLEDGE CONTEXT].
-
-[RELEVANT RETRIEVED KNOWLEDGE CONTEXT]
+    return `[참조된 에디터 문서 내용]
 ${formattedContext}
-${customInstruction}
-[USER QUESTION]
-${query}
-
-CRITICAL RULES:
-1. You MUST wrap your final answer inside <answer> and </answer> tags.
-2. Answer in professional and clear Korean.
-3. Base your answer strictly on the facts in the retrieved context. If the context does not contain enough information to answer, state that clearly and provide the best related explanation.
-4. If relevant, cite the section or document title mentioned in the context.
-5. NEVER fabricate or hallucinate ungrounded facts.`;
+${customInstruction}`;
   }
 }

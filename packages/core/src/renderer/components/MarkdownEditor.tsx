@@ -419,7 +419,7 @@ export function MarkdownEditor({
    * - setCurrentContent: 원문 텍스트 변경 세터.
    * - tabs: 다중 문서 탭 정보 목록.
    */
-  const { currentContent, setCurrentContent, tabs, filePath, pdfData, pdfFileName, isSmartDocsMode, setIsSmartDocsMode } = useWorkspaceStore()
+  const { currentContent, setCurrentContent, tabs, filePath, pdfData, setPdfData, pdfFileName, setPdfFileName, isSmartDocsMode, setIsSmartDocsMode, setActiveEditorInstance } = useWorkspaceStore()
 
   const hasPermission = useProcessStore((s) => s.hasPermission)
   const canUseAITagging = false
@@ -530,11 +530,6 @@ export function MarkdownEditor({
   }, [selectedFont, selectedSize, editor, editorMode, hasRichStyling, editorContainerRef])
 
   useEffect(() => {
-    /*
-     * [CONTRACT]
-     * - 현재 활성화된 에디터 인스턴스를 전역 AMEVA_CORE 공간에 바인딩하여,
-     *   동적으로 마운트되는 원격/프리미엄 플러그인(마인드맵, 프레젠테이션 등)에서 에디터의 실시간 문서 구조를 읽거나 쓸 수 있도록 지원한다.
-     */
     if (typeof window !== 'undefined') {
       const win = window as any
       if (!win.AMEVA_CORE) {
@@ -542,7 +537,13 @@ export function MarkdownEditor({
       }
       win.AMEVA_CORE.editor = editor
     }
-  }, [editor])
+    if (editor) {
+      setActiveEditorInstance(editor);
+      import('../features/ai-agent/adapters/EditorToolAdapter').then(({ editorToolAdapter }) => {
+        editorToolAdapter.setEditor(editor);
+      });
+    }
+  }, [editor, setActiveEditorInstance])
 
   // 코드 펜스, 작업 피어 포커스 레이어 및 파일 드롭 이미지 가로채기 구동
   useBacktickFence(editor)

@@ -43,6 +43,8 @@ import * as pdfjsLib from 'pdfjs-dist'
 import { saveAttachment, getAttachment } from '../utils/vfsDatabase'
 // [내부 프로젝트 의존성 모듈 임포트: ../stores/useDocumentProfilerStore]
 import { useDocumentProfilerStore } from '../stores/useDocumentProfilerStore'
+// [내부 프로젝트 의존성 모듈 임포트: ../stores/useUIStore]
+import { useUIStore } from '../stores/useUIStore'
 // [내부 프로젝트 의존성 모듈 임포트: ./DocumentProfileModal]
 import { DocumentProfileModal } from './DocumentProfileModal'
 // [내부 프로젝트 의존성 모듈 임포트: ./ResizableBlockContainer]
@@ -2031,43 +2033,8 @@ export const InlineDocumentBlockSpec = createReactBlockSpec(
     content: 'none',
   },
   {
-    render: InlineDocumentBlockComponent,
-    toExternalHTML: ({ block }) => {
-      return (
-        <a href={block.props.sourceUrl || '#'} data-content-type="inlineDocument">
-          [AMEVA Document: {block.props.fileName || block.props.docType}]
-        </a>
-      )
-    },
-    parseHTML: [
-      {
-        tag: 'a',
-        getAttrs: (element) => {
-          if (typeof element === 'string') return false
-          const text = element.textContent || ''
-          if (!text.startsWith('[AMEVA Document:')) return false
-          
-          const href = element.getAttribute('href') || ''
-          const fileName = text.replace('[AMEVA Document: ', '').replace(']', '').trim()
-          
-          let docType = 'unknown'
-          if (fileName.toLowerCase().endsWith('.pdf')) docType = 'pdf'
-          else if (fileName.toLowerCase().endsWith('.docx')) docType = 'docx'
-          else if (fileName.toLowerCase().endsWith('.pptx')) docType = 'pptx'
-          else if (fileName.toLowerCase().endsWith('.xlsx')) docType = 'xlsx'
-
-          return {
-            sourceUrl: href === '#' ? '' : href,
-            fileName: fileName,
-            docType: docType,
-            isExpanded: 'false',
-            height: '420',
-            fileBase64: ''
-          }
-        }
-      }
-    ]
-  }
+    render: InlineDocumentBlockComponent
+  } as any
 )
 
 /**

@@ -17,14 +17,14 @@ export interface SemanticCacheEntry {
   response: {
     content: string;
     thought?: string;
-    citations?: Array<{ blockId?: string; text: string; heading?: string }>;
+    citations?: Array<{ chunkId?: string; blockId?: string; text: string; heading?: string; section?: string; score?: number }>;
     insertSuggestions?: InsertSuggestion[];
   };
   createdAt: number;
   hitCount: number;
 }
 
-const DB_NAME = 'ameva-semantic-cache-db';
+const DB_NAME = 'ameva-semantic-cache-v2';
 const STORE_NAME = 'cache_entries';
 const DB_VERSION = 1;
 const DEFAULT_SIMILARITY_THRESHOLD = 0.95;

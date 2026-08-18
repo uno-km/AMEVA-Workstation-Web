@@ -59,10 +59,16 @@ export class RemoteHttpEngineAdapter implements IAIEngineAdapter {
       headers['Authorization'] = `Bearer ${this.config.apiKey}`;
     }
 
+    const historyMessages = (options?.history || []).map((h) => ({
+      role: h.role === 'assistant' ? 'assistant' : 'user',
+      content: h.content
+    }));
+
     const payload = {
       model: this.config.model,
       messages: [
         { role: 'system', content: systemPrompt },
+        ...historyMessages,
         { role: 'user', content: userPrompt }
       ],
       stream: true,
@@ -71,16 +77,38 @@ export class RemoteHttpEngineAdapter implements IAIEngineAdapter {
       stop: options?.stop
     };
 
-    const response = await fetch(this.config.endpoint, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(payload),
-      signal: options?.signal
-    });
+    let response: Response;
+    try {
+      response = await fetch(this.config.endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+        signal: options?.signal
+      });
+    } catch (fetchErr: any) {
+      if (this.config.endpoint.includes('localhost') || this.config.endpoint.includes('127.0.0.1')) {
+        throw new Error(
+          `로컬 AI 서버(${this.config.endpoint})에 연결할 수 없습니다. 컴퓨터에 Ollama를 실행해 두셨거나, 상단 제목 옆의 [🌐 API] 버튼을 눌러 설치가 필요 없는 [⚡ WebGPU] 모드로 전환해 주세요!`
+        );
+      }
+      throw new Error(`원격 API 서버 연결 실패: ${fetchErr?.message || '네트워크 오류'}`);
+    }
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`[RemoteHttpEngineAdapter] HTTP ${response.status}: ${errText}`);
+      let parsedMsg = errText;
+      try {
+        const json = JSON.parse(errText);
+        if (json?.error?.message) {
+          const rawMsg = json.error.message;
+          if (rawMsg.includes('unsupported toolchain') || rawMsg.includes('CUDA error')) {
+            parsedMsg = 'Ollama의 CUDA 그래픽 드라이버 버전 충돌이 감지되었습니다. 상단 제목 옆의 [🌐 API] 버튼을 눌러 [⚡ WebGPU] 모드로 전환하시면 CUDA 충돌 없이 내 그래픽카드로 즉시 쌩쌩 실행됩니다!';
+          } else {
+            parsedMsg = rawMsg;
+          }
+        }
+      } catch {}
+      throw new Error(`[RemoteHttpEngineAdapter] HTTP ${response.status}: ${parsedMsg}`);
     }
 
     if (!response.body) {

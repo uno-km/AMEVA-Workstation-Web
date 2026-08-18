@@ -57,14 +57,32 @@ export class EditorToolAdapter implements IToolRegistry {
 
     if (name === 'insert_block') {
       const { afterBlockId, blockType, content, level } = args as InsertSuggestion;
+      
       if (!this.editorRef) {
-        return { success: false, error: 'Editor instance is not connected' };
+        const { useWorkspaceStore } = await import('../../../stores/useWorkspaceStore');
+        const storeEditor = useWorkspaceStore.getState().activeEditorInstance;
+        if (storeEditor) {
+          this.editorRef = storeEditor;
+        }
+      }
+
+      if (!this.editorRef) {
+        return { success: false, error: '에디터가 아직 연결되지 않았습니다. 문서를 클릭한 후 다시 시도해주세요.' };
       }
 
       try {
-        const newBlock = {
-          type: blockType === 'heading' ? 'heading' : (blockType || 'paragraph'),
-          props: blockType === 'heading' ? { level: level || 2 } : {},
+        const type = blockType || 'paragraph';
+        const props: Record<string, any> = { ...((args as any).props || {}) };
+
+        if (type === 'heading') {
+          props.level = level || (args as any).level || 2;
+        } else if (type === 'codeBlock') {
+          props.language = (args as any).language || props.language || 'python';
+        }
+
+        const newBlock: any = {
+          type,
+          props,
           content: content || ''
         };
 
@@ -85,6 +103,29 @@ export class EditorToolAdapter implements IToolRegistry {
         } else {
           this.editorRef.insertBlocks([newBlock], afterBlockId, 'after');
         }
+
+        // 스크롤 및 하이라이트 애니메이션
+        setTimeout(() => {
+          try {
+            const doc = this.editorRef?.document;
+            if (doc && doc.length > 0) {
+              const last = doc[doc.length - 1];
+              if (last?.id) {
+                const el = document.querySelector(`[data-id="${last.id}"], [data-block-id="${last.id}"]`);
+                if (el) {
+                  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  const outer = el.closest('.bn-block-outer') || el;
+                  if (outer) {
+                    outer.setAttribute('data-highlighted-temp', 'true');
+                    setTimeout(() => outer.removeAttribute('data-highlighted-temp'), 1800);
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('[EditorToolAdapter] Scroll after insert skipped:', e);
+          }
+        }, 120);
 
         return { success: true, output: `Block inserted successfully` };
       } catch (err: any) {

@@ -67,18 +67,9 @@ Wrap answer in <answer> tags.`;
     userInstructions?: string
   ): string {
     const formattedContext = formatRAGContext(contextChunks);
-    const custom = userInstructions ? `\nNote: ${userInstructions}` : '';
+    const custom = userInstructions ? `\n[추가 지침]\n${userInstructions}` : '';
 
-    return `Answer the user question using ONLY the provided context.
-
-[CONTEXT]
-${formattedContext}${custom}
-
-[QUESTION]
-${query}
-
-RULES:
-1. Wrap response in <answer> and </answer> tags.
-2. Answer concisely in Korean based strictly on the context.`;
+    return `[참조된 에디터 문서 내용]
+${formattedContext}${custom}`;
   }
 }

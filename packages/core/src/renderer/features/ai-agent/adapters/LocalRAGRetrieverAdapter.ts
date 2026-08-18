@@ -37,7 +37,17 @@ export class LocalRAGRetrieverAdapter implements IRAGRetriever {
   }
 
   async buildContextPrompt(query: string, options?: HybridSearchOptions): Promise<{ prompt: string; chunks: EmbeddingChunk[] }> {
-    const chunks = await this.search(query, options);
+    const rawChunks = await this.search(query, options);
+
+    // 높은 관련도 청크 상위 2개로 압축 및 청크 길이 450자로 캡
+    const chunks = (rawChunks || [])
+      .filter(c => (c.score || 0) > 0.2)
+      .slice(0, 2)
+      .map(c => ({
+        ...c,
+        text: c.text && c.text.length > 450 ? c.text.slice(0, 450) + '...' : c.text
+      }));
+
     const factory = PromptManager.getFactory(this.activeModelId);
     let prompt = factory.createRAGPrompt(query, chunks);
 
@@ -46,15 +56,15 @@ export class LocalRAGRetrieverAdapter implements IRAGRetriever {
       const { edges, nodes } = graphStore.getState();
       const simEdges = edges.filter(e => e.relationType === 'semantic-similarity');
 
-      if (simEdges.length > 0) {
+      if (simEdges.length > 0 && chunks.length > 0) {
         const nodeMap = new Map(nodes.map(n => [n.id, n.label]));
-        const graphRelations = simEdges.slice(0, 5).map(e => {
+        const graphRelations = simEdges.slice(0, 3).map(e => {
           const src = nodeMap.get(e.source) || e.source;
           const tgt = nodeMap.get(e.target) || e.target;
-          return `- [연관 개념] "${src}" <---> "${tgt}" (${e.label || '의미적 연관'})`;
+          return `- [연관] "${src}" <---> "${tgt}"`;
         }).join('\n');
 
-        prompt += `\n\n[KNOWLEDGE GRAPH CONCEPTUAL RELATIONSHIPS]\n${graphRelations}\n`;
+        prompt += `\n\n[KNOWLEDGE GRAPH]\n${graphRelations}\n`;
       }
     } catch (err) {
       console.warn('[LocalRAGRetrieverAdapter] GraphRAG synthesis skipped:', err);

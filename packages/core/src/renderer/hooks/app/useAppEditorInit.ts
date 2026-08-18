@@ -218,6 +218,12 @@ export function useAppEditorInit({
 
       // 전역 상태에 에디터 이식
       setEditor(activeEditor)
+      import('../../stores/useWorkspaceStore').then(({ useWorkspaceStore }) => {
+        useWorkspaceStore.getState().setActiveEditorInstance(activeEditor);
+      });
+      import('../../features/ai-agent/adapters/EditorToolAdapter').then(({ editorToolAdapter }) => {
+        editorToolAdapter.setEditor(activeEditor);
+      });
     }
 
     initEditorAsync().catch(console.error)

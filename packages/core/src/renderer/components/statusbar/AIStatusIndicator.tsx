@@ -19,7 +19,7 @@ import React, { useState, useEffect, useRef } from 'react'
 // [외부 패키지 및 라이브러리 임포트: lucide-react]
 import { Bot, Play, Square, Cpu, Clock, Activity, Sparkles, Info } from 'lucide-react'
 // [내부 프로젝트 의존성 모듈 임포트: ../useWebLLM]
-import { useWebLLM } from '../useWebLLM'
+import { useWebLLM, SUPPORTED_WEBGPU_MODELS } from '../useWebLLM'
 
 /**
  * AIStatusIndicatorProps 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
@@ -45,7 +45,11 @@ export function AIStatusIndicator({
   const { isMainReady, isGhostReady, isMainLoading, isGhostLoading, mainProgressText, ghostProgressText, mainProgress, ghostProgress, initModel, activeModelId } = useWebLLM()
   const [showDashboard, setShowDashboard] = useState(false)
   const [selectedModel, setSelectedModel] = useState(() => {
-    return localStorage.getItem('ameva_selected_llm_model') || 'Qwen2.5-0.5B-Instruct-q4f32_1-MLC'
+    const saved = localStorage.getItem('ameva_selected_llm_model')
+    if (!saved || saved.includes('q4f16')) {
+      return 'Qwen2.5-3B-Instruct-q4f32_1-MLC'
+    }
+    return saved
   })
 
   useEffect(() => {
@@ -148,13 +152,22 @@ export function AIStatusIndicator({
                     maxWidth: '140px', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden'
                   }}
                 >
-                  <option value="Qwen2.5-3B-Instruct-q4f32_1-MLC" style={{ color: '#000' }}>Qwen2.5 3B (기본)</option>
-                  <option value="Llama-3.2-3B-Instruct-q4f32_1-MLC" style={{ color: '#000' }}>Llama 3.2 3B</option>
-                  <option value="Qwen2.5-3B-Instruct-q4f32_1-MLC" style={{ color: '#000' }}>Qwen2.5 7B (고성능)</option>
+                  {SUPPORTED_WEBGPU_MODELS.map(m => (
+                    <option key={m.id} value={m.id} style={{ color: '#000' }}>
+                      {m.label.split(' ')[0]} {m.label.split(' ')[1] || ''} ({m.vram})
+                    </option>
+                  ))}
                 </select>
               ) : (
                 <span style={{ fontWeight: 600, color: '#e2e8f0' }}>
-                  {activeModelId?.includes('1.5B') ? 'Qwen 2.5 1.5B' : (activeModelId?.includes('Llama') ? 'Llama 3.2 3B' : 'Qwen 2.5 3B')}
+                  {(() => {
+                    const found = SUPPORTED_WEBGPU_MODELS.find(m => m.id === activeModelId);
+                    if (found) return `${found.label.split(' ')[0]} ${found.label.split(' ')[1] || ''}`;
+                    if (activeModelId?.includes('0.5B')) return 'Qwen 2.5 0.5B';
+                    if (activeModelId?.includes('1.5B')) return 'Qwen 2.5 1.5B';
+                    if (activeModelId?.includes('Llama')) return 'Llama 3.2 1B';
+                    return activeModelId || 'Qwen 2.5 0.5B';
+                  })()}
                 </span>
               )}
             </div>

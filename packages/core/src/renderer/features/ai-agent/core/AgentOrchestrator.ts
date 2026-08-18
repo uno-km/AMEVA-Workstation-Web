@@ -16,6 +16,7 @@ import type {
 } from '../types';
 import { useAIAgentStore } from './useAIAgentStore';
 import { semanticCache } from './semanticCache';
+import { PromptComposerService } from '../../../services/prompt/PromptComposerService';
 
 export class AgentOrchestrator {
   private aiEngine: IAIEngineAdapter;
@@ -82,13 +83,54 @@ export class AgentOrchestrator {
         afterBlockId: afterBlockId || 'END',
         blockType: (blockType as any) || 'paragraph',
         content: content.trim(),
-        level: levelStr ? parseInt(levelStr, 10) : undefined,
+        level: levelStr ? (parseInt(levelStr, 10) as 1 | 2 | 3) : undefined,
         status: 'pending'
       });
     }
 
     cleanText = cleanText.replace(insertRegex, '').trim();
+    cleanText = this.cleanXmlArtifacts(cleanText);
     return { cleanText, suggestions };
+  }
+
+  /**
+   * 경량 모델의 비정상 XML/HTML 태그 (<answer>, <itemized-list>, <li>)를 자연스러운 마크다운으로 정제
+   */
+  private cleanXmlArtifacts(text: string): string {
+    let res = text;
+    // HTML <table>...</table>을 표준 마크다운 표 문법으로 변환
+    res = res.replace(/<thead>\s*<tr>([\s\S]*?)<\/tr>\s*<\/thead>/gi, (_, trContent) => {
+      const ths = trContent.match(/<th>([\s\S]*?)<\/th>/gi) || [];
+      const headers = ths.map((th: string) => th.replace(/<\/?th>/gi, '').trim());
+      if (headers.length === 0) return '';
+      return `| ${headers.join(' | ')} |\n| ${headers.map(() => '---').join(' | ')} |\n`;
+    });
+    res = res.replace(/<tbody>\s*([\s\S]*?)\s*<\/tbody>/gi, (_, tbodyContent) => {
+      const rows = tbodyContent.match(/<tr>([\s\S]*?)<\/tr>/gi) || [];
+      return rows.map((r: string) => {
+        const tds = r.match(/<td>([\s\S]*?)<\/td>/gi) || [];
+        const cells = tds.map((td: string) => td.replace(/<\/?td>/gi, '').trim());
+        return `| ${cells.join(' | ')} |`;
+      }).join('\n');
+    });
+
+    // <insert ...>, </insert>, <blockId...>, </blockId>, <table>, <tr>, <td> 등 잔여 태그 완전 제거
+    res = res.replace(/<\/?(table|thead|tbody|tr|th|td)(?:\s+[^>]*)?>/gi, '');
+    res = res.replace(/<\/?insert(?:\s+[^>]*)?>/gi, '');
+    res = res.replace(/<\/?blockId(?:\s+[^>]*)?>/gi, '');
+    // 속성이 포함된 <answer type="..."> 및 </answer> 완전 제거
+    res = res.replace(/<\/?answer(?:\s+[^>]*)?>/gi, '');
+    // <itemized-list ...> 및 </itemized-list> 제거
+    res = res.replace(/<\/?itemized-list(?:\s+[^>]*)?>/gi, '');
+    // <item ...> 태그를 자연스러운 줄바꿈으로 변환
+    res = res.replace(/<item(?:\s+[^>]*)?>\s*/gi, '');
+    res = res.replace(/<\/item>\s*/gi, '\n');
+    // <li> 태그 변환
+    res = res.replace(/<li(?:\s+[^>]*)?>\s*/gi, '- ');
+    res = res.replace(/<\/li>\s*/gi, '\n');
+    // 불필요한 연속 개행 정리
+    res = res.replace(/\n{3,}/g, '\n\n');
+    return res.trim();
   }
 
   /**
@@ -128,19 +170,22 @@ export class AgentOrchestrator {
     store.setIsStreaming(true);
 
     try {
-      // 3. 시맨틱 캐시(SemanticCache) 조회 (0.001s Instant Hit)
-      const cachedHit = await semanticCache.findMatch(userPrompt);
-      if (cachedHit && !taggedBlocks?.length) {
-        console.log('[AgentOrchestrator] ⚡ Semantic Cache Hit! Instant Response.');
-        store.updateMessage(assistantMsgId, {
-          content: cachedHit.response.content,
-          thought: cachedHit.response.thought,
-          citations: cachedHit.response.citations,
-          insertSuggestions: cachedHit.response.insertSuggestions,
-          isStreaming: false
-        });
-        store.setIsStreaming(false);
-        return;
+      // 3. 시맨틱 캐시(SemanticCache) 조회 (실시간 문서 기반 요약/수정은 항상 LLM 실시간 추론 바이패스)
+      const isDocQuery = userPrompt.includes('문서') || userPrompt.includes('요약') || userPrompt.includes('개선') || userPrompt.includes('정리') || userPrompt.includes('RAG');
+      if (!isDocQuery && !taggedBlocks?.length) {
+        const cachedHit = await semanticCache.findMatch(userPrompt);
+        if (cachedHit) {
+          console.log('[AgentOrchestrator] ⚡ Semantic Cache Hit! Instant Response.');
+          store.updateMessage(assistantMsgId, {
+            content: cachedHit.response.content,
+            thought: cachedHit.response.thought,
+            citations: cachedHit.response.citations,
+            insertSuggestions: cachedHit.response.insertSuggestions,
+            isStreaming: false
+          });
+          store.setIsStreaming(false);
+          return;
+        }
       }
 
       // 4. RAG 하이브리드 지식 & GraphRAG 검색 실행
@@ -157,23 +202,24 @@ export class AgentOrchestrator {
 
       store.updateMessage(assistantMsgId, { citations });
 
-      // 5. 시스템 프롬프트 조립 (CoT 및 도구 지침 포함)
-      const systemPrompt = `${ragSystemPrompt}
+      // 5. 시스템 프롬프트 조립 (CoT 및 도구 지침, 유저 커스텀 페르소나 포함)
+      const systemPrompt = await PromptComposerService.getInstance().buildSystemPrompt(ragSystemPrompt);
 
-[AGENT ROLE & FORMAT INSTRUCTIONS]
-당신은 AMEVA 지능형 문서 작업 에이전트입니다.
-답변 작성 시 반드시 아래 규칙을 준수하십시오:
-1. 답변을 생성하기 전 <think>...</think> 태그 안에 단계별 사고 과정(CoT)을 한국어로 작성하십시오.
-2. 문서에 새로운 단락이나 제목을 추가해야 할 경우 아래 형식으로 제안하십시오:
-   <insert afterBlockId="START|END|블록ID" type="heading|paragraph|table" level="1|2|3">추가할 내용</insert>
-3. 질문에 명확하고 전문적인 한국어로 답변하십시오.`;
+      // 6. 직전 대화 히스토리(최근 2턴, 250자 스마트 슬라이스) 추출 및 LLM 스트리밍 생성
+      const previousHistory = store.messages
+        .filter(m => m.id !== userMsgId && m.id !== assistantMsgId && m.content && !m.error && !m.content.includes('초기화되었습니다'))
+        .slice(-2)
+        .map(m => ({
+          role: m.role as 'user' | 'assistant',
+          content: m.content.length > 250 ? m.content.slice(0, 250) + '...' : m.content
+        }));
 
-      // 6. LLM 스트리밍 생성
       let rawAccumulated = '';
 
       const generator = this.aiEngine.generateStream(systemPrompt, userPrompt, {
         signal: ac.signal,
-        temperature: 0.3
+        temperature: 0.3,
+        history: previousHistory
       });
 
       for await (const chunk of generator) {
