@@ -197,6 +197,17 @@ export interface UIState {
   setIsNewDocumentConfirmOpen: (val: boolean) => void
 
   /*
+   * [CUSTOM BLOCK DELETE CONFIRM STATE]
+   */
+  blockDeleteConfirmState: {
+    isOpen: boolean
+    blockName: string
+    onConfirm: () => void
+  } | null
+  openBlockDeleteConfirm: (blockName: string, onConfirm: () => void) => void
+  closeBlockDeleteConfirm: () => void
+
+  /*
    * [COMPOSITE ACTIONS]
    * - toggleRightTab: 우측 활성 탭 전환 및 동일 선택 시 자동 패널 숨김 조율 액션.
    */
@@ -305,6 +316,12 @@ export const useUIStore = create<UIState>((set, get) => ({
 
   isNewDocumentConfirmOpen: false,
   setIsNewDocumentConfirmOpen: (open) => set({ isNewDocumentConfirmOpen: open }),
+
+  blockDeleteConfirmState: null,
+  openBlockDeleteConfirm: (blockName, onConfirm) => set({
+    blockDeleteConfirmState: { isOpen: true, blockName, onConfirm }
+  }),
+  closeBlockDeleteConfirm: () => set({ blockDeleteConfirmState: null }),
 
   /**
    * [CONTRACT - Right Panel Tab Toggle Action]

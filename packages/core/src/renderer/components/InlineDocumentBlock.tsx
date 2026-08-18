@@ -1050,8 +1050,8 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
         )}
         <button
           style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 2 }}
-          onClick={() => editor.updateBlock(block.id, { props: { ...props, fileBase64: '', sourceUrl: '', fileName: '' } })}
-          title="지우기"
+          onClick={() => useUIStore.getState().openBlockDeleteConfirm(config.label || '문서', () => editor.removeBlocks([block]))}
+          title="블록 삭제"
         >
           <X size={12} />
         </button>

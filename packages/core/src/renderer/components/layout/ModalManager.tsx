@@ -58,6 +58,8 @@ import { InstallDesktopModal } from '../InstallDesktopModal'
 import { RefreshConfirmModal } from '../RefreshConfirmModal'
 // [내부 프로젝트 의존성 모듈 임포트: ../ui/modals/NewDocumentConfirmModal]
 import { NewDocumentConfirmModal } from '../ui/modals/NewDocumentConfirmModal'
+import { ConfirmModal } from '../ui/modals/ConfirmModal'
+import { Trash2 } from 'lucide-react'
 
 // [내부 프로젝트 의존성 모듈 임포트: ../../contexts/AppContext]
 import { useAppContext } from '../../contexts/AppContext'
@@ -99,7 +101,8 @@ export function ModalManager({}: ModalManagerProps = {}) {
     setShowModelHub, isAboutOpen, setIsAboutOpen, isGuideOpen, setIsGuideOpen,
     showMarketplaceModal, setShowMarketplaceModal, showPricingModal, setShowPricingModal,
     isQuitConfirmOpen, setIsQuitConfirmOpen, isRefreshConfirmOpen, setIsRefreshConfirmOpen,
-    isInstallPromptOpen, setIsInstallPromptOpen, isNewDocumentConfirmOpen, setIsNewDocumentConfirmOpen
+    isInstallPromptOpen, setIsInstallPromptOpen, isNewDocumentConfirmOpen, setIsNewDocumentConfirmOpen,
+    blockDeleteConfirmState, closeBlockDeleteConfirm
   } = useUIStore(useShallow((s) => ({
     isDiffOpen: s.isDiffOpen,
     setIsDiffOpen: s.setIsDiffOpen,
@@ -122,7 +125,9 @@ export function ModalManager({}: ModalManagerProps = {}) {
     isInstallPromptOpen: s.isInstallPromptOpen,
     setIsInstallPromptOpen: s.setIsInstallPromptOpen,
     isNewDocumentConfirmOpen: s.isNewDocumentConfirmOpen,
-    setIsNewDocumentConfirmOpen: s.setIsNewDocumentConfirmOpen
+    setIsNewDocumentConfirmOpen: s.setIsNewDocumentConfirmOpen,
+    blockDeleteConfirmState: s.blockDeleteConfirmState,
+    closeBlockDeleteConfirm: s.closeBlockDeleteConfirm
   })))
 
   const { selectedSnapshot, currentContent } = useWorkspaceStore()
@@ -246,6 +251,23 @@ export function ModalManager({}: ModalManagerProps = {}) {
             handleStartNewDocument()
             setIsNewDocumentConfirmOpen(false)
           }}
+        />
+      )}
+
+      {blockDeleteConfirmState && blockDeleteConfirmState.isOpen && (
+        <ConfirmModal
+          isOpen={blockDeleteConfirmState.isOpen}
+          onClose={closeBlockDeleteConfirm}
+          onConfirm={() => {
+            const cb = blockDeleteConfirmState.onConfirm
+            closeBlockDeleteConfirm()
+            if (cb) cb()
+          }}
+          title={`해당 마크업(${blockDeleteConfirmState.blockName})을(를) 삭제하시겠습니까?`}
+          description={`작성된 ${blockDeleteConfirmState.blockName} 데이터와 블록 내용이 문서에서 완전히 제거됩니다.`}
+          confirmText="삭제"
+          confirmButtonColor="#ef4444"
+          icon={<Trash2 size={20} color="#ef4444" />}
         />
       )}
     </>

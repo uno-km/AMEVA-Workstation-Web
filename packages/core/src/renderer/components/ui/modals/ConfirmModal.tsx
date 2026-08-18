@@ -57,6 +57,23 @@ export function ConfirmModal({
   confirmButtonColor = '#3b82f6',
   icon
 }: ConfirmModalProps) {
+  React.useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        e.preventDefault()
+        e.stopPropagation()
+        onConfirm()
+      } else if (e.key === 'Escape') {
+        e.preventDefault()
+        e.stopPropagation()
+        onClose()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown, { capture: true })
+    return () => window.removeEventListener('keydown', handleKeyDown, { capture: true })
+  }, [isOpen, onConfirm, onClose])
+
   if (!isOpen) return null
 
   return (

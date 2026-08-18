@@ -300,11 +300,62 @@ const CustomAddBlockButton = () => {
  * [CONTRACT] Mantine을 8.x로 업그레이드하면 이 컴포넌트를 제거하고
  * 기본 <SideMenuController />로 복원 가능.
  */
-const SafeDragHandleMenu = () => (
-  <DragHandleMenu>
-    <RemoveBlockItem>블록 삭제</RemoveBlockItem>
-  </DragHandleMenu>
-)
+const SafeDragHandleMenu = () => {
+  const editor = useBlockNoteEditor()
+  const block = useExtensionState(SideMenuExtension, {
+    editor,
+    selector: (state) => state?.block,
+  })
+
+  const handleRemove = useCallback(() => {
+    if (!block) return
+    const customTypeNames: Record<string, string> = {
+      inlineDocument: '문서 (PDF/Word/Excel)',
+      map: '인터랙티브 지도',
+      kanban: '칸반 보드',
+      drawing: '드로잉 캔버스',
+      chart: '데이터 차트',
+      youtube: 'YouTube 동영상',
+      sqlite: 'SQLite 데이터베이스',
+      excel: '엑셀 스프레드시트',
+      presentation: '프레젠테이션',
+      jupyter: 'Jupyter 노트북',
+      aiDiff: 'AI 변경사항 비교',
+      linkPreview: '웹 링크 미리보기',
+      amevaImage: '이미지 미디어',
+      amevaVideo: '비디오 미디어',
+      amevaAudio: '오디오 미디어',
+    }
+
+    const typeName = customTypeNames[block.type]
+    if (typeName) {
+      useUIStore.getState().openBlockDeleteConfirm(typeName, () => {
+        editor.removeBlocks([block])
+      })
+    } else {
+      editor.removeBlocks([block])
+    }
+  }, [editor, block])
+
+  return (
+    <DragHandleMenu>
+      <div
+        onClick={handleRemove}
+        style={{
+          padding: '6px 12px',
+          fontSize: '13px',
+          cursor: 'pointer',
+          color: '#ef4444',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px'
+        }}
+      >
+        블록 삭제
+      </div>
+    </DragHandleMenu>
+  )
+}
 
 /**
  * @component SafeCustomSideMenu
@@ -496,6 +547,50 @@ export function MarkdownEditor({
   useBacktickFence(editor)
   useCollaborationHighlight(editor, onBlockHighlight, editorContainerRef)
   useNativeUploadIntercept(editor, editorContainerRef)
+
+  // 리치 커스텀 마크다운 블록 Backspace/Delete 즉각 삭제 방어 가드
+  useEffect(() => {
+    const container = editorContainerRef?.current
+    if (!container || !editor) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Backspace' || e.key === 'Delete') {
+        const selection = window.getSelection()
+        const selectedEl = selection?.anchorNode instanceof HTMLElement ? selection.anchorNode : selection?.anchorNode?.parentElement
+        const customBlockEl = selectedEl?.closest('[data-content-type="inlineDocument"], [data-content-type="map"], [data-content-type="kanban"], [data-content-type="drawing"], [data-content-type="chart"], [data-content-type="youtube"], [data-content-type="sqlite"], [data-content-type="excel"], [data-content-type="presentation"], [data-content-type="jupyter"], [data-content-type="aiDiff"]')
+        
+        const selectedBlocks = editor.getSelection()?.blocks || [editor.getTextCursorPosition()?.block].filter(Boolean)
+        const customBlock = selectedBlocks.find((b: any) => [
+          'inlineDocument', 'map', 'kanban', 'drawing', 'chart', 'youtube', 'sqlite', 'excel', 'presentation', 'jupyter', 'aiDiff'
+        ].includes(b?.type))
+
+        if (customBlock && !customBlockEl?.querySelector('input:focus, textarea:focus, [contenteditable="true"]:focus')) {
+          const customTypeNames: Record<string, string> = {
+            inlineDocument: '문서 (PDF/Word/Excel)',
+            map: '인터랙티브 지도',
+            kanban: '칸반 보드',
+            drawing: '드로잉 캔버스',
+            chart: '데이터 차트',
+            youtube: 'YouTube 동영상',
+            sqlite: 'SQLite 데이터베이스',
+            excel: '엑셀 스프레드시트',
+            presentation: '프레젠테이션',
+            jupyter: 'Jupyter 노트북',
+            aiDiff: 'AI 변경사항 비교',
+          }
+          const name = customTypeNames[customBlock.type] || customBlock.type
+          e.preventDefault()
+          e.stopPropagation()
+          useUIStore.getState().openBlockDeleteConfirm(name, () => {
+            editor.removeBlocks([customBlock])
+          })
+        }
+      }
+    }
+
+    container.addEventListener('keydown', handleKeyDown, { capture: true })
+    return () => container.removeEventListener('keydown', handleKeyDown, { capture: true })
+  }, [editor, editorContainerRef])
 
   /*
    * [DRAG DROP & CLIPBOARD PASTE CAPTURES]
