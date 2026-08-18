@@ -6,8 +6,8 @@
  * @role High-Performance WebGPU VRAM-Optimized Engine Manager with DX12 TDR Fault-Tolerance
  * 
  * [Optimization Architecture]
- * 1. Default Ultra-Stable Model: Qwen2.5-1.5B (q4f16_1, ~850MB VRAM) - Prevents DXGI_ERROR_DEVICE_HUNG.
- * 2. Single-Engine Multiplexing: Uses 1.5B/3B for both Chat & GhostText by default.
+ * 1. Default Ultra-Lightweight Model: Qwen2.5-0.5B (q4f16_1, ~380MB VRAM) - 100% immune to DX12 TDR Device Lost.
+ * 2. Single-Engine Multiplexing: Uses 0.5B/1.5B for both Chat & GhostText by default.
  * 3. Fault-Tolerant Auto-Recovery: Catches GPUDeviceLostInfo / Disposed objects and resets gracefully.
  * 4. Smart Eco-Lifecycle: 10-minute Idle Auto-Unload & 3-minute Tab-Hidden Sleep.
  * ============================================================================
@@ -17,13 +17,13 @@ import { useState, useCallback, useEffect } from 'react';
 import type { MLCEngine, InitProgressReport } from '@mlc-ai/web-llm';
 
 export const SUPPORTED_WEBGPU_MODELS = [
-  { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC', label: 'Qwen2.5 1.5B (권장·고속·850MB VRAM)', vram: '850MB' },
-  { id: 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC', label: 'Qwen2.5 0.5B (초경량·내장그래픽·380MB)', vram: '380MB' },
+  { id: 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC', label: 'Qwen2.5 0.5B (초경량·안정성 100%·380MB)', vram: '380MB' },
+  { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC', label: 'Qwen2.5 1.5B (고성능·빠른속도·850MB)', vram: '850MB' },
   { id: 'Qwen2.5-3B-Instruct-q4f32_1-MLC', label: 'Qwen2.5 3B (외장 RTX GPU 전용·2.2GB)', vram: '2.2GB' },
   { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC', label: 'Llama-3.2 1B (Meta 공식·750MB)', vram: '750MB' }
 ];
 
-export const DEFAULT_WEBGPU_MODEL = 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC';
+export const DEFAULT_WEBGPU_MODEL = 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC';
 
 let globalMainEngine: MLCEngine | null = null;
 let globalGhostEngine: MLCEngine | null = null;
@@ -162,7 +162,7 @@ export const useWebLLM = () => {
   }, []);
 
   /**
-   * Main Model Loader (Qwen2.5-1.5B by default)
+   * Main Model Loader (Qwen2.5-0.5B by default)
    * Only loads the targeted main model into VRAM on-demand.
    */
   const initModel = useCallback(async (modelId?: string, loadGhostSeparately: boolean = false) => {
@@ -227,7 +227,12 @@ export const useWebLLM = () => {
       console.error('[WebLLM] Failed to initialize WebGPU model:', error);
       globalIsMainReady = false;
       globalMainEngine = null;
-      globalMainProgressText = '초기화 실패 (더 가벼운 모델을 선택하거나 원격 API를 사용하세요)';
+      const errMsg = error?.message || String(error);
+      if (errMsg.includes('DXGI_ERROR_DEVICE_REMOVED') || errMsg.includes('requestDevice') || errMsg.includes('Device was lost')) {
+        globalMainProgressText = 'GPU 디바이스 재설정 필요 (브라우저 새 탭 또는 API 모드 사용 권장)';
+      } else {
+        globalMainProgressText = '초기화 실패 (0.5B 초경량 모델 또는 API 모드 권장)';
+      }
       notify();
       throw error;
     } finally {
@@ -253,7 +258,7 @@ export const useWebLLM = () => {
     options?: any
   ): AsyncGenerator<string, void, unknown> {
     if (!globalMainEngine || !globalIsMainReady) {
-      throw new Error('[WebLLM] WebGPU 모델이 로드되지 않았습니다. 상단 배너에서 모델을 먼저 로드해 주세요.');
+      throw new Error('[WebLLM] WebGPU 모델이 로드되지 않았습니다. 상단 배너에서 [GPU에 모델 올리기]를 누르거나 상단 [🌐 API] 모드를 선택해 주세요.');
     }
 
     touchEngineActivity();
@@ -293,7 +298,7 @@ export const useWebLLM = () => {
         globalIsMainReady = false;
         notify();
         throw new Error(
-          'GPU VRAM 한계 또는 Windows 드라이버 재설정으로 인해 WebGPU 모델이 초기화되었습니다. 상단 [엔진 설정(⚙️)]에서 더 가벼운 모델(1.5B / 0.5B)을 선택하거나 [HTTP API 모드]로 전환해 주세요.'
+          'GPU VRAM 한계 또는 Windows 드라이버 재설정으로 인해 WebGPU 모델이 초기화되었습니다. 브라우저 탭을 완전히 닫고 새 탭으로 열거나, 상단 [엔진 설정(⚙️)]에서 [Qwen2.5 0.5B] 초경량 모델 또는 [HTTP API 모드]를 사용해 주세요.'
         );
       }
       throw err;

@@ -130,7 +130,11 @@ export function AIPanel() {
     if (!text || isStreaming) return;
 
     if (engineMode === 'webgpu' && !isLLMReady && !isModelLoading) {
-      await initModel(webgpuModel);
+      try {
+        await initModel(webgpuModel);
+      } catch (err) {
+        console.warn('[AIPanel] WebGPU model init failed, delegating to orchestrator error report:', err);
+      }
     }
 
     setInput('');
