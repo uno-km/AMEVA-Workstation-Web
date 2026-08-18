@@ -104,7 +104,9 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
                 color: '#94a3b8',
                 lineHeight: '1.5',
                 whiteSpace: 'pre-wrap',
-                borderTop: '1px solid rgba(139, 92, 246, 0.1)'
+                borderTop: '1px solid rgba(139, 92, 246, 0.1)',
+                userSelect: 'text',
+                cursor: 'text'
               }}
             >
               {msg.thought}
@@ -159,7 +161,9 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
           lineHeight: '1.6',
           whiteSpace: 'pre-wrap',
           wordBreak: 'break-word',
-          boxShadow: isUser ? '0 2px 8px rgba(139, 92, 246, 0.3)' : 'none'
+          boxShadow: isUser ? '0 2px 8px rgba(139, 92, 246, 0.3)' : 'none',
+          userSelect: 'text',
+          cursor: 'text'
         }}
       >
         {msg.content || (msg.isStreaming ? '생각하는 중...' : '')}
