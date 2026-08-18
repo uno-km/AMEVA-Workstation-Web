@@ -7,18 +7,18 @@
   --bg-glass: rgba(255, 255, 255, 0.04);
   --bg-glass-active: rgba(255, 255, 255, 0.08);
   
-  --border-muted: rgba(255, 255, 255, 0.07);
-  --border-glow: rgba(139, 92, 246, 0.25);
+  --border-muted: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(14, 165, 233, 0.35);
   
-  --text-main: #f3f4f6;
-  --text-muted: #9ca3af;
-  --text-dark: #6b7280;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-dark: #64748b;
   
-  --primary: #a855f7;
-  --primary-glow: rgba(168, 85, 247, 0.35);
-  --secondary: #06b6d4;
-  --secondary-glow: rgba(6, 182, 212, 0.35);
-  --accent: #ec4899;
+  --primary: #2563eb;
+  --primary-glow: rgba(37, 99, 235, 0.45);
+  --secondary: #0ea5e9;
+  --secondary-glow: rgba(14, 165, 233, 0.4);
+  --accent: #10b981;
 
   /* 🎨 동적 테마 교정 변수 신설 */
   --bg-textarea: #090a0f;

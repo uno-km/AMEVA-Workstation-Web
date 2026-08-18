@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ameva-workstation-web-core.vercel.app/sitemap.xml
