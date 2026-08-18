@@ -216,7 +216,8 @@ export class PdfMapReduceService {
         message: `🧩 [2/3 단계] 섹션별 중간 요약 생성 중 (섹션 ${i + 1}/${totalClusters}: p.${cluster.startPage}~${cluster.endPage})...`
       });
 
-      const boundedText = cluster.rawText.length > 2000 ? cluster.rawText.slice(0, 2000) + '...' : cluster.rawText;
+      // 토큰 예산 보호: 800자 내외로 슬라이스하여 2048 KV-Cache 초과 및 VRAM OOM 방지
+      const boundedText = cluster.rawText.length > 1000 ? cluster.rawText.slice(0, 1000) + '...' : cluster.rawText;
       const userPrompt = `[페이지 ${cluster.startPage} ~ ${cluster.endPage} 내용]:\n${boundedText}`;
 
       try {
@@ -224,6 +225,9 @@ export class PdfMapReduceService {
         const summary = await this.runPrompt(engine, mapSystemPrompt, userPrompt, signal);
         level1Summaries.push(`### 📌 [페이지 ${cluster.startPage}~${cluster.endPage} 요약]\n${summary}`);
         onLog?.(this.createLog('mapping', `✅ [섹션 ${i + 1}/${totalClusters}] 요약 완료`, summary));
+
+        // Windows D3D12 TDR (0x887A0006) 방지를 위한 GPU 이벤트 루프 쿨다운 양보
+        await new Promise((resolve) => setTimeout(resolve, 400));
       } catch (err: any) {
         level1Summaries.push(`### 📌 [페이지 ${cluster.startPage}~${cluster.endPage}]\n- (요약 생성 생략: ${err?.message || '처리 오류'})`);
         onLog?.(this.createLog('mapping', `⚠️ [섹션 ${i + 1}] 요약 중 예외: ${err?.message}`));
@@ -242,9 +246,12 @@ export class PdfMapReduceService {
       onLog?.(this.createLog('reducing', `🔄 [Recursive Reduce] ${level1Summaries.length}개 섹션 요약을 통합 재압축합니다...`));
 
       const joined = level1Summaries.join('\n\n');
-      const reducePrompt = `다음 중간 요약들의 중복을 제거하고 핵심 흐름을 유지하며 5~6개의 체계적인 문맥으로 재압축하십시오:\n\n${joined.slice(0, 3000)}`;
+      const reducePrompt = `다음 중간 요약들의 중복을 제거하고 핵심 흐름을 유지하며 5~6개의 체계적인 문맥으로 재압축하십시오:\n\n${joined.slice(0, 2000)}`;
       const reduced = await this.runPrompt(engine, mapSystemPrompt, reducePrompt, signal);
       onLog?.(this.createLog('reducing', `✅ 2차 재귀 압축 완료!`, reduced));
+
+      // GPU 쿨다운
+      await new Promise((resolve) => setTimeout(resolve, 400));
       return [reduced];
     }
 

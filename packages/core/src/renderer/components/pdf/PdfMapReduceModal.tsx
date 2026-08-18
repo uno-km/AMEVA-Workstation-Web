@@ -74,7 +74,7 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
       let adapter: any;
       if (isApiMode) {
         addLog({
-          id: 'log_api',
+          id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
           time: new Date().toLocaleTimeString(),
           stage: 'system',
           message: '🌐 로컬 Ollama / 원격 API 엔진에 연결합니다...'
@@ -96,14 +96,14 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
             message: '⚡ [AI 엔진 가동] 온디바이스 Qwen2.5 1.5B (890MB) VRAM 로드 중...'
           });
           addLog({
-            id: 'log_llm_init',
+            id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
             time: new Date().toLocaleTimeString(),
             stage: 'system',
             message: '⚡ WebGPU AI 엔진이 오프라인 상태입니다. Qwen2.5 1.5B (890MB) 모델을 자동으로 VRAM에 가동합니다...'
           });
           await initModel(DEFAULT_WEBGPU_MODEL);
           addLog({
-            id: 'log_llm_ready',
+            id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
             time: new Date().toLocaleTimeString(),
             stage: 'system',
             message: '✅ WebGPU AI 모델 가동 완료! 맵리듀스 분석을 시작합니다.'
@@ -134,6 +134,7 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
       setReportResult(finalReport);
       setActiveTab('report');
     } catch (err: any) {
+      const isGpuCrash = err?.message?.includes('disposed') || err?.message?.includes('Device was lost') || err?.message?.includes('0x887A0006');
       if (ac.signal.aborted) {
         setStatus({
           stage: 'error',
@@ -143,24 +144,27 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
           message: '사용자에 의해 분석이 중단되었습니다.'
         });
         addLog({
-          id: 'log_abort',
+          id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
           time: new Date().toLocaleTimeString(),
           stage: 'system',
           message: '🛑 작업이 중단되었습니다.'
         });
       } else {
+        const errorText = isGpuCrash 
+          ? 'GPU VRAM 버퍼 한계로 인퍼런스가 중단되었습니다. 0.5B 초경량 모델 또는 API 모드로 즉시 복구 가능합니다.'
+          : (err?.message || '알 수 없는 오류');
         setStatus({
           stage: 'error',
           progressPercent: 0,
           currentStep: 0,
           totalSteps: 0,
-          message: `분석 실패: ${err?.message || '알 수 없는 오류'}`
+          message: `분석 실패: ${errorText}`
         });
         addLog({
-          id: 'log_err',
+          id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
           time: new Date().toLocaleTimeString(),
           stage: 'system',
-          message: `❌ 오류 발생: ${err?.message || '알 수 없는 오류'}`
+          message: `❌ 오류 발생: ${errorText}`
         });
       }
     } finally {
@@ -519,6 +523,54 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
                 <StopCircle size={12} />
                 분석 중단
               </button>
+            ) : status.stage === 'error' ? (
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button
+                  onClick={async () => {
+                    localStorage.setItem('ameva_selected_llm_model', 'Qwen2.5-0.5B-Instruct-q4f32_1-MLC');
+                    localStorage.setItem('ameva_engine_mode', 'webgpu');
+                    await initModel('Qwen2.5-0.5B-Instruct-q4f32_1-MLC');
+                    startAnalysis();
+                  }}
+                  style={{
+                    background: 'rgba(16, 185, 129, 0.15)',
+                    border: '1px solid rgba(16, 185, 129, 0.4)',
+                    color: '#34d399',
+                    borderRadius: '4px',
+                    padding: '6px 12px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <Cpu size={12} />
+                  ⚡ 0.5B 초경량(390MB)으로 재시도
+                </button>
+                <button
+                  onClick={() => {
+                    localStorage.setItem('ameva_engine_mode', 'api');
+                    startAnalysis();
+                  }}
+                  style={{
+                    background: 'rgba(59, 130, 246, 0.15)',
+                    border: '1px solid rgba(59, 130, 246, 0.4)',
+                    color: '#60a5fa',
+                    borderRadius: '4px',
+                    padding: '6px 12px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  🌐 Ollama API로 전환
+                </button>
+              </div>
             ) : (
               <button
                 onClick={startAnalysis}
