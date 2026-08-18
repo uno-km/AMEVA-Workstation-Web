@@ -10,9 +10,11 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import type { IAIEngineAdapter } from '../../features/ai-agent/types';
 import { getAttachment } from '../../utils/vfsDatabase';
+import { base64ToUint8Array } from '../../utils/binaryUtils';
+import { normalizeMarkdownTables } from '../../utils/markdownUtils';
 
 export interface MapReduceProgress {
-  stage: 'extracting' | 'mapping' | 'reducing' | 'synthesizing' | 'done' | 'error';
+  stage: 'queued' | 'extracting' | 'mapping' | 'reducing' | 'synthesizing' | 'done' | 'error';
   progressPercent: number;
   currentStep: number;
   totalSteps: number;
@@ -23,7 +25,7 @@ export interface MapReduceProgress {
 export interface MapReduceLogItem {
   id: string;
   time: string;
-  stage: 'extracting' | 'mapping' | 'reducing' | 'synthesizing' | 'system';
+  stage: 'queued' | 'extracting' | 'mapping' | 'reducing' | 'synthesizing' | 'done' | 'error' | 'system';
   message: string;
   detail?: string;
 }
@@ -38,11 +40,38 @@ export interface PageCluster {
 
 export class PdfMapReduceService {
   /**
+   * Helper: Resolves ArrayBuffer from fileId or base64 rawData
+   */
+  static async resolveDocumentBuffer(fileId?: string, rawData?: string): Promise<ArrayBuffer | null> {
+    if (fileId) {
+      try {
+        const blob = await getAttachment(fileId);
+        if (blob) return await blob.arrayBuffer();
+      } catch (err) {
+        console.warn('[PdfMapReduce] Failed to resolve buffer from fileId:', err);
+      }
+    }
+    if (rawData) {
+      try {
+        const bytes = base64ToUint8Array(rawData);
+        return bytes.buffer as ArrayBuffer;
+      } catch (err) {
+        console.warn('[PdfMapReduce] Failed to decode rawData base64:', err);
+      }
+    }
+    return null;
+  }
+
+  /**
    * Helper: Resolves a pdfjs document instance from pdf object, fileId, or raw data
    */
-  static async resolvePdfInstance(pdfInput: any, fileId?: string, pdfData?: string): Promise<{ pdf: any; numPages: number }> {
+  static async resolvePdfInstance(
+    pdfInput: any, 
+    fileId?: string, 
+    pdfData?: string
+  ): Promise<{ pdf: any; numPages: number; isInternalDoc: boolean }> {
     if (pdfInput && typeof pdfInput.getPage === 'function') {
-      return { pdf: pdfInput, numPages: pdfInput.numPages || 1 };
+      return { pdf: pdfInput, numPages: pdfInput.numPages || 1, isInternalDoc: false };
     }
 
     if (fileId) {
@@ -51,7 +80,7 @@ export class PdfMapReduceService {
         if (blob) {
           const ab = await blob.arrayBuffer();
           const doc = await pdfjsLib.getDocument({ data: new Uint8Array(ab) }).promise;
-          return { pdf: doc, numPages: doc.numPages };
+          return { pdf: doc, numPages: doc.numPages, isInternalDoc: true };
         }
       } catch (err) {
         console.warn('[PdfMapReduce] Failed to resolve PDF from fileId:', err);
@@ -60,18 +89,15 @@ export class PdfMapReduceService {
 
     if (pdfData) {
       try {
-        let cleanBase64 = pdfData.includes(',') ? pdfData.split(',')[1] : pdfData;
-        const binaryString = atob(cleanBase64.replace(/\s/g, ''));
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+        const bytes = base64ToUint8Array(pdfData);
         const doc = await pdfjsLib.getDocument({ data: bytes }).promise;
-        return { pdf: doc, numPages: doc.numPages };
+        return { pdf: doc, numPages: doc.numPages, isInternalDoc: true };
       } catch (err) {
         console.warn('[PdfMapReduce] Failed to resolve PDF from pdfData:', err);
       }
     }
 
-    return { pdf: null, numPages: 1 };
+    return { pdf: null, numPages: 1, isInternalDoc: false };
   }
 
   /**
@@ -85,7 +111,7 @@ export class PdfMapReduceService {
     onChunk?: (chunk: string) => void
   ): Promise<string> {
     let accumulated = '';
-    const generator = engine.generateStream(systemPrompt, userPrompt, { signal, temperature: 0.2 });
+    const generator = engine.generateStream(systemPrompt, userPrompt, { signal, temperature: 0.2, max_tokens: 384 });
 
     for await (const chunk of generator) {
       if (signal?.aborted) throw new Error('작업이 사용자에 의해 중단되었습니다.');
@@ -102,7 +128,7 @@ export class PdfMapReduceService {
   }
 
   /**
-   * Stage 1: Extracts text page-by-page from pdfjs-dist and groups into clusters
+   * Stage 1: Universal Document Cluster Extractor (PDF / DOCX / PPTX / XLSX / HWPX / TXT)
    */
   static async extractAndCluster(
     pdf: any,
@@ -110,9 +136,142 @@ export class PdfMapReduceService {
     pagesPerCluster: number = 3,
     signal?: AbortSignal,
     onProgress?: (p: MapReduceProgress) => void,
-    onLog?: (log: MapReduceLogItem) => void
+    onLog?: (log: MapReduceLogItem) => void,
+    fileName: string = '',
+    fileId?: string,
+    docData?: string
   ): Promise<PageCluster[]> {
     const clusters: PageCluster[] = [];
+    const lowerName = fileName.toLowerCase();
+
+    // ── 1. Word DOCX / DOC 파일 추출 ───────────────────────────
+    if (lowerName.endsWith('.docx') || lowerName.endsWith('.doc')) {
+      onLog?.(this.createLog('extracting', `📝 DOCX 워드 문서 텍스트 스트리밍 추출 시작 (${fileName})...`));
+      const buffer = await this.resolveDocumentBuffer(fileId, docData);
+      if (buffer) {
+        try {
+          const mammoth = await import('mammoth');
+          const { value: rawText } = await mammoth.extractRawText({ arrayBuffer: buffer });
+          const paragraphs = rawText.split('\n').map(p => p.trim()).filter(Boolean);
+          
+          let currentCluster = '';
+          let clusterIdx = 0;
+          let startP = 1;
+
+          for (let i = 0; i < paragraphs.length; i++) {
+            currentCluster += paragraphs[i] + '\n\n';
+            if (currentCluster.length >= 1500 || i === paragraphs.length - 1) {
+              clusters.push({
+                clusterIndex: clusterIdx++,
+                startPage: startP,
+                endPage: i + 1,
+                rawText: currentCluster.trim()
+              });
+              startP = i + 2;
+              currentCluster = '';
+            }
+          }
+          onLog?.(this.createLog('extracting', `✅ DOCX 텍스트 추출 완료! 총 ${clusters.length}개 섹션 클러스터 생성`));
+          return clusters.length > 0 ? clusters : [{ clusterIndex: 0, startPage: 1, endPage: 1, rawText }];
+        } catch (e) {
+          console.warn('[PdfMapReduce] DOCX extraction error:', e);
+        }
+      }
+    }
+
+    // ── 2. PowerPoint PPTX / PPT 파일 추출 ─────────────────────
+    if (lowerName.endsWith('.pptx') || lowerName.endsWith('.ppt')) {
+      onLog?.(this.createLog('extracting', `📊 PPTX 발표 슬라이드 스트리밍 추출 시작 (${fileName})...`));
+      const buffer = await this.resolveDocumentBuffer(fileId, docData);
+      if (buffer) {
+        try {
+          const JSZipModule = await import('jszip');
+          const JSZip = JSZipModule.default || JSZipModule;
+          const zip = await JSZip.loadAsync(buffer);
+          
+          const slidePaths = Object.keys(zip.files)
+            .filter(p => p.startsWith('ppt/slides/slide') && p.endsWith('.xml'))
+            .sort((a, b) => {
+              const numA = parseInt(a.replace(/[^0-9]/g, ''), 10) || 0;
+              const numB = parseInt(b.replace(/[^0-9]/g, ''), 10) || 0;
+              return numA - numB;
+            });
+
+          let currentCluster = '';
+          let clusterIdx = 0;
+          let startSlide = 1;
+
+          for (let i = 0; i < slidePaths.length; i++) {
+            const slideXml = await zip.file(slidePaths[i])?.async('text') || '';
+            const slideText = slideXml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+            const slideNum = i + 1;
+            currentCluster += `\n[슬라이드 #${slideNum}]\n${slideText}\n`;
+
+            if ((i + 1) % pagesPerCluster === 0 || i === slidePaths.length - 1) {
+              clusters.push({
+                clusterIndex: clusterIdx++,
+                startPage: startSlide,
+                endPage: slideNum,
+                rawText: currentCluster.trim()
+              });
+              startSlide = slideNum + 1;
+              currentCluster = '';
+            }
+          }
+          onLog?.(this.createLog('extracting', `✅ PPTX 슬라이드 추출 완료! 총 ${slidePaths.length}장 슬라이드 (${clusters.length}개 클러스터)`));
+          if (clusters.length > 0) return clusters;
+        } catch (e) {
+          console.warn('[PdfMapReduce] PPTX extraction error:', e);
+        }
+      }
+    }
+
+    // ── 3. HWPX 한글 문서 파일 추출 ─────────────────────────────
+    if (lowerName.endsWith('.hwpx')) {
+      onLog?.(this.createLog('extracting', `📄 HWPX 한글 공문서 텍스트 스트리밍 추출 시작 (${fileName})...`));
+      const buffer = await this.resolveDocumentBuffer(fileId, docData);
+      if (buffer) {
+        try {
+          const JSZipModule = await import('jszip');
+          const JSZip = JSZipModule.default || JSZipModule;
+          const zip = await JSZip.loadAsync(buffer);
+          
+          const sectionPaths = Object.keys(zip.files)
+            .filter(p => p.includes('section') && p.endsWith('.xml'));
+
+          let fullText = '';
+          for (const sp of sectionPaths) {
+            const secXml = await zip.file(sp)?.async('text') || '';
+            fullText += secXml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ') + '\n\n';
+          }
+
+          const paragraphs = fullText.split('\n\n').filter(p => p.trim().length > 10);
+          let currentCluster = '';
+          let clusterIdx = 0;
+          let startP = 1;
+
+          for (let i = 0; i < paragraphs.length; i++) {
+            currentCluster += paragraphs[i] + '\n\n';
+            if (currentCluster.length >= 1500 || i === paragraphs.length - 1) {
+              clusters.push({
+                clusterIndex: clusterIdx++,
+                startPage: startP,
+                endPage: i + 1,
+                rawText: currentCluster.trim()
+              });
+              startP = i + 2;
+              currentCluster = '';
+            }
+          }
+          onLog?.(this.createLog('extracting', `✅ HWPX 텍스트 추출 완료! 총 ${clusters.length}개 섹션 클러스터 생성`));
+          if (clusters.length > 0) return clusters;
+        } catch (e) {
+          console.warn('[PdfMapReduce] HWPX extraction error:', e);
+        }
+      }
+    }
+
+    // ── 4. PDF (기본) 스트리밍 추출 ──────────────────────────────
     let currentClusterText = '';
     let clusterStart = 1;
 
@@ -125,14 +284,14 @@ export class PdfMapReduceService {
         progressPercent: 30,
         currentStep: 1,
         totalSteps: 1,
-        message: `📄 [1/3 단계] 문서 메타데이터 기반 컨텍스트 로드 완료 (총 ${numPages}p)`
+        message: `📄 [1/3 단계] 문서 컨텍스트 로드 완료 (총 ${numPages}p)`
       });
-      onLog?.(this.createLog('extracting', `⚠️ PDF 직접 추출 불가능 상태 - 메타데이터 컨텍스트로 전환합니다.`));
+      onLog?.(this.createLog('extracting', `⚠️ PDF 직접 추출 불가 상태 - 텍스트 메타데이터로 폴백 전환합니다.`));
       return [{
         clusterIndex: 0,
         startPage: 1,
         endPage: numPages || 1,
-        rawText: `[문서 분석 대상]: 총 ${numPages || 1}페이지로 구성된 PDF 문서입니다.`
+        rawText: `[문서 분석 대상: ${fileName || '문서'}]: 총 ${numPages || 1}페이지로 구성된 문서입니다.`
       }];
     }
 
@@ -154,6 +313,11 @@ export class PdfMapReduceService {
         currentClusterText += `\n[페이지 ${pageNum}]\n${pageText}\n`;
 
         onLog?.(this.createLog('extracting', `[페이지 ${pageNum}/${numPages}] 텍스트 추출 완료 (${pageText.length}자)`, pageText.slice(0, 150) + '...'));
+        try {
+          if (typeof page.cleanup === 'function') {
+            page.cleanup();
+          }
+        } catch {}
       } catch (err) {
         console.warn(`[PdfMapReduce] Failed to extract page ${pageNum}:`, err);
         onLog?.(this.createLog('extracting', `⚠️ [페이지 ${pageNum}] 추출 오류 발생, 건너뜁니다.`));
@@ -201,7 +365,11 @@ export class PdfMapReduceService {
 
     onLog?.(this.createLog('mapping', `🧩 [2/3 단계] 총 ${totalClusters}개 섹션별 병렬 중간 요약(Map) 가동 시작...`));
 
-    const mapSystemPrompt = `당신은 대용량 문서 분석 전문가입니다. 주어진 페이지 범위의 텍스트에서 핵심 사실, 주요 수치, 핵심 논점만을 3~4개의 간결한 마크다운 불릿(-)으로 응축하여 요약하십시오. 불필요한 서론이나 태그는 절대 작성하지 마십시오.`;
+    const mapSystemPrompt = `당신은 대용량 문서 분석 전문가입니다.
+[필수 수칙]
+1. 반드시 100% 한국어(Korean)로만 작성하십시오.
+2. 영어나 임의의 프로그래밍 코드(TypeVar, hadd 등)를 절대로 출력하지 마십시오.
+3. 주어진 페이지 내용에서 핵심 사실, 주요 수치, 핵심 논점만을 3~4개의 간결한 한국어 마크다운 불릿(-)으로 응축하여 요약하십시오.`;
 
     for (let i = 0; i < totalClusters; i++) {
       if (signal?.aborted) throw new Error('맵리듀스 분석이 중단되었습니다.');
@@ -226,11 +394,11 @@ export class PdfMapReduceService {
         level1Summaries.push(`### 📌 [페이지 ${cluster.startPage}~${cluster.endPage} 요약]\n${summary}`);
         onLog?.(this.createLog('mapping', `✅ [섹션 ${i + 1}/${totalClusters}] 요약 완료`, summary));
 
-        // GPU 버퍼 GC 및 D3D12 TDR 방지를 위한 1.0초 안정적 페이싱 딜레이
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+        // GPU 버퍼 GC 및 비동기 프레임 양보를 위한 200ms 경량 페이싱 딜레이
+        await new Promise((resolve) => setTimeout(resolve, 200));
       } catch (err: any) {
-        level1Summaries.push(`### 📌 [페이지 ${cluster.startPage}~${cluster.endPage}]\n- (요약 생성 생략: ${err?.message || '처리 오류'})`);
-        onLog?.(this.createLog('mapping', `⚠️ [섹션 ${i + 1}] 요약 중 예외: ${err?.message}`));
+        level1Summaries.push(`### [페이지 ${cluster.startPage}~${cluster.endPage}]\n- (요약 생성 생략: ${err?.message || '처리 오류'})`);
+        onLog?.(this.createLog('mapping', `[섹션 ${i + 1}] 요약 중 예외: ${err?.message}`));
       }
     }
 
@@ -241,17 +409,16 @@ export class PdfMapReduceService {
         progressPercent: 75,
         currentStep: 1,
         totalSteps: 1,
-        message: `🔄 [2/3 단계] 계층형 중간 요약 재귀 압축(Recursive Reduce) 진행 중...`
+        message: `[2/3 단계] 계층형 중간 요약 재귀 압축(Recursive Reduce) 진행 중...`
       });
-      onLog?.(this.createLog('reducing', `🔄 [Recursive Reduce] ${level1Summaries.length}개 섹션 요약을 통합 재압축합니다...`));
+      onLog?.(this.createLog('reducing', `[Recursive Reduce] ${level1Summaries.length}개 섹션 요약을 통합 재압축합니다...`));
 
       const joined = level1Summaries.join('\n\n');
       const reducePrompt = `다음 중간 요약들의 중복을 제거하고 핵심 흐름을 유지하며 5~6개의 체계적인 문맥으로 재압축하십시오:\n\n${joined.slice(0, 1500)}`;
       const reduced = await this.runPrompt(engine, mapSystemPrompt, reducePrompt, signal);
-      onLog?.(this.createLog('reducing', `✅ 2차 재귀 압축 완료!`, reduced));
+      onLog?.(this.createLog('reducing', `2차 재귀 압축 완료`, reduced));
 
-      // GPU 쿨다운
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 200));
       return [reduced];
     }
 
@@ -276,47 +443,47 @@ export class PdfMapReduceService {
       progressPercent: 80,
       currentStep: 1,
       totalSteps: 1,
-      message: `✨ [3/3 단계] 마크다운 표 및 종합 통찰 리포트 생성 중...`
+      message: `[3/3 단계] 마크다운 표 및 종합 리포트 생성 중...`
     });
-    onLog?.(this.createLog('synthesizing', `✨ [3/3 단계] 최고 수석 분석가 모드로 종합 마크다운 표 & 액션 리포트 작성 시작!`));
+    onLog?.(this.createLog('synthesizing', `[3/3 단계] 종합 마크다운 표 & 핵심 분석 리포트 작성 시작`));
 
-    // Stage 2와 Stage 3 사이 GPU TDR 방지 및 버퍼 정리 1.2초 쿨다운
-    await new Promise((resolve) => setTimeout(resolve, 1200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
-    const contextText = reducedSummaries.join('\n\n').slice(0, 1200);
+    const contextText = reducedSummaries.join('\n\n').slice(0, 1500);
 
-    const synthesisSystemPrompt = `당신은 기술 및 비즈니스 문서를 최고 경영진을 위해 심층 분석하는 수석 리드 분석관입니다.
-제공된 섹션별 분석 데이터를 바탕으로 아래 마크다운 양식에 맞춰 완결성 높은 [최종 종합 분석 리포트]를 작성하십시오.
-작성 수칙:
-1. 절대 중간에 문장이나 표 생성을 중단하지 마시고, 4개 섹션을 모두 끝까지 완결하십시오.
-2. <table> 태그 대신 표준 마크다운 표(| 구분 | 주요 내용 및 쟁점 | 판정 및 조치방안 |)를 사용하십시오.
-3. 문서 내 식별된 고유 항목 번호(예: 취약점 코드, P0/P1 분류, 핵심 지표 등)를 명확히 포함하십시오.`;
+    const synthesisSystemPrompt = `당신은 최고 수석 문서 분석관입니다.
+[필수 작성 수칙]
+1. 반드시 100% 한국어(Korean)로만 리포트를 작성하십시오. 영어로 작성하거나 알 수 없는 프로그래밍 코드(TypeVar, hadd 등)를 임의로 지어내지 마십시오.
+2. 제공된 분석 요약 데이터를 바탕으로 아래 양식에 맞춰 완결성 높은 [최종 종합 분석 리포트]를 작성하십시오.
+3. <table> 태그 대신 표준 마크다운 표(| 구분 | 주요 내용 및 쟁점 | 판정 및 조치방안 |)를 사용하십시오.
+4. [중요] 마크다운 표를 작성할 때 표의 각 행(Row) 사이에 절대로 빈 줄(줄바꿈 2회 이상)을 삽입하지 마십시오. 모든 표 행(| ... |)은 다음 줄에 바로 이어서 연속해서 작성해야 합니다.
+5. 지정된 4개 섹션을 모두 끝까지 한국어로 완결하십시오.`;
 
     const synthesisUserPrompt = `[분석 대상 문서]: ${fileName} (총 ${numPages}페이지)
 [섹션별 분석 요약 데이터]:
 ${contextText}
 
-위 데이터를 바탕으로 다음 마크다운 리포트를 완성하십시오:
-# 📑 [종합 분석 리포트] ${fileName}
+위 데이터를 바탕으로 반드시 100% 한국어로 다음 마크다운 리포트를 완성하십시오:
+# [종합 분석 리포트] ${fileName}
 
-## 1. 💡 총괄 핵심 요약 (Executive Summary)
-- **문서 목적 및 최종 판정**: ...
-- **핵심 쟁점 요약**: ...
+## 1. 총괄 핵심 요약 (Executive Summary)
+- **문서 목적 및 최종 판정**: (한국어로 상세 기술)
+- **핵심 쟁점 요약**: (한국어로 상세 기술)
 
-## 2. 📊 주요 항목 비교 및 분석 매트릭스 (Key Matrix)
+## 2. 주요 항목 비교 및 분석 매트릭스 (Key Matrix)
 | 구분 | 주요 내용 및 쟁점 | 판정 및 조치방안 |
 | :--- | :--- | :--- |
-(핵심 항목 3~5개를 마크다운 표로 정리)
+(핵심 항목 3~5개를 한국어로 빈 줄 없이 연속 표 행으로 작성)
 
-## 3. 🔍 핵심 쟁점 및 위험 분석
-- ...
+## 3. 핵심 쟁점 및 위험 분석
+- (한국어로 작성)
 
-## 4. 🎯 실행 권고사항 및 조치계획 (Action Items)
-1. ...
-2. ...`;
+## 4. 실행 권고사항 및 조치계획 (Action Items)
+1. (한국어로 작성)
+2. (한국어로 작성)`;
 
     let finalReport = '';
-    const generator = engine.generateStream(synthesisSystemPrompt, synthesisUserPrompt, { signal, temperature: 0.3 });
+    const generator = engine.generateStream(synthesisSystemPrompt, synthesisUserPrompt, { signal, temperature: 0.3, max_tokens: 896 });
 
     for await (const chunk of generator) {
       if (signal?.aborted) throw new Error('리포트 생성이 중단되었습니다.');
@@ -327,22 +494,22 @@ ${contextText}
         progressPercent: 90,
         currentStep: 1,
         totalSteps: 1,
-        message: `✨ [3/3 단계] 리포트 실시간 스트리밍 작성 중...`,
+        message: `[3/3 단계] 리포트 실시간 스트리밍 작성 중...`,
         streamingChunk: chunk
       });
     }
 
-    onLog?.(this.createLog('synthesizing', `🎉 [완료] 대용량 PDF 3단계 맵리듀스 종합 분석 리포트 생성 완료!`));
+    onLog?.(this.createLog('synthesizing', `[완료] 대용량 문서 AI 분석 리포트 생성 완료`));
 
     onProgress?.({
       stage: 'done',
       progressPercent: 100,
       currentStep: 1,
       totalSteps: 1,
-      message: `🎉 [완료] 대용량 PDF 3단계 맵리듀스 분석이 완료되었습니다!`
+      message: `[완료] 문서 AI 분석이 완료되었습니다.`
     });
 
-    return finalReport.trim();
+    return normalizeMarkdownTables(finalReport.trim());
   }
 
   /**
@@ -360,21 +527,38 @@ ${contextText}
     onLog?: (log: MapReduceLogItem) => void,
     onStreamingChunk?: (chunk: string) => void
   ): Promise<string> {
-    onLog?.(this.createLog('system', `🚀 대용량 PDF 3단계 계층형 맵리듀스 파이프라인 가동 (${fileName})`));
+    onLog?.(this.createLog('system', `문서 AI 분석 파이프라인 가동 (${fileName})`));
 
     // 0. Resolve PDF Instance safely
-    const { pdf, numPages: resolvedPages } = await this.resolvePdfInstance(pdfInput, fileId, pdfData);
+    const { pdf, numPages: resolvedPages, isInternalDoc } = await this.resolvePdfInstance(pdfInput, fileId, pdfData);
     const finalPages = resolvedPages || numPages || 1;
 
-    // 1. Map (추출 및 청킹)
-    const clusters = await this.extractAndCluster(pdf, finalPages, 3, signal, onProgress, onLog);
+    try {
+      // 1. Map (추출 및 청킹 - PDF/DOCX/PPTX/HWPX/TXT 지원)
+      const clusters = await this.extractAndCluster(pdf, finalPages, 3, signal, onProgress, onLog, fileName, fileId, pdfData);
 
-    // 2. Reduce (섹션별 계층 요약)
-    const reduced = await this.executeMapReduce(clusters, engine, signal, onProgress, onLog);
+      // 초고속 패스: 1~3페이지(또는 클러스터 1개) 문서의 경우 중간 맵 단계를 건너뛰고 직접 종합 리포트 생성 (3~5초 이내 완료)
+      if (clusters.length === 1) {
+        onLog?.(this.createLog('mapping', `소형 문서 고속 패스(Direct Fast Path) 적용: 종합 분석으로 즉시 진입`));
+        const finalReport = await this.synthesizeMasterReport(fileName, finalPages, [clusters[0].rawText], engine, signal, onProgress, onLog, onStreamingChunk);
+        return finalReport;
+      }
 
-    // 3. Synthesis (최종 종합 리포트)
-    const finalReport = await this.synthesizeMasterReport(fileName, finalPages, reduced, engine, signal, onProgress, onLog, onStreamingChunk);
+      // 2. Reduce (섹션별 계층 요약 - 4페이지 이상 대용량 문서)
+      const reduced = await this.executeMapReduce(clusters, engine, signal, onProgress, onLog);
 
-    return finalReport;
+      // 3. Synthesis (최종 종합 리포트)
+      const finalReport = await this.synthesizeMasterReport(fileName, finalPages, reduced, engine, signal, onProgress, onLog, onStreamingChunk);
+
+      return finalReport;
+    } finally {
+      if (isInternalDoc && pdf && typeof pdf.destroy === 'function') {
+        try {
+          await pdf.destroy();
+        } catch (e) {
+          console.debug('[PdfMapReduce] PDF instance destroy error:', e);
+        }
+      }
+    }
   }
 }

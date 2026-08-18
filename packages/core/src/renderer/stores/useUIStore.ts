@@ -233,24 +233,6 @@ export interface UIState {
    */
   marketplacePlugins: PluginMetadata[]
   setMarketplacePlugins: (plugins: PluginMetadata[]) => void
-
-  /*
-   * [CODE INTELLIGENCE ASSISTANT MODAL (SCRUM-172)]
-   */
-  isCodeAssistantOpen: boolean
-  codeAssistantOptions?: {
-    initialMode?: 'generate' | 'debug' | 'review' | 'explain'
-    initialCode?: string
-    initialLanguage?: string
-    initialErrorLog?: string
-  }
-  openCodeAssistant: (options?: {
-    initialMode?: 'generate' | 'debug' | 'review' | 'explain'
-    initialCode?: string
-    initialLanguage?: string
-    initialErrorLog?: string
-  }) => void
-  closeCodeAssistant: () => void
 }
 
 /**
@@ -391,11 +373,6 @@ export const useUIStore = create<UIState>((set, get) => ({
   })),
 
   marketplacePlugins: [],
-  setMarketplacePlugins: (plugins) => set({ marketplacePlugins: plugins }),
-
-  isCodeAssistantOpen: false,
-  codeAssistantOptions: undefined,
-  openCodeAssistant: (options) => set({ isCodeAssistantOpen: true, codeAssistantOptions: options }),
-  closeCodeAssistant: () => set({ isCodeAssistantOpen: false, codeAssistantOptions: undefined })
+  setMarketplacePlugins: (plugins) => set({ marketplacePlugins: plugins })
 }))
 

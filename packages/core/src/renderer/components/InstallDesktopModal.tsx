@@ -83,7 +83,7 @@ export function InstallDesktopModal({ isOpen, onClose }: InstallDesktopModalProp
         style={{
           width: '480px',
           background: 'linear-gradient(135deg, rgba(24, 24, 35, 0.9) 0%, rgba(15, 15, 23, 0.95) 100%)',
-          border: '1px solid rgba(139, 92, 246, 0.25)',
+          border: '1px solid rgba(59, 130, 246, 0.25)',
           borderRadius: '24px',
           boxShadow: '0 20px 50px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
           padding: '32px',
@@ -129,12 +129,12 @@ export function InstallDesktopModal({ isOpen, onClose }: InstallDesktopModalProp
             width: '80px',
             height: '80px',
             borderRadius: '24px',
-            background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
+            background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             marginBottom: '24px',
-            boxShadow: '0 8px 24px rgba(139, 92, 246, 0.35)',
+            boxShadow: '0 8px 24px rgba(59, 130, 246, 0.35)',
             position: 'relative'
           }}
         >
@@ -186,15 +186,15 @@ export function InstallDesktopModal({ isOpen, onClose }: InstallDesktopModalProp
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px' }}>
-            <Terminal size={14} color="#a78bfa" />
+            <Terminal size={14} color="#38bdf8" />
             <span>딥리즈닝(Deep Reasoning)을 통한 로컬 LLM 아키텍처 무료 사용</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px' }}>
-            <Shield size={14} color="#a78bfa" />
+            <Shield size={14} color="#38bdf8" />
             <span>협업 비즈니스를 위한 광대한 마켓플레이스 환경 제공</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px' }}>
-            <ArrowRight size={14} color="#a78bfa" />
+            <ArrowRight size={14} color="#38bdf8" />
             <span>향상된 네이티브 AI 툴 및 오프라인 미디어 자동 컴파일 지원</span>
           </div>
         </div>
@@ -209,7 +209,7 @@ export function InstallDesktopModal({ isOpen, onClose }: InstallDesktopModalProp
               padding: '14px',
               borderRadius: '12px',
               border: 'none',
-              background: 'linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%)',
+              background: 'linear-gradient(90deg, #2563eb 0%, #2563eb 100%)',
               color: '#fff',
               fontSize: '13.5px',
               fontWeight: 700,
@@ -218,7 +218,7 @@ export function InstallDesktopModal({ isOpen, onClose }: InstallDesktopModalProp
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
-              boxShadow: '0 4px 12px rgba(124, 58, 237, 0.25)',
+              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
               transition: 'transform 0.2s, opacity 0.2s'
             }}
             onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}

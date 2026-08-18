@@ -122,7 +122,7 @@ export const KnowledgeGraphBlock = createReactBlockSpec(
               onClick={handleAutoGenerate}
               disabled={isGenerating}
               style={{
-                background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)',
+                background: 'linear-gradient(135deg, #2563eb 0%, #6366f1 100%)',
                 color: '#fff',
                 border: 'none',
                 padding: '6px 14px',
@@ -130,7 +130,7 @@ export const KnowledgeGraphBlock = createReactBlockSpec(
                 cursor: 'pointer',
                 fontSize: '12px',
                 fontWeight: 600,
-                boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)'
+                boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)'
               }}
             >
               {isGenerating ? '그래프 분석 중...' : '✨ AI 문서 GraphRAG 자동 생성'}
@@ -151,8 +151,8 @@ export const KnowledgeGraphBlock = createReactBlockSpec(
           </AsyncBlockWrapper>
 
           {selectedNode && (
-            <div style={{ marginTop: '12px', padding: '10px 14px', background: 'rgba(30, 41, 59, 0.7)', borderRadius: '6px', border: '1px solid rgba(139, 92, 246, 0.4)', fontSize: '12px' }}>
-              <div style={{ fontWeight: 600, color: selectedNode.color || '#a78bfa', marginBottom: '4px' }}>
+            <div style={{ marginTop: '12px', padding: '10px 14px', background: 'rgba(30, 41, 59, 0.7)', borderRadius: '6px', border: '1px solid rgba(59, 130, 246, 0.4)', fontSize: '12px' }}>
+              <div style={{ fontWeight: 600, color: selectedNode.color || '#38bdf8', marginBottom: '4px' }}>
                 선택된 노드: {selectedNode.heading || selectedNode.label}
               </div>
               {selectedNode.summary && (

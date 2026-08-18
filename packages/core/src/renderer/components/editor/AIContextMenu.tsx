@@ -288,21 +288,21 @@ export function AIContextMenu({
 
               {isGhostLoading && (
                 <div style={{ marginTop: '8px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#8b5cf6', opacity: 0.9 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#06b6d4', opacity: 0.9 }}>
                     <span>Ghost 보조 모델</span>
                     <span>{pGhost}%</span>
                   </div>
                   <div style={{ width: '100%', height: '4px', background: 'rgba(0,0,0,0.1)', borderRadius: '2px', overflow: 'hidden', margin: '2px 0' }}>
-                    <div style={{ width: `${pGhost}%`, height: '100%', background: 'linear-gradient(90deg, #7c3aed, #8b5cf6)', transition: 'width 0.2s ease-out' }} />
+                    <div style={{ width: `${pGhost}%`, height: '100%', background: 'linear-gradient(90deg, #2563eb, #06b6d4)', transition: 'width 0.2s ease-out' }} />
                   </div>
-                  <div style={{ color: '#8b5cf6', fontSize: '9px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left' }}>{ghostProgressText}</div>
+                  <div style={{ color: '#67e8f9', fontSize: '9px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left' }}>{ghostProgressText}</div>
                 </div>
               )}
             </div>
           ) : (
             <button
               className="bn-button"
-              style={{ display: 'flex', alignItems: 'center', gap: '6px', textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'transparent', color: '#a855f7', border: 'none', cursor: 'pointer', fontSize: '12px' }}
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'transparent', color: '#38bdf8', border: 'none', cursor: 'pointer', fontSize: '12px' }}
               onClick={() => {
                 if (isMainLoading || isGhostLoading) return;
                 try {
@@ -311,7 +311,7 @@ export function AIContextMenu({
                   console.warn('[AIContextMenu] init sync error:', e);
                 }
               }}
-              onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'rgba(168,85,247,0.1)' }}
+              onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'rgba(59,130,246,0.1)' }}
               onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
               <Sparkles size={14} />

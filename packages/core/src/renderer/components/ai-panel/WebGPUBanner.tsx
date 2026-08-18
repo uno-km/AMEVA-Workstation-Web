@@ -42,7 +42,7 @@ export const WebGPUBanner: React.FC<WebGPUBannerProps> = ({
           ? 'rgba(16, 185, 129, 0.08)'
           : isModelLoading
           ? 'rgba(59, 130, 246, 0.12)'
-          : 'rgba(139, 92, 246, 0.12)',
+          : 'rgba(59, 130, 246, 0.12)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
         display: 'flex',
         flexDirection: 'column',
@@ -52,7 +52,7 @@ export const WebGPUBanner: React.FC<WebGPUBannerProps> = ({
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px' }}>
-          <Cpu size={13} color={isLLMReady ? '#34d399' : '#a78bfa'} />
+          <Cpu size={13} color={isLLMReady ? '#34d399' : '#38bdf8'} />
           <span
             data-testid="webgpu-status-text"
             style={{ fontWeight: 600, color: isLLMReady ? '#34d399' : '#e2e8f0' }}
@@ -90,7 +90,7 @@ export const WebGPUBanner: React.FC<WebGPUBannerProps> = ({
             data-testid="webgpu-load-btn"
             onClick={onInit}
             style={{
-              background: 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)',
+              background: 'linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)',
               color: '#fff',
               border: 'none',
               borderRadius: '4px',
@@ -98,7 +98,7 @@ export const WebGPUBanner: React.FC<WebGPUBannerProps> = ({
               fontSize: '10px',
               fontWeight: 600,
               cursor: 'pointer',
-              boxShadow: '0 2px 6px rgba(139, 92, 246, 0.3)'
+              boxShadow: '0 2px 6px rgba(37, 99, 235, 0.3)'
             }}
           >
             GPU에 모델 올리기
@@ -119,7 +119,7 @@ export const WebGPUBanner: React.FC<WebGPUBannerProps> = ({
               style={{
                 height: '100%',
                 width: `${downloadProgress * 100}%`,
-                background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)',
+                background: 'linear-gradient(90deg, #3b82f6, #06b6d4)',
                 transition: 'width 0.2s'
               }}
             />

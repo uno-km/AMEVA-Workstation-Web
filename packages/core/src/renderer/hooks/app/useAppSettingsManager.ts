@@ -15,9 +15,11 @@ export function useAppSettingsManager(activeRightTab: string, setActiveRightTab:
   const { setEditorZoom, adjustEditorZoom, setBrowserZoom } = useProcessStore()
 
   const [settings, setSettings] = useState<AppSettings>(() => {
+    const isAutoLoad = typeof localStorage !== 'undefined' && (localStorage.getItem('ameva_auto_load_llm') === 'true');
     const DEFAULT: AppSettings = {
       showPeersPointer: true, showPeersDrag: true, showCodeConsole: true, autoSnapshot: true,
       theme: 'dark', wordWrap: true, showMinimap: true, installedPlugins: [],
+      autoLoadAI: isAutoLoad,
       hotkeys: {
         save: 'Control+s', open: 'Control+o', newFile: 'Control+n', pdfExport: 'Control+p',
         toggleAI: 'Control+\\', toggleMode: 'Control+e', zoomIn: 'Control+=', zoomOut: 'Control+-', zoomReset: 'Control+0'
@@ -31,7 +33,7 @@ export function useAppSettingsManager(activeRightTab: string, setActiveRightTab:
           parsed.hotkeys.toggleMode = 'Control+e'
           localStorage.setItem('app-settings', JSON.stringify(parsed))
         }
-        return { ...DEFAULT, ...parsed }
+        return { ...DEFAULT, ...parsed, autoLoadAI: parsed.autoLoadAI ?? isAutoLoad }
       }
     } catch {}
     return DEFAULT
@@ -46,6 +48,9 @@ export function useAppSettingsManager(activeRightTab: string, setActiveRightTab:
       const updated = { ...prev, ...newSettings }
       try {
         localStorage.setItem('app-settings', JSON.stringify(updated))
+        if (newSettings.autoLoadAI !== undefined) {
+          localStorage.setItem('ameva_auto_load_llm', String(newSettings.autoLoadAI))
+        }
       } catch {}
       return updated
     })

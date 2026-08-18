@@ -3,18 +3,38 @@
  * @file PdfMapReduceModal.tsx
  * @system AMEVA OS Desktop Workstation - PDF Intelligence UI
  * @location packages/core/src/renderer/components/pdf/PdfMapReduceModal.tsx
- * @role 3-Stage Hierarchical Map-Reduce PDF Summarization Modal (SCRUM-166)
+ * @role 3-Stage Hierarchical Map-Reduce PDF Summarization Modal (SCRUM-173)
  * ============================================================================
  */
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Sparkles, X, Check, Copy, FileText, Loader2, StopCircle, RefreshCw, Layers, Terminal, ChevronDown, ChevronRight, Activity, Cpu, Globe, Eye, Code } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Sparkles, 
+  X, 
+  Check, 
+  Copy, 
+  FileText, 
+  Loader2, 
+  StopCircle, 
+  RefreshCw, 
+  Layers, 
+  Terminal, 
+  ChevronDown, 
+  ChevronRight, 
+  Cpu, 
+  Globe, 
+  Eye, 
+  Code,
+  Minus
+} from 'lucide-react';
 import { marked } from 'marked';
 import { PdfMapReduceService } from '../../services/pdf/PdfMapReduceService';
 import type { MapReduceProgress, MapReduceLogItem } from '../../services/pdf/PdfMapReduceService';
 import { WebLLMEngineAdapter } from '../../features/ai-agent/adapters/WebLLMEngineAdapter';
 import { RemoteHttpEngineAdapter } from '../../features/ai-agent/adapters/RemoteHttpEngineAdapter';
-import { useWebLLM, DEFAULT_WEBGPU_MODEL, SUPPORTED_WEBGPU_MODELS } from '../useWebLLM';
+import { useWebLLM } from '../useWebLLM';
+import { useDocumentSummaryStore } from '../../stores/useDocumentSummaryStore';
+import { normalizeMarkdownTables } from '../../utils/markdownUtils';
 
 interface PdfMapReduceModalProps {
   pdf?: any;
@@ -22,6 +42,7 @@ interface PdfMapReduceModalProps {
   pdfData?: string;
   fileName: string;
   numPages: number;
+  blockId?: string;
   onClose: () => void;
   onInsertToEditor?: (reportText: string) => void;
 }
@@ -32,10 +53,26 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
   pdfData,
   fileName,
   numPages,
+  blockId,
   onClose,
   onInsertToEditor
 }) => {
-  const { generateStream, isMainReady, initModel, activeModelId } = useWebLLM();
+  const taskId = fileId || fileName;
+  const { generateStream, isMainReady, isMainLoading, mainProgress, mainProgressText, initModel, activeModelId } = useWebLLM();
+  const { 
+    tasks, 
+    registerSummaryTask, 
+    updateProgress, 
+    appendLog, 
+    setReportResult: setStoreReport, 
+    setTaskDone, 
+    setTaskError, 
+    setDeckExpanded,
+    closeModal 
+  } = useDocumentSummaryStore();
+
+  const storeTask = tasks[taskId];
+
   const [activeTab, setActiveTab] = useState<'report' | 'logs'>('logs');
   const [viewMode, setViewMode] = useState<'rendered' | 'raw'>('rendered');
   const [selectedEngine, setSelectedEngine] = useState<'webgpu-0.5b' | 'webgpu-1.5b' | 'api'>(() => {
@@ -46,15 +83,28 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
     return 'webgpu-0.5b';
   });
 
-  const [status, setStatus] = useState<MapReduceProgress>({
-    stage: 'extracting',
-    progressPercent: 5,
-    currentStep: 0,
-    totalSteps: numPages,
-    message: '대용량 PDF 3단계 맵리듀스 파이프라인 가동 준비 중...'
+  const [status, setStatus] = useState<MapReduceProgress>(() => {
+    if (storeTask) {
+      return {
+        stage: storeTask.stage,
+        progressPercent: storeTask.progressPercent,
+        currentStep: 0,
+        totalSteps: numPages,
+        message: storeTask.statusMessage
+      };
+    }
+    return {
+      stage: 'extracting',
+      progressPercent: 5,
+      currentStep: 0,
+      totalSteps: numPages,
+      message: '대용량 PDF 3단계 맵리듀스 파이프라인 가동 준비 중...'
+    };
   });
-  const [logs, setLogs] = useState<MapReduceLogItem[]>([]);
-  const [reportResult, setReportResult] = useState<string>('');
+
+  const [logs, setLogs] = useState<MapReduceLogItem[]>(() => storeTask?.logs || []);
+  const [reportResult, setReportResult] = useState<string>(() => storeTask?.reportResult || '');
+  const [renderedHtml, setRenderedHtml] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
   const [inserted, setInserted] = useState<boolean>(false);
@@ -65,26 +115,88 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
 
   const addLog = (log: MapReduceLogItem) => {
     setLogs((prev) => [...prev, log]);
+    appendLog(taskId, log);
   };
 
-  const renderedHtml = useMemo(() => {
-    if (!reportResult) return '';
+  // WebGPU 모델 가중치 로딩 진행률 실시간 동기화
+  useEffect(() => {
+    if (isMainLoading && isRunning) {
+      const p = Math.max(5, Math.min(25, Math.round((mainProgress || 0) * 25)));
+      setStatus((prev) => ({
+        ...prev,
+        stage: 'extracting',
+        progressPercent: p,
+        message: mainProgressText ? `WebGPU VRAM 적재 중: ${mainProgressText}` : 'WebGPU VRAM 가속기 적재 중...'
+      }));
+    }
+  }, [isMainLoading, mainProgress, mainProgressText, isRunning]);
+
+  // 마크다운 파싱 비동기/동기 완전 대응
+  useEffect(() => {
+    if (!reportResult) {
+      setRenderedHtml('');
+      return;
+    }
     try {
-      return marked.parse(reportResult, { gfm: true, breaks: true }) as string;
-    } catch {
-      return reportResult;
+      const normalized = normalizeMarkdownTables(reportResult);
+      const parsed = marked.parse(normalized, { gfm: true, breaks: true });
+      if (parsed instanceof Promise) {
+        parsed.then((html) => setRenderedHtml(html as string));
+      } else {
+        setRenderedHtml(parsed as string);
+      }
+    } catch (err) {
+      console.warn('[PdfMapReduce] marked parsing error:', err);
+      setRenderedHtml(reportResult);
     }
   }, [reportResult]);
 
+  // FIFO 큐에서 다음 순번이 되어 실행 시작될 때 리스너
+  useEffect(() => {
+    const handleQueueStart = (e: any) => {
+      if (e.detail?.taskId === taskId) {
+        startAnalysisWithEngine(selectedEngine);
+      }
+    };
+    window.addEventListener('ameva:summary-queue-start', handleQueueStart);
+    return () => window.removeEventListener('ameva:summary-queue-start', handleQueueStart);
+  }, [taskId, selectedEngine]);
+
   const startAnalysisWithEngine = async (engineChoice = selectedEngine) => {
+    if (isRunning) return;
+
+    const ac = new AbortController();
+    abortControllerRef.current = ac;
+
+    // 글로벌 스토어에 태스크 등록 (FIFO 큐 스케줄러 검사)
+    const { isQueued, queuePosition } = registerSummaryTask({
+      id: taskId,
+      fileId,
+      blockId,
+      fileName,
+      docType: fileName.toLowerCase().endsWith('.pptx') ? 'pptx' : fileName.toLowerCase().endsWith('.docx') ? 'docx' : fileName.toLowerCase().endsWith('.xlsx') ? 'xlsx' : 'pdf',
+      numPages,
+      abortController: ac
+    });
+
+    if (isQueued) {
+      const qProg: MapReduceProgress = {
+        stage: 'queued' as any,
+        progressPercent: 0,
+        currentStep: 0,
+        totalSteps: numPages,
+        message: `⏳ 프로세스 대기 큐 등록됨 (선입선출 대기 순번 #${queuePosition}번)`
+      };
+      setStatus(qProg);
+      setIsRunning(false);
+      return;
+    }
+
     setIsRunning(true);
     setReportResult('');
     setInserted(false);
     setLogs([]);
     setActiveTab('logs');
-
-    const ac = new AbortController();
-    abortControllerRef.current = ac;
 
     try {
       // 1. AI Engine Auto-Preparation
@@ -114,31 +226,34 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
 
         if (!isMainReady || activeModelId !== targetModel) {
           const modelLabel = targetModel.includes('1.5B') ? '1.5B (890MB)' : '0.5B (390MB)';
-          setStatus({
+          const initProg: MapReduceProgress = {
             stage: 'extracting',
             progressPercent: 10,
             currentStep: 0,
             totalSteps: numPages,
-            message: `⚡ [AI 엔진 가동] 온디바이스 Qwen2.5 ${modelLabel} VRAM 로드 중...`
-          });
+            message: `⚡ WebGPU 온디바이스 AI 가속기(${modelLabel})를 VRAM에 적재 중...`
+          };
+          setStatus(initProg);
+          updateProgress(taskId, initProg);
+
           addLog({
             id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
             time: new Date().toLocaleTimeString(),
             stage: 'system',
-            message: `⚡ WebGPU Qwen2.5 ${modelLabel} 모델을 GPU VRAM에 가동합니다...`
+            message: `⚡ WebGPU 가속기(${modelLabel}) VRAM 적재 시작...`
           });
           await initModel(targetModel);
           addLog({
             id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
             time: new Date().toLocaleTimeString(),
             stage: 'system',
-            message: `✅ WebGPU AI 모델 가동 완료! 맵리듀스 분석을 시작합니다.`
+            message: `✅ WebGPU VRAM 적재 완료! Zero-Cloud 로컬 분석을 가동합니다.`
           });
         }
-        adapter = new WebLLMEngineAdapter((sys, user, opt) => generateStream(sys, user, opt), true);
+        adapter = new WebLLMEngineAdapter(generateStream, false);
       }
 
-      // 2. Run Map-Reduce Pipeline
+      // 2. Run Map-Reduce Full Pipeline
       const finalReport = await PdfMapReduceService.runFullMapReducePipeline(
         pdf,
         fileName,
@@ -149,53 +264,58 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
         ac.signal,
         (progress) => {
           setStatus(progress);
-          if (progress.stage === 'synthesizing' && activeTab === 'logs') {
-            setActiveTab('report');
-          }
+          updateProgress(taskId, progress);
         },
-        (logItem) => addLog(logItem),
-        (chunk) => setReportResult((prev) => prev + chunk)
+        (log) => addLog(log),
+        (chunk) => {
+          setReportResult((prev) => {
+            const next = prev + chunk;
+            queueMicrotask(() => {
+              setStoreReport(taskId, next);
+            });
+            return next;
+          });
+          setActiveTab('report');
+        }
       );
 
       setReportResult(finalReport);
+      setTaskDone(taskId, finalReport);
       setActiveTab('report');
+      setStatus({
+        stage: 'done',
+        progressPercent: 100,
+        currentStep: numPages,
+        totalSteps: numPages,
+        message: '🎉 [완료] 대용량 문서 3단계 맵리듀스 분석이 완료되었습니다!'
+      });
     } catch (err: any) {
-      const isGpuCrash = err?.message?.includes('disposed') || err?.message?.includes('Device was lost') || err?.message?.includes('0x887A0006');
-      if (ac.signal.aborted) {
-        setStatus({
-          stage: 'error',
-          progressPercent: 0,
-          currentStep: 0,
-          totalSteps: 0,
-          message: '사용자에 의해 분석이 중단되었습니다.'
-        });
+      if (err?.name === 'AbortError' || err?.message?.includes('중단')) {
         addLog({
           id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
           time: new Date().toLocaleTimeString(),
           stage: 'system',
-          message: '🛑 작업이 중단되었습니다.'
+          message: '🛑 사용자에 의해 분석이 중단되었습니다.'
         });
+        setStatus((prev) => ({ ...prev, stage: 'error', message: '🛑 분석 작업이 중단되었습니다.' }));
+        setTaskError(taskId, '분석 중단');
       } else {
-        const errorText = isGpuCrash 
-          ? 'GPU VRAM 버퍼 한계로 인퍼런스가 중단되었습니다. 0.5B 초경량 모델 또는 Ollama API 모드로 즉시 복구 가능합니다.'
-          : (err?.message || '알 수 없는 오류');
-        setStatus({
-          stage: 'error',
-          progressPercent: 0,
-          currentStep: 0,
-          totalSteps: 0,
-          message: `분석 실패: ${errorText}`
-        });
+        console.error('[PdfMapReduceModal] Error:', err);
         addLog({
           id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
           time: new Date().toLocaleTimeString(),
           stage: 'system',
-          message: `❌ 오류 발생: ${errorText}`
+          message: `❌ 오류 발생: ${err?.message || '알 수 없는 에러'}`
         });
+        setStatus((prev) => ({
+          ...prev,
+          stage: 'error',
+          message: `❌ 분석 실패: ${err?.message || '오류 발생'}`
+        }));
+        setTaskError(taskId, err?.message || '오류 발생');
       }
     } finally {
       setIsRunning(false);
-      abortControllerRef.current = null;
     }
   };
 
@@ -203,20 +323,37 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
+    setIsRunning(false);
   };
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     if (!reportResult) return;
-    navigator.clipboard.writeText(reportResult);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      const normalized = normalizeMarkdownTables(reportResult);
+      await navigator.clipboard.writeText(normalized);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy report:', err);
+    }
   };
 
   const handleInsert = () => {
-    if (!reportResult || !onInsertToEditor) return;
-    onInsertToEditor(reportResult);
+    if (!reportResult) return;
+    const normalized = normalizeMarkdownTables(reportResult);
+    onInsertToEditor?.(normalized);
     setInserted(true);
-    setTimeout(() => setInserted(false), 2000);
+    setTimeout(() => {
+      setInserted(false);
+      closeModal();
+      onClose();
+    }, 800);
+  };
+
+  const handleMinimize = () => {
+    setDeckExpanded(true);
+    closeModal();
+    onClose();
   };
 
   // Auto scroll logs
@@ -226,14 +363,19 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
     }
   }, [logs, activeTab]);
 
-  // Auto start on mount
+  // Auto start on mount if no previous result
   useEffect(() => {
-    startAnalysisWithEngine();
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
+    if (storeTask?.reportResult && storeTask.stage === 'done') {
+      setReportResult(storeTask.reportResult);
+      setActiveTab('report');
+    } else if (storeTask?.stage === 'queued') {
+      // FIFO 큐 대기 상태 유지
+    } else {
+      const timer = setTimeout(() => {
+        startAnalysisWithEngine();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   return (
@@ -252,10 +394,15 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
       padding: '20px'
     }}>
       <style>{`
+        .ameva-report-markdown, .ameva-report-markdown * {
+          user-select: text !important;
+          -webkit-user-select: text !important;
+        }
         .ameva-report-markdown {
           font-size: 13.5px;
           line-height: 1.7;
           color: #f1f5f9;
+          font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
         .ameva-report-markdown h1 {
           font-size: 18px;
@@ -269,7 +416,7 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
         .ameva-report-markdown h2 {
           font-size: 15px;
           font-weight: 700;
-          color: #a78bfa;
+          color: #38bdf8;
           margin-top: 20px;
           margin-bottom: 10px;
         }
@@ -294,42 +441,42 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
           width: 100%;
           border-collapse: collapse;
           margin: 14px 0;
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          border: 1px solid #334155;
           border-radius: 8px;
           overflow: hidden;
-          background: rgba(15, 23, 42, 0.6);
+          background: #0f172a;
         }
         .ameva-report-markdown th {
-          background: rgba(30, 41, 59, 0.95);
+          background: #1e293b;
           color: #93c5fd;
           font-weight: 700;
           text-align: left;
           padding: 8px 12px;
           font-size: 12px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+          border-bottom: 1px solid #334155;
         }
         .ameva-report-markdown td {
           padding: 8px 12px;
           font-size: 12px;
-          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          border-bottom: 1px solid #1e293b;
           color: #e2e8f0;
         }
         .ameva-report-markdown tr:last-child td {
           border-bottom: none;
         }
         .ameva-report-markdown tr:hover td {
-          background: rgba(255, 255, 255, 0.03);
+          background: rgba(255, 255, 255, 0.04);
         }
         .ameva-report-markdown blockquote {
           margin: 12px 0;
           padding: 8px 14px;
-          border-left: 3px solid #8b5cf6;
-          background: rgba(139, 92, 246, 0.08);
+          border-left: 3px solid #3b82f6;
+          background: rgba(59, 130, 246, 0.08);
           border-radius: 0 6px 6px 0;
           color: #cbd5e1;
         }
         .ameva-report-markdown strong {
-          color: #f8fafc;
+          color: #ffffff;
           font-weight: 700;
         }
       `}</style>
@@ -338,10 +485,10 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
         width: '100%',
         maxWidth: '920px',
         height: '86vh',
-        background: '#0e111a',
-        border: '1px solid rgba(139, 92, 246, 0.4)',
+        background: '#0a0d14',
+        border: '1px solid rgba(59, 130, 246, 0.25)',
         borderRadius: '12px',
-        boxShadow: '0 16px 64px rgba(0, 0, 0, 0.8), 0 0 32px rgba(139, 92, 246, 0.15)',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.85), 0 0 24px rgba(59, 130, 246, 0.12)',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden'
@@ -349,7 +496,7 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
         {/* Header */}
         <div style={{
           padding: '12px 18px',
-          background: 'rgba(23, 29, 44, 0.95)',
+          background: 'rgba(15, 20, 32, 0.95)',
           borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
           display: 'flex',
           alignItems: 'center',
@@ -360,23 +507,26 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
               width: '30px',
               height: '30px',
               borderRadius: '7px',
-              background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
+              background: 'linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 2px 10px rgba(139, 92, 246, 0.4)'
+              boxShadow: '0 2px 10px rgba(37, 99, 235, 0.4)'
             }}>
               <Layers size={16} color="#fff" />
             </div>
             <div>
               <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#f8fafc', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span>대용량 PDF 3단계 계층형 맵리듀스 AI 상세 요약</span>
-                <span style={{ fontSize: '10px', background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa', padding: '1px 6px', borderRadius: '4px', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
-                  SCRUM-166
+                <span>
+                  {fileName.toLowerCase().endsWith('.docx') ? 'Word 문서 계층형 맵리듀스 AI 요약' :
+                   fileName.toLowerCase().endsWith('.pptx') ? 'PPTX 슬라이드 계층형 맵리듀스 AI 요약' :
+                   fileName.toLowerCase().endsWith('.hwpx') ? 'HWPX 한글 계층형 맵리듀스 AI 요약' :
+                   fileName.toLowerCase().endsWith('.xlsx') ? '엑셀 데이터 계층형 맵리듀스 AI 요약' :
+                   '대용량 문서 계층형 맵리듀스 AI 상세 요약'}
                 </span>
               </div>
               <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
-                {fileName} (총 {numPages} 페이지 분석)
+                {fileName} ({numPages ? `총 ${numPages} ${fileName.toLowerCase().endsWith('.pptx') ? '슬라이드' : '페이지/섹션'} 대상` : '문서 전수 분석'})
               </div>
             </div>
           </div>
@@ -389,13 +539,13 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
                   setSelectedEngine('webgpu-0.5b');
                   startAnalysisWithEngine('webgpu-0.5b');
                 }}
-                disabled={isRunning}
+                disabled={isRunning || status.stage === 'queued'}
                 title="Qwen2.5 0.5B (390MB) 초경량 온디바이스 모델"
                 style={{
                   padding: '3px 8px',
                   borderRadius: '4px',
                   border: 'none',
-                  background: selectedEngine === 'webgpu-0.5b' ? 'rgba(16, 185, 129, 0.3)' : 'transparent',
+                  background: selectedEngine === 'webgpu-0.5b' ? 'rgba(16, 185, 129, 0.25)' : 'transparent',
                   color: selectedEngine === 'webgpu-0.5b' ? '#34d399' : '#64748b',
                   fontSize: '10.5px',
                   fontWeight: 600,
@@ -409,14 +559,14 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
                   setSelectedEngine('webgpu-1.5b');
                   startAnalysisWithEngine('webgpu-1.5b');
                 }}
-                disabled={isRunning}
+                disabled={isRunning || status.stage === 'queued'}
                 title="Qwen2.5 1.5B (890MB) 고품질 온디바이스 모델"
                 style={{
                   padding: '3px 8px',
                   borderRadius: '4px',
                   border: 'none',
-                  background: selectedEngine === 'webgpu-1.5b' ? 'rgba(139, 92, 246, 0.3)' : 'transparent',
-                  color: selectedEngine === 'webgpu-1.5b' ? '#c4b5fd' : '#64748b',
+                  background: selectedEngine === 'webgpu-1.5b' ? 'rgba(59, 130, 246, 0.25)' : 'transparent',
+                  color: selectedEngine === 'webgpu-1.5b' ? '#93c5fd' : '#64748b',
                   fontSize: '10.5px',
                   fontWeight: 600,
                   cursor: isRunning ? 'not-allowed' : 'pointer'
@@ -429,14 +579,14 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
                   setSelectedEngine('api');
                   startAnalysisWithEngine('api');
                 }}
-                disabled={isRunning}
+                disabled={isRunning || status.stage === 'queued'}
                 title="로컬 Ollama / 원격 API (DeepSeek/Qwen 7B/14B 등 고성능)"
                 style={{
                   padding: '3px 8px',
                   borderRadius: '4px',
                   border: 'none',
-                  background: selectedEngine === 'api' ? 'rgba(59, 130, 246, 0.3)' : 'transparent',
-                  color: selectedEngine === 'api' ? '#60a5fa' : '#64748b',
+                  background: selectedEngine === 'api' ? 'rgba(6, 182, 212, 0.25)' : 'transparent',
+                  color: selectedEngine === 'api' ? '#67e8f9' : '#64748b',
                   fontSize: '10.5px',
                   fontWeight: 600,
                   cursor: isRunning ? 'not-allowed' : 'pointer'
@@ -454,7 +604,7 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
                   padding: '4px 10px',
                   borderRadius: '4px',
                   border: 'none',
-                  background: activeTab === 'logs' ? '#3b82f6' : 'transparent',
+                  background: activeTab === 'logs' ? '#2563eb' : 'transparent',
                   color: activeTab === 'logs' ? '#fff' : '#94a3b8',
                   fontSize: '11px',
                   fontWeight: 600,
@@ -473,7 +623,7 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
                   padding: '4px 10px',
                   borderRadius: '4px',
                   border: 'none',
-                  background: activeTab === 'report' ? '#8b5cf6' : 'transparent',
+                  background: activeTab === 'report' ? '#0284c7' : 'transparent',
                   color: activeTab === 'report' ? '#fff' : '#94a3b8',
                   fontSize: '11px',
                   fontWeight: 600,
@@ -489,8 +639,31 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
               </button>
             </div>
 
+            {/* 최소화 버튼 (보관함 덱으로 접기) */}
             <button
-              onClick={onClose}
+              onClick={handleMinimize}
+              title="보관함 덱으로 최소화"
+              style={{
+                background: 'rgba(255, 255, 255, 0.06)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: '#cbd5e1',
+                cursor: 'pointer',
+                padding: '4px 8px',
+                borderRadius: '5px',
+                display: 'flex',
+                alignItems: 'center'
+              }}
+            >
+              <Minus size={15} />
+            </button>
+
+            {/* 닫기 버튼 */}
+            <button
+              onClick={() => {
+                closeModal();
+                onClose();
+              }}
+              title="닫기"
               style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}
             >
               <X size={18} />
@@ -515,7 +688,7 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
               alignItems: 'center',
               justifyContent: 'space-between'
             }}>
-              <span>1️⃣ Map: 스트리밍 추출</span>
+              <span>1단계 Map: 스트리밍 추출</span>
               {status.stage === 'extracting' ? <Loader2 size={11} className="animate-spin" /> : status.progressPercent >= 30 ? <Check size={12} /> : null}
             </div>
 
@@ -523,16 +696,16 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
               flex: 1,
               padding: '6px 10px',
               borderRadius: '6px',
-              background: status.stage === 'mapping' || status.stage === 'reducing' ? 'rgba(139, 92, 246, 0.2)' : status.progressPercent >= 80 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.03)',
-              border: status.stage === 'mapping' || status.stage === 'reducing' ? '1px solid #8b5cf6' : status.progressPercent >= 80 ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.06)',
+              background: status.stage === 'mapping' || status.stage === 'reducing' ? 'rgba(59, 130, 246, 0.2)' : status.progressPercent >= 80 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+              border: status.stage === 'mapping' || status.stage === 'reducing' ? '1px solid #3b82f6' : status.progressPercent >= 80 ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.06)',
               fontSize: '10.5px',
               fontWeight: 600,
-              color: status.stage === 'mapping' || status.stage === 'reducing' ? '#c4b5fd' : status.progressPercent >= 80 ? '#34d399' : '#64748b',
+              color: status.stage === 'mapping' || status.stage === 'reducing' ? '#93c5fd' : status.progressPercent >= 80 ? '#34d399' : '#64748b',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between'
             }}>
-              <span>2️⃣ Reduce: 계층형 압축</span>
+              <span>2단계 Reduce: 계층형 압축</span>
               {(status.stage === 'mapping' || status.stage === 'reducing') ? <Loader2 size={11} className="animate-spin" /> : status.progressPercent >= 80 ? <Check size={12} /> : null}
             </div>
 
@@ -540,16 +713,16 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
               flex: 1,
               padding: '6px 10px',
               borderRadius: '6px',
-              background: status.stage === 'synthesizing' ? 'rgba(236, 72, 153, 0.2)' : status.stage === 'done' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.03)',
-              border: status.stage === 'synthesizing' ? '1px solid #ec4899' : status.stage === 'done' ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.06)',
+              background: status.stage === 'synthesizing' ? 'rgba(6, 182, 212, 0.2)' : status.stage === 'done' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.03)',
+              border: status.stage === 'synthesizing' ? '1px solid #06b6d4' : status.stage === 'done' ? '1px solid #10b981' : '1px solid rgba(255, 255, 255, 0.06)',
               fontSize: '10.5px',
               fontWeight: 600,
-              color: status.stage === 'synthesizing' ? '#f472b6' : status.stage === 'done' ? '#34d399' : '#64748b',
+              color: status.stage === 'synthesizing' ? '#67e8f9' : status.stage === 'done' ? '#34d399' : '#64748b',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between'
             }}>
-              <span>3️⃣ Synthesis: 종합 리포트</span>
+              <span>3단계 Synthesis: 종합 리포트</span>
               {status.stage === 'synthesizing' ? <Loader2 size={11} className="animate-spin" /> : status.stage === 'done' ? <Check size={12} /> : null}
             </div>
           </div>
@@ -559,7 +732,7 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
             <div style={{
               width: `${status.progressPercent}%`,
               height: '100%',
-              background: 'linear-gradient(90deg, #ef4444, #f59e0b, #10b981)',
+              background: 'linear-gradient(90deg, #3b82f6, #06b6d4, #10b981)',
               transition: 'width 0.3s ease'
             }} />
           </div>
@@ -583,20 +756,98 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
           fontSize: '12.5px',
           lineHeight: '1.65',
           color: '#e2e8f0',
-          fontFamily: activeTab === 'logs' ? "'JetBrains Mono', Consolas, monospace" : "'Inter', -apple-system, sans-serif"
+          userSelect: 'text',
+          WebkitUserSelect: 'text',
+          fontFamily: activeTab === 'logs' ? "'JetBrains Mono', Consolas, monospace" : "Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
         }}>
-          {activeTab === 'logs' ? (
+          {status.stage === 'queued' ? (
+            /* ── FIFO Process Queue Waiting Screen ── */
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '100%',
+              minHeight: '260px',
+              gap: '14px',
+              textAlign: 'center',
+              padding: '24px'
+            }}>
+              <div style={{
+                width: '56px',
+                height: '56px',
+                borderRadius: '50%',
+                background: 'rgba(59, 130, 246, 0.12)',
+                border: '1.5px solid rgba(59, 130, 246, 0.35)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 0 24px rgba(59, 130, 246, 0.2)'
+              }}>
+                <Loader2 size={28} className="animate-spin" color="#60a5fa" />
+              </div>
+              <div>
+                <div style={{ fontSize: '15px', fontWeight: 700, color: '#f8fafc', marginBottom: '6px' }}>
+                  선입선출(FIFO) 프로세스 큐에서 대기 중
+                </div>
+                <div style={{ fontSize: '12px', color: '#94a3b8', maxWidth: '420px', lineHeight: '1.5' }}>
+                  현재 다른 문서의 AI 맵리듀스 분석이 진행 중입니다.<br/>
+                  이전 작업이 끝나는 즉시 <strong style={{ color: '#60a5fa' }}>대기 순번 #{storeTask?.queuePosition || 1}번</strong>으로 자동 시작됩니다.
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                <button
+                  onClick={() => {
+                    useDocumentSummaryStore.getState().forceStartTask(taskId);
+                    startAnalysisWithEngine(selectedEngine);
+                  }}
+                  style={{
+                    padding: '6px 16px',
+                    borderRadius: '6px',
+                    background: 'linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)',
+                    border: 'none',
+                    color: '#ffffff',
+                    fontSize: '11.5px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    boxShadow: '0 2px 10px rgba(37, 99, 235, 0.3)'
+                  }}
+                >
+                  <Sparkles size={12} />
+                  즉시 분석 시작
+                </button>
+                <button
+                  onClick={handleStop}
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: '6px',
+                    background: 'rgba(239, 68, 68, 0.15)',
+                    border: '1px solid rgba(239, 68, 68, 0.35)',
+                    color: '#fca5a5',
+                    fontSize: '11.5px',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  대기 취소
+                </button>
+              </div>
+            </div>
+          ) : activeTab === 'logs' ? (
             /* Live Execution Log View */
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {logs.length === 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '200px', color: '#64748b', gap: '8px' }}>
-                  <Loader2 size={24} className="animate-spin" color="#8b5cf6" />
+                  <Loader2 size={24} className="animate-spin" color="#3b82f6" />
                   <span>맵리듀스 분석 파이프라인 시동 중...</span>
                 </div>
               ) : (
                 logs.map((log) => {
                   const isExpanded = expandedLogId === log.id;
-                  const stageColor = log.stage === 'extracting' ? '#60a5fa' : log.stage === 'mapping' ? '#a78bfa' : log.stage === 'reducing' ? '#f59e0b' : log.stage === 'synthesizing' ? '#ec4899' : '#10b981';
+                  const stageColor = log.stage === 'extracting' ? '#60a5fa' : log.stage === 'mapping' ? '#38bdf8' : log.stage === 'reducing' ? '#06b6d4' : log.stage === 'synthesizing' ? '#10b981' : '#3b82f6';
                   return (
                     <div
                       key={log.id}
@@ -633,12 +884,12 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
                           marginTop: '6px',
                           padding: '8px 10px',
                           background: 'rgba(0,0,0,0.4)',
+                          border: '1px solid rgba(255,255,255,0.05)',
                           borderRadius: '4px',
-                          border: '1px solid rgba(255,255,255,0.06)',
                           color: '#94a3b8',
                           fontSize: '11px',
                           whiteSpace: 'pre-wrap',
-                          maxHeight: '160px',
+                          maxHeight: '120px',
                           overflowY: 'auto'
                         }}>
                           {log.detail}
@@ -663,7 +914,7 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
                         padding: '3px 8px',
                         borderRadius: '3px',
                         border: 'none',
-                        background: viewMode === 'rendered' ? '#8b5cf6' : 'transparent',
+                        background: viewMode === 'rendered' ? '#2563eb' : 'transparent',
                         color: viewMode === 'rendered' ? '#fff' : '#94a3b8',
                         fontSize: '10px',
                         fontWeight: 600,
@@ -682,7 +933,7 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
                         padding: '3px 8px',
                         borderRadius: '3px',
                         border: 'none',
-                        background: viewMode === 'raw' ? '#8b5cf6' : 'transparent',
+                        background: viewMode === 'raw' ? '#2563eb' : 'transparent',
                         color: viewMode === 'raw' ? '#fff' : '#94a3b8',
                         fontSize: '10px',
                         fontWeight: 600,
@@ -848,7 +1099,7 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
                 onClick={handleInsert}
                 disabled={!reportResult}
                 style={{
-                  background: inserted ? 'rgba(16, 185, 129, 0.85)' : 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
+                  background: inserted ? 'rgba(16, 185, 129, 0.85)' : 'linear-gradient(135deg, #2563eb 0%, #0284c7 100%)',
                   border: 'none',
                   color: '#fff',
                   borderRadius: '5px',
@@ -859,7 +1110,7 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '5px',
-                  boxShadow: '0 2px 12px rgba(139, 92, 246, 0.4)'
+                  boxShadow: '0 2px 12px rgba(59, 130, 246, 0.4)'
                 }}
               >
                 {inserted ? <Check size={13} /> : <FileText size={13} />}

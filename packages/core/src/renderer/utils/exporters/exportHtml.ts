@@ -71,7 +71,7 @@ function inlineToHTML(inline: NormalizedInlineContent[] | any): string {
     if (c.styles?.underline) txt = `<u>${txt}</u>`
     if (c.styles?.strike) txt = `<del>${txt}</del>`
     if (c.styles?.textColor) txt = `<span style="color:${c.styles.textColor}">${txt}</span>`
-    if (c.type === 'link') txt = `<a href="${c.text}" style="color:#8b5cf6">${txt}</a>`
+    if (c.type === 'link') txt = `<a href="${c.text}" style="color:#2563eb">${txt}</a>`
     return txt
   }).join('')
 }
@@ -112,14 +112,14 @@ export async function blocksToHTML(rawBlocks: any): Promise<string> {
     ul, ol { padding-left: 1.6rem; margin-bottom: 1rem; }
     li { margin-bottom: 0.4rem; }
     pre { background: #0f172a; border-radius: 10px; padding: 20px 24px; overflow-x: auto; margin: 1.2rem 0; border: 1px solid #1e293b; }
-    code { font-family: 'JetBrains Mono', 'Consolas', monospace; font-size: 13px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #7c3aed; }
+    code { font-family: 'JetBrains Mono', 'Consolas', monospace; font-size: 13px; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #2563eb; }
     pre code { background: transparent; padding: 0; color: #a3e635; font-size: 13px; white-space: pre; line-height: 1.65; }
     .lang-badge { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 10px; }
     table { border-collapse: collapse; width: 100%; margin: 1.2rem 0; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
     th { background: #f8fafc; font-weight: 700; padding: 11px 16px; text-align: left; font-size: 13px; border-bottom: 2px solid #e5e7eb; }
     td { padding: 10px 16px; font-size: 14px; border-bottom: 1px solid #f1f5f9; }
     tr:last-child td { border-bottom: none; }
-    blockquote { border-left: 4px solid #8b5cf6; padding: 12px 20px; background: #faf5ff; border-radius: 0 8px 8px 0; margin: 1rem 0; }
+    blockquote { border-left: 4px solid #2563eb; padding: 12px 20px; background: #faf5ff; border-radius: 0 8px 8px 0; margin: 1rem 0; }
     img { max-width: 100%; border-radius: 8px; margin: 1rem 0; }
     hr { border: none; border-top: 1px solid #e5e7eb; margin: 2rem 0; }
     @media print { body { font-size: 12pt; } .doc-container { padding: 0; } }

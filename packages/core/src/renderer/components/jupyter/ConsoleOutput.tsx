@@ -93,9 +93,9 @@ export function ConsoleOutput({
             <button
               onClick={onAskAgent}
               style={{
-                background: 'rgba(139, 92, 246, 0.15)',
-                border: '1px solid rgba(139, 92, 246, 0.4)',
-                color: '#c4b5fd',
+                background: 'rgba(59, 130, 246, 0.15)',
+                border: '1px solid rgba(59, 130, 246, 0.4)',
+                color: '#93c5fd',
                 borderRadius: '4px',
                 padding: '2px 8px',
                 fontSize: '9.5px',
@@ -128,7 +128,7 @@ export function ConsoleOutput({
             <thead>
               <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.03)' }}>
                 {tableData.columns.map((col: string, i: number) => (
-                  <th key={i} style={{ padding: '6px 10px', fontWeight: 'bold', color: '#a78bfa' }}>{col}</th>
+                  <th key={i} style={{ padding: '6px 10px', fontWeight: 'bold', color: '#38bdf8' }}>{col}</th>
                 ))}
               </tr>
             </thead>

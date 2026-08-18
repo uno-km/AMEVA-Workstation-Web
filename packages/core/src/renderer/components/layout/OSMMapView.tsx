@@ -393,11 +393,11 @@ export function OSMMapView() {
           }}
           style={{
             width: '100%', padding: '8px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold',
-            background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)',
+            background: 'rgba(59, 130, 246,0.15)', border: '1px solid rgba(59, 130, 246,0.3)',
             color: 'var(--primary)', cursor: 'pointer', textAlign: 'center', transition: 'background 0.2s'
           }}
-          onMouseEnter={e => e.currentTarget.style.background = 'rgba(139,92,246,0.25)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'rgba(139,92,246,0.15)'}
+          onMouseEnter={e => e.currentTarget.style.background = 'rgba(59, 130, 246,0.25)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'rgba(59, 130, 246,0.15)'}
         >
           글 본문에 지도 블록 삽입
         </button>

@@ -103,7 +103,7 @@ export function BaseModal({
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
-        boxShadow: '0 25px 60px rgba(139, 92, 246, 0.35)',
+        boxShadow: '0 25px 60px rgba(59, 130, 246, 0.3)',
         color: 'var(--text-main)',
         ...style
       }}

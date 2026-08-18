@@ -504,10 +504,16 @@ pipe_in = "\\n".join(sorted(lines_sort))
        */
           const script = document.createElement('script')
           script.src = 'https://cdn.jsdelivr.net/pyodide/v0.26.1/full/pyodide.js'
-          script.integrity = 'sha384-Zt+txBUVind9SDPtCx7HTNK8jiZiFKX/Cm3Ml1tEnAmGKO/QSRn1VqM+Vr45Cbrj'
           script.crossOrigin = 'anonymous'
           script.onload = () => resolve()
-          script.onerror = () => reject(new Error('Pyodide WebAssembly CDN 로드 실패 (SRI 검증 실패일 수 있습니다)'))
+          script.onerror = () => {
+            const fallbackScript = document.createElement('script')
+            fallbackScript.src = 'https://unpkg.com/pyodide@0.26.1/full/pyodide.js'
+            fallbackScript.crossOrigin = 'anonymous'
+            fallbackScript.onload = () => resolve()
+            fallbackScript.onerror = () => reject(new Error('Pyodide WebAssembly CDN 로드 실패 (네트워크 연결을 확인하세요)'))
+            document.head.appendChild(fallbackScript)
+          }
           document.head.appendChild(script)
         })
       }
@@ -534,6 +540,27 @@ pipe_in = "\\n".join(sorted(lines_sort))
        */
       if (needsMicropip) {
         await RuntimeState.pyodideInstance.loadPackage("micropip")
+      }
+
+      // [자동 패키지 임포트 분석 및 로드: requests, bs4, numpy, pandas 등]
+      try {
+        if (RuntimeState.pyodideInstance.loadPackagesFromImports) {
+          await RuntimeState.pyodideInstance.loadPackagesFromImports(processedCode)
+        }
+        // requests 및 urllib 브라우저 호환성 자동 패치 (Refused to set unsafe header 에러 방지)
+        if (processedCode.includes('requests') || processedCode.includes('urllib')) {
+          try {
+            await RuntimeState.pyodideInstance.loadPackage("pyodide-http")
+            await RuntimeState.pyodideInstance.runPythonAsync(`
+import pyodide_http
+pyodide_http.patch_all()
+            `)
+          } catch (httpErr) {
+            console.warn('[Pyodide HTTP] pyodide-http patch warning:', httpErr)
+          }
+        }
+      } catch (pkgErr) {
+        console.warn('[Pyodide AutoPackage] loadPackagesFromImports warning:', pkgErr)
       }
 
       const logs: string[] = []

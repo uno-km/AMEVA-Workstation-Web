@@ -36,7 +36,7 @@
 // [외부 패키지 및 라이브러리 임포트: react]
 import { useState, useEffect } from 'react'
 // [외부 패키지 및 라이브러리 임포트: lucide-react]
-import { Terminal, Eye, EyeOff, ChevronDown } from 'lucide-react'
+import { Terminal, Eye, EyeOff, ChevronDown, Sparkles } from 'lucide-react'
 // [외부 패키지 및 라이브러리 임포트: mermaid]
 import mermaid from 'mermaid'
 // [내부 프로젝트 의존성 모듈 임포트: ./langMeta]
@@ -44,26 +44,23 @@ import { getLangMeta } from './langMeta'
 // [내부 프로젝트 의존성 모듈 임포트: ./RunState]
 import { type RunState } from './RunState'
 
-  /*
-   * [FUNCTION CONTRACT]
-   * - 함수 명: `JupyterCodeEditorTerminal`
-   * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
-   * - 예시: `JupyterCodeEditorTerminal(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
-   */
 /**
  * JupyterCodeEditorTerminal 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
 export function JupyterCodeEditorTerminal({
   language,
   runState,
   code,
   blockId,
+  onAIFix,
+  isFixing = false,
 }: {
   language: string
   runState?: RunState
   code: string
   blockId: string
+  onAIFix?: (errorLog: string) => void
+  isFixing?: boolean
 }) {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -246,16 +243,48 @@ export function JupyterCodeEditorTerminal({
               <Terminal size={12} />
               Output
             </span>
-            {runState.success !== null && (
-              <span style={{
-                color: runState.success ? '#10b981' : '#f43f5e',
-                background: runState.success ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)',
-                border: `1px solid ${runState.success ? '#10b98133' : '#f43f5e33'}`,
-                padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold'
-              }}>
-                {runState.success ? 'Success' : 'Error'}
-              </span>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {runState.success === false && onAIFix && (
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const errorLog = runState.outputLines.filter(l => l.type === 'stderr').map(l => l.text).join('\n') || runState.outputLines.map(l => l.text).join('\n');
+                    onAIFix(errorLog);
+                  }}
+                  disabled={isFixing}
+                  title="AI로 이 에러의 원인을 진단하고 코드를 자동으로 수정합니다."
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    background: isFixing ? 'rgba(239, 68, 68, 0.3)' : 'linear-gradient(135deg, rgba(239, 68, 68, 0.25) 0%, rgba(220, 38, 38, 0.35) 100%)',
+                    border: '1px solid rgba(248, 113, 113, 0.6)',
+                    color: '#fecaca',
+                    borderRadius: '4px',
+                    padding: '2px 8px',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    cursor: isFixing ? 'wait' : 'pointer',
+                    boxShadow: '0 0 10px rgba(239, 68, 68, 0.35)',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  <Sparkles size={10} color="#f87171" className={isFixing ? 'animate-spin' : ''} />
+                  {isFixing ? 'AI 코드 수정 중...' : '🛠️ AI 에러 즉시 해결'}
+                </button>
+              )}
+              {runState.success !== null && (
+                <span style={{
+                  color: runState.success ? '#10b981' : '#f43f5e',
+                  background: runState.success ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)',
+                  border: `1px solid ${runState.success ? '#10b98133' : '#f43f5e33'}`,
+                  padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold'
+                }}>
+                  {runState.success ? 'Success' : 'Error'}
+                </span>
+              )}
+            </div>
           </div>
           <div style={{
             padding: isCollapsed ? '0px 16px' : '12px 16px',
@@ -342,7 +371,7 @@ export function JupyterCodeEditorTerminal({
                 <thead>
                   <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.03)' }}>
                     {runState.tableData.columns.map((col: string, i: number) => (
-                      <th key={i} style={{ padding: '8px 12px', fontWeight: 'bold', color: '#a78bfa' }}>{col}</th>
+                      <th key={i} style={{ padding: '8px 12px', fontWeight: 'bold', color: '#38bdf8' }}>{col}</th>
                     ))}
                   </tr>
                 </thead>
@@ -387,7 +416,9 @@ export function JupyterCodeEditorTerminal({
             Live HTML Renderer Sandbox
           </div>
           <iframe
-            srcDoc={code}
+            srcDoc={code && (code.includes('loadPyodide') || code.includes('pyodide.js'))
+              ? (code.includes('cdn.jsdelivr.net/pyodide') ? code : `<script src="https://cdn.jsdelivr.net/pyodide/v0.26.1/full/pyodide.js"></script>\n${code.replace(/src=["'](?:(?:\.\/)?pyodide\.js|https?:\/\/[^"']*pyodide\.js)["']/g, 'src="https://cdn.jsdelivr.net/pyodide/v0.26.1/full/pyodide.js"')}`)
+              : code}
             title="HTML Preview Sandbox"
             sandbox="allow-scripts allow-modals"
             style={{

@@ -3,57 +3,15 @@
  * @file JupyterCodeEditorHeader.tsx
  * @description JupyterCodeEditorHeader.tsx 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
  * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
- * @example
- * // 예시 로직 (자동 생성됨)
- * import { something } from './JupyterCodeEditorHeader';
- * 
- * @created 2026-08-10 20:30:36
- * @updated 2026-08-10 20:30:36
- * @author uno-km
- * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
  * ============================================================================
  */
 
-/**
- * @file JupyterCodeEditorHeader.tsx
- * @system AMEVA OS Desktop Workstation
- * @location src/renderer/components/jupyter/JupyterCodeEditorHeader.tsx
- * @role Core module helper and integration logic
- * 
- * [소비처 - CONSUMERS / USAGE CONTEXT]
- * - 소비처 A (src/renderer/AppLayout.tsx): 레이아웃 그리드 내부 또는 플로팅 레이어 영역 내에서 그리기로 소비.
- * - 소비처 B (src/renderer/App.tsx): 전역 모달 매니저 및 뷰포트 상태 스위칭에 따라 동적 마운트되어 소비.
- * 
- * [책임 범위 - RESPONSIBILITY]
- * - 본 파일은 AMEVA 시스템 내에서 도메인 목적에 부합하는 연산 및 데이터 처리 흐름을 안전하게 캡슐화한다.
- * - 외부 라이브러리 및 하위 종속성을 조율하고 결과 규격을 일관되게 제공한다.
- * 
- * [절대 깨면 안 되는 계약 - CONTRACT]
- * - MUST: 모든 예외 발생 시 에러를 침묵시키지 말고 에러 로그를 명확하게 남길 것.
- * - MUST NOT: TypeScript any 형식을 우회 수단으로 함부로 선언하지 말 것.
- */
-
-// [외부 패키지 및 라이브러리 임포트: react]
 import { useState } from 'react'
-// [외부 패키지 및 라이브러리 임포트: lucide-react]
-import { Play, Copy, ChevronDown } from 'lucide-react'
-// [내부 프로젝트 의존성 모듈 임포트: ../../editor/amevaBlockSchema]
+import { Play, Copy, ChevronDown, Sparkles, Eye, Code2, Columns } from 'lucide-react'
 import { type AmevaEditor } from '../../editor/amevaBlockSchema'
-// [내부 프로젝트 의존성 모듈 임포트: ../../hooks/useCodeRuntime]
 import { useCodeRuntime } from '../../hooks/useCodeRuntime'
-// [내부 프로젝트 의존성 모듈 임포트: ./langMeta]
 import { getLangMeta } from './langMeta'
 
-  /*
-   * [FUNCTION CONTRACT]
-   * - 함수 명: `JupyterCodeEditorHeader`
-   * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
-   * - 예시: `JupyterCodeEditorHeader(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
-   */
-/**
- * JupyterCodeEditorHeader 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 export function JupyterCodeEditorHeader({
   code,
   language,
@@ -64,6 +22,11 @@ export function JupyterCodeEditorHeader({
   onRunFailure,
   isInputCollapsed = false,
   onToggleInputCollapse,
+  isAIOpen = false,
+  onToggleAI,
+  isAIGenerating = false,
+  previewMode = 'preview',
+  onTogglePreviewMode,
 }: {
   code: string
   language: string
@@ -74,46 +37,23 @@ export function JupyterCodeEditorHeader({
   onRunFailure: (errMessage: string) => void
   isInputCollapsed?: boolean
   onToggleInputCollapse?: () => void
+  isAIOpen?: boolean
+  onToggleAI?: () => void
+  isAIGenerating?: boolean
+  previewMode?: 'preview' | 'code' | 'split'
+  onTogglePreviewMode?: (mode: 'preview' | 'code' | 'split') => void
 }) {
   const { isRunning, runJSCode, runPythonCode, runSQLCode } = useCodeRuntime()
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `meta`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const meta = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const meta = getLangMeta(language)
   const [copied, setCopied] = useState(false)
 
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `handleRun`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const handleRun = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const handleRun = async () => {
     onRunStart()
     try {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `language === 'html'`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (language === 'html')` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
       if (language === 'html') {
         onRunSuccess(true, ['렌더링 완료'])
         return
       }
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `result`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const result = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
       const result = (language === 'python' || language === 'py')
         ? await runPythonCode(code)
         : (language === 'sql')
@@ -125,13 +65,6 @@ export function JupyterCodeEditorHeader({
     }
   }
 
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `handleCopy`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const handleCopy = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(code)
@@ -140,13 +73,6 @@ export function JupyterCodeEditorHeader({
     } catch {}
   }
 
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `accentColor`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const accentColor = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const accentColor = meta.color
 
   return (
@@ -158,16 +84,17 @@ export function JupyterCodeEditorHeader({
         gap: '8px',
         padding: '0 12px',
         height: '100%',
-        background: '#161821',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        background: '#161b26',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
         borderTopLeftRadius: '8px',
         borderTopRightRadius: '8px',
         userSelect: 'none',
         boxSizing: 'border-box',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        WebkitFontSmoothing: 'antialiased',
       }}
     >
-      {/* 븡어빵틀 접기/펴기 (Chevron 토글) */}
+      {/* 코드 영역 접기/펼치기 */}
       {onToggleInputCollapse && (
         <button
           onClick={onToggleInputCollapse}
@@ -175,9 +102,9 @@ export function JupyterCodeEditorHeader({
           style={{
             background: 'transparent',
             border: 'none',
-            color: '#9ca3af',
+            color: '#94a3b8',
             cursor: 'pointer',
-            padding: '2px',
+            padding: '4px',
             marginRight: '2px',
             display: 'flex',
             alignItems: 'center',
@@ -186,7 +113,7 @@ export function JupyterCodeEditorHeader({
           }}
         >
           <ChevronDown
-            size={14}
+            size={15}
             style={{
               transform: isInputCollapsed ? 'rotate(-90deg)' : 'none',
               transition: 'transform 0.2s ease',
@@ -195,18 +122,19 @@ export function JupyterCodeEditorHeader({
         </button>
       )}
 
+      {/* 언어 선택 셀렉터 */}
       <div style={{
-        fontSize: '11px',
+        fontSize: '11.5px',
         fontWeight: 700,
         color: accentColor,
         display: 'flex',
         alignItems: 'center',
         gap: '6px',
-        fontFamily: '"JetBrains Mono","Fira Code","Cascadia Code",monospace',
+        fontFamily: 'Consolas, "JetBrains Mono", monospace',
       }}>
         <span style={{
-          width: '6px',
-          height: '6px',
+          width: '7px',
+          height: '7px',
           borderRadius: '50%',
           backgroundColor: accentColor,
           display: 'inline-block'
@@ -214,13 +142,6 @@ export function JupyterCodeEditorHeader({
         <select
           value={language}
           onChange={(e) => {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `val`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const val = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
             const val = e.target.value
             editor.updateBlock(blockId, {
               type: 'jupyter' as any,
@@ -236,18 +157,18 @@ export function JupyterCodeEditorHeader({
             color: accentColor,
             border: 'none',
             outline: 'none',
-            fontSize: '11px',
+            fontSize: '11.5px',
             fontWeight: 700,
             cursor: 'pointer',
             textTransform: 'uppercase',
             letterSpacing: '0.8px',
-            fontFamily: '"JetBrains Mono","Fira Code",monospace',
+            fontFamily: 'Consolas, "JetBrains Mono", monospace',
             padding: '2px 4px',
             borderRadius: '4px',
             transition: 'background 0.2s',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.background = 'transparent'
@@ -257,15 +178,137 @@ export function JupyterCodeEditorHeader({
           <option value="python" style={{ background: '#12131a', color: '#3b82f6' }}>Python</option>
           <option value="sql" style={{ background: '#12131a', color: '#06b6d4' }}>SQL (SQLite)</option>
           <option value="html" style={{ background: '#12131a', color: '#14b8a6' }}>HTML Sandbox</option>
-          <option value="mermaid" style={{ background: '#12131a', color: '#8b5cf6' }}>Mermaid</option>
-          <option value="plaintext" style={{ background: '#12131a', color: '#6b7280' }}>Plaintext</option>
-          <option value="text" style={{ background: '#12131a', color: '#6b7280' }}>Text</option>
+          <option value="mermaid" style={{ background: '#12131a', color: '#2563eb' }}>Mermaid</option>
+          <option value="plaintext" style={{ background: '#12131a', color: '#94a3b8' }}>Plaintext</option>
+          <option value="text" style={{ background: '#12131a', color: '#94a3b8' }}>Text</option>
           <option value="json" style={{ background: '#12131a', color: '#10b981' }}>JSON</option>
           <option value="bash" style={{ background: '#12131a', color: '#ec4899' }}>Bash</option>
         </select>
       </div>
 
+      {/* Mermaid / HTML 전용 뷰 모드 토글 (다이어그램 / 코드 / 분할) */}
+      {(meta.isMermaid || meta.isHtml) && onTogglePreviewMode && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          background: '#0d1117',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          borderRadius: '5px',
+          padding: '2px',
+          gap: '2px',
+          marginLeft: '4px'
+        }}>
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onTogglePreviewMode('preview')
+            }}
+            title={meta.isMermaid ? '다이어그램 렌더링 뷰' : 'HTML 렌더링 뷰'}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              background: previewMode === 'preview' ? '#2563eb' : 'transparent',
+              color: previewMode === 'preview' ? '#ffffff' : '#94a3b8',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '2px 8px',
+              fontSize: '11px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <Eye size={11} />
+            {meta.isMermaid ? '다이어그램' : '미리보기'}
+          </button>
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onTogglePreviewMode('code')
+            }}
+            title="소스코드 편집 뷰"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              background: previewMode === 'code' ? '#2563eb' : 'transparent',
+              color: previewMode === 'code' ? '#ffffff' : '#94a3b8',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '2px 8px',
+              fontSize: '11px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <Code2 size={11} />
+            코드
+          </button>
+          <button
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              onTogglePreviewMode('split')
+            }}
+            title="코드 및 다이어그램 분할 뷰"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              background: previewMode === 'split' ? '#2563eb' : 'transparent',
+              color: previewMode === 'split' ? '#ffffff' : '#94a3b8',
+              border: 'none',
+              borderRadius: '4px',
+              padding: '2px 8px',
+              fontSize: '11px',
+              fontWeight: 700,
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <Columns size={11} />
+            분할
+          </button>
+        </div>
+      )}
+
+      {/* 우측 액션 버튼들 */}
       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {/* ✨ AI 어시스턴트 토글 버튼 */}
+        <button
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            onToggleAI?.()
+          }}
+          title={isAIOpen ? 'AI 패널 닫기' : 'AI 인텔리전스 (코드 자동생성, 에러 수정, 복잡도 최적화, 해설)'}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '5px',
+            background: isAIOpen
+              ? 'linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)'
+              : 'rgba(59, 130, 246, 0.15)',
+            border: `1px solid ${isAIOpen ? '#38bdf8' : 'rgba(59, 130, 246, 0.35)'}`,
+            color: isAIOpen ? '#ffffff' : '#93c5fd',
+            borderRadius: '5px',
+            padding: '4px 10px',
+            fontSize: '11.5px',
+            fontWeight: 700,
+            cursor: 'pointer',
+            boxShadow: isAIOpen ? '0 2px 8px rgba(37, 99, 235, 0.4)' : 'none',
+            transition: 'all 0.15s ease',
+          }}
+        >
+          <Sparkles size={12} color={isAIOpen ? '#ffffff' : '#38bdf8'} />
+          AI {isAIGenerating ? '생성 중...' : '어시스턴트'}
+        </button>
+
+        {/* 실행 버튼 */}
         {meta.runnable && (
           <button
             onClick={(e) => {
@@ -278,23 +321,24 @@ export function JupyterCodeEditorHeader({
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              background: isRunning ? 'rgba(255, 255, 255, 0.1)' : accentColor,
-              color: '#fff',
+              background: isRunning ? '#475569' : accentColor,
+              color: '#ffffff',
               border: 'none',
-              borderRadius: '4px',
-              padding: '4px 10px',
-              fontSize: '11px',
+              borderRadius: '5px',
+              padding: '4px 12px',
+              fontSize: '11.5px',
               fontWeight: 700,
               cursor: isRunning ? 'not-allowed' : 'pointer',
               boxShadow: isRunning ? 'none' : `0 2px 8px ${accentColor}40`,
               transition: 'all 0.15s ease',
             }}
           >
-            <Play size={10} fill="#fff" />
+            <Play size={10} fill="#ffffff" />
             Run
           </button>
         )}
 
+        {/* 복사 버튼 */}
         <button
           onClick={(e) => {
             e.preventDefault()
@@ -306,14 +350,14 @@ export function JupyterCodeEditorHeader({
             display: 'inline-flex',
             alignItems: 'center',
             gap: '5px',
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            borderRadius: '4px',
+            background: 'rgba(255, 255, 255, 0.08)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            borderRadius: '5px',
             padding: '4px 10px',
-            fontSize: '11px',
-            fontWeight: 700,
+            fontSize: '11.5px',
+            fontWeight: 600,
             cursor: 'pointer',
-            color: copied ? '#10b981' : '#e5e7eb',
+            color: copied ? '#34d399' : '#f1f5f9',
             transition: 'all 0.15s ease',
           }}
         >
@@ -324,4 +368,3 @@ export function JupyterCodeEditorHeader({
     </div>
   )
 }
-

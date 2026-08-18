@@ -205,3 +205,44 @@ export async function blobToBase64(blob: Blob): Promise<string> {
   })
 }
 
+/**
+ * Formats a byte number into a human-readable string (B, KB, MB, GB, TB).
+ */
+export function formatBytes(bytes: number, decimals: number = 2): string {
+  if (bytes === 0) return '0 B'
+  if (isNaN(bytes) || bytes < 0) return '0 B'
+  const k = 1024
+  const dm = decimals < 0 ? 0 : decimals
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  const safeIndex = Math.min(i, sizes.length - 1)
+  return `${parseFloat((bytes / Math.pow(k, safeIndex)).toFixed(dm))} ${sizes[safeIndex]}`
+}
+
+/**
+ * Universal safe clipboard copy with fallback
+ */
+export async function copyToClipboard(text: string): Promise<boolean> {
+  if (!text) return false
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+      return true
+    }
+    const textArea = document.createElement('textarea')
+    textArea.value = text
+    textArea.style.position = 'fixed'
+    textArea.style.left = '-9999px'
+    document.body.appendChild(textArea)
+    textArea.focus()
+    textArea.select()
+    const successful = document.execCommand('copy')
+    document.body.removeChild(textArea)
+    return successful
+  } catch (err) {
+    console.warn('[appUtils] copyToClipboard failed:', err)
+    return false
+  }
+}
+
+

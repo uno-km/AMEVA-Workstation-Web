@@ -59,7 +59,7 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
       maxHeight: 'calc(100vh - 120px)',
       overflowY: 'auto',
       background: '#1e1e24',
-      border: '1px solid rgba(139, 92, 246, 0.4)',
+      border: '1px solid rgba(59, 130, 246, 0.4)',
       borderRadius: '8px',
       padding: '12px',
       zIndex: 100,
@@ -201,7 +201,7 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
         {/* System Prompt & Persona Customization Section */}
         <div style={{ marginTop: '4px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span style={{ fontWeight: 700, color: '#a78bfa', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ fontWeight: 700, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Sparkles size={11} /> 시스템 프롬프트 & 페르소나
             </span>
             <button
@@ -242,10 +242,10 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
                   setTimeout(() => setPromptSavedAlert(false), 1500);
                 }}
                 style={{
-                  background: customPersona.trim() === p.persona.trim() ? 'rgba(167, 139, 250, 0.25)' : 'rgba(255, 255, 255, 0.05)',
-                  border: customPersona.trim() === p.persona.trim() ? '1px solid #a78bfa' : '1px solid rgba(255, 255, 255, 0.1)',
+                  background: customPersona.trim() === p.persona.trim() ? 'rgba(59, 130, 246, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                  border: customPersona.trim() === p.persona.trim() ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.1)',
                   borderRadius: '4px',
-                  color: customPersona.trim() === p.persona.trim() ? '#c4b5fd' : '#94a3b8',
+                  color: customPersona.trim() === p.persona.trim() ? '#93c5fd' : '#94a3b8',
                   padding: '2px 6px',
                   fontSize: '9.5px',
                   fontWeight: 600,

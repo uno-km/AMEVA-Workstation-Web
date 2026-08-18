@@ -76,7 +76,7 @@ export default defineConfig({
             if (id.includes('@mlc-ai') || id.includes('@xenova') || id.includes('onnxruntime')) {
               return 'ml-vendor';
             }
-            if (id.includes('pdfjs-dist') || id.includes('pdf-lib') || id.includes('pdf-parse')) {
+            if (id.includes('pdfjs-dist') || id.includes('pdf-lib')) {
               return 'pdf-vendor';
             }
             if (id.includes('recharts') || id.includes('mermaid') || id.includes('exceljs')) {

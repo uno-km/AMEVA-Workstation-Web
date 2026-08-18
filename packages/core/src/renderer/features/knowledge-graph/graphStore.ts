@@ -85,7 +85,7 @@ export const graphStore = {
       vx: 0,
       vy: 0,
       size: 24,
-      color: '#8b5cf6', // 보라색 (Root)
+      color: '#2563eb', // 보라색 (Root)
       nodeType: 'root',
       summary: `총 ${chunks.length}개 청크로 구성된 문서`
     });

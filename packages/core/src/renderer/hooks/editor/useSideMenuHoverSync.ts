@@ -34,8 +34,9 @@ import { useEffect } from 'react'
  */
 export function useSideMenuHoverSync() {
   /**
-   * [SIDE EFFECT - Global Mouse Move Hijacker]
-   * - Rationale: 마우스 무브를 감지하여 플로팅 메뉴 포털 호버 좌표를 캡처한다.
+   * [SIDE EFFECT - Global Mouse Move Hijacker with rAF Throttling]
+   * - Rationale: 마우스 무브를 감지하여 플로팅 메뉴 포털 호버 좌표를 캡처하되,
+   *   requestAnimationFrame으로 배칭하여 매 픽셀마다 발생하는 동기식 Reflow(Layout Thrashing)를 원천 차단한다.
    */
   useEffect(() => {
     /*
@@ -43,49 +44,28 @@ export function useSideMenuHoverSync() {
      * - lastHoveredBlock: 이전 턴에 임시로 hover 속성을 받았던 DOM 블록 노드 캐시 변수.
      */
     let lastHoveredBlock: Element | null = null
+    let rafId: number | null = null
+    let latestEvent: MouseEvent | null = null
 
-    // 마우스 무브 이벤트 핸들러
-    const handleSideMenuHover = (e: MouseEvent) => {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `target`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const target = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-      const target = e.target as HTMLElement
+    const processHover = () => {
+      rafId = null
+      if (!latestEvent) return
+      const e = latestEvent
+      latestEvent = null
+
+      const target = e.target as HTMLElement | null
+      if (!target) return
       
       // 마우스가 BlockNote의 플로팅 [+] 단추나 드래그 핸들 단추 위에 올라가 있는지 감지
       const isSideMenu = target.closest('.bn-side-menu') || target.closest('button[data-test-id="side-menu-button"]') || target.closest('button[data-test-id="drag-handle"]')
       
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `isSideMenu`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (isSideMenu)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
       if (isSideMenu) {
         // Rationale: 사이드 버튼 위치에서 우측으로 60px 이동(본문 영역 내부)한 지점의 실제 블록 요소를 역캡처
         const el = document.elementFromPoint(e.clientX + 60, e.clientY)
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `blockOuter`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const blockOuter = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
         const blockOuter = el?.closest('.bn-block-outer')
         
         // 새로 감지된 블록 노드가 이전 노드와 다를 때 속성 교체 주입
         if (blockOuter && lastHoveredBlock !== blockOuter) {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `lastHoveredBlock) lastHoveredBlock.removeAttribute('data-bn-hover-sync'`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (lastHoveredBlock) lastHoveredBlock.removeAttribute('data-bn-hover-sync')` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
           if (lastHoveredBlock) lastHoveredBlock.removeAttribute('data-bn-hover-sync')
           blockOuter.setAttribute('data-bn-hover-sync', 'true')
           lastHoveredBlock = blockOuter
@@ -99,19 +79,21 @@ export function useSideMenuHoverSync() {
       }
     }
 
-    // 전역 감청 등록
-    window.addEventListener('mousemove', handleSideMenuHover)
+    // 마우스 무브 이벤트 핸들러 (rAF 스케줄러)
+    const handleSideMenuHover = (e: MouseEvent) => {
+      latestEvent = e
+      if (rafId === null) {
+        rafId = requestAnimationFrame(processHover)
+      }
+    }
+
+    // 전역 감청 등록 (passive: true로 스크롤/이벤트 루프 지연 방지)
+    window.addEventListener('mousemove', handleSideMenuHover, { passive: true })
     
     // CONTRACT: 소멸 시 리스너 해제 및 스타일 복구
     return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId)
       window.removeEventListener('mousemove', handleSideMenuHover)
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `lastHoveredBlock) lastHoveredBlock.removeAttribute('data-bn-hover-sync'`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (lastHoveredBlock) lastHoveredBlock.removeAttribute('data-bn-hover-sync')` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
       if (lastHoveredBlock) lastHoveredBlock.removeAttribute('data-bn-hover-sync')
     }
   }, [])

@@ -35,7 +35,7 @@
   width: 20px;
   height: 20px;
   color: var(--primary);
-  filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.4));
+  filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.4));
   transition: transform 0.3s ease;
 }
 
@@ -253,7 +253,7 @@
 
 .google-popover-btn-primary:hover {
   background: var(--primary-glow);
-  box-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
 }
 
 .google-popover-btn-secondary {

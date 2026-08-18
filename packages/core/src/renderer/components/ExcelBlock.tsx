@@ -55,6 +55,7 @@ const ExcelBlockSpec = createReactBlockSpec(
   {
     render: (props) => {
       const workbookRef = useRef<any>(null)
+      const saveTimeoutRef = useRef<any>(null)
       const [isFullScreen, setIsFullScreen] = useState(false)
       const [isMounted, setIsMounted] = useState(false)
 
@@ -101,7 +102,8 @@ const ExcelBlockSpec = createReactBlockSpec(
       })
 
       const handleSave = (latestData?: any) => {
-        setTimeout(() => {
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+        saveTimeoutRef.current = setTimeout(() => {
           try {
             let allData = latestData
             if (!allData || !Array.isArray(allData)) {
@@ -151,7 +153,12 @@ const ExcelBlockSpec = createReactBlockSpec(
       useEffect(() => {
         const forceSave = () => handleSave()
         window.addEventListener('AMEVA_FORCE_SAVE_BLOCKS', forceSave as EventListener)
-        return () => window.removeEventListener('AMEVA_FORCE_SAVE_BLOCKS', forceSave as EventListener)
+        return () => {
+          window.removeEventListener('AMEVA_FORCE_SAVE_BLOCKS', forceSave as EventListener)
+          if (saveTimeoutRef.current) {
+            clearTimeout(saveTimeoutRef.current)
+          }
+        }
       }, [handleSave])
 
       const handleExportTable = async () => {

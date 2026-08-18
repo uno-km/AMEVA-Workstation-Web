@@ -33,6 +33,7 @@ import { useState, useEffect, useCallback } from 'react'
  * - DocumentSnapshot: 정제 복원된 스냅샷 객체 규격.
  */
 import type { DocumentSnapshot } from '../../shared/types'
+import { computeLineDiff } from '../utils/diffUtils'
 
 // IndexedDB 저장소 스펙 설정 상수
 const DB_NAME = 'AMEVA_Markdown_Editor_DB'
@@ -500,98 +501,7 @@ export function useHistory(documentId: string) {
    * - Rationale: 이전 복원 텍스트와 현 버퍼 문자열 간의 줄단위 변경(added, removed, unchanged) 구조 배열을 반환한다.
    */
   const getLineDiff = (oldText: string, newText: string) => {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `oldLines`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const oldLines = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-    const oldLines = oldText.split('\n')
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `newLines`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const newLines = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-    const newLines = newText.split('\n')
-    const diffs: { type: 'added' | 'removed' | 'unchanged'; value: string }[] = []
-
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `i`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const i = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-    let i = 0
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `j`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const j = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-    let j = 0
-
-      /*
-       * [LOOP CONTROL ITERATION]
-       * - 루프 조건: `while (i < oldLines.length || j < newLines.length) {`
-       * - 예상 시나리오: 지정된 조건 한계 도달 시점까지 콜렉션 항목의 순차 매핑, 변환 및 동기 적재 처리를 수행함.
-       * - 예시: `for (const item of list)` 루프 실행 시 모든 개별 블록의 html 포맷 정제 완료 후 스택 종결.
-       */
-    while (i < oldLines.length || j < newLines.length) {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `i < oldLines.length && j < newLines.length`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (i < oldLines.length && j < newLines.length)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-      if (i < oldLines.length && j < newLines.length) {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `oldLines[i] === newLines[j]`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (oldLines[i] === newLines[j])` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-        if (oldLines[i] === newLines[j]) {
-          diffs.push({ type: 'unchanged', value: oldLines[i] })
-          i++
-          j++
-        } else {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `oldLines[i + 1] === newLines[j]`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (oldLines[i + 1] === newLines[j])` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-          if (oldLines[i + 1] === newLines[j]) {
-            diffs.push({ type: 'removed', value: oldLines[i] })
-            i++
-          } else if (oldLines[i] === newLines[j + 1]) {
-            diffs.push({ type: 'added', value: newLines[j] })
-            j++
-          } else {
-            diffs.push({ type: 'removed', value: oldLines[i] })
-            diffs.push({ type: 'added', value: newLines[j] })
-            i++
-            j++
-          }
-        }
-      } else if (i < oldLines.length) {
-        diffs.push({ type: 'removed', value: oldLines[i] })
-        i++
-      } else if (j < newLines.length) {
-        diffs.push({ type: 'added', value: newLines[j] })
-        j++
-      }
-    }
-
-    return diffs
+    return computeLineDiff(oldText, newText)
   }
 
   return {

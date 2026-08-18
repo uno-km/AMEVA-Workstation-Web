@@ -1,55 +1,10 @@
 /**
  * ============================================================================
  * @file JupyterCodeViewer.tsx
- * @description JupyterCodeViewer.tsx 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
- * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
- * @example
- * // 예시 로직 (자동 생성됨)
- * import { something } from './JupyterCodeViewer';
- * 
- * @created 2026-08-10 20:30:36
- * @updated 2026-08-10 20:30:36
- * @author uno-km
- * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * @system AMEVA OS Desktop Workstation
+ * @location packages/core/src/renderer/components/JupyterCodeViewer.tsx
+ * @role Interactive Code Viewer & Inline Runtime Renderer
  * ============================================================================
- */
-
-/**
- * @file JupyterCodeViewer.tsx
- * @system AMEVA OS Desktop Workstation
- * @location src/renderer/components/JupyterCodeViewer.tsx
- * @role Core module helper and integration logic
- * 
- * [소비처 - CONSUMERS / USAGE CONTEXT]
- * - 소비처 A (src/renderer/AppLayout.tsx): 레이아웃 그리드 내부 또는 플로팅 레이어 영역 내에서 그리기로 소비.
- * - 소비처 B (src/renderer/App.tsx): 전역 모달 매니저 및 뷰포트 상태 스위칭에 따라 동적 마운트되어 소비.
- * 
- * [책임 범위 - RESPONSIBILITY]
- * - 본 파일은 AMEVA 시스템 내에서 도메인 목적에 부합하는 연산 및 데이터 처리 흐름을 안전하게 캡슐화한다.
- * - 외부 라이브러리 및 하위 종속성을 조율하고 결과 규격을 일관되게 제공한다.
- * 
- * [절대 깨면 안 되는 계약 - CONTRACT]
- * - MUST: 모든 예외 발생 시 에러를 침묵시키지 말고 에러 로그를 명확하게 남길 것.
- * - MUST NOT: TypeScript any 형식을 우회 수단으로 함부로 선언하지 말 것.
- */
-
-/**
- * @file JupyterCodeViewer.tsx
- * @system AMEVA OS Desktop Workstation
- * @location src/renderer/components/JupyterCodeViewer.tsx
- * @role Core module helper and integration logic
- * 
- * [소비처 - CONSUMERS / USAGE CONTEXT]
- * - 소비처 A (src/renderer/AppLayout.tsx): 레이아웃 그리드 내부 또는 플로팅 레이어 영역 내에서 그리기로 소비.
- * - 소비처 B (src/renderer/App.tsx): 전역 모달 매니저 및 뷰포트 상태 스위칭에 따라 동적 마운트되어 소비.
- * 
- * [책임 범위 - RESPONSIBILITY]
- * - 본 파일은 AMEVA 시스템 내에서 도메인 목적에 부합하는 연산 및 데이터 처리 흐름을 안전하게 캡슐화한다.
- * - 외부 라이브러리 및 하위 종속성을 조율하고 결과 규격을 일관되게 제공한다.
- * 
- * [절대 깨면 안 되는 계약 - CONTRACT]
- * - MUST: 모든 예외 발생 시 에러를 침묵시키지 말고 에러 로그를 명확하게 남길 것.
- * - MUST NOT: TypeScript any 형식을 우회 수단으로 함부로 선언하지 말 것.
  */
 
 // [외부 패키지 및 라이브러리 임포트: react]
@@ -75,8 +30,8 @@ import { getLangMeta } from './jupyter/langMeta'
 import { InlineHtmlRenderer } from './jupyter/InlineHtmlRenderer'
 // [내부 프로젝트 의존성 모듈 임포트: ./jupyter/HtmlPreviewModal]
 import { HtmlPreviewModal } from './jupyter/HtmlPreviewModal'
-// [내부 프로젝트 의존성 모듈 임포트: ./jupyter/InlineMermaidRenderer]
-import { InlineMermaidRenderer } from './jupyter/InlineMermaidRenderer'
+// [내부 프로젝트 의존성 모듈 임포트: ./markdown/InlineMermaidRenderer]
+import { InlineMermaidRenderer } from './markdown/InlineMermaidRenderer'
 // [내부 프로젝트 의존성 모듈 임포트: ./jupyter/ConsoleOutput]
 import { ConsoleOutput } from './jupyter/ConsoleOutput'
 
@@ -332,10 +287,10 @@ export function JupyterCodeViewer({
             onClick={() => setShowMermaidPreview(v => !v)}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: '5px',
-              background: showMermaidPreview ? '#8b5cf6' : 'rgba(139,92,246,0.3)',
-              color: '#fff', border: `1px solid ${showMermaidPreview ? 'transparent' : '#8b5cf6'}`, borderRadius: '4px',
+              background: showMermaidPreview ? '#2563eb' : 'rgba(59, 130, 246,0.3)',
+              color: '#fff', border: `1px solid ${showMermaidPreview ? 'transparent' : '#2563eb'}`, borderRadius: '4px',
               padding: '3px 10px', fontSize: '10px', fontWeight: 700, cursor: 'pointer',
-              boxShadow: showMermaidPreview ? '0 2px 8px rgba(139,92,246,0.4)' : 'none',
+              boxShadow: showMermaidPreview ? '0 2px 8px rgba(59, 130, 246,0.4)' : 'none',
               transition: 'all 0.15s ease',
             }}
           >
@@ -362,41 +317,6 @@ export function JupyterCodeViewer({
         )}
 
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          {resolvedCode.trim() && (
-            <>
-              <button
-                onClick={() => useUIStore.getState().openCodeAssistant({ initialMode: 'explain', initialCode: resolvedCode, initialLanguage: resolvedLanguage as any })}
-                title="AI로 이 코드 동작 원리 해설하기"
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '3px',
-                  background: 'rgba(59, 130, 246, 0.15)',
-                  border: '1px solid rgba(59, 130, 246, 0.35)',
-                  color: '#93c5fd', borderRadius: '4px',
-                  padding: '2px 7px', fontSize: '10px', fontWeight: 600, cursor: 'pointer',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <Sparkles size={10} color="#60a5fa" />
-                AI 해설
-              </button>
-              <button
-                onClick={() => useUIStore.getState().openCodeAssistant({ initialMode: 'debug', initialCode: resolvedCode, initialLanguage: resolvedLanguage as any })}
-                title="AI로 이 코드 디버깅 및 리뷰하기"
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '3px',
-                  background: 'rgba(239, 68, 68, 0.15)',
-                  border: '1px solid rgba(239, 68, 68, 0.35)',
-                  color: '#fca5a5', borderRadius: '4px',
-                  padding: '2px 7px', fontSize: '10px', fontWeight: 600, cursor: 'pointer',
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <Bug size={10} color="#f87171" />
-                AI 디버그
-              </button>
-            </>
-          )}
-
           <button
             onClick={() => setIsCollapsed(c => !c)}
             title={isCollapsed ? '펼치기' : '접기'}
@@ -502,12 +422,21 @@ export function JupyterCodeViewer({
             onAskAgent(errorLog, resolvedCode);
           } : () => {
             const errorLog = outputLines.filter(l => l.type === 'stderr').map(l => l.text).join('\n');
-            useUIStore.getState().openCodeAssistant({
-              initialMode: 'debug',
-              initialCode: resolvedCode,
-              initialLanguage: resolvedLanguage as any,
-              initialErrorLog: errorLog
-            });
+            const payload = {
+              type: 'code_analyze_error',
+              data: {
+                requestId: `err_${Date.now()}`,
+                language: resolvedLanguage,
+                executionContextType: resolvedLanguage === 'python' ? 'python' : 'typescript',
+                rawErrorLog: errorLog,
+                fullSourceAvailable: true,
+                codeSnippet: resolvedCode,
+                errorLineNumber: null,
+                surroundingStartLine: null,
+                surroundingEndLine: null
+              }
+            };
+            window.dispatchEvent(new CustomEvent('ameva:ask-agent-direct', { detail: JSON.stringify(payload) }));
           }}
         />
       )}

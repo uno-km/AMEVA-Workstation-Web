@@ -41,52 +41,7 @@ import { Download, CheckCircle, XCircle, Loader2 } from 'lucide-react'
 import { useProcessStore } from '../../stores/useProcessStore'
 // [내부 프로젝트 의존성 모듈 임포트: ../../hooks/app/useDownloadManager]
 import type { DownloadQueueItem } from '../../hooks/app/useDownloadManager'
-
-  /*
-   * [FUNCTION CONTRACT]
-   * - 함수 명: `formatBytes`
-   * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
-   * - 예시: `formatBytes(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
-   */
-/**
- * formatBytes 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
-function formatBytes(bytes: number = 0): string {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `bytes === 0`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (bytes === 0)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-  if (bytes === 0) return '0 B'
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `k`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const k = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-  const k = 1024
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `sizes`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const sizes = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `i`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const i = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
+import { formatBytes } from '../../utils/appUtils'
 
   /*
    * [FUNCTION CONTRACT]
@@ -174,7 +129,7 @@ export function GlobalDownloadProgress() {
           marginBottom: '10px',
           background: 'rgba(5, 5, 10, 0.95)',
           backdropFilter: 'blur(20px)',
-          border: '1px solid rgba(139, 92, 246, 0.3)',
+          border: '1px solid rgba(59, 130, 246, 0.3)',
           borderRadius: '12px',
           width: '320px',
           boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
@@ -237,8 +192,8 @@ export function GlobalDownloadProgress() {
 
       {/* 축소된 상태의 배지 바 */}
       <div style={{
-        background: isAllDone ? 'rgba(52, 211, 153, 0.15)' : 'rgba(139, 92, 246, 0.15)',
-        border: `1px solid ${isAllDone ? 'rgba(52, 211, 153, 0.4)' : 'rgba(139, 92, 246, 0.4)'}`,
+        background: isAllDone ? 'rgba(52, 211, 153, 0.15)' : 'rgba(59, 130, 246, 0.15)',
+        border: `1px solid ${isAllDone ? 'rgba(52, 211, 153, 0.4)' : 'rgba(59, 130, 246, 0.4)'}`,
         backdropFilter: 'blur(10px)',
         padding: '8px 14px',
         borderRadius: '20px',

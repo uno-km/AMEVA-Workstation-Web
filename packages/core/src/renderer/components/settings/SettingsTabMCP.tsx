@@ -400,7 +400,7 @@ export function SettingsTabMCP({ isOpen }: SettingsTabMCPProps) {
                   <span style={{ fontSize: '11px', fontWeight: 700 }}>{server.name}</span>
                   <span style={{
                     fontSize: '8.5px', color: 'var(--primary)',
-                    background: 'rgba(168,85,247,0.1)', padding: '1px 4px', borderRadius: '3px'
+                    background: 'rgba(59, 130, 246,0.1)', padding: '1px 4px', borderRadius: '3px'
                   }}>
                     {server.type.toUpperCase()}
                   </span>

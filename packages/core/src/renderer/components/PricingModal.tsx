@@ -317,11 +317,11 @@ export function PricingModal({ isOpen, onClose }: PricingModalProps) {
               </div>
 
               {/* 장점 요약 */}
-              <div style={{ background: 'rgba(168,85,247,0.08)', borderRadius: '6px', padding: '6px 10px', marginBottom: '12px', fontSize: '9px', color: 'var(--text-main)' }}>
+              <div style={{ background: 'rgba(59, 130, 246,0.08)', borderRadius: '6px', padding: '6px 10px', marginBottom: '12px', fontSize: '9px', color: 'var(--text-main)' }}>
                 <strong>Advantage:</strong> Powerful real-time collaboration & multi-user syncing via Cloud Relay.
               </div>
 
-              <div style={{ height: '1px', background: 'rgba(168,85,247,0.2)', marginBottom: '12px' }} />
+              <div style={{ height: '1px', background: 'rgba(59, 130, 246,0.2)', marginBottom: '12px' }} />
 
               {/* 기능 상세 */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -348,15 +348,15 @@ export function PricingModal({ isOpen, onClose }: PricingModalProps) {
               style={{
                 width: '100%',
                 padding: '6px',
-                background: isPro ? 'rgba(168, 85, 247, 0.12)' : 'var(--primary)',
-                border: isPro ? '1px solid rgba(168, 85, 247, 0.3)' : 'none',
+                background: isPro ? 'rgba(59, 130, 246, 0.12)' : 'var(--primary)',
+                border: isPro ? '1px solid rgba(59, 130, 246, 0.3)' : 'none',
                 borderRadius: '6px',
                 color: isPro ? '#a855f7' : '#fff',
                 fontSize: '9.5px',
                 fontWeight: 700,
                 cursor: isPro ? 'default' : 'pointer',
                 marginTop: '16px',
-                boxShadow: isPro ? 'none' : '0 4px 10px rgba(168, 85, 247, 0.25)'
+                boxShadow: isPro ? 'none' : '0 4px 10px rgba(59, 130, 246, 0.25)'
               }}
             >
               {isPro ? 'Current Active Plan ✓' : 'Upgrade to Pro Plan'}

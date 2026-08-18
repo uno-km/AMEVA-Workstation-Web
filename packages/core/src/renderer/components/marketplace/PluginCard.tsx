@@ -174,7 +174,7 @@ export function PluginCard({
           {p.placement && (
             <span style={{
               fontSize: '9px',
-              color: p.placement === 'slash-menu' ? '#8b5cf6' : p.placement === 'editor-overlay' ? '#f59e0b' : '#10b981',
+              color: p.placement === 'slash-menu' ? '#2563eb' : p.placement === 'editor-overlay' ? '#f59e0b' : '#10b981',
               background: 'rgba(255,255,255,0.03)',
               border: '1px solid rgba(255,255,255,0.05)',
               padding: '1px 5px',

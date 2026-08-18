@@ -36,17 +36,19 @@ import React, { useState, useRef, useCallback, useEffect } from 'react'
 // [외부 패키지 및 라이브러리 임포트: @blocknote/react]
 import { createReactBlockSpec } from '@blocknote/react'
 // [외부 패키지 및 라이브러리 임포트: lucide-react]
-import { Upload, FileText, FileSpreadsheet, Presentation, FileType2, X, Maximize2, Minimize2, ExternalLink, Dna, List, Search } from 'lucide-react'
+import { Upload, FileText, FileSpreadsheet, Presentation, FileType2, X, Maximize2, Minimize2, ExternalLink, Dna, List, Search, Sparkles } from 'lucide-react'
 // [외부 패키지 및 라이브러리 임포트: pdfjs-dist]
 import * as pdfjsLib from 'pdfjs-dist'
 // [내부 프로젝트 의존성 모듈 임포트: ../utils/vfsDatabase]
 import { saveAttachment, getAttachment } from '../utils/vfsDatabase'
+import { base64ToBlob } from '../utils/binaryUtils'
 // [내부 프로젝트 의존성 모듈 임포트: ../stores/useDocumentProfilerStore]
 import { useDocumentProfilerStore } from '../stores/useDocumentProfilerStore'
 // [내부 프로젝트 의존성 모듈 임포트: ../stores/useUIStore]
 import { useUIStore } from '../stores/useUIStore'
 // [내부 프로젝트 의존성 모듈 임포트: ./DocumentProfileModal]
 import { DocumentProfileModal } from './DocumentProfileModal'
+import { useDocumentSummaryStore } from '../stores/useDocumentSummaryStore'
 // [내부 프로젝트 의존성 모듈 임포트: ./ResizableBlockContainer]
 import { ResizableBlockContainer } from './ResizableBlockContainer'
 // @ts-ignore
@@ -58,7 +60,7 @@ pdfjsLib.GlobalWorkerOptions.workerPort = new PdfWorker()
  * DocType 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
  * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
-export type DocType = 'pdf' | 'pptx' | 'docx' | 'xlsx' | 'unknown'
+export type DocType = 'pdf' | 'pptx' | 'docx' | 'xlsx' | 'hwpx' | 'unknown'
 
 /**
  * detectDocType 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
@@ -70,6 +72,7 @@ function detectDocType(fileName: string, mimeType?: string): DocType {
   if (['pptx', 'ppt'].includes(ext)) return 'pptx'
   if (['docx', 'doc'].includes(ext)) return 'docx'
   if (['xlsx', 'xls'].includes(ext)) return 'xlsx'
+  if (['hwpx', 'hwp'].includes(ext)) return 'hwpx'
   return 'unknown'
 }
 
@@ -82,7 +85,8 @@ export const DOC_TYPE_CONFIG: Record<DocType, { label: string; color: string; ic
   pptx:    { label: 'PowerPoint',  color: '#f97316', icon: <Presentation size={16} /> },
   docx:    { label: 'Word',        color: '#3b82f6', icon: <FileType2 size={16} /> },
   xlsx:    { label: 'Excel',       color: '#22c55e', icon: <FileSpreadsheet size={16} /> },
-  unknown: { label: '문서',        color: '#8b5cf6', icon: <FileText size={16} /> },
+  hwpx:    { label: '한글 (HWPX)', color: '#3b82f6', icon: <FileText size={16} /> },
+  unknown: { label: '문서',        color: '#06b6d4', icon: <FileText size={16} /> },
 }
 
 /**
@@ -892,15 +896,11 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
       } else if (props.sourceUrl.startsWith('data:') || props.fileBase64) {
         try {
           const raw = props.sourceUrl.startsWith('data:') ? props.sourceUrl : props.fileBase64
-          const cleanBase64 = raw.includes(',') ? raw.split(',')[1] : raw
-          const binary = atob(cleanBase64.replace(/\s/g, ''))
-          const bytes = new Uint8Array(binary.length)
-          for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-          const blob = new Blob([bytes], { type: 'application/pdf' })
+          const blob = base64ToBlob(raw, 'application/pdf')
           createdUrl = URL.createObjectURL(blob)
           setResolvedBlobUrl(createdUrl)
         } catch (e) {
-          console.error(e)
+          console.error('[InlineDocumentBlock] Base64 PDF blob creation failed:', e)
         }
       }
     } else {
@@ -937,6 +937,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
+    e.stopPropagation()
     setIsDragging(false)
     const file = e.dataTransfer.files[0]
     if (file) handleFileUpload(file)
@@ -1012,11 +1013,38 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
         <button
           onClick={() => setShowDNA(true)}
           style={{
-            marginLeft: '4px', padding: '3px 8px', background: 'rgba(168, 85, 247, 0.2)', border: '1px solid rgba(168, 85, 247, 0.4)', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: '#d8b4fe', fontSize: '11px', fontWeight: 600,
+            marginLeft: '4px', padding: '3px 8px', background: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.35)', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', color: '#93c5fd', fontSize: '11px', fontWeight: 600,
           }}
         >
           <Dna size={12} />
           분석 결과
+        </button>
+      )}
+
+      {(hasFile || hasUrl) && (
+        <button
+          onClick={() => {
+            const taskId = fileId || props.fileName || `${config.label} 문서`;
+            useDocumentSummaryStore.getState().registerSummaryTask({
+              id: taskId,
+              fileId: fileId || undefined,
+              blockId: block.id,
+              fileName: props.fileName || `${config.label} 문서`,
+              docType: (docType === 'unknown' ? 'pdf' : docType) as any,
+              numPages: 1
+            });
+            useDocumentSummaryStore.getState().openModalForTask(taskId);
+          }}
+          style={{
+            marginLeft: '4px', padding: '3px 8px',
+            background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.25) 0%, rgba(6, 182, 212, 0.25) 100%)',
+            border: '1px solid rgba(59, 130, 246, 0.45)', borderRadius: '4px', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: '4px', color: '#93c5fd', fontSize: '11px', fontWeight: 600,
+          }}
+          title="3단계 계층형 맵리듀스 AI 상세 요약 실행"
+        >
+          <Sparkles size={12} />
+          AI 요약
         </button>
       )}
 
@@ -1026,8 +1054,8 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: 2 }}
             onClick={() => {
               const nextExpanded = !isExpanded
-              const currentH = parseInt(props.height || '450', 10)
-              const nextH = nextExpanded ? Math.max(850, Math.round(currentH * 1.5)) : 450
+              const currentH = parseInt(props.height || '850', 10)
+              const nextH = nextExpanded ? Math.max(1200, Math.round(currentH * 1.5)) : 850
               editor.updateBlock(block.id, {
                 props: {
                   ...props,
@@ -1036,7 +1064,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
                 }
               })
             }}
-            title={isExpanded ? '축소 (기본 높이로)' : '확대 (850px+ 로)'}
+            title={isExpanded ? '축소 (기본 높이 850px로)' : '확대 (1200px+ 로)'}
           >
             {isExpanded ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
           </button>
@@ -1091,6 +1119,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
             {docType === 'pptx' && 'PowerPoint (.pptx, .ppt)'}
             {docType === 'docx' && 'Word (.docx, .doc)'}
             {docType === 'xlsx' && 'Excel (.xlsx, .xls)'}
+            {docType === 'hwpx' && '한글 문서 (.hwpx, .hwp)'}
             {docType === 'unknown' && '모든 문서 형식'}
           </div>
         </div>
@@ -1112,7 +1141,8 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
             docType === 'pptx' ? '.pptx,.ppt' :
             docType === 'docx' ? '.docx,.doc' :
             docType === 'xlsx' ? '.xlsx,.xls' :
-            '.pdf,.pptx,.ppt,.docx,.doc,.xlsx,.xls'
+            docType === 'hwpx' ? '.hwpx,.hwp' :
+            '.pdf,.pptx,.ppt,.docx,.doc,.xlsx,.xls,.hwpx,.hwp'
           }
           style={{ display: 'none' }}
           onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f) }}
@@ -1124,8 +1154,8 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
   return (
     <ResizableBlockContainer
       initialWidth={props.width || '100%'}
-      initialHeight={parseInt(props.height || '450', 10)}
-      minHeight={150}
+      initialHeight={parseInt(props.height || '850', 10)}
+      minHeight={250}
       maxHeight={4000}
       minWidth={280}
       maxWidth={3200}
@@ -1209,8 +1239,10 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
                 <button 
                   onClick={() => setShowSearch(false)} 
                   title="닫기 (ESC)"
-                  style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '2px 4px', fontSize: '11px' }}
-                >✕</button>
+                  style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '0 2px' }}
+                >
+                  <X size={13} />
+                </button>
               </div>
             )}
 
@@ -1294,45 +1326,34 @@ export function PptxMiniViewer({ sourceUrl, fileBase64, height }: { sourceUrl: s
   const parseSlides = useCallback(() => {
     if (!containerRef.current) return
     const container = containerRef.current
+    const slideEls = Array.from(container.querySelectorAll('section, .pptx-slide, .slide, svg')) as HTMLElement[]
+    if (slideEls.length === 0) return
 
-    // pptx-preview가 생성한 슬라이드 래퍼 또는 직계 자식 요소 탐색
-    const wrapper = container.querySelector('.slides, .pptx-wrapper') || container.firstElementChild || container
-    const directChildren = Array.from(wrapper.children) as HTMLElement[]
-
-    // 실제 최상위 슬라이드 요소만 필터링 (크기 및 최상위 구조 검증)
-    let slideEls = directChildren.filter(el => {
-      const rect = el.getBoundingClientRect()
-      return (rect.width > 80 && rect.height > 80) || el.classList.contains('slide') || el.id?.startsWith('slide')
+    const parsed = slideEls.map((el, i) => {
+      let title = ''
+      const textNodes = Array.from(el.querySelectorAll('p, span, text, h1, h2, h3, h4'))
+      for (const node of textNodes) {
+        const t = node.textContent?.trim() || ''
+        if (t.length > 1 && t.length < 80 && !t.startsWith('Slide') && isNaN(Number(t))) {
+          title = t
+          break
+        }
+      }
+      return {
+        index: i + 1,
+        title: title || `${i + 1}번 슬라이드`,
+        element: el
+      }
     })
-
-    // 직계 자식으로 안 묶여있을 경우: 중첩되지 않은 최상위 .slide 요소만 추출
-    if (slideEls.length === 0) {
-      const allSlides = Array.from(container.querySelectorAll('.slide, section.slide')) as HTMLElement[]
-      slideEls = allSlides.filter(el => !el.parentElement?.closest('.slide, section.slide'))
-    }
-
-    if (slideEls.length > 0) {
-      const items = slideEls.map((el, i) => {
-        const titleEl = el.querySelector('h1, h2, h3, h4, .title, p, span')
-        const textContent = (titleEl?.textContent || el.textContent || '').replace(/\s+/g, ' ').trim()
-        const titleSnippet = textContent.slice(0, 35) || `슬라이드 ${i + 1}`
-        return { index: i + 1, title: titleSnippet, element: el }
-      })
-      setSlides(items)
-    }
+    setSlides(parsed)
   }, [])
 
-  const scrollToSlide = useCallback((el: HTMLElement, idx: number) => {
-    const container = containerRef.current
-    if (!container || !el) return
-    const containerRect = container.getBoundingClientRect()
-    const elemRect = el.getBoundingClientRect()
-    const offset = elemRect.top - containerRect.top + container.scrollTop
-    container.scrollTo({ top: offset, behavior: 'smooth' })
+  const scrollToSlide = (el: HTMLElement, idx: number) => {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
     setCurrentSlide(idx)
-  }, [])
+  }
 
-  // 스크롤 시 현재 슬라이드 추적 (중심점 거리 기반 + capture 옵션)
+  // 스크롤 시 현재 슬라이드 번호 자동 추적
   useEffect(() => {
     const container = containerRef.current
     if (!container || slides.length === 0) return
@@ -1341,53 +1362,40 @@ export function PptxMiniViewer({ sourceUrl, fileBase64, height }: { sourceUrl: s
       const containerRect = container.getBoundingClientRect()
       const containerCenter = containerRect.top + containerRect.height / 2
 
-      let closestIdx = 1
+      let closestSlide = 1
       let minDistance = Infinity
 
-      for (let i = 0; i < slides.length; i++) {
-        const rect = slides[i].element.getBoundingClientRect()
+      slides.forEach(s => {
+        const rect = s.element.getBoundingClientRect()
         const slideCenter = rect.top + rect.height / 2
         const dist = Math.abs(slideCenter - containerCenter)
         if (dist < minDistance) {
           minDistance = dist
-          closestIdx = slides[i].index
+          closestSlide = s.index
         }
-      }
-      setCurrentSlide(closestIdx)
+      })
+      setCurrentSlide(closestSlide)
     }
 
-    container.addEventListener('scroll', handleScroll, { passive: true, capture: true })
-    window.addEventListener('resize', handleScroll, { passive: true })
-    return () => {
-      container.removeEventListener('scroll', handleScroll, true)
-      window.removeEventListener('resize', handleScroll)
-    }
+    container.addEventListener('scroll', handleScroll, { passive: true })
+    return () => container.removeEventListener('scroll', handleScroll)
   }, [slides])
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setError(null)
-    setSlides([])
-
-    const loadPptx = async () => {
+    const renderPptx = async () => {
       try {
+        setLoading(true)
+        setError(null)
         let arrayBuffer: ArrayBuffer
         if (sourceUrl.startsWith('ameva-vfs://')) {
           const fileId = sourceUrl.replace('ameva-vfs://', '')
           const blob = await getAttachment(fileId)
           if (!blob) throw new Error('VFS_EXPIRED')
           arrayBuffer = await blob.arrayBuffer()
-        } else if (sourceUrl.startsWith('blob:') || sourceUrl.startsWith('http')) {
+        } else if (sourceUrl.startsWith('blob:') || sourceUrl.startsWith('data:') || sourceUrl.startsWith('http')) {
           const res = await fetch(sourceUrl)
           arrayBuffer = await res.arrayBuffer()
-        } else if (sourceUrl.startsWith('data:')) {
-          const cleanBase64 = sourceUrl.split(',')[1] || ''
-          const binaryString = atob(cleanBase64.replace(/\s/g, ''))
-          const len = binaryString.length
-          const bytes = new Uint8Array(len)
-          for (let i = 0; i < len; i++) bytes[i] = binaryString.charCodeAt(i)
-          arrayBuffer = bytes.buffer
         } else if (fileBase64) {
           const cleanBase64 = fileBase64.includes(',') ? fileBase64.split(',')[1] : fileBase64
           const binaryString = atob(cleanBase64.replace(/\s/g, ''))
@@ -1399,29 +1407,39 @@ export function PptxMiniViewer({ sourceUrl, fileBase64, height }: { sourceUrl: s
           throw new Error('Local file only')
         }
 
-        if (cancelled || !containerRef.current) return
+        if (cancelled) return
 
-        const pptxjs = await import('pptx-preview')
-        const previewer = (pptxjs as any).init(containerRef.current, {
-          width: 800,
-          height: 600,
-          autoScale: true
-        })
-        
-        await previewer.preview(arrayBuffer)
-        if (!cancelled) {
+        const pptxPreview = await import('pptx-preview')
+        if (containerRef.current && !cancelled) {
+          containerRef.current.innerHTML = ''
+          const wrapper = document.createElement('div')
+          wrapper.style.width = '100%'
+          wrapper.style.display = 'flex'
+          wrapper.style.flexDirection = 'column'
+          wrapper.style.alignItems = 'center'
+          wrapper.style.gap = '20px'
+          wrapper.style.padding = '20px 0'
+          containerRef.current.appendChild(wrapper)
+
+          const pptx = pptxPreview.init(wrapper, {
+            width: 800,
+            height: 450,
+            slideInterval: 0,
+            showSlideNumber: true
+          })
+          await pptx.preview(arrayBuffer)
           setLoading(false)
-          setTimeout(parseSlides, 350)
+          setTimeout(parseSlides, 500)
         }
-      } catch (e: any) {
+      } catch (err: any) {
         if (!cancelled) {
-          setError(e.message === 'VFS_EXPIRED' ? '임시 파일이 만료되었거나 로드에 실패했습니다.' : 'PPTX 로드 실패')
+          setError(err.message === 'VFS_EXPIRED' ? '파일이 만료되었습니다. 다시 업로드해주세요.' : 'PowerPoint 파일을 렌더링할 수 없습니다.')
           setLoading(false)
         }
       }
     }
 
-    if (sourceUrl) loadPptx()
+    renderPptx()
     return () => { cancelled = true }
   }, [sourceUrl, parseSlides])
 
@@ -1634,7 +1652,7 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
   }, [totalPages])
 
   useEffect(() => {
-    if (docType !== 'docx' && docType !== 'xlsx') {
+    if (docType !== 'docx' && docType !== 'xlsx' && docType !== 'hwpx') {
       setLoading(false)
       return
     }
@@ -1663,6 +1681,84 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
 
         setCachedBuffer(arrayBuffer)
 
+        if (docType === 'hwpx') {
+          const JSZipModule = await import('jszip')
+          const JSZip = JSZipModule.default || JSZipModule
+          const zip = await JSZip.loadAsync(arrayBuffer)
+          const sectionFiles = Object.keys(zip.files).filter(name => 
+            name.includes('Contents/section') && name.endsWith('.xml')
+          ).sort((a, b) => {
+            const numA = parseInt(a.replace(/[^0-9]/g, '')) || 0
+            const numB = parseInt(b.replace(/[^0-9]/g, '')) || 0
+            return numA - numB
+          })
+
+          if (sectionFiles.length === 0) {
+            const sec0 = await zip.file('Contents/section0.xml')?.async('text')
+            if (sec0) sectionFiles.push('Contents/section0.xml')
+          }
+
+          const parser = new DOMParser()
+          let html = ''
+
+          for (let sIdx = 0; sIdx < sectionFiles.length; sIdx++) {
+            const fileData = zip.file(sectionFiles[sIdx])
+            if (!fileData) continue
+            const xmlString = await fileData.async('text')
+            const xmlDoc = parser.parseFromString(xmlString, "text/xml")
+
+            const pNodes = xmlDoc.getElementsByTagName('hp:p')
+            for (let i = 0; i < pNodes.length; i++) {
+              const pNode = pNodes[i]
+              
+              // 테이블 감지 (<hp:tbl>)
+              const tblNode = pNode.querySelector('hp\\:tbl, tbl')
+              if (tblNode) {
+                const trNodes = tblNode.querySelectorAll('hp\\:tr, tr')
+                if (trNodes.length > 0) {
+                  html += '<table style="width: 100%; border-collapse: collapse; margin: 1.2em 0; border: 1px solid #cbd5e1; font-size: 13px;">'
+                  trNodes.forEach((tr, rIdx) => {
+                    html += '<tr>'
+                    const tcNodes = tr.querySelectorAll('hp\\:tc, tc')
+                    tcNodes.forEach((tc) => {
+                      const tEls = tc.querySelectorAll('hp\\:t, t')
+                      let cellText = ''
+                      tEls.forEach(t => cellText += (t.textContent || '') + ' ')
+                      const isHeader = rIdx === 0
+                      const tag = isHeader ? 'th' : 'td'
+                      const style = isHeader 
+                        ? 'border: 1px solid #cbd5e1; padding: 8px 12px; background-color: #f1f5f9; font-weight: 600; text-align: left;' 
+                        : 'border: 1px solid #cbd5e1; padding: 8px 12px; text-align: left;'
+                      html += `<${tag} style="${style}">${cellText.trim()}</${tag}>`
+                    })
+                    html += '</tr>'
+                  })
+                  html += '</table>'
+                  continue
+                }
+              }
+
+              const tNodes = pNode.getElementsByTagName('hp:t')
+              let paraText = ''
+              for (let j = 0; j < tNodes.length; j++) {
+                paraText += tNodes[j].textContent || ''
+              }
+              const trimmed = paraText.trim()
+              if (trimmed) {
+                if (trimmed.length < 50 && (trimmed.startsWith('제') || /^[0-9]+[.)]/.test(trimmed) || trimmed.startsWith('【') || trimmed.startsWith('['))) {
+                  html += `<h2 style="color: #0f172a; margin-top: 1.2em; margin-bottom: 0.5em; font-weight: 700;">${trimmed}</h2>`
+                } else {
+                  html += `<p style="margin: 0.6em 0; line-height: 1.7;">${trimmed}</p>`
+                }
+              }
+            }
+          }
+          setHtmlContent(html || '<p style="color:#94a3b8">내용이 비어 있는 HWPX 문서입니다.</p>')
+          setLoading(false)
+          setTimeout(parseWordStructure, 400)
+          return
+        }
+
         // 1) mammoth HTML 항상 생성 (브라우저 뷰어용)
         try {
           const mammoth = await import('mammoth')
@@ -1680,7 +1776,7 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
                 docxContainerRef.current.innerHTML = ''
                 await docxPreview.renderAsync(arrayBuffer, docxContainerRef.current, undefined, {
                   className: 'docx-preview-container',
-                                    ignoreWidth: false,
+                  ignoreWidth: false,
                   ignoreHeight: false,
                   ignoreFonts: false,
                   breakPages: true,
@@ -1740,7 +1836,7 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
           docxContainerRef.current.innerHTML = ''
           docxPreview.renderAsync(cachedBuffer, docxContainerRef.current, undefined, {
             className: 'docx-preview-container',
-                        ignoreWidth: false,
+            ignoreWidth: false,
             ignoreHeight: false,
             ignoreFonts: false,
             breakPages: true,
@@ -1755,7 +1851,7 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
     }
   }, [docViewMode, cachedBuffer, docType, parseWordStructure])
 
-  if (docType === 'docx' || docType === 'xlsx') {
+  if (docType === 'docx' || docType === 'xlsx' || docType === 'hwpx') {
     if (loading) return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height, color: '#94a3b8', fontSize: 12 }}>
         문서 변환 및 렌더링 중...
@@ -1778,8 +1874,8 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
 
     return (
       <div style={{ position: 'relative', width: '100%', height, background: '#0b0f19', display: 'flex', flexDirection: 'column' }}>
-        {/* Word/Docs 상단 툴바: PDF 뷰어와 동일한 페이지 이동 및 목차 버튼 */}
-        {docType === 'docx' && (
+        {/* Word/HWPX 상단 툴바: 페이지 이동 및 목차 버튼 */}
+        {(docType === 'docx' || docType === 'hwpx') && (
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             padding: '4px 12px', background: 'rgba(15, 23, 42, 0.95)', borderBottom: '1px solid rgba(255,255,255,0.1)',
@@ -1792,8 +1888,8 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
                 disabled={currentPage <= 1}
                 title="이전 페이지"
               >‹</button>
-              <span style={{ padding: '2px 8px', background: '#3b82f633', color: '#60a5fa', borderRadius: 4, fontSize: 11, fontWeight: 700 }}>
-                📄 {currentPage} / {totalPages} 페이지
+              <span style={{ padding: '2px 8px', background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', borderRadius: 4, fontSize: 11, fontWeight: 700 }}>
+                {currentPage} / {totalPages} 페이지
               </span>
               <button
                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '2px 6px', fontSize: 14, lineHeight: 1 }}
@@ -1803,19 +1899,52 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
               >›</button>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <button
-                onClick={() => setDocViewMode(prev => prev === 'native' ? 'rich' : 'native')}
-                style={{
-                  background: docViewMode === 'rich' ? 'rgba(168, 85, 247, 0.25)' : 'rgba(59, 130, 246, 0.2)',
-                  border: '1px solid ' + (docViewMode === 'rich' ? 'rgba(168, 85, 247, 0.5)' : 'rgba(59, 130, 246, 0.4)'),
-                  color: docViewMode === 'rich' ? '#d8b4fe' : '#93c5fd',
-                  borderRadius: 4, padding: '3px 8px', fontSize: 11, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600
-                }}
-                title={docViewMode === 'native' ? '웹 리더 브라우저 뷰어로 전환' : 'A4 원본 조판 내장 뷰어로 전환'}
-              >
-                {docViewMode === 'native' ? '🖥️ 브라우저 뷰어' : '📑 A4 내장 뷰어'}
-              </button>
+              {/* 뷰 모드 세그먼트 스위처 (DOCX 전용) */}
+              {docType === 'docx' && (
+                <div style={{
+                  display: 'inline-flex',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  borderRadius: 5,
+                  padding: 2,
+                  gap: 2,
+                  border: '1px solid rgba(255, 255, 255, 0.12)'
+                }}>
+                  <button
+                    onClick={() => setDocViewMode('rich')}
+                    style={{
+                      background: docViewMode === 'rich' ? '#2563eb' : 'transparent',
+                      color: docViewMode === 'rich' ? '#ffffff' : '#94a3b8',
+                      border: 'none',
+                      borderRadius: 4,
+                      padding: '3px 8px',
+                      fontSize: 11,
+                      fontWeight: docViewMode === 'rich' ? 700 : 500,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    title="웹 리더 브라우저 뷰어 (기본)"
+                  >
+                    웹 리더
+                  </button>
+                  <button
+                    onClick={() => setDocViewMode('native')}
+                    style={{
+                      background: docViewMode === 'native' ? '#2563eb' : 'transparent',
+                      color: docViewMode === 'native' ? '#ffffff' : '#94a3b8',
+                      border: 'none',
+                      borderRadius: 4,
+                      padding: '3px 8px',
+                      fontSize: 11,
+                      fontWeight: docViewMode === 'native' ? 700 : 500,
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    title="A4 원본 조판 뷰어"
+                  >
+                    A4 조판
+                  </button>
+                </div>
+              )}
               <button
                 onClick={() => {
                   const root = docxContainerRef.current?.closest('[data-viewer-inner]');
@@ -1827,8 +1956,8 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
                   }
                 }}
                 style={{
-                  background: 'rgba(59, 130, 246, 0.2)',
-                  border: '1px solid rgba(59, 130, 246, 0.4)',
+                  background: 'rgba(59, 130, 246, 0.15)',
+                  border: '1px solid rgba(59, 130, 246, 0.35)',
                   color: '#93c5fd',
                   borderRadius: 4, padding: '3px 8px', fontSize: 11, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600
@@ -1842,7 +1971,7 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
                 <button
                   onClick={() => setShowToc(!showToc)}
                   style={{
-                    background: showToc ? '#3b82f633' : 'transparent',
+                    background: showToc ? 'rgba(59, 130, 246, 0.25)' : 'transparent',
                     border: '1px solid ' + (showToc ? '#3b82f6' : 'rgba(255,255,255,0.2)'),
                     color: showToc ? '#60a5fa' : '#94a3b8',
                     borderRadius: 4, padding: '3px 10px', fontSize: 11, cursor: 'pointer',
@@ -1948,7 +2077,7 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
               }
             `}</style>
             
-            {docType === 'docx' && docViewMode === 'rich' ? (
+            {(docType === 'docx' || docType === 'hwpx') && (docViewMode === 'rich' || docType === 'hwpx') ? (
               <div style={{ width: '100%', minHeight: '100%', padding: '24px 16px', display: 'flex', justifyContent: 'center' }}>
                 <div
                   className="docx-styled-html"
@@ -2024,7 +2153,7 @@ export const InlineDocumentBlockSpec = createReactBlockSpec(
       fileName:    { default: '' },
       fileBase64:  { default: '' },
       docType:     { default: 'unknown' },
-      height:      { default: '420' },
+      height:      { default: '850' },
       width:       { default: '100%' },
       sourceUrl:   { default: '' },
       isExpanded:  { default: 'false' },

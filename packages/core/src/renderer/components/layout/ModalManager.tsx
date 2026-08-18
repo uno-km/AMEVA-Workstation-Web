@@ -58,8 +58,10 @@ import { InstallDesktopModal } from '../InstallDesktopModal'
 import { RefreshConfirmModal } from '../RefreshConfirmModal'
 // [내부 프로젝트 의존성 모듈 임포트: ../ui/modals/NewDocumentConfirmModal]
 import { NewDocumentConfirmModal } from '../ui/modals/NewDocumentConfirmModal'
+import { DocumentSummariesDeck } from '../pdf/DocumentSummariesDeck'
+import { PdfMapReduceModal } from '../pdf/PdfMapReduceModal'
+import { useDocumentSummaryStore } from '../../stores/useDocumentSummaryStore'
 import { ConfirmModal } from '../ui/modals/ConfirmModal'
-import { CodeAssistantModal } from '../ai-panel/CodeAssistantModal'
 import { Trash2 } from 'lucide-react'
 
 // [내부 프로젝트 의존성 모듈 임포트: ../../contexts/AppContext]
@@ -104,8 +106,7 @@ export function ModalManager({}: ModalManagerProps = {}) {
     showMarketplaceModal, setShowMarketplaceModal, showPricingModal, setShowPricingModal,
     isQuitConfirmOpen, setIsQuitConfirmOpen, isRefreshConfirmOpen, setIsRefreshConfirmOpen,
     isInstallPromptOpen, setIsInstallPromptOpen, isNewDocumentConfirmOpen, setIsNewDocumentConfirmOpen,
-    blockDeleteConfirmState, closeBlockDeleteConfirm,
-    isCodeAssistantOpen, codeAssistantOptions, closeCodeAssistant
+    blockDeleteConfirmState, closeBlockDeleteConfirm
   } = useUIStore(useShallow((s) => ({
     isDiffOpen: s.isDiffOpen,
     setIsDiffOpen: s.setIsDiffOpen,
@@ -130,15 +131,15 @@ export function ModalManager({}: ModalManagerProps = {}) {
     isNewDocumentConfirmOpen: s.isNewDocumentConfirmOpen,
     setIsNewDocumentConfirmOpen: s.setIsNewDocumentConfirmOpen,
     blockDeleteConfirmState: s.blockDeleteConfirmState,
-    closeBlockDeleteConfirm: s.closeBlockDeleteConfirm,
-    isCodeAssistantOpen: s.isCodeAssistantOpen,
-    codeAssistantOptions: s.codeAssistantOptions,
-    closeCodeAssistant: s.closeCodeAssistant
+    closeBlockDeleteConfirm: s.closeBlockDeleteConfirm
   })))
 
   const { selectedSnapshot, currentContent } = useWorkspaceStore()
   
   const { exportProgress, setExportProgress, exportMinimized, setExportMinimized, toggleExportMinimized } = useProcessStore()
+
+  const { tasks, activeModalTaskId, closeModal } = useDocumentSummaryStore()
+  const activeTask = activeModalTaskId ? tasks[activeModalTaskId] : null
 
   const aiSettings = {} as any
   const updateAISettings = () => {}
@@ -271,23 +272,22 @@ export function ModalManager({}: ModalManagerProps = {}) {
         />
       )}
 
-      {isCodeAssistantOpen && (
-        <CodeAssistantModal
-          initialMode={codeAssistantOptions?.initialMode}
-          initialCode={codeAssistantOptions?.initialCode}
-          initialLanguage={codeAssistantOptions?.initialLanguage as any}
-          initialErrorLog={codeAssistantOptions?.initialErrorLog}
-          onClose={closeCodeAssistant}
-          onInsertToEditor={(content) => {
-            if (editor) {
-              const currentBlock = editor.getTextCursorPosition()?.block;
-              if (currentBlock) {
-                editor.insertBlocks([{ type: 'paragraph', content: [{ type: 'text', text: content, styles: {} }] }], currentBlock, 'after');
-              } else if (editor.document.length > 0) {
-                editor.insertBlocks([{ type: 'paragraph', content: [{ type: 'text', text: content, styles: {} }] }], editor.document[editor.document.length - 1], 'after');
-              }
-            }
-            closeCodeAssistant();
+      {/* ─── AI 문서 요약 보관함 플립 덱 (SCRUM-173) ─── */}
+      <DocumentSummariesDeck />
+
+      {/* 활성화된 PDF 3단계 맵리듀스 모달 */}
+      {activeTask && (
+        <PdfMapReduceModal
+          fileId={activeTask.fileId}
+          blockId={activeTask.blockId}
+          fileName={activeTask.fileName}
+          numPages={activeTask.numPages}
+          onClose={closeModal}
+          onInsertToEditor={(reportText) => {
+            window.dispatchEvent(new CustomEvent('app:insert-markdown', {
+              detail: { content: reportText, fileName: `[AI 요약] ${activeTask.fileName}` }
+            }));
+            closeModal();
           }}
         />
       )}

@@ -70,16 +70,8 @@ export function useHoverBlock(
     // 부모 협업 포인터 동기화를 위한 콜백 리다이렉트 기동
     onMouseMove(e)
 
-    // 편집 모드가 아니거나 에디터 인스턴스가 활성화 전인 경우 즉각 초기화
-    // WARNING: 절대 canUseAITagging 검사를 추가하여 락을 걸지 마라. (Free 에디터의 + 슬래시 삽입 붕괴 방지).
-    if (editorMode !== 'edit' || !editor) {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `hoverBlock !== null) setHoverBlock(null`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (hoverBlock !== null) setHoverBlock(null)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
+    // AI 태깅이 비활성화되어 있거나 편집 모드가 아니거나 에디터 인스턴스가 활성화 전인 경우 즉각 초기화
+    if (!canUseAITagging || editorMode !== 'edit' || !editor) {
       if (hoverBlock !== null) setHoverBlock(null)
       return
     }

@@ -54,7 +54,7 @@ const EXPORT_FORMATS: { format: ExportFormat; label: string; color?: string }[] 
   { format: 'docx', label: 'Word (DOCX)' },
   { format: 'xlsx', label: 'Excel (XLSX)' },
   { format: 'pptx', label: 'PPT (PPTX)' },
-  { format: 'hwpx', label: '한글 (HWPX)', color: 'rgba(167,139,250,0.5)' },
+  { format: 'hwpx', label: '한글 (HWPX)', color: 'rgba(59, 130, 246,0.5)' },
   { format: 'xml',  label: 'XML' },
 ]
 

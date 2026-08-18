@@ -267,12 +267,12 @@ export const DrawingBlockSpec = createReactBlockSpec(
                 onClick={handleRetryLoad}
                 style={{
                   padding: '6px 14px', borderRadius: '6px', cursor: 'pointer',
-                  background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)',
+                  background: 'rgba(59, 130, 246,0.15)', border: '1px solid rgba(59, 130, 246,0.3)',
                   color: 'var(--primary)', fontSize: '11px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px',
                   transition: 'background 0.2s'
                 }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(139,92,246,0.25)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(139,92,246,0.15)'}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(59, 130, 246,0.25)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(59, 130, 246,0.15)'}
               >
                 <RefreshCw size={12} /> 다시 시도
               </button>
@@ -332,7 +332,7 @@ export const DrawingBlockSpec = createReactBlockSpec(
                 const rect = e.currentTarget.getBoundingClientRect()
                 const x = (e.clientX - rect.left) * (canvas.width / rect.width)
                 const y = (e.clientY - rect.top) * (canvas.height / rect.height)
-                ctx.strokeStyle = '#a78bfa'
+                ctx.strokeStyle = '#38bdf8'
                 ctx.lineWidth = 2
                 ctx.lineCap = 'round'
                 ctx.lineJoin = 'round'
@@ -391,11 +391,11 @@ export const DrawingBlockSpec = createReactBlockSpec(
                 gap: '4px',
                 padding: '4px 8px',
                 borderRadius: '4px',
-                backgroundColor: 'rgba(139,92,246,0.1)',
+                backgroundColor: 'rgba(59, 130, 246,0.1)',
                 transition: 'background 0.15s'
               }}
-              onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(139,92,246,0.2)'}
-              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(139,92,246,0.1)'}
+              onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246,0.2)'}
+              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246,0.1)'}
             >
               {isEditing ? (
                 <>

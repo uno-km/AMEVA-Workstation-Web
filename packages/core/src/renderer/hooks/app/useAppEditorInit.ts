@@ -487,7 +487,7 @@ export function useAppEditorInit({
 }
 .ai-msg-box {
   background: #181c2d;
-  border: 1px solid rgba(168, 85, 247, 0.3);
+  border: 1px solid rgba(59, 130, 246, 0.3);
   border-radius: 8px;
   padding: 10px;
   display: flex;
@@ -500,7 +500,7 @@ export function useAppEditorInit({
 .think-badge {
   font-size: 9.5px;
   color: #c084fc;
-  background: rgba(168, 85, 247, 0.15);
+  background: rgba(59, 130, 246, 0.15);
   padding: 2px 6px;
   border-radius: 4px;
   display: inline-block;
@@ -712,7 +712,7 @@ export function useAppEditorInit({
 /* Diff Block (Hidden initially, appears after click) */
 .diff-block {
   background: rgba(24, 24, 27, 0.8);
-  border: 1px solid rgba(139, 92, 246, 0.4);
+  border: 1px solid rgba(59, 130, 246, 0.4);
   border-radius: 8px;
   padding: 12px;
   display: flex;

@@ -483,8 +483,8 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
           style={{
             width: '100%',
             maxWidth: '92%',
-            background: 'rgba(139, 92, 246, 0.06)',
-            border: '1px solid rgba(139, 92, 246, 0.2)',
+            background: 'rgba(59, 130, 246, 0.06)',
+            border: '1px solid rgba(59, 130, 246, 0.2)',
             borderRadius: '8px',
             overflow: 'hidden',
             marginBottom: '4px'
@@ -501,12 +501,12 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
               cursor: 'pointer',
               fontSize: '10px',
               fontWeight: 600,
-              color: '#c4b5fd',
-              background: 'rgba(139, 92, 246, 0.1)'
+              color: '#93c5fd',
+              background: 'rgba(59, 130, 246, 0.1)'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <Brain size={12} color="#a78bfa" />
+              <Brain size={12} color="#38bdf8" />
               <span>AI 사고 과정 (Reasoning Trace)</span>
             </div>
             {thoughtOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
@@ -521,7 +521,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
                 color: '#94a3b8',
                 lineHeight: '1.5',
                 whiteSpace: 'pre-wrap',
-                borderTop: '1px solid rgba(139, 92, 246, 0.1)',
+                borderTop: '1px solid rgba(59, 130, 246, 0.1)',
                 userSelect: 'text',
                 cursor: 'text'
               }}
@@ -570,7 +570,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
           padding: '10px 14px',
           borderRadius: isUser ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
           background: isUser
-            ? 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)'
+            ? 'linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)'
             : isGpuError
             ? 'rgba(239, 68, 68, 0.08)'
             : 'rgba(255, 255, 255, 0.05)',
@@ -579,7 +579,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
           fontSize: '12px',
           lineHeight: '1.6',
           wordBreak: 'break-word',
-          boxShadow: isUser ? '0 2px 8px rgba(139, 92, 246, 0.3)' : 'none',
+          boxShadow: isUser ? '0 2px 8px rgba(37, 99, 235, 0.3)' : 'none',
           userSelect: 'text',
           cursor: 'text'
         }}

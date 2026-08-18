@@ -145,12 +145,12 @@ export function InlineYoutubeRenderer({ code }: { code: string }) {
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
             {data.timeline.map((t: any, idx: number) => (
               <div key={idx} style={{
-                display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(139, 92, 246, 0.1)',
-                border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: '4px', padding: '2px 6px',
+                display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(59, 130, 246, 0.1)',
+                border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '4px', padding: '2px 6px',
               }}>
                 <button
                   onClick={() => handleSeek(t.time)}
-                  style={{ background: 'none', border: 'none', color: '#a78bfa', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer', padding: 0 }}
+                  style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer', padding: 0 }}
                 >
                   {t.time}
                 </button>

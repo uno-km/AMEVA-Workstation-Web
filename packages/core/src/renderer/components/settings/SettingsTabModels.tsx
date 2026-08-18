@@ -211,7 +211,7 @@ export function SettingsTabModels({
                       onClick={() => void startModelDownload(model.url, model.filename, 'llm')}
                       style={{
                         padding: '4px 8px', borderRadius: '4px',
-                        background: isInstalled ? 'rgba(52, 211, 153, 0.15)' : isDownloading ? 'rgba(139, 92, 246, 0.3)' : 'var(--primary)',
+                        background: isInstalled ? 'rgba(52, 211, 153, 0.15)' : isDownloading ? 'rgba(59, 130, 246, 0.3)' : 'var(--primary)',
                         color: isInstalled ? '#fff' : '#fff',
                         border: 'none', fontSize: '9.5px', fontWeight: 'bold',
                         cursor: isInstalled || isDownloading ? 'default' : 'pointer',
@@ -336,7 +336,7 @@ export function SettingsTabModels({
                       onClick={() => void startModelDownload(model.url, model.filename, 'code')}
                       style={{
                         padding: '4px 8px', borderRadius: '4px',
-                        background: isInstalled ? 'rgba(52, 211, 153, 0.15)' : isDownloading ? 'rgba(139, 92, 246, 0.3)' : '#34d399',
+                        background: isInstalled ? 'rgba(52, 211, 153, 0.15)' : isDownloading ? 'rgba(59, 130, 246, 0.3)' : '#34d399',
                         color: isInstalled ? '#34d399' : isDownloading ? '#fff' : '#000',
                         border: 'none', fontSize: '9.5px', fontWeight: 'bold',
                         cursor: isInstalled || isDownloading ? 'default' : 'pointer',

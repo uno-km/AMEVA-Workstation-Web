@@ -1,148 +1,230 @@
 /**
  * ============================================================================
  * @file InlineMermaidRenderer.tsx
- * @description InlineMermaidRenderer.tsx 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
- * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
- * @example
- * // 예시 로직 (자동 생성됨)
- * import { something } from './InlineMermaidRenderer';
- * 
- * @created 2026-08-10 20:30:36
- * @updated 2026-08-10 20:30:36
- * @author uno-km
- * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * @system AMEVA OS Desktop Workstation
+ * @location packages/core/src/renderer/components/markdown/InlineMermaidRenderer.tsx
+ * @role Inline Mermaid Diagram SVG Renderer with Dynamic Instance Isolation
  * ============================================================================
  */
 
-/**
- * @file InlineMermaidRenderer.tsx
- * @system AMEVA OS Desktop Workstation
- * @location src/renderer/components/markdown/InlineMermaidRenderer.tsx
- * @role Core module helper and integration logic
- * 
- * [소비처 - CONSUMERS / USAGE CONTEXT]
- * - 소비처 A (src/renderer/components/MarkdownPreview.tsx): 마크다운 파싱 시 mermaid 다이어그램 세그먼트 전용 드로잉 뷰어로 소비.
- */
-
-// [외부 패키지 및 라이브러리 임포트: react]
 import { useState, useEffect, useRef } from 'react'
 import mermaid from 'mermaid'
+import { ZoomIn, ZoomOut, RotateCcw, Maximize2 } from 'lucide-react'
 
+export function sanitizeMermaidCode(raw: string): string {
+  if (!raw) return ''
+  let text = raw.trim()
 
-  /*
-   * [FUNCTION CONTRACT]
-   * - 함수 명: `InlineMermaidRenderer`
-   * - 역할: Mermaid 다이어그램 코드를 컴파일하여 SVG 형식으로 안전하게 렌더링하고 DOM에 주입함.
-   */
-/**
- * InlineMermaidRenderer 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
+  // 1. ```mermaid 마크다운 펜스 제거
+  text = text.replace(/^```(?:mermaid)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim()
+
+  // 2. 한국어/영문 end 키워드 줄바꿈 분리
+  text = text.replace(/^(\s*)end([가-힣a-zA-Z]+)/gm, '$1end\n$1$2')
+
+  // 3. flowchart / graph에서 콜론(:) 문법 자동 교정
+  const isSequence = /^\s*sequenceDiagram/im.test(text)
+  if (!isSequence) {
+    // 3-1. 세미콜론 뒤 줄바꿈 누락 분리 (C[End];A --> B -> C[End];\nA --> B)
+    text = text.replace(/;([^\n\r\s])/g, ';\n$1')
+
+    // 3-2. A --> B: 라벨 -> A -->|라벨| B
+    text = text.replace(/([a-zA-Z0-9_\-\[\]\(\)\"\s]+?)\s*-->\s*([a-zA-Z0-9_\-\[\]\(\)\"\s]+?)\s*:\s*([^;\n]+)/g, (_match, from, to, label) => {
+      const cleanLabel = label.trim().replace(/^\/\/\s*/, '')
+      return `${from.trim()} -->|${cleanLabel}| ${to.trim()}`
+    })
+
+    // 3-3. A -> B: 라벨 -> A -->|라벨| B
+    text = text.replace(/([a-zA-Z0-9_\-\[\]\(\)\"\s]+?)\s*->\s*([a-zA-Z0-9_\-\[\]\(\)\"\s]+?)\s*:\s*([^;\n]+)/g, (_match, from, to, label) => {
+      const cleanLabel = label.trim().replace(/^\/\/\s*/, '')
+      return `${from.trim()} -->|${cleanLabel}| ${to.trim()}`
+    })
+
+    // 3-4. A -> B -> A --> B
+    text = text.replace(/([a-zA-Z0-9_\]\)\"]+)\s*->\s*([a-zA-Z0-9_\[\(\"]+)/g, '$1 --> $2')
+
+    // 3-5. 라인 끝에 남은 슬래시 주석(//)이나 찌꺼기 정돈
+    text = text.replace(/\/\/\s*$/gm, '')
+  }
+
+  return text
+}
+
 export function InlineMermaidRenderer({ code }: { code: string }) {
-  /*
-   * [RUN-TIME STATE / INVARIANT]
-   * - 변수 명: `svg`, `setSvg`
-   * - 자료형 / 예상 값: string (인코딩된 SVG 문자열)
-   * - 시나리오: mermaid 렌더링 성공 시 결과 SVG 마크업 문자열을 보존.
-   */
   const [svg, setSvg] = useState<string>('')
-  
-  /*
-   * [RUN-TIME STATE / INVARIANT]
-   * - 변수 명: `error`, `setError`
-   * - 자료형 / 예상 값: string | null
-   * - 시나리오: 다이어그램 구문 오류 시 예외 텍스트를 캐싱하여 에러 UI 출력 분기에 사용.
-   */
   const [error, setError] = useState<string | null>(null)
-  
-  /*
-   * [RUN-TIME STATE / INVARIANT]
-   * - 변수 명: `elementId`
-   * - 자료형 / 예상 값: React.MutableRefObject<string>
-   * - 시나리오: mermaid.render 호출 시 고유 ID 인스턴스를 유지하기 위해 무작위 해시 문자열 캐싱.
-   */
-  const elementId = useRef(`mermaid-preview-${Math.random().toString(36).substr(2, 9)}`)
+  const [scale, setScale] = useState<number>(1)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    mermaid.initialize({
-      startOnLoad: false,
-      theme: 'dark',
-      securityLevel: 'loose',
-    })
-    /*
-     * [RUN-TIME STATE / INVARIANT]
-     * - 변수 명: `active`
-     * - 자료형 / 예상 값: boolean
-     * - 시나리오: 비동기 렌더링이 완료되기 전에 컴포넌트가 언마운트되었을 때의 메모리 누수 및 상태 업데이트 충돌 방지를 위한 마운트 가드 플래그.
-     */
     let active = true
-    
-    /*
-     * [RUN-TIME STATE / INVARIANT]
-     * - 변수 명: `renderDiagram`
-     * - 자료형 / 예상 값: () => Promise<void>
-     * - 시나리오: mermaid 비동기 API인 render를 기동하고 SVG를 설정함.
-     */
+    const renderId = `mermaid-preview-${Date.now()}-${Math.random().toString(36).substr(2, 7)}`
+
     const renderDiagram = async () => {
-      try {
-        /*
-         * [RUN-TIME STATE / INVARIANT]
-         * - 변수 명: `cleanCode`
-         * - 자료형 / 예상 값: string
-         * - 시나리오: 줄바꿈 등의 정규화를 거쳐 렌더러가 올바르게 파싱하도록 정제한 코드.
-         */
-        const cleanCode = code.replace(/^(\s*)end([가-힣a-zA-Z]+)/gm, '$1end\n$1$2')
-        const { svg: renderedSvg } = await mermaid.render(elementId.current, cleanCode)
-        
-        /*
-         * [ALGORITHM BRANCH / DECISION]
-         * - 조건 식: `active`
-         * - 만족 시: 컴포넌트가 여전히 마운트 상태이므로 정상적으로 SVG 상태를 세팅하고 에러를 해제함.
-         * - 불만족 시: 바이패스(Bypass)하여 작업을 종료함.
-         */
+      if (!code || !code.trim()) {
         if (active) {
-          setSvg(renderedSvg)
+          setSvg('')
+          setError(null)
+        }
+        return
+      }
+
+      try {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'dark',
+          securityLevel: 'loose',
+          fontFamily: 'Pretendard, -apple-system, sans-serif'
+        })
+        let cleanCode = sanitizeMermaidCode(code)
+        
+        let renderedSvg = ''
+        try {
+          const res = await mermaid.render(renderId, cleanCode)
+          renderedSvg = res.svg
+        } catch (firstErr) {
+          // 2차 폴백: 세미콜론 및 헤더 포맷 보정 후 재시도
+          const fallbackCode = cleanCode
+            .replace(/^graph\s+([A-Z]+);/im, 'graph $1\n')
+            .replace(/;\s*$/gm, '')
+          const res = await mermaid.render(renderId + '-fb', fallbackCode)
+          renderedSvg = res.svg
+        }
+
+        if (active && renderedSvg) {
+          // SVG의 고정 너비/높이를 반응형으로 보정하여 컨테이너 리사이징 시 비례 스케일링 지원
+          let processedSvg = renderedSvg
+            .replace(/<svg\s+([^>]*?)id="[^"]*"/, `<svg $1 id="${renderId}-svg"`)
+            .replace(/style="max-width:[^"]*"/g, 'style="width:100%; height:100%; max-width:100%;"')
+          
+          setSvg(processedSvg)
           setError(null)
         }
       } catch (err: any) {
-        /*
-         * [ALGORITHM BRANCH / DECISION]
-         * - 조건 식: `active`
-         * - 만족 시: 마운트 상태를 검증해 에러 메시지 상태를 동기화 표출함.
-         */
         if (active) {
           setError(err.message || 'Mermaid 렌더링에 실패했습니다.')
         }
       }
     }
+
     renderDiagram()
-    return () => { active = false }
+
+    return () => {
+      active = false
+      const el = document.getElementById(renderId)
+      if (el) el.remove()
+      const dEl = document.getElementById('d' + renderId)
+      if (dEl) dEl.remove()
+    }
   }, [code])
 
-  /*
-   * [ALGORITHM BRANCH / DECISION]
-   * - 조건 식: `error`
-   * - 만족 시: 렌더링 문법 에러 화면을 노출.
-   * - 불만족 시: 정상 SVG 그래프 레이아웃 반환.
-   * - 예시: `if (error)` 만족 시 에러 패널 렌더링.
-   */
+  const handleZoomIn = () => setScale(prev => Math.min(3, Math.round((prev + 0.15) * 100) / 100))
+  const handleZoomOut = () => setScale(prev => Math.max(0.4, Math.round((prev - 0.15) * 100) / 100))
+  const handleResetZoom = () => setScale(1)
+
   if (error) {
     return (
       <div style={{
-        padding: '12px 16px', borderRadius: '8px', background: 'rgba(239,68,68,0.08)',
-        border: '1.5px solid rgba(239,68,68,0.25)', color: '#f87171', fontSize: '12px', textAlign: 'left'
+        padding: '14px 18px',
+        borderRadius: '8px',
+        background: 'rgba(239, 68, 68, 0.09)',
+        border: '1.5px solid rgba(239, 68, 68, 0.3)',
+        color: '#fca5a5',
+        fontSize: '12px',
+        textAlign: 'left',
+        width: '100%',
+        boxSizing: 'border-box'
       }}>
-        <strong>[Mermaid Syntax Error]</strong>
-        <pre style={{ margin: '6px 0 0 0', overflowX: 'auto', fontSize: '11px', opacity: 0.85 }}>{error}</pre>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+          <strong style={{ color: '#f87171', fontSize: '12.5px' }}>[Mermaid 문법 오류 감지]</strong>
+        </div>
+        <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: '#cbd5e1' }}>
+          Flowchart에서는 연결선에 콜론(<code>:</code>) 대신 <code>A --&gt;|라벨| B</code> 문법을 사용해야 합니다.
+        </p>
+        <pre style={{ margin: '0', overflowX: 'auto', fontSize: '11px', opacity: 0.9, background: 'rgba(0,0,0,0.3)', padding: '6px', borderRadius: '4px' }}>{error}</pre>
       </div>
     )
   }
 
   return (
     <div
-      className="mermaid-svg-container"
-      style={{ display: 'flex', justifyContent: 'center', background: '#12121e', borderRadius: '8px', padding: '16px', overflowX: 'auto' }}
-      dangerouslySetInnerHTML={{ __html: svg || '<span style="color:#6b7280; font-size:12px;">Mermaid 로딩 중...</span>' }}
-    />
+      ref={containerRef}
+      className="mermaid-wrapper"
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: '100%',
+        minHeight: '100px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#0a0d14',
+        borderRadius: '6px',
+        overflow: 'hidden',
+        boxSizing: 'border-box'
+      }}
+    >
+      {/* ─── 머메이드 다이어그램 배율 툴바 ─── */}
+      {svg && (
+        <div style={{
+          position: 'absolute',
+          top: 8,
+          right: 8,
+          zIndex: 10,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 3,
+          background: 'rgba(15, 23, 42, 0.85)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          borderRadius: 6,
+          padding: '2px 6px',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)'
+        }}>
+          <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600, marginRight: 2 }}>
+            {Math.round(scale * 100)}%
+          </span>
+          <button
+            onClick={handleZoomOut}
+            title="축소"
+            style={{ background: 'transparent', border: 'none', color: '#cbd5e1', cursor: 'pointer', padding: '2px', display: 'flex' }}
+          >
+            <ZoomOut size={12} />
+          </button>
+          <button
+            onClick={handleZoomIn}
+            title="확대"
+            style={{ background: 'transparent', border: 'none', color: '#cbd5e1', cursor: 'pointer', padding: '2px', display: 'flex' }}
+          >
+            <ZoomIn size={12} />
+          </button>
+          <button
+            onClick={handleResetZoom}
+            title="원래 크기로 (100%)"
+            style={{ background: 'transparent', border: 'none', color: '#cbd5e1', cursor: 'pointer', padding: '2px', display: 'flex' }}
+          >
+            <RotateCcw size={11} />
+          </button>
+        </div>
+      )}
+
+      <div
+        className="mermaid-svg-container"
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: '100%',
+          height: '100%',
+          padding: '16px',
+          overflow: 'auto',
+          boxSizing: 'border-box',
+          transform: `scale(${scale})`,
+          transformOrigin: 'center center',
+          transition: 'transform 0.15s ease'
+        }}
+        dangerouslySetInnerHTML={{ __html: svg || '<span style="color:#64748b; font-size:12px;">Mermaid 다이어그램 렌더링 중...</span>' }}
+      />
+    </div>
   )
 }

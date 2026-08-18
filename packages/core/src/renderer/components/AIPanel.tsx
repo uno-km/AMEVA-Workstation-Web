@@ -43,7 +43,9 @@ export function AIPanel() {
     updateInsertSuggestionStatus
   } = useAIAgentStore();
 
-  const { taggedBlocks, clearTaggedBlocks, activeEditorInstance } = useWorkspaceStore();
+  const taggedBlocks = useWorkspaceStore(s => s.taggedBlocks);
+  const clearTaggedBlocks = useWorkspaceStore(s => s.clearTaggedBlocks);
+  const activeEditorInstance = useWorkspaceStore(s => s.activeEditorInstance);
   const {
     generateStream,
     isMainReady: isLLMReady,
@@ -246,7 +248,7 @@ export function AIPanel() {
               width: '24px',
               height: '24px',
               borderRadius: '6px',
-              background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
+              background: 'linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -266,8 +268,8 @@ export function AIPanel() {
                   padding: '1px 5px',
                   borderRadius: '3px',
                   border: 'none',
-                  background: engineMode === 'webgpu' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(59, 130, 246, 0.2)',
-                  color: engineMode === 'webgpu' ? '#a78bfa' : '#60a5fa',
+                  background: engineMode === 'webgpu' ? 'rgba(37, 99, 235, 0.2)' : 'rgba(6, 182, 212, 0.2)',
+                  color: engineMode === 'webgpu' ? '#93c5fd' : '#67e8f9',
                   cursor: 'pointer',
                   fontWeight: 600
                 }}
@@ -301,7 +303,7 @@ export function AIPanel() {
               data-testid="ai-tab-chat"
               onClick={() => setActiveTab('chat')}
               style={{
-                background: activeTab === 'chat' ? 'var(--primary, #8b5cf6)' : 'transparent',
+                background: activeTab === 'chat' ? 'var(--primary, #2563eb)' : 'transparent',
                 color: '#fff',
                 border: 'none',
                 padding: '4px 8px',
@@ -317,7 +319,7 @@ export function AIPanel() {
               data-testid="ai-tab-outline"
               onClick={() => setActiveTab('outline')}
               style={{
-                background: activeTab === 'outline' ? 'var(--primary, #8b5cf6)' : 'transparent',
+                background: activeTab === 'outline' ? 'var(--primary, #2563eb)' : 'transparent',
                 color: '#fff',
                 border: 'none',
                 padding: '4px 8px',
@@ -431,16 +433,16 @@ export function AIPanel() {
                 onClick={() => setShowOllamaPrompt(false)}
                 style={{
                   flex: 1,
-                  background: 'rgba(139, 92, 246, 0.15)',
-                  color: '#a78bfa',
-                  border: '1px solid rgba(139, 92, 246, 0.3)',
+                  background: 'rgba(59, 130, 246, 0.15)',
+                  color: '#93c5fd',
+                  border: '1px solid rgba(59, 130, 246, 0.35)',
                   borderRadius: '4px',
                   padding: '4px',
                   fontSize: '9px',
                   cursor: 'pointer'
                 }}
               >
-                ⚡ WebGPU 모드 유지
+                WebGPU 모드 유지
               </button>
             </div>
           </div>
@@ -518,7 +520,7 @@ export function AIPanel() {
                   gap: '6px'
                 }}
               >
-                <ArrowRight size={10} color="#8b5cf6" />
+                <ArrowRight size={10} color="#3b82f6" />
                 <span>{item.text}</span>
               </div>
             ))
@@ -553,13 +555,13 @@ export function AIPanel() {
                 width: '48px',
                 height: '48px',
                 borderRadius: '12px',
-                background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%)',
-                border: '1px solid rgba(139, 92, 246, 0.3)',
+                background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%)',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <Sparkles size={24} color="#a78bfa" />
+                <Sparkles size={24} color="#60a5fa" />
               </div>
 
               <div>
@@ -593,7 +595,7 @@ export function AIPanel() {
                         textAlign: 'left'
                       }}
                     >
-                      <Icon size={14} color="#8b5cf6" />
+                      <Icon size={14} color="#3b82f6" />
                       <span style={{ fontSize: '11px', fontWeight: 600, color: '#e2e8f0' }}>{action.label}</span>
                     </button>
                   );
@@ -710,7 +712,7 @@ export function AIPanel() {
                 width: '28px',
                 height: '28px',
                 borderRadius: '6px',
-                background: input.trim() ? 'var(--primary, #8b5cf6)' : 'rgba(255,255,255,0.1)',
+                background: input.trim() ? 'var(--primary, #2563eb)' : 'rgba(255,255,255,0.1)',
                 color: '#fff',
                 border: 'none',
                 cursor: input.trim() ? 'pointer' : 'default',

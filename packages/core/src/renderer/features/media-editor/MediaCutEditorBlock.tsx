@@ -48,10 +48,21 @@ export const MediaCutEditorBlock = createReactBlockSpec(
         setGpuAvailable('gpu' in navigator)
       }, [])
 
+      const blobUrlsRef = useRef<string[]>([])
+
+      useEffect(() => {
+        return () => {
+          blobUrlsRef.current.forEach(u => {
+            if (u.startsWith('blob:')) URL.revokeObjectURL(u)
+          })
+        }
+      }, [])
+
       const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file) return
         const url = URL.createObjectURL(file)
+        blobUrlsRef.current.push(url)
         const type = file.type.startsWith('video/') ? 'video' : 'audio'
         
         const newClip: MediaClip = {
@@ -151,7 +162,7 @@ export const MediaCutEditorBlock = createReactBlockSpec(
               <div key={clip.id} style={{ 
                 minWidth: '100px', 
                 height: '40px', 
-                background: i % 2 === 0 ? '#3b82f6' : '#8b5cf6', 
+                background: i % 2 === 0 ? '#3b82f6' : '#2563eb', 
                 borderRadius: '4px', 
                 display: 'flex', 
                 alignItems: 'center', 

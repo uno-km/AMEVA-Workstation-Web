@@ -109,7 +109,7 @@ export const MiniColabBlock = createReactBlockSpec(
               </button>
               <button onClick={() => addCell('python')} style={{ background: '#3b82f6', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}>+ Python</button>
               <button onClick={() => addCell('javascript')} style={{ background: '#f59e0b', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}>+ JavaScript</button>
-              <button onClick={() => addCell('sql')} style={{ background: '#8b5cf6', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}>+ SQL</button>
+              <button onClick={() => addCell('sql')} style={{ background: '#2563eb', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}>+ SQL</button>
             </div>
           </div>
 

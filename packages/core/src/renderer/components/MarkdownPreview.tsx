@@ -103,7 +103,11 @@ function decodeHtmlEntities(str: string): string {
  * buildPreviewSegments 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
  * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
-function buildPreviewSegments(markdown: string) {
+function buildPreviewSegments(rawMarkdown?: string) {
+  const markdown = typeof rawMarkdown === 'string' ? rawMarkdown : ''
+  if (!markdown.trim()) {
+    return []
+  }
   const customBlocks: { lang: string; code: string }[] = []
 
       /*
@@ -335,23 +339,30 @@ function buildPreviewSegments(markdown: string) {
  * MarkdownPreview 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
  * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
-export function MarkdownPreview({ markdown, editor }: { markdown: string; editor?: AmevaEditor | null }) {
+export interface MarkdownPreviewProps {
+  markdown?: string
+  content?: string
+  editor?: AmevaEditor | null
+}
+
+export function MarkdownPreview({ markdown, content, editor }: MarkdownPreviewProps) {
+  const targetMarkdown = markdown ?? content ?? ''
   /*
    * [RUN-TIME STATE / INVARIANT]
    * - 변수 명: `segments`
    * - 자료형 / 예상 값: Array<{type: string, html?: string, code?: string, language?: string}>
    * - 시나리오: 입력받은 markdown 문자열이 변경될 때마다 buildPreviewSegments를 호출하여 내부 커스텀 블록과 일반 HTML 영역으로 파싱해 배열 캐시를 동적으로 할당함.
-   * - 예시 코드: `const segments = useMemo(() => buildPreviewSegments(markdown), [markdown])`
+   * - 예시 코드: `const segments = useMemo(() => buildPreviewSegments(targetMarkdown), [targetMarkdown])`
    */
   const segments = useMemo(() => {
     try {
-      const parsed = buildPreviewSegments(markdown)
+      const parsed = buildPreviewSegments(targetMarkdown)
       return parsed
     } catch (err) {
       console.error('[MarkdownPreview] Failed to parse markdown segments:', err)
       return []
     }
-  }, [markdown])
+  }, [targetMarkdown])
 
   return (
     <div className="markdown-preview-body" style={{ padding: '10px 0', color: 'var(--text-main)', lineHeight: '1.7' }}>

@@ -54,6 +54,11 @@ import {
   type GhostTextCallbacks,
 } from '../../services/llm/ghostText/GhostTextPlugin';
 
+// RAG 인덱스 DB 디스크 I/O 병목 해소를 위한 메모리 TTL 캐시 (30초)
+let cachedRAGChunks: any[] | null = null;
+let lastRAGChunksFetchTime = 0;
+const RAG_CACHE_TTL = 30000;
+
 // ─────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────
@@ -272,14 +277,19 @@ export function useGhostText({
     throttleRef.current = throttledShow;
 
     try {
-      // [RAG Smart Copilot Context Lookup]
+      // [RAG Smart Copilot Context Lookup with TTL Cache]
       let referenceContext = '';
       try {
-        const { loadAllChunks, searchKeywordOnly } = await import('../../features/rag-embedding/vectorStore');
-        const allChunks = await loadAllChunks();
-        if (allChunks && allChunks.length > 0) {
+        const now = Date.now();
+        if (!cachedRAGChunks || now - lastRAGChunksFetchTime > RAG_CACHE_TTL) {
+          const { loadAllChunks } = await import('../../features/rag-embedding/vectorStore');
+          cachedRAGChunks = await loadAllChunks();
+          lastRAGChunksFetchTime = now;
+        }
+        if (cachedRAGChunks && cachedRAGChunks.length > 0) {
+          const { searchKeywordOnly } = await import('../../features/rag-embedding/vectorStore');
           const beforeTextSample = getTextBeforeCursor(view.state, pos, 60);
-          const matched = searchKeywordOnly(beforeTextSample, 1, allChunks);
+          const matched = searchKeywordOnly(beforeTextSample, 1, cachedRAGChunks);
           if (matched.length > 0 && (matched[0].score || 0) > 10) {
             const topChunk = matched[0];
             const headingPrefix = topChunk.heading ? `[${topChunk.heading}] ` : '';

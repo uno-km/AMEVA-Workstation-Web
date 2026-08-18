@@ -154,7 +154,7 @@ export const AppLayout: React.FC<AppLayoutProps> = (props) => {
     setShowAIPanel,
   } = useUIStore()
 
-  const { isSplitView } = useWorkspaceStore()
+  const isSplitView = useWorkspaceStore(s => s.isSplitView)
 
   // AI 패널 너비: 설정에서 저장된 값 사용, 기본 320px
   const [aiPanelWidth, setAIPanelWidth] = React.useState<number>(320)
@@ -260,7 +260,7 @@ export const AppLayout: React.FC<AppLayoutProps> = (props) => {
             <React.Suspense
               fallback={
                 <div style={{ padding: '24px', color: 'var(--text-muted)', fontSize: '11px', display: 'flex', flexDirection: 'column', gap: '14px', background: 'var(--bg-deep)', height: '100%', borderRight: '1px solid var(--border-muted)', userSelect: 'none' }}>
-                  <div style={{ height: '24px', background: 'rgba(139,92,246,0.08)', borderRadius: '6px', width: '70%', opacity: 0.5 }} />
+                  <div style={{ height: '24px', background: 'rgba(59, 130, 246,0.08)', borderRadius: '6px', width: '70%', opacity: 0.5 }} />
                   <div style={{ height: '32px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', opacity: 0.5 }} />
                   <div style={{ flex: 1, background: 'rgba(255,255,255,0.01)', borderRadius: '8px', opacity: 0.3 }} />
                 </div>
@@ -271,7 +271,7 @@ export const AppLayout: React.FC<AppLayoutProps> = (props) => {
           ) : (
             // 로딩 스켈레톤 가이드 (성능 상 visual jump를 없애기 위함)
             <div style={{ padding: '24px', color: 'var(--text-muted)', fontSize: '11px', display: 'flex', flexDirection: 'column', gap: '14px', background: 'var(--bg-deep)', height: '100%', borderRight: '1px solid var(--border-muted)', userSelect: 'none' }}>
-              <div style={{ height: '24px', background: 'rgba(139,92,246,0.08)', borderRadius: '6px', width: '70%', opacity: 0.5 }} />
+              <div style={{ height: '24px', background: 'rgba(59, 130, 246,0.08)', borderRadius: '6px', width: '70%', opacity: 0.5 }} />
               <div style={{ height: '32px', background: 'rgba(255,255,255,0.03)', borderRadius: '6px', opacity: 0.5 }} />
               <div style={{ flex: 1, background: 'rgba(255,255,255,0.01)', borderRadius: '8px', opacity: 0.3 }} />
             </div>

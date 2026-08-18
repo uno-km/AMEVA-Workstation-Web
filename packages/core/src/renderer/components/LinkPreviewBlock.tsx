@@ -176,10 +176,10 @@ function LinkPreviewComponent({ block, editor }: { block: any, editor: any }) {
                   <button
                     onClick={() => setIsExpanded(!isExpanded)}
                     style={{
-                      background: 'rgba(139,92,246,0.15)',
-                      border: '1.5px solid rgba(139,92,246,0.3)',
+                      background: 'rgba(59, 130, 246,0.15)',
+                      border: '1.5px solid rgba(59, 130, 246,0.3)',
                       borderRadius: '6px',
-                      color: '#a78bfa',
+                      color: '#38bdf8',
                       fontSize: '10.5px',
                       padding: '4px 8px',
                       cursor: 'pointer',
@@ -187,12 +187,12 @@ function LinkPreviewComponent({ block, editor }: { block: any, editor: any }) {
                       transition: 'all 0.25s'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(139,92,246,0.3)'
-                      e.currentTarget.style.borderColor = '#a78bfa'
+                      e.currentTarget.style.background = 'rgba(59, 130, 246,0.3)'
+                      e.currentTarget.style.borderColor = '#38bdf8'
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(139,92,246,0.15)'
-                      e.currentTarget.style.borderColor = 'rgba(139,92,246,0.3)'
+                      e.currentTarget.style.background = 'rgba(59, 130, 246,0.15)'
+                      e.currentTarget.style.borderColor = 'rgba(59, 130, 246,0.3)'
                     }}
                   >
                     {isExpanded ? '접기 ▲' : '미리보기 ▶'}

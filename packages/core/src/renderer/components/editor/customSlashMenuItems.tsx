@@ -38,12 +38,11 @@ import React from 'react'
 // [외부 패키지 및 라이브러리 임포트: @blocknote/react]
 import { getDefaultReactSlashMenuItems } from '@blocknote/react'
 // [외부 패키지 및 라이브러리 임포트: lucide-react]
-import { Code2, Globe, Eye, Terminal, File, Layout, Pencil, FileText, FileSpreadsheet, Presentation, FileType2, Type, Sparkles, Bug, FileSearch, BookOpen } from 'lucide-react'
+import { Code2, Globe, Eye, Terminal, File, Layout, Pencil, FileText, FileSpreadsheet, Presentation, FileType2, Type } from 'lucide-react'
 // [내부 프로젝트 의존성 모듈 임포트: ../../config/features]
 import { FEATURE_FLAGS } from '../../config/features'
 // [내부 프로젝트 의존성 모듈 임포트: ../../editor/amevaBlockSchema]
 import { type AmevaEditor } from '../../editor/amevaBlockSchema'
-import { useUIStore } from '../../stores/useUIStore'
 
   /*
    * [FUNCTION CONTRACT]
@@ -194,7 +193,7 @@ export function getCustomSlashMenuItems(editorInstance: AmevaEditor, installedPl
       onItemClick: insertCodeBlock('mermaid'),
       aliases: ['mermaid', 'diagram', 'flowchart', 'chart', 'cm'],
       group: 'Code',
-      icon: <Eye size={16} color="#8b5cf6" />,
+      icon: <Eye size={16} color="#2563eb" />,
       subtext: 'Mermaid 다이어그램 블록 삽입 (/cm)',
     },
     {
@@ -438,7 +437,7 @@ export function getCustomSlashMenuItems(editorInstance: AmevaEditor, installedPl
           docType,
           fileName: '',
           fileBase64: '',
-          height: '420',
+          height: '850',
           sourceUrl: '',
           isExpanded: 'false',
         }
@@ -486,7 +485,7 @@ export function getCustomSlashMenuItems(editorInstance: AmevaEditor, installedPl
       onItemClick: insertDocumentBlock('unknown'),
       aliases: ['문서블록', 'document', 'file', 'attachment', '첨부파일'],
       group: 'Documents',
-      icon: <File size={16} color="#8b5cf6" />,
+      icon: <File size={16} color="#2563eb" />,
       subtext: '임의 문서 첨부 블록 삽입 (/doc)',
     },
   ]
@@ -581,51 +580,7 @@ export function getCustomSlashMenuItems(editorInstance: AmevaEditor, installedPl
     },
   ]
 
-  // AI Code Intelligence Slash Menu Items (SCRUM-172)
-  const aiCodeItems = [
-    {
-      title: 'AI 코드 생성 (Qwen Coder)',
-      onItemClick: () => {
-        useUIStore.getState().openCodeAssistant({ initialMode: 'generate' })
-      },
-      aliases: ['code', 'coder', 'ai-code', '코딩', '코드생성', '개발'],
-      group: 'AI Code Intelligence',
-      icon: <Sparkles size={16} color="#3b82f6" />,
-      subtext: '자연어 설명으로 다국어 코드 자동 작성 (/code)'
-    },
-    {
-      title: 'AI 에러 디버깅 & 해결',
-      onItemClick: () => {
-        useUIStore.getState().openCodeAssistant({ initialMode: 'debug' })
-      },
-      aliases: ['debug', 'fix', 'error', '에러', '디버깅', '버그'],
-      group: 'AI Code Intelligence',
-      icon: <Bug size={16} color="#ef4444" />,
-      subtext: '스택트레이스 및 런타임 오류 자동 진단 및 패치 (/debug)'
-    },
-    {
-      title: 'AI 코드 정밀 리뷰',
-      onItemClick: () => {
-        useUIStore.getState().openCodeAssistant({ initialMode: 'review' })
-      },
-      aliases: ['review', 'lint', '리뷰', '코드리뷰'],
-      group: 'AI Code Intelligence',
-      icon: <FileSearch size={16} color="#8b5cf6" />,
-      subtext: '시간복잡도/보안/클린코드 심층 분석 (/review)'
-    },
-    {
-      title: 'AI 코드 상세 해설',
-      onItemClick: () => {
-        useUIStore.getState().openCodeAssistant({ initialMode: 'explain' })
-      },
-      aliases: ['explain', '해설', '해석', '코드해석'],
-      group: 'AI Code Intelligence',
-      icon: <BookOpen size={16} color="#10b981" />,
-      subtext: '소스코드 동작 원리 단계별 해설 (/explain)'
-    }
-  ]
-
-  const finalItems = [...aiCodeItems, ...filtered, ...codeItems, ...drawingItems, mapItem, ...excelItems, ...kanbanItems, ...documentItems]
+  const finalItems = [...filtered, ...codeItems, ...drawingItems, mapItem, ...excelItems, ...kanbanItems, ...documentItems]
   if (FEATURE_FLAGS.ENABLE_SMARTDOCS) {
     finalItems.push(...smartDocsItems)
   }

@@ -450,8 +450,8 @@ export function FloatingChat({}: FloatingChatProps = {}) {
           borderRadius: '50%',
           background: 'linear-gradient(135deg, rgba(30, 27, 75, 0.85), rgba(15, 23, 42, 0.85))',
           backdropFilter: 'blur(20px)',
-          border: '1.5px solid rgba(139, 92, 246, 0.5)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 15px rgba(139, 92, 246, 0.3)',
+          border: '1.5px solid rgba(59, 130, 246, 0.5)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 15px rgba(59, 130, 246, 0.3)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -461,11 +461,11 @@ export function FloatingChat({}: FloatingChatProps = {}) {
           userSelect: 'none',
         }}
         onMouseDown={handleDragMouseDown}
-        onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#a78bfa')}
-        onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.5)')}
+        onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#38bdf8')}
+        onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'rgba(59, 130, 246, 0.5)')}
         title="드래그하여 이동 / 클릭하여 열기"
       >
-        <MessageCircle size={22} style={{ color: '#a78bfa' }} />
+        <MessageCircle size={22} style={{ color: '#38bdf8' }} />
 
         {/* 🟠 주황색 알림 주황점 (Pulsing Orange Badge) */}
         {hasUnread && (
@@ -508,8 +508,8 @@ export function FloatingChat({}: FloatingChatProps = {}) {
         borderRadius: '12px',
         background: 'rgba(10, 11, 18, 0.9)',
         backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(139, 92, 246, 0.3)',
-        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(139, 92, 246, 0.15)',
+        border: '1px solid rgba(59, 130, 246, 0.3)',
+        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(59, 130, 246, 0.15)',
         display: 'flex',
         flexDirection: 'column',
         zIndex: 9990,
@@ -522,7 +522,7 @@ export function FloatingChat({}: FloatingChatProps = {}) {
         onMouseDown={handleDragMouseDown}
         style={{
           padding: '8px 12px',
-          background: 'linear-gradient(90deg, rgba(139, 92, 246, 0.15), transparent)',
+          background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.15), transparent)',
           borderBottom: '1px solid rgba(255,255,255,0.06)',
           display: 'flex',
           alignItems: 'center',
@@ -533,7 +533,7 @@ export function FloatingChat({}: FloatingChatProps = {}) {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#8b5cf6', display: 'inline-block' }} />
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#2563eb', display: 'inline-block' }} />
           <span style={{ fontSize: '11px', fontWeight: 700, color: '#e5e7eb', letterSpacing: '0.5px' }}>
             CHAT (FLOATING)
           </span>
@@ -601,7 +601,7 @@ export function FloatingChat({}: FloatingChatProps = {}) {
           height: '15px',
           cursor: 'se-resize',
           zIndex: 10,
-          background: 'linear-gradient(135deg, transparent 40%, rgba(139, 92, 246, 0.4) 100%)',
+          background: 'linear-gradient(135deg, transparent 40%, rgba(59, 130, 246, 0.4) 100%)',
         }}
       />
     </div>

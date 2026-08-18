@@ -27,7 +27,7 @@ import { usePdfAnnotations } from '../hooks/usePdfAnnotations'
 import type { AnnotationTool } from '../hooks/usePdfAnnotations'
 import { uint8ArrayToBase64 } from '../utils/pdfAnnotationWriter'
 import { getAttachment } from '../utils/vfsDatabase'
-import { PdfMapReduceModal } from './pdf/PdfMapReduceModal'
+import { useDocumentSummaryStore } from '../stores/useDocumentSummaryStore'
 
 
 // [NEW] 50페이지 제한을 없애고 레이지 로딩을 지원하는 썸네일 컴포넌트
@@ -252,7 +252,6 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
   const [pageInput, setPageInput] = useState('1')
   const [searchQuery, setSearchQuery] = useState('')
   const [showSearch, setShowSearch] = useState(false)
-  const [showMapReduceModal, setShowMapReduceModal] = useState(false)
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 })
   const [showAnnotationTools, setShowAnnotationTools] = useState(false)
   const [annotationOpacity, setAnnotationOpacity] = useState(0.85)
@@ -683,7 +682,7 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
       }}>
         <div style={{
           width: '36px', height: '36px', borderRadius: '50%',
-          border: '3px solid rgba(139, 92, 246, 0.2)',
+          border: '3px solid rgba(59, 130, 246, 0.2)',
           borderTop: '3px solid #3b82f6',
           animation: 'spin 0.8s linear infinite'
         }} />
@@ -947,18 +946,29 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
             ...btnStyle,
             width: 'auto',
             padding: '0 10px',
-            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(59, 130, 246, 0.2) 100%)',
-            color: '#c4b5fd',
-            borderColor: 'rgba(139, 92, 246, 0.4)',
+            background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.25) 0%, rgba(6, 182, 212, 0.2) 100%)',
+            color: '#93c5fd',
+            borderColor: 'rgba(59, 130, 246, 0.45)',
             fontWeight: 700,
             fontSize: '11px',
             gap: '6px',
-            boxShadow: '0 0 12px rgba(139, 92, 246, 0.25)'
+            boxShadow: '0 0 12px rgba(59, 130, 246, 0.25)'
           }}
-          onClick={() => setShowMapReduceModal(true)}
+          onClick={() => {
+            const fileId = pdfData?.startsWith('ameva-vfs://') ? pdfData.replace('ameva-vfs://', '') : undefined;
+            const taskId = fileId || fileName;
+            useDocumentSummaryStore.getState().registerSummaryTask({
+              id: taskId,
+              fileId,
+              fileName,
+              docType: 'pdf',
+              numPages: numPages
+            });
+            useDocumentSummaryStore.getState().openModalForTask(taskId);
+          }}
           title="대용량 PDF 3단계 계층형 맵리듀스(Map-Reduce) AI 상세 분석을 실행합니다"
         >
-          <Sparkles size={13} color="#a78bfa" />
+          <Sparkles size={13} color="#60a5fa" />
           <span>AI 맵리듀스 상세 요약</span>
         </button>
 
@@ -970,9 +980,9 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
                 ...btnStyle,
                 width: 'auto',
                 padding: '0 10px',
-                background: 'rgba(168, 85, 247, 0.15)',
-                color: '#d8b4fe',
-                borderColor: 'rgba(168, 85, 247, 0.3)',
+                background: 'rgba(59, 130, 246, 0.15)',
+                color: '#93c5fd',
+                borderColor: 'rgba(59, 130, 246, 0.3)',
                 fontWeight: 600,
                 fontSize: '11px',
                 gap: '6px'
@@ -1310,17 +1320,6 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
           ← → 이동 | + - 줌 | F 검색 | C 연속/단일
         </span>
       </div>
-
-      {/* 대용량 PDF 3단계 맵리듀스 AI 상세 요약 모달 */}
-      {showMapReduceModal && (
-        <PdfMapReduceModal
-          pdf={pdf}
-          fileName={fileName}
-          numPages={numPages}
-          onClose={() => setShowMapReduceModal(false)}
-          onInsertToEditor={onInsertReport}
-        />
-      )}
     </div>
   )
 }

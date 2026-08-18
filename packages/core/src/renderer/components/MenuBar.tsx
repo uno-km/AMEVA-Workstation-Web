@@ -733,7 +733,7 @@ export function MenuBar({}: MenuBarProps = {}) {
             title="AMEVA Browser 앱 실행"
             style={{ width: '26px', height: '26px' }}
           >
-            <svg viewBox="0 0 24 24" style={{ width: '13px', height: '13px', fill: 'none', stroke: '#a78bfa', strokeWidth: 2.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
+            <svg viewBox="0 0 24 24" style={{ width: '13px', height: '13px', fill: 'none', stroke: '#38bdf8', strokeWidth: 2.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
               <polygon points="12 2 2 22 22 22" />
               <line x1="12" y1="11" x2="12" y2="21" />
             </svg>

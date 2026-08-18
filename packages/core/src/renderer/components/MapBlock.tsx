@@ -15,6 +15,7 @@ import { MapPin, Search, Map as MapIcon, X, ChevronDown, ChevronUp, Navigation, 
 import React, { useState, useEffect } from 'react'
 
 import { AsyncBlockWrapper } from './AsyncBlockWrapper'
+import { ResizableBlockContainer } from './ResizableBlockContainer'
 import type { MapPinData, MapRouteData } from './map/AmevaMapViewer'
 
 const AmevaMapViewer = React.lazy(() => 
@@ -131,7 +132,7 @@ const RouteDetails = ({ route }: { route: MapRouteData }) => {
 const ROUTE_COLORS = [
   '#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e',
   '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9', '#3b82f6',
-  '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899',
+  '#6366f1', '#2563eb', '#a855f7', '#d946ef', '#ec4899',
   '#f43f5e', '#fb923c', '#fbbf24', '#a3e635', '#4ade80'
 ]
 
@@ -160,7 +161,9 @@ export const MapBlockSpec = createReactBlockSpec(
       mapMode: { default: 'pin' },
       useUserLocation: { default: 'false' },
       pins: { default: '[]' },
-      routes: { default: '[]' }
+      routes: { default: '[]' },
+      height: { default: '480' },
+      width: { default: '100%' }
     },
     content: 'none',
   },
@@ -328,234 +331,255 @@ export const MapBlockSpec = createReactBlockSpec(
         updateProps({ routes: JSON.stringify(newRoutes) })
       }
 
+      const initialHeight = parseInt(props.height || '480', 10)
+      const initialWidth = props.width || '100%'
+
       return (
-        <div
-          className="bn-block-content-wrapper"
-          style={{
-            width: '100%',
-            backgroundColor: '#18181c',
-            border: '1px solid var(--border-muted)',
-            borderRadius: '12px',
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-            marginTop: '8px',
-            marginBottom: '8px'
+        <ResizableBlockContainer
+          initialHeight={initialHeight}
+          initialWidth={initialWidth}
+          minHeight={280}
+          maxHeight={3000}
+          minWidth={280}
+          maxWidth={3200}
+          disabled={!isEditable}
+          accentColor="#10b981"
+          onResizeEnd={({ height: newH, width: newW }) => {
+            updateProps({
+              height: String(Math.round(newH)),
+              width: newW || props.width || '100%'
+            })
           }}
+          style={{ margin: '14px 0', width: props.width || '100%' }}
         >
-          {/* 헤더 바 */}
-          <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border-muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#121215' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <MapIcon size={14} color="#10b981" />
-              <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#f8fafc' }}>지도 (Map)</span>
-            </div>
-            {isEditable && (
-              <div style={{ display: 'flex', gap: '4px' }}>
-                <button 
-                  onClick={() => updateProps({ mapMode: 'pin' })}
-                  style={{ background: mapMode === 'pin' ? 'rgba(16, 185, 129, 0.2)' : 'transparent', border: '1px solid', borderColor: mapMode === 'pin' ? '#10b981' : 'var(--border-muted)', color: mapMode === 'pin' ? '#10b981' : 'var(--text-muted)', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
-                >📍 다중 핀</button>
-                <button 
-                  onClick={() => updateProps({ mapMode: 'route' })}
-                  style={{ background: mapMode === 'route' ? 'rgba(59, 130, 246, 0.2)' : 'transparent', border: '1px solid', borderColor: mapMode === 'route' ? '#3b82f6' : 'var(--border-muted)', color: mapMode === 'route' ? '#3b82f6' : 'var(--text-muted)', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
-                >🗺️ 경로 탐색</button>
+          {({ height: containerH }) => (
+            <div
+              className="bn-block-content-wrapper custom-map-card"
+              style={{
+                width: '100%',
+                height: `${containerH}px`,
+                backgroundColor: '#18181c',
+                border: '1px solid var(--border-muted)',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                boxSizing: 'border-box'
+              }}
+            >
+              {/* 헤더 바 */}
+              <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border-muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#121215', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <MapIcon size={14} color="#10b981" />
+                  <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#f8fafc' }}>지도 (Map)</span>
+                </div>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button 
+                    onClick={() => updateProps({ mapMode: 'pin' })}
+                    style={{ background: mapMode === 'pin' ? 'rgba(16, 185, 129, 0.2)' : 'transparent', border: '1px solid', borderColor: mapMode === 'pin' ? '#10b981' : 'var(--border-muted)', color: mapMode === 'pin' ? '#10b981' : 'var(--text-muted)', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
+                  >📍 다중 핀</button>
+                  <button 
+                    onClick={() => updateProps({ mapMode: 'route' })}
+                    style={{ background: mapMode === 'route' ? 'rgba(59, 130, 246, 0.2)' : 'transparent', border: '1px solid', borderColor: mapMode === 'route' ? '#3b82f6' : 'var(--border-muted)', color: mapMode === 'route' ? '#3b82f6' : 'var(--text-muted)', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}
+                  >🗺️ 경로 탐색</button>
+                </div>
               </div>
-            )}
-          </div>
 
-          {/* 에디터 컨트롤 패널 */}
-          {isEditable && (
-            <div style={{ padding: '12px', background: 'var(--bg-deep)', borderBottom: '1px solid var(--border-muted)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              
-              {mapMode === 'pin' && (
-                <>
-                  <div style={{ position: 'relative' }}>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <input 
-                        type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSearchPin()}
-                        placeholder="장소나 주소를 검색 후 엔터를 치세요..."
-                        style={{ flex: 1, padding: '8px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-muted)', borderRadius: '4px', color: '#fff', fontSize: '11px' }}
-                      />
-                      <button onClick={handleSearchPin} style={{ background: '#10b981', color: '#000', border: 'none', padding: '0 12px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>검색</button>
-                    </div>
-                    {pinSearchResults && pinSearchResults.length > 0 && (
-                      <div style={{ position: 'absolute', top: '100%', left: 0, right: '60px', background: '#1e1e24', border: '1px solid var(--border-muted)', borderRadius: '4px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', marginTop: '4px' }}>
-                        {pinSearchResults.map((r, i) => (
-                          <div key={i} onClick={() => handleSelectPinResult(r)} style={{ padding: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: '10px' }}>
-                            <strong style={{ color: '#fff' }}>{r.name || searchInput}</strong><br/>
-                            <span style={{ color: 'var(--text-muted)' }}>{r.display_name}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {pinSearchResults && pinSearchResults.length === 0 && searchInput && (
-                      <div style={{ position: 'absolute', top: '100%', left: 0, right: '60px', background: '#1e1e24', border: '1px solid var(--border-muted)', borderRadius: '4px', zIndex: 10, padding: '8px', marginTop: '4px', fontSize: '10px', color: 'var(--text-muted)' }}>
-                        엔터를 눌러 검색하세요. 결과가 없으면 표시됩니다.
-                      </div>
-                    )}
-                  </div>
-                  
-                  {pins.length > 0 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      {pins.map((p, i) => (
-                        <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-muted)', borderRadius: '6px', overflow: 'hidden' }}>
-                          <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setExpandedPinIdx(expandedPinIdx === i ? null : i)}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <MapPin size={12} color="#10b981" />
-                              <span style={{ fontSize: '11px', color: '#fff' }}>{p.name}</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <button onClick={(e) => { e.stopPropagation(); handleRemovePin(i) }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><X size={12} /></button>
-                              {expandedPinIdx === i ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                            </div>
-                          </div>
-                          {expandedPinIdx === i && (
-                            <div style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.2)', borderTop: '1px solid var(--border-muted)' }}>
-                              <textarea
-                                value={p.description || ''}
-                                onChange={e => updatePinData(i, { description: e.target.value })}
-                                placeholder="이 핀에 대한 상세 설명을 작성하세요..."
-                                style={{ width: '100%', padding: '6px', background: 'var(--bg-deep)', border: '1px solid var(--border-muted)', borderRadius: '4px', color: 'var(--text-main)', fontSize: '11px', resize: 'vertical', minHeight: '40px' }}
-                              />
-                            </div>
-                          )}
+              {/* 에디터 컨트롤 패널 (핀 추가, 경로 탐색, 장소 검색) */}
+              <div style={{ padding: '12px', background: 'var(--bg-deep)', borderBottom: '1px solid var(--border-muted)', display: 'flex', flexDirection: 'column', gap: '12px', flexShrink: 0, maxHeight: '200px', overflowY: 'auto' }}>
+                {mapMode === 'pin' && (
+                    <>
+                      <div style={{ position: 'relative' }}>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <input 
+                            type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSearchPin()}
+                            placeholder="장소나 주소를 검색 후 엔터를 치세요..."
+                            style={{ flex: 1, padding: '8px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-muted)', borderRadius: '4px', color: '#fff', fontSize: '11px' }}
+                          />
+                          <button onClick={handleSearchPin} style={{ background: '#10b981', color: '#000', border: 'none', padding: '0 12px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>검색</button>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-
-              {mapMode === 'route' && (
-                <>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    
-                    {/* 출발지 / 목적지 검색 UI */}
-                    <div style={{ display: 'flex', gap: '8px', position: 'relative' }}>
-                      <div style={{ flex: 1, position: 'relative' }}>
-                        <input 
-                          type="text" value={startSearch} onChange={e => { setStartSearch(e.target.value); setSelectedStart(null); }} onKeyDown={e => e.key === 'Enter' && handleSearchStart()}
-                          placeholder="출발지 검색 (Enter)"
-                          style={{ width: '100%', padding: '8px 12px', background: 'var(--bg-surface)', border: selectedStart ? '1px solid #3b82f6' : '1px solid var(--border-muted)', borderRadius: '4px', color: '#fff', fontSize: '11px' }}
-                        />
-                        {startSearchResults && startSearchResults.length > 0 && (
-                          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e1e24', border: '1px solid var(--border-muted)', borderRadius: '4px', zIndex: 10, maxHeight: '200px', overflowY: 'auto' }}>
-                            {startSearchResults.map((r, i) => (
-                              <div key={i} onClick={() => { setSelectedStart(r); setStartSearch(r.name || r.display_name.split(',')[0]); setStartSearchResults([]) }} style={{ padding: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: '10px' }}>
-                                <strong style={{ color: '#fff' }}>{r.display_name.split(',')[0]}</strong><br/>
+                        {pinSearchResults && pinSearchResults.length > 0 && (
+                          <div style={{ position: 'absolute', top: '100%', left: 0, right: '60px', background: '#1e1e24', border: '1px solid var(--border-muted)', borderRadius: '4px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', marginTop: '4px' }}>
+                            {pinSearchResults.map((r, i) => (
+                              <div key={i} onClick={() => handleSelectPinResult(r)} style={{ padding: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: '10px' }}>
+                                <strong style={{ color: '#fff' }}>{r.name || searchInput}</strong><br/>
                                 <span style={{ color: 'var(--text-muted)' }}>{r.display_name}</span>
                               </div>
                             ))}
                           </div>
                         )}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', color: 'var(--text-muted)' }}>➡</div>
-                      <div style={{ flex: 1, position: 'relative' }}>
-                        <input 
-                          type="text" value={destSearch} onChange={e => { setDestSearch(e.target.value); setSelectedDest(null); }} onKeyDown={e => e.key === 'Enter' && handleSearchDest()}
-                          placeholder="도착지 검색 (Enter)"
-                          style={{ width: '100%', padding: '8px 12px', background: 'var(--bg-surface)', border: selectedDest ? '1px solid #3b82f6' : '1px solid var(--border-muted)', borderRadius: '4px', color: '#fff', fontSize: '11px' }}
-                        />
-                        {destSearchResults && destSearchResults.length > 0 && (
-                          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e1e24', border: '1px solid var(--border-muted)', borderRadius: '4px', zIndex: 10, maxHeight: '200px', overflowY: 'auto' }}>
-                            {destSearchResults.map((r, i) => (
-                              <div key={i} onClick={() => { setSelectedDest(r); setDestSearch(r.name || r.display_name.split(',')[0]); setDestSearchResults([]) }} style={{ padding: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: '10px' }}>
-                                <strong style={{ color: '#fff' }}>{r.display_name.split(',')[0]}</strong><br/>
-                                <span style={{ color: 'var(--text-muted)' }}>{r.display_name}</span>
-                              </div>
-                            ))}
+                        {pinSearchResults && pinSearchResults.length === 0 && searchInput && (
+                          <div style={{ position: 'absolute', top: '100%', left: 0, right: '60px', background: '#1e1e24', border: '1px solid var(--border-muted)', borderRadius: '4px', zIndex: 10, padding: '8px', marginTop: '4px', fontSize: '10px', color: 'var(--text-muted)' }}>
+                            엔터를 눌러 검색하세요. 결과가 없으면 표시됩니다.
                           </div>
                         )}
                       </div>
-                    </div>
-
-                    {/* 이동 수단 및 추가 버튼 */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
-                      <div style={{ display: 'flex', gap: '4px' }}>
-                        <button onClick={() => setRouteType('driving')} style={{ background: routeType === 'driving' ? 'rgba(59, 130, 246, 0.2)' : 'transparent', border: '1px solid', borderColor: routeType === 'driving' ? '#3b82f6' : 'var(--border-muted)', color: routeType === 'driving' ? '#3b82f6' : 'var(--text-muted)', padding: '4px 12px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}>🚗 자동차</button>
-                        <button onClick={() => setRouteType('walking')} style={{ background: routeType === 'walking' ? 'rgba(16, 185, 129, 0.2)' : 'transparent', border: '1px solid', borderColor: routeType === 'walking' ? '#10b981' : 'var(--border-muted)', color: routeType === 'walking' ? '#10b981' : 'var(--text-muted)', padding: '4px 12px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}>🚶 도보</button>
-                        <button onClick={() => setRouteType('cycling')} style={{ background: routeType === 'cycling' ? 'rgba(245, 158, 11, 0.2)' : 'transparent', border: '1px solid', borderColor: routeType === 'cycling' ? '#f59e0b' : 'var(--border-muted)', color: routeType === 'cycling' ? '#f59e0b' : 'var(--text-muted)', padding: '4px 12px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}>🚲 자전거</button>
-                      </div>
-                      <button onClick={handleAddRoute} disabled={!selectedStart || !selectedDest} style={{ background: selectedStart && selectedDest ? '#3b82f6' : 'var(--bg-surface)', color: selectedStart && selectedDest ? '#fff' : 'var(--text-muted)', border: 'none', padding: '6px 16px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: selectedStart && selectedDest ? 'pointer' : 'not-allowed' }}>경로 추가</button>
-                    </div>
-                  </div>
-
-                  {/* 등록된 다중 경로 리스트 */}
-                  {routes.length > 0 && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
-                      {routes.map((r, i) => (
-                        <div key={r.id || i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-muted)', borderRadius: '6px', overflow: 'hidden' }}>
-                          <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setExpandedRouteIdx(expandedRouteIdx === i ? null : i)}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <Circle fill={r.color} color={r.color} size={10} />
-                              <span style={{ fontSize: '11px', color: '#fff', fontWeight: 'bold' }}>{r.name}</span>
-                              <span style={{ fontSize: '9px', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>{r.type === 'driving' ? '자동차' : r.type === 'walking' ? '도보' : '자전거'}</span>
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <button onClick={(e) => { e.stopPropagation(); handleRemoveRoute(i) }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><X size={12} /></button>
-                              {expandedRouteIdx === i ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                            </div>
-                          </div>
-                          {expandedRouteIdx === i && (
-                            <div style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.2)', borderTop: '1px solid var(--border-muted)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                <input type="color" value={r.color} onChange={e => updateRouteData(i, { color: e.target.value })} style={{ width: '24px', height: '24px', padding: 0, border: 'none', cursor: 'pointer', background: 'transparent' }} />
-                                <input type="text" value={r.name} onChange={e => updateRouteData(i, { name: e.target.value })} placeholder="경로 이름" style={{ flex: 1, padding: '4px 8px', background: 'var(--bg-deep)', border: '1px solid var(--border-muted)', borderRadius: '4px', color: 'var(--text-main)', fontSize: '11px' }} />
+                      
+                      {pins.length > 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          {pins.map((p, i) => (
+                            <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-muted)', borderRadius: '6px', overflow: 'hidden' }}>
+                              <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setExpandedPinIdx(expandedPinIdx === i ? null : i)}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <MapPin size={12} color="#10b981" />
+                                  <span style={{ fontSize: '11px', color: '#fff' }}>{p.name}</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <button onClick={(e) => { e.stopPropagation(); handleRemovePin(i) }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><X size={12} /></button>
+                                  {expandedPinIdx === i ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                                </div>
                               </div>
-                              <textarea
-                                value={r.description || ''}
-                                onChange={e => updateRouteData(i, { description: e.target.value })}
-                                placeholder="이 경로에 대한 상세 설명을 작성하세요..."
-                                style={{ width: '100%', padding: '6px', background: 'var(--bg-deep)', border: '1px solid var(--border-muted)', borderRadius: '4px', color: 'var(--text-main)', fontSize: '11px', resize: 'vertical', minHeight: '40px' }}
-                              />
-                              <RouteDetails route={r} />
+                              {expandedPinIdx === i && (
+                                <div style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.2)', borderTop: '1px solid var(--border-muted)' }}>
+                                  <textarea
+                                    value={p.description || ''}
+                                    onChange={e => updatePinData(i, { description: e.target.value })}
+                                    placeholder="이 핀에 대한 상세 설명을 작성하세요..."
+                                    style={{ width: '100%', padding: '6px', background: 'var(--bg-deep)', border: '1px solid var(--border-muted)', borderRadius: '4px', color: 'var(--text-main)', fontSize: '11px', resize: 'vertical', minHeight: '40px' }}
+                                  />
+                                </div>
+                              )}
                             </div>
-                          )}
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      )}
+                    </>
                   )}
-                </>
-              )}
+
+                  {mapMode === 'route' && (
+                    <>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        
+                        {/* 출발지 / 목적지 검색 UI */}
+                        <div style={{ display: 'flex', gap: '8px', position: 'relative' }}>
+                          <div style={{ flex: 1, position: 'relative' }}>
+                            <input 
+                              type="text" value={startSearch} onChange={e => { setStartSearch(e.target.value); setSelectedStart(null); }} onKeyDown={e => e.key === 'Enter' && handleSearchStart()}
+                              placeholder="출발지 검색 (Enter)"
+                              style={{ width: '100%', padding: '8px 12px', background: 'var(--bg-surface)', border: selectedStart ? '1px solid #3b82f6' : '1px solid var(--border-muted)', borderRadius: '4px', color: '#fff', fontSize: '11px' }}
+                            />
+                            {startSearchResults && startSearchResults.length > 0 && (
+                              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e1e24', border: '1px solid var(--border-muted)', borderRadius: '4px', zIndex: 10, maxHeight: '200px', overflowY: 'auto' }}>
+                                {startSearchResults.map((r, i) => (
+                                  <div key={i} onClick={() => { setSelectedStart(r); setStartSearch(r.name || r.display_name.split(',')[0]); setStartSearchResults([]) }} style={{ padding: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: '10px' }}>
+                                    <strong style={{ color: '#fff' }}>{r.display_name.split(',')[0]}</strong><br/>
+                                    <span style={{ color: 'var(--text-muted)' }}>{r.display_name}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--text-muted)' }}>➡</div>
+                          <div style={{ flex: 1, position: 'relative' }}>
+                            <input 
+                              type="text" value={destSearch} onChange={e => { setDestSearch(e.target.value); setSelectedDest(null); }} onKeyDown={e => e.key === 'Enter' && handleSearchDest()}
+                              placeholder="도착지 검색 (Enter)"
+                              style={{ width: '100%', padding: '8px 12px', background: 'var(--bg-surface)', border: selectedDest ? '1px solid #3b82f6' : '1px solid var(--border-muted)', borderRadius: '4px', color: '#fff', fontSize: '11px' }}
+                            />
+                            {destSearchResults && destSearchResults.length > 0 && (
+                              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e1e24', border: '1px solid var(--border-muted)', borderRadius: '4px', zIndex: 10, maxHeight: '200px', overflowY: 'auto' }}>
+                                {destSearchResults.map((r, i) => (
+                                  <div key={i} onClick={() => { setSelectedDest(r); setDestSearch(r.name || r.display_name.split(',')[0]); setDestSearchResults([]) }} style={{ padding: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: '10px' }}>
+                                    <strong style={{ color: '#fff' }}>{r.display_name.split(',')[0]}</strong><br/>
+                                    <span style={{ color: 'var(--text-muted)' }}>{r.display_name}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* 이동 수단 및 추가 버튼 */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                          <div style={{ display: 'flex', gap: '4px' }}>
+                            <button onClick={() => setRouteType('driving')} style={{ background: routeType === 'driving' ? 'rgba(59, 130, 246, 0.2)' : 'transparent', border: '1px solid', borderColor: routeType === 'driving' ? '#3b82f6' : 'var(--border-muted)', color: routeType === 'driving' ? '#3b82f6' : 'var(--text-muted)', padding: '4px 12px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}>🚗 자동차</button>
+                            <button onClick={() => setRouteType('walking')} style={{ background: routeType === 'walking' ? 'rgba(16, 185, 129, 0.2)' : 'transparent', border: '1px solid', borderColor: routeType === 'walking' ? '#10b981' : 'var(--border-muted)', color: routeType === 'walking' ? '#10b981' : 'var(--text-muted)', padding: '4px 12px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}>🚶 도보</button>
+                            <button onClick={() => setRouteType('cycling')} style={{ background: routeType === 'cycling' ? 'rgba(245, 158, 11, 0.2)' : 'transparent', border: '1px solid', borderColor: routeType === 'cycling' ? '#f59e0b' : 'var(--border-muted)', color: routeType === 'cycling' ? '#f59e0b' : 'var(--text-muted)', padding: '4px 12px', borderRadius: '4px', fontSize: '10px', cursor: 'pointer' }}>🚲 자전거</button>
+                          </div>
+                          <button onClick={handleAddRoute} disabled={!selectedStart || !selectedDest} style={{ background: selectedStart && selectedDest ? '#3b82f6' : 'var(--bg-surface)', color: selectedStart && selectedDest ? '#fff' : 'var(--text-muted)', border: 'none', padding: '6px 16px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: selectedStart && selectedDest ? 'pointer' : 'not-allowed' }}>경로 추가</button>
+                        </div>
+                      </div>
+
+                      {/* 등록된 다중 경로 리스트 */}
+                      {routes.length > 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
+                          {routes.map((r, i) => (
+                            <div key={r.id || i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-muted)', borderRadius: '6px', overflow: 'hidden' }}>
+                              <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setExpandedRouteIdx(expandedRouteIdx === i ? null : i)}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <Circle fill={r.color} color={r.color} size={10} />
+                                  <span style={{ fontSize: '11px', color: '#fff', fontWeight: 'bold' }}>{r.name}</span>
+                                  <span style={{ fontSize: '9px', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>{r.type === 'driving' ? '자동차' : r.type === 'walking' ? '도보' : '자전거'}</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <button onClick={(e) => { e.stopPropagation(); handleRemoveRoute(i) }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><X size={12} /></button>
+                                  {expandedRouteIdx === i ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                                </div>
+                              </div>
+                              {expandedRouteIdx === i && (
+                                <div style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.2)', borderTop: '1px solid var(--border-muted)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                    <input type="color" value={r.color} onChange={e => updateRouteData(i, { color: e.target.value })} style={{ width: '24px', height: '24px', padding: 0, border: 'none', cursor: 'pointer', background: 'transparent' }} />
+                                    <input type="text" value={r.name} onChange={e => updateRouteData(i, { name: e.target.value })} placeholder="경로 이름" style={{ flex: 1, padding: '4px 8px', background: 'var(--bg-deep)', border: '1px solid var(--border-muted)', borderRadius: '4px', color: 'var(--text-main)', fontSize: '11px' }} />
+                                  </div>
+                                  <textarea
+                                    value={r.description || ''}
+                                    onChange={e => updateRouteData(i, { description: e.target.value })}
+                                    placeholder="이 경로에 대한 상세 설명을 작성하세요..."
+                                    style={{ width: '100%', padding: '6px', background: 'var(--bg-deep)', border: '1px solid var(--border-muted)', borderRadius: '4px', color: 'var(--text-main)', fontSize: '11px', resize: 'vertical', minHeight: '40px' }}
+                                  />
+                                  <RouteDetails route={r} />
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+
+              {/* 지도 렌더러 영역 */}
+              <div style={{ flex: 1, minHeight: '180px', width: '100%', position: 'relative', overflow: 'hidden' }}>
+                <AsyncBlockWrapper name="지도">
+                  <AmevaMapViewer
+                    mapMode={mapMode}
+                    pins={pins}
+                    routes={routes}
+                    startLat={parseFloat(props.lat)}
+                    startLng={parseFloat(props.lng)}
+                    destLat={props.destLat ? parseFloat(props.destLat) : undefined}
+                    destLng={props.destLng ? parseFloat(props.destLng) : undefined}
+                    useUserLocation={useUserLocation}
+                    height="100%"
+                  />
+                </AsyncBlockWrapper>
+              </div>
+
+              {/* 메모 영역 (글로벌) */}
+              <div style={{ padding: '12px', background: '#121215', borderTop: '1px solid var(--border-muted)', flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '11px', color: 'var(--text-main)', fontWeight: 'bold' }}>📝 글로벌 메모</span>
+                </div>
+                {isEditable ? (
+                  <textarea
+                    defaultValue={props.memo}
+                    onBlur={handleMemoBlur}
+                    placeholder="전체 지도에 대한 노트를 남기세요..."
+                    style={{ width: '100%', border: '1px solid var(--border-muted)', color: 'var(--text-main)', fontSize: '11px', lineHeight: '1.4', resize: 'vertical', outline: 'none', padding: '6px', borderRadius: '4px', background: 'transparent' }}
+                  />
+                ) : props.memo ? (
+                  <div style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', color: 'var(--text-main)', fontSize: '11px', lineHeight: '1.5', whiteSpace: 'pre-wrap', textAlign: 'left' }}>
+                    {props.memo}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic', textAlign: 'left' }}>남겨진 메모가 없습니다.</div>
+                )}
+              </div>
             </div>
           )}
-
-          {/* 지도 렌더러 영역 */}
-          <AsyncBlockWrapper name="지도">
-            <AmevaMapViewer
-              mapMode={mapMode}
-              pins={pins}
-              routes={routes}
-              startLat={parseFloat(props.lat)}
-              startLng={parseFloat(props.lng)}
-              destLat={props.destLat ? parseFloat(props.destLat) : undefined}
-              destLng={props.destLng ? parseFloat(props.destLng) : undefined}
-              useUserLocation={useUserLocation}
-            />
-          </AsyncBlockWrapper>
-
-          {/* 메모 영역 (글로벌) */}
-          <div style={{ padding: '12px', background: '#121215', borderTop: '1px solid var(--border-muted)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text-main)', fontWeight: 'bold' }}>📝 글로벌 메모</span>
-            </div>
-            {isEditable ? (
-              <textarea
-                defaultValue={props.memo}
-                onBlur={handleMemoBlur}
-                placeholder="전체 지도에 대한 노트를 남기세요..."
-                style={{ width: '100%', border: '1px solid var(--border-muted)', color: 'var(--text-main)', fontSize: '11px', lineHeight: '1.4', resize: 'vertical', outline: 'none', padding: '6px', borderRadius: '4px', background: 'transparent' }}
-              />
-            ) : props.memo ? (
-              <div style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', color: 'var(--text-main)', fontSize: '11px', lineHeight: '1.5', whiteSpace: 'pre-wrap', textAlign: 'left' }}>
-                {props.memo}
-              </div>
-            ) : (
-              <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontStyle: 'italic', textAlign: 'left' }}>남겨진 메모가 없습니다.</div>
-            )}
-          </div>
-        </div>
+        </ResizableBlockContainer>
       )
     }
   }

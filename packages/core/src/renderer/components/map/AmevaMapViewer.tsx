@@ -68,6 +68,18 @@ interface AmevaMapViewerProps {
   height?: string
 }
 
+// 리사이징 시 Leaflet 지도 크기 재계산 컴포넌트
+function MapResizer({ height }: { height?: string }) {
+  const map = useMap()
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize()
+    }, 100)
+    return () => clearTimeout(timer)
+  }, [height, map])
+  return null
+}
+
 // 지도 영역 자동 맞춤 컴포넌트
 function MapFitter({ bounds }: { bounds: L.LatLngBoundsExpression | null }) {
   const map = useMap()
@@ -200,7 +212,7 @@ export function AmevaMapViewer({
     const fetchRoutes = async () => {
       if (mapMode === 'route' && startLat && startLng && destLat && destLng) {
         try {
-          const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${destLat},${destLng}?overview=full&geometries=geojson`)
+          const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${destLng},${destLat}?overview=full&geometries=geojson`)
           const data = await res.json()
           if (!active) return
           if (data.routes && data.routes.length > 0) {
@@ -220,31 +232,37 @@ export function AmevaMapViewer({
     return () => { active = false }
   }, [mapMode, startLat, startLng, destLat, destLng])
 
-  // GPS B루트 계산
+  // GPS 연동 실시간 위치 추적 및 B->Z 경로 탐색
   useEffect(() => {
-    let active = true
-    if (isGpsActive && activeTarget) {
-      navigator.geolocation.getCurrentPosition(async (pos) => {
-        if (!active) return
-        const uLat = pos.coords.latitude
-        const uLng = pos.coords.longitude
-        setUserPos({ lat: uLat, lng: uLng })
+    let watchId: number | null = null
+    if (isGpsActive && activeTarget && navigator.geolocation) {
+      watchId = navigator.geolocation.watchPosition(
+        async (position) => {
+          const uLat = position.coords.latitude
+          const uLng = position.coords.longitude
+          setUserPos({ lat: uLat, lng: uLng })
 
-        try {
-          const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${uLng},${uLat};${activeTarget.lng},${activeTarget.lat}?overview=full&geometries=geojson`)
-          const data = await res.json()
-          if (!active) return
-          if (data.routes && data.routes.length > 0) {
-            const coords = data.routes[0].geometry.coordinates.map((c: any) => [c[1], c[0]] as [number, number])
-            setRouteB(coords)
-          }
-        } catch(e) {}
-      })
+          try {
+            const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${uLng},${uLat};${activeTarget.lng},${activeTarget.lat}?overview=full&geometries=geojson`)
+            const data = await res.json()
+            if (data.routes && data.routes.length > 0) {
+              const coords = data.routes[0].geometry.coordinates.map((c: any) => [c[1], c[0]] as [number, number])
+              setRouteB(coords)
+              setBounds(L.latLngBounds([ [uLat, uLng], [activeTarget.lat, activeTarget.lng] ]))
+            }
+          } catch(e) {}
+        },
+        () => {},
+        { enableHighAccuracy: true, maximumAge: 5000, timeout: 10000 }
+      )
     } else {
-      setRouteB([])
       setUserPos(null)
+      setRouteB([])
     }
-    return () => { active = false }
+
+    return () => {
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId)
+    }
   }, [isGpsActive, activeTarget])
 
   // 핀 또는 멀티 경로 바운즈 계산
@@ -276,6 +294,7 @@ export function AmevaMapViewer({
         style={{ width: '100%', height: '100%' }}
         scrollWheelZoom={true}
       >
+        <MapResizer height={height} />
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'

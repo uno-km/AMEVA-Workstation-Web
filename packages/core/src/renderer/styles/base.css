@@ -98,7 +98,7 @@ body {
 /* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
 .glass-panel-interactive:hover {
   border-color: var(--primary);
-  box-shadow: 0 8px 32px 0 rgba(139, 92, 246, 0.15);
+  box-shadow: 0 8px 32px 0 rgba(59, 130, 246, 0.15);
   transform: translateY(-2px);
 }
 

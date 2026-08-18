@@ -393,12 +393,12 @@ export const YoutubeBlockComponent = ({ block, editor }: YoutubeBlockComponentPr
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {((typeof timeline === 'string' ? JSON.parse(timeline || '[]') : timeline) as {time: string, note: string}[]).map((t, idx) => (
                     <div key={idx} style={{
-                      display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(139, 92, 246, 0.1)',
-                      border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: '4px', padding: '2px 6px',
+                      display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(59, 130, 246, 0.1)',
+                      border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '4px', padding: '2px 6px',
                     }}>
                       <button
                         onClick={() => handleSeek(t.time)}
-                        style={{ background: 'none', border: 'none', color: '#a78bfa', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer', padding: 0 }}
+                        style={{ background: 'none', border: 'none', color: '#38bdf8', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer', padding: 0 }}
                       >
                         {t.time}
                       </button>
@@ -448,7 +448,7 @@ export const YoutubeBlockComponent = ({ block, editor }: YoutubeBlockComponentPr
                         max={Math.floor(duration)}
                         value={Math.floor(currentTime)}
                         onChange={handleSliderChange}
-                        style={{ flex: 1, accentColor: '#a78bfa', cursor: 'pointer' }}
+                        style={{ flex: 1, accentColor: '#38bdf8', cursor: 'pointer' }}
                       />
                       <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>
                         {Math.floor(duration / 60).toString().padStart(2, '0')}:{(Math.floor(duration) % 60).toString().padStart(2, '0')}

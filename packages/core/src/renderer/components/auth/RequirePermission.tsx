@@ -85,7 +85,7 @@ export function RequirePermission({ scope, children, fallback, hideInsteadOfFall
         onClick={() => setShowPricingModal(true)}
         style={{
           display: 'flex', alignItems: 'center', gap: '8px',
-          background: 'linear-gradient(to right, #ec4899, #8b5cf6)',
+          background: 'linear-gradient(to right, #ec4899, #2563eb)',
           border: 'none', color: '#fff', padding: '10px 24px',
           borderRadius: '24px', cursor: 'pointer', fontWeight: 600,
           boxShadow: '0 4px 12px rgba(236, 72, 153, 0.25)',

@@ -133,8 +133,8 @@ export function AboutModal({ isOpen, onClose, onOpenGithub }: AboutModalProps) {
             
             <div
               style={{
-                background: 'rgba(139, 92, 246, 0.08)',
-                border: '1px solid rgba(139, 92, 246, 0.15)',
+                background: 'rgba(59, 130, 246, 0.08)',
+                border: '1px solid rgba(59, 130, 246, 0.15)',
                 borderRadius: '8px',
                 padding: '12px 16px',
                 marginTop: '10px',

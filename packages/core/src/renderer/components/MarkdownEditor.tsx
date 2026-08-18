@@ -125,6 +125,7 @@ import { SmartDocsRibbon } from '../plugins/smartdocs/components/SmartDocsRibbon
 import { useWebLLM } from './useWebLLM'
 import { useLLMAction } from '../hooks/editor/useLLMAction'
 import { useGhostText } from '../hooks/editor/useGhostText'
+import { useDocumentSummaryStore } from '../stores/useDocumentSummaryStore'
 
 /* 
  * [INTERACTION HOOKS]
@@ -156,6 +157,7 @@ import { useUIStore } from '../stores/useUIStore'
  * @description 에디터 드래그 및 셀렉션 이동 콜백 등 내부 레이아웃 바인딩을 위한 Props.
  */
 export interface MarkdownEditorProps {
+  isSplitViewInstance?: boolean
   onMouseMove?: (e: React.MouseEvent) => void
   onSelectionChange?: (selection: { anchorBlockId: string; focusBlockId: string } | null) => void
   onBlockHighlight?: (blockId: string | null, isEditing: boolean) => void
@@ -423,15 +425,17 @@ export function MarkdownEditor({
    */
   const { editor, editorMode, peers, settings, handleOpenFile, handleStartWelcomeEdit, handleStartNewDocument, loadMarkdownIntoEditor } = useAppContext()
 
-  /*
-   * [ZUSTAND STORE PROPERTIES]
-   * - currentContent: 원문 텍스트 버퍼.
-   * - setCurrentContent: 원문 텍스트 변경 세터.
-   * - tabs: 다중 문서 탭 정보 목록.
-   */
-  const { currentContent, setCurrentContent, tabs, filePath, pdfData, setPdfData, pdfFileName, setPdfFileName, isSmartDocsMode, setIsSmartDocsMode, setActiveEditorInstance } = useWorkspaceStore()
-
-  const hasPermission = useProcessStore((s) => s.hasPermission)
+  const setActiveEditorInstance = useWorkspaceStore(s => s.setActiveEditorInstance)
+  const currentContent = useWorkspaceStore(s => s.currentContent)
+  const setCurrentContent = useWorkspaceStore(s => s.setCurrentContent)
+  const tabs = useWorkspaceStore(s => s.tabs)
+  const filePath = useWorkspaceStore(s => s.filePath)
+  const pdfData = useWorkspaceStore(s => s.pdfData)
+  const setPdfData = useWorkspaceStore(s => s.setPdfData)
+  const pdfFileName = useWorkspaceStore(s => s.pdfFileName)
+  const setPdfFileName = useWorkspaceStore(s => s.setPdfFileName)
+  const isSmartDocsMode = useWorkspaceStore(s => s.isSmartDocsMode)
+  const setIsSmartDocsMode = useWorkspaceStore(s => s.setIsSmartDocsMode)
   const canUseAITagging = false
 
   /*
@@ -503,10 +507,16 @@ export function MarkdownEditor({
     }
     const handleInsertMarkdown = async (e: Event) => {
       const customEvent = e as CustomEvent
-      if (customEvent.detail?.content && editor) {
-        await loadMarkdownIntoEditor(editor, customEvent.detail.content, false, customEvent.detail.fileName || 'AI 요약 리포트')
-        setPdfData(null)
-        setPdfFileName(null)
+      const content = customEvent.detail?.content || customEvent.detail?.markdownText
+      if (content && editor) {
+        const blocks = await editor.tryParseMarkdownToBlocks(content)
+        const doc = editor.document || []
+        const lastBlock = doc[doc.length - 1]
+        if (lastBlock) {
+          editor.insertBlocks(blocks, lastBlock, 'after')
+        } else {
+          editor.replaceBlocks(editor.document, blocks)
+        }
       }
     }
     window.addEventListener('app:hwpx-parsed', handleHwpxParsed)
@@ -564,6 +574,26 @@ export function MarkdownEditor({
       });
     }
   }, [editor, setActiveEditorInstance])
+
+  // 에디터 내 블록 변경 감지 및 고아 문서 요약 태스크 자동 GC 회수 (SCRUM-173)
+  useEffect(() => {
+    if (!editor) return
+    const syncBlocks = () => {
+      try {
+        const doc = editor.document
+        if (Array.isArray(doc)) {
+          const activeIds = doc.map((b: any) => b.id).filter(Boolean)
+          useDocumentSummaryStore.getState().syncWithEditorBlocks(activeIds)
+        }
+      } catch {}
+    }
+
+    syncBlocks()
+    const unsubscribe = editor.onChange(syncBlocks)
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe()
+    }
+  }, [editor])
 
   // 코드 펜스, 작업 피어 포커스 레이어 및 파일 드롭 이미지 가로채기 구동
   useBacktickFence(editor)
@@ -688,9 +718,9 @@ export function MarkdownEditor({
               width: '24px',
               height: '24px',
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)',
+              background: 'linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)',
               border: 'none',
-              boxShadow: '0 2px 8px rgba(139, 92, 246, 0.4)',
+              boxShadow: '0 2px 8px rgba(37, 99, 235, 0.4)',
               color: '#fff',
               display: 'flex',
               alignItems: 'center',

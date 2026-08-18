@@ -128,8 +128,8 @@ export function SettingsTabGeneral({
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center',
-          background: 'rgba(168, 85, 247, 0.05)',
-          border: '1px dashed rgba(168, 85, 247, 0.3)',
+          background: 'rgba(59, 130, 246, 0.05)',
+          border: '1px dashed rgba(59, 130, 246, 0.3)',
           borderRadius: '8px',
           padding: '10px 12px'
         }}>

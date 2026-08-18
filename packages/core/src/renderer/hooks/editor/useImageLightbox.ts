@@ -1,100 +1,129 @@
 /**
- * ============================================================================
  * @file useImageLightbox.ts
- * @description useImageLightbox.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
- * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
- * @example
- * // 예시 로직 (자동 생성됨)
- * import { something } from './useImageLightbox';
+ * @system AMEVA OS Desktop Workstation - Editor Media Core
+ * @location packages/core/src/renderer/hooks/editor/useImageLightbox.ts
+ * @role Editor Image Lightbox Controller Hook
  * 
- * @created 2026-08-10 20:30:36
- * @updated 2026-08-10 20:30:36
- * @author uno-km
- * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
- * ============================================================================
- */
-
-/**
- * @file useImageLightbox.ts
- * @system AMEVA OS Desktop Workstation
- * @location src/renderer/hooks/editor/useImageLightbox.ts
- * @role Core module helper and integration logic
- * 
- * [소비처 - CONSUMERS / USAGE CONTEXT]
- * - 소비처 A (src/renderer/App.tsx): 최상위 Facade 구조에 통합 마운트.
- * - 소비처 B (src/renderer/contexts/AppContext.tsx): 리액트 Context 훅 목록에 바인딩되어 하위 뷰에 전파.
+ * [설계 의도 - DESIGN INTENT / ADR]
+ * - 에디터 본문 및 갤러리 내의 이미지에 대해 사용자가 의도적으로 더블클릭하거나 
+ *   커스텀 이벤트(`ameva:open-lightbox`)를 발행했을 때만 고해상도 무손실 확대 라이트박스 모달을 구동한다.
+ * - 본문 작성 중 단순 마우스 클릭 시 무분별하게 전체화면 라이트박스가 팝업되어 사용자 경험을 저해하는 문제를 원천 방지한다.
  * 
  * [책임 범위 - RESPONSIBILITY]
- * - 본 파일은 AMEVA 시스템 내에서 도메인 목적에 부합하는 연산 및 데이터 처리 흐름을 안전하게 캡슐화한다.
- * - 외부 라이브러리 및 하위 종속성을 조율하고 결과 규격을 일관되게 제공한다.
+ * - 에디터 컨테이너 내부의 `dblclick` 이벤트 감청 및 `selectedImg` 상태 생명주기 관리.
+ * - 전역 커스텀 이벤트 `ameva:open-lightbox` 연동 및 정리(cleanup).
  * 
  * [절대 깨면 안 되는 계약 - CONTRACT]
- * - MUST: 모든 예외 발생 시 에러를 침묵시키지 말고 에러 로그를 명확하게 남길 것.
- * - MUST NOT: TypeScript any 형식을 우회 수단으로 함부로 선언하지 말 것.
+ * - MUST: 훅 언마운트 시 등록된 `dblclick` 및 `ameva:open-lightbox` 이벤트 리스너를 반드시 해제하여 메모리 누수를 방지할 것.
+ * - MUST NOT: 버튼, 링크, 입력 필드 등 인터랙티브 요소 내부의 이미지 클릭 시 라이트박스를 띄우지 말 것.
+ * 
+ * [소비처 - CONSUMERS / USAGE CONTEXT]
+ * - 소비처 A (packages/core/src/renderer/components/MarkdownEditor.tsx): 메인 마크다운 에디터 내 라이트박스 바인딩.
+ * - 소비처 B (packages/core/src/renderer/components/media/AmevaImageBlock.tsx): 갤러리 카드 내 크게보기 연동.
  */
 
-// [외부 패키지 및 라이브러리 임포트: react]
+/* 
+ * [IMPORT SEGMENTATION & CONTRACTS]
+ * - react: useEffect, useState 상태 및 부수효과 관리를 위한 리액트 코어 훅.
+ */
 import { useEffect, useState } from 'react'
 
-  /*
-   * [FUNCTION CONTRACT]
-   * - 함수 명: `useImageLightbox`
-   * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
-   * - 예시: `useImageLightbox(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
-   */
+/*
+ * [FUNCTION CONTRACT]
+ * - 함수 명: `useImageLightbox`
+ * - 역할: 에디터 컨테이너 DOM 참조를 받아 이미지 확대 뷰어 대상 URL 상태 및 제어자를 반환함.
+ * - 예시: `const { selectedImg, setSelectedImg } = useImageLightbox(editorContainerRef)`
+ */
 /**
  * useImageLightbox 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
  * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
 export function useImageLightbox(editorContainerRef: React.RefObject<HTMLDivElement | null>) {
+  /*
+   * [RUN-TIME STATE / INVARIANT]
+   * - 변수 명: `selectedImg`
+   * - 자료형 / 예상 값: string (이미지 URL / blob / base64) 또는 null.
+   * - 시나리오: 사용자가 이미지를 더블클릭하거나 크게보기 버튼을 누르면 해당 이미지 URL이 할당되어 모달을 마운트함.
+   * - 예시 코드: `setSelectedImg('blob:http://...')`
+   */
   const [selectedImg, setSelectedImg] = useState<string | null>(null)
 
+  /**
+   * [SIDE EFFECT - Double Click & Custom Event Listener Registration]
+   * - Rationale: 에디터 컨테이너의 더블클릭 이벤트 및 전역 브로드캐스트 이벤트를 감청하여 안전하게 뷰어를 기동함.
+   */
   useEffect(() => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `!editorContainerRef.current`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (!editorContainerRef.current)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
+    /*
+     * [ALGORITHM BRANCH / DECISION]
+     * - 조건 식: `!editorContainerRef.current`
+     * - 만족 시: DOM 마운트 전이므로 리스너 등록을 건너뜀.
+     * - 불만족 시: 유효한 컨테이너 DOM에 이벤트 리스너를 바인딩함.
+     */
     if (!editorContainerRef.current) return
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `container`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const container = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
+
+    /*
+     * [RUN-TIME STATE / INVARIANT]
+     * - 변수 명: `container`
+     * - 자료형 / 예상 값: HTMLDivElement DOM 노드.
+     */
     const container = editorContainerRef.current
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `handleImgClick`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const handleImgClick = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-    const handleImgClick = (e: MouseEvent) => {
+
+    /*
+     * [FUNCTION CONTRACT]
+     * - 함수 명: `handleImgDblClick`
+     * - 역할: 마우스 더블클릭 대상이 인터랙티브 요소가 아닌 일반 이미지일 때 라이트박스 오픈.
+     */
+    const handleImgDblClick = (e: MouseEvent) => {
       /*
        * [RUN-TIME STATE / INVARIANT]
        * - 변수 명: `t`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const t = ...` 형태로 안전 캐싱 후 가공 기동.
+       * - 자료형 / 예상 값: HTMLElement (클릭된 DOM 타깃).
        */
       const t = e.target as HTMLElement
+
       /*
        * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `t.tagName === 'IMG') setSelectedImg((t as HTMLImageElement).src`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (t.tagName === 'IMG') setSelectedImg((t as HTMLImageElement).src)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
+       * - 조건 식: `t.closest('button, a, input, [data-interactive], .bn-side-menu')`
+       * - 만족 시: 버튼 클릭 등 다른 사용자 의도가 우선하므로 라이트박스를 띄우지 않고 탈출.
        */
-      if (t.tagName === 'IMG') setSelectedImg((t as HTMLImageElement).src)
+      if (t.closest('button, a, input, [data-interactive], .bn-side-menu')) return
+
+      /*
+       * [ALGORITHM BRANCH / DECISION]
+       * - 조건 식: `t.tagName === 'IMG'`
+       * - 만족 시: 이미지 엘리먼트이므로 src를 읽어 선택 이미지 상태로 승격.
+       */
+      if (t.tagName === 'IMG') {
+        setSelectedImg((t as HTMLImageElement).src)
+      }
     }
-    container.addEventListener('click', handleImgClick)
-    return () => container.removeEventListener('click', handleImgClick)
+
+    /*
+     * [FUNCTION CONTRACT]
+     * - 함수 명: `handleCustomOpen`
+     * - 역할: `ameva:open-lightbox` 커스텀 이벤트를 수신하여 특정 URL의 이미지를 라이트박스로 오픈.
+     */
+    const handleCustomOpen = (e: any) => {
+      /*
+       * [ALGORITHM BRANCH / DECISION]
+       * - 조건 식: `e.detail?.url`
+       * - 만족 시: 전달받은 이미지 URL로 라이트박스를 켬.
+       */
+      if (e.detail?.url) {
+        setSelectedImg(e.detail.url)
+      }
+    }
+
+    // 전역 및 로컬 이벤트 바인딩
+    container.addEventListener('dblclick', handleImgDblClick)
+    window.addEventListener('ameva:open-lightbox', handleCustomOpen)
+
+    // CONTRACT: 언마운트 시 완벽한 리스너 클린업 수행
+    return () => {
+      container.removeEventListener('dblclick', handleImgDblClick)
+      window.removeEventListener('ameva:open-lightbox', handleCustomOpen)
+    }
   }, [editorContainerRef])
 
   return { selectedImg, setSelectedImg }
 }
-

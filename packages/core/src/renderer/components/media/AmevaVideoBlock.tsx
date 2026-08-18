@@ -17,6 +17,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { createReactBlockSpec } from '@blocknote/react'
 import { useWaveformAnalyzer, type SilenceSegment, mergeCutRegions } from '../../features/media-editor/useWaveformAnalyzer'
 import { saveAttachment, getAttachment } from '../../utils/vfsDatabase'
+import { ResizableBlockContainer } from '../ResizableBlockContainer'
 
 // ─── 내부 컴포넌트: 파형 캔버스 렌더러 ──────────────────────────────────────
 interface WaveformCanvasProps {
@@ -140,6 +141,8 @@ export const AmevaVideoBlockSpec = createReactBlockSpec(
       caption: { default: '' },
       showPreview: { default: 'true' },
       previewWidth: { default: '512' },
+      width: { default: '100%' },
+      height: { default: '400' },
     },
     content: 'none',
   },
@@ -171,6 +174,9 @@ export const AmevaVideoBlockSpec = createReactBlockSpec(
       const [src, setSrc] = useState<string>('')
 
       useEffect(() => {
+        let active = true
+        let objectUrl: string | null = null
+
         if (!rawUrl) {
           setSrc('')
           return
@@ -178,10 +184,20 @@ export const AmevaVideoBlockSpec = createReactBlockSpec(
         if (rawUrl.startsWith('ameva-vfs://')) {
           const fileId = rawUrl.replace('ameva-vfs://', '')
           getAttachment(fileId).then(blob => {
-            if (blob) setSrc(URL.createObjectURL(blob))
+            if (active && blob) {
+              objectUrl = URL.createObjectURL(blob)
+              setSrc(objectUrl)
+            }
           }).catch(err => console.error("Failed to load VFS blob:", err))
         } else {
           setSrc(rawUrl)
+        }
+
+        return () => {
+          active = false
+          if (objectUrl) {
+            URL.revokeObjectURL(objectUrl)
+          }
         }
       }, [rawUrl])
 
@@ -362,41 +378,75 @@ export const AmevaVideoBlockSpec = createReactBlockSpec(
         )
       }
 
+      const initialHeight = parseInt(props.block.props.height || '400', 10)
+      const initialWidth = props.block.props.width || '100%'
+      const isEditable = props.editor?.isEditable !== false
+
       return (
-        <div
-          ref={containerRef}
-          style={{
-            background: '#0f0f13',
-            border: '1px solid #2a2a3a',
-            borderRadius: '10px',
-            overflow: 'hidden',
-            color: '#fff',
-            fontFamily: 'Pretendard, sans-serif',
+        <ResizableBlockContainer
+          initialHeight={initialHeight}
+          initialWidth={initialWidth}
+          minHeight={220}
+          maxHeight={3000}
+          minWidth={280}
+          maxWidth={3200}
+          disabled={!isEditable}
+          accentColor="#3b82f6"
+          onResizeEnd={({ height: newH, width: newW }) => {
+            props.editor.updateBlock(props.block.id, {
+              type: 'video',
+              props: {
+                ...props.block.props,
+                height: String(Math.round(newH)),
+                width: newW || props.block.props.width || '100%'
+              }
+            } as any)
           }}
+          style={{ margin: '14px 0', width: props.block.props.width || '100%' }}
         >
-          {/* ─── 비디오 뷰어 ─────────────────────────────────────── */}
-          <div style={{ position: 'relative', background: '#000' }}>
-            <video
-              ref={videoRef}
-              src={src}
-              style={{ width: '100%', maxHeight: isEditMode ? '240px' : '400px', display: 'block' }}
-              controls={!isEditMode}
-            />
-            {/* 편집 모드 토글 버튼 */}
-            <button
-              onClick={() => setIsEditMode(m => !m)}
+          {({ height: containerH }) => (
+            <div
+              ref={containerRef}
               style={{
-                position: 'absolute', top: '8px', right: '8px',
-                background: isEditMode ? '#ef4444' : 'rgba(0,0,0,0.7)',
-                border: '1px solid rgba(255,255,255,0.2)',
-                color: '#fff', borderRadius: '6px',
-                padding: '4px 10px', fontSize: '12px', cursor: 'pointer',
-                backdropFilter: 'blur(8px)',
+                width: '100%',
+                height: isEditMode ? `${Math.max(containerH, 460)}px` : `${containerH}px`,
+                minHeight: `${containerH}px`,
+                background: '#0f0f13',
+                border: '1px solid #2a2a3a',
+                borderRadius: '10px',
+                overflow: 'hidden',
+                color: '#fff',
+                fontFamily: 'Pretendard, sans-serif',
+                display: 'flex',
+                flexDirection: 'column'
               }}
             >
-              {isEditMode ? '✕ 편집 닫기' : '✂️ 편집 모드'}
-            </button>
-          </div>
+              {/* ─── 비디오 뷰어 (상하좌우 크기에 맞춰 선명하게 채움) ───────────────── */}
+              <div style={{ position: 'relative', background: '#000', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px', overflow: 'hidden' }}>
+                <video
+                  ref={videoRef}
+                  src={src || undefined}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+                  controls={!isEditMode}
+                />
+                {/* 편집 모드 토글 버튼 (미리보기 모드에선 숨김) */}
+                {isEditable && (
+                  <button
+                    onClick={() => setIsEditMode(m => !m)}
+                    style={{
+                      position: 'absolute', top: '8px', right: '8px',
+                      background: isEditMode ? '#ef4444' : 'rgba(0,0,0,0.7)',
+                      border: '1px solid rgba(255,255,255,0.2)',
+                      color: '#fff', borderRadius: '6px',
+                      padding: '4px 10px', fontSize: '12px', cursor: 'pointer',
+                      backdropFilter: 'blur(8px)',
+                      zIndex: 5
+                    }}
+                  >
+                    {isEditMode ? '✕ 편집 닫기' : '✂️ 편집 모드'}
+                  </button>
+                )}
+              </div>
 
           {/* ─── 인라인 편집 패널 ────────────────────────────────── */}
           {isEditMode && (
@@ -489,7 +539,7 @@ export const AmevaVideoBlockSpec = createReactBlockSpec(
                   onClick={handleAnalyze}
                   disabled={isAnalyzing}
                   style={{
-                    background: isAnalyzing ? '#374151' : '#7c3aed',
+                    background: isAnalyzing ? '#374151' : '#2563eb',
                     border: 'none', color: '#fff', borderRadius: '5px',
                     padding: '5px 12px', cursor: 'pointer', fontSize: '11px',
                   }}
@@ -566,6 +616,15 @@ export const AmevaVideoBlockSpec = createReactBlockSpec(
               {props.block.props.caption}
             </div>
           )}
+            </div>
+          )}
+        </ResizableBlockContainer>
+      )
+    },
+    toExternalHTML: ({ block }) => {
+      return (
+        <div data-content-type="video" data-url={block.props.url} data-width={block.props.width} data-height={block.props.height}>
+          <video src={block.props.url} controls />
         </div>
       )
     }

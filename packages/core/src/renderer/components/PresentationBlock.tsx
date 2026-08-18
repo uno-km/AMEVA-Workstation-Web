@@ -179,8 +179,8 @@ export const PresentationBlockComponent = ({ block, editor: _editor }: Presentat
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', opacity: 0.7 }}>
-              <AlertCircle size={16} color="#8b5cf6" />
-              <span style={{ fontSize: '11px', fontWeight: 600, color: '#8b5cf6', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+              <AlertCircle size={16} color="#2563eb" />
+              <span style={{ fontSize: '11px', fontWeight: 600, color: '#2563eb', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                 Text Outline Fallback Mode
               </span>
             </div>
@@ -192,7 +192,7 @@ export const PresentationBlockComponent = ({ block, editor: _editor }: Presentat
             <div style={{ width: '100%', fontSize: isFullscreen ? '22px' : '15px', lineHeight: 1.6, opacity: 0.85 }}>
               {parsedSlidesText[currentSlide]?.texts?.map((t: string, i: number) => (
                 <p key={i} style={{ margin: '8px 0', display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
-                  <span style={{ color: '#8b5cf6', fontWeight: 'bold' }}>•</span>
+                  <span style={{ color: '#2563eb', fontWeight: 'bold' }}>•</span>
                   <span>{t}</span>
                 </p>
               )) || <p style={{ fontStyle: 'italic', opacity: 0.5 }}>본문에 텍스트 내용이 없는 슬라이드입니다.</p>}
@@ -212,22 +212,23 @@ export const PresentationBlockComponent = ({ block, editor: _editor }: Presentat
           />
         )}
 
-        {/* 홉업용 슬라이드 컨트롤 오버레이 (마우스 오버 시 선명하게 노출) */}
+        {/* 슬라이드 상단 컨트롤 오버레이 (리모컨) */}
         <div 
           className="slide-controls"
           style={{
             position: 'absolute',
-            bottom: '16px',
+            top: '16px',
             left: '50%',
             transform: 'translateX(-50%)',
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
-            padding: '8px 16px',
+            padding: '6px 16px',
             borderRadius: '24px',
-            background: 'rgba(15, 15, 20, 0.75)',
-            backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            background: 'rgba(15, 15, 20, 0.85)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.5)',
             zIndex: 10
           }}
         >
@@ -318,7 +319,7 @@ export const PresentationBlockComponent = ({ block, editor: _editor }: Presentat
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Presentation size={12} color="#8b5cf6" />
+            <Presentation size={12} color="#2563eb" />
             <span style={{ fontWeight: 600, color: '#f3f4f6' }}>
               {pptxPath.split(/[\\/]/).pop() || 'Presentation'}
             </span>

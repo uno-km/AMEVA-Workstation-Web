@@ -38,7 +38,7 @@
  * [IMPORT SEGMENTATION & CONTRACTS]
  * - React 라이프사이클 훅 (상태 관리, 부작용 제어, 메모이제이션 바인딩)
  */
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 
 /* 
  * [ZUSTAND GLOBAL STORES]
@@ -545,21 +545,36 @@ export default function App() {
     onZoomIn: handleZoomIn, onZoomOut: handleZoomOut, onZoomReset: handleZoomReset
   })
 
+  // AppContext 값 메모이제이션: 하위 트리 전체 무차별 리렌더 폭포 차단
+  const appContextValue = useMemo(() => ({
+    settings, handleUpdateSettings, handleInstallPlugin, handleUninstallPlugin,
+    handleOpenGithub, handleCloseApp, handleToggleFullscreen, handleZoomIn, handleZoomOut, handleZoomReset,
+    documentId, setDocumentId, editor, splitEditor, editorMode, setEditorMode, handleSwitchMode, handleStartWelcomeEdit, handleStartNewDocument,
+    loadMarkdownIntoEditor,
+    handleOpenFile, handleSaveFile, handleSaveAsFile, handleExport,
+    snapshots, createSnapshot, deleteSnapshot, handleSelectSnapshotForDiff, handleRollback, getLineDiff,
+    peers, serverRunning, serverPort, setServerPort, serverHost, setServerHost,
+    useLocalServer, setUseLocalServer, toggleLocalServer, collaborationLink, isConnected,
+    username, setUsername, userColor, setUserColor,
+    chatMessages, sendChatMessage, clearChatMessages,
+    mcpServers: mcpServersState,
+    refreshMcpServers
+  }), [
+    settings, handleUpdateSettings, handleInstallPlugin, handleUninstallPlugin,
+    handleOpenGithub, handleCloseApp, handleToggleFullscreen, handleZoomIn, handleZoomOut, handleZoomReset,
+    documentId, setDocumentId, editor, splitEditor, editorMode, setEditorMode, handleSwitchMode, handleStartWelcomeEdit, handleStartNewDocument,
+    loadMarkdownIntoEditor,
+    handleOpenFile, handleSaveFile, handleSaveAsFile, handleExport,
+    snapshots, createSnapshot, deleteSnapshot, handleRollback, getLineDiff,
+    peers, serverRunning, serverPort, serverHost,
+    useLocalServer, collaborationLink, isConnected,
+    username, userColor,
+    chatMessages, sendChatMessage, clearChatMessages,
+    mcpServersState, refreshMcpServers
+  ])
+
   return (
-    <AppProvider value={{
-      settings, handleUpdateSettings, handleInstallPlugin, handleUninstallPlugin,
-      handleOpenGithub, handleCloseApp, handleToggleFullscreen, handleZoomIn, handleZoomOut, handleZoomReset,
-      documentId, setDocumentId, editor, splitEditor, editorMode, setEditorMode, handleSwitchMode, handleStartWelcomeEdit, handleStartNewDocument,
-      loadMarkdownIntoEditor,
-      handleOpenFile, handleSaveFile, handleSaveAsFile, handleExport,
-      snapshots, createSnapshot, deleteSnapshot, handleSelectSnapshotForDiff, handleRollback, getLineDiff,
-      peers, serverRunning, serverPort, setServerPort, serverHost, setServerHost,
-      useLocalServer, setUseLocalServer, toggleLocalServer, collaborationLink, isConnected,
-      username, setUsername, userColor, setUserColor,
-      chatMessages, sendChatMessage, clearChatMessages,
-      mcpServers: mcpServersState,
-      refreshMcpServers
-    }}>
+    <AppProvider value={appContextValue}>
       <AppLayout
         settings={settings}
         showStatusBar={showStatusBar}

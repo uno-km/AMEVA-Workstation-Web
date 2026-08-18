@@ -128,7 +128,7 @@ export function InlineDrawingRenderer({ code }: { code: string }) {
         
         elements.forEach((el: any) => {
           if (el.type === 'freedraw' && el.points) {
-            ctx.strokeStyle = el.strokeColor || '#a78bfa'
+            ctx.strokeStyle = el.strokeColor || '#38bdf8'
             ctx.lineWidth = el.strokeWidth || 2
             ctx.lineCap = 'round'
             ctx.lineJoin = 'round'
@@ -183,7 +183,7 @@ export function InlineDrawingRenderer({ code }: { code: string }) {
             onClick={handleRetryLoad}
             style={{
               padding: '6px 12px', borderRadius: '6px', cursor: 'pointer',
-              background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)',
+              background: 'rgba(59, 130, 246,0.15)', border: '1px solid rgba(59, 130, 246,0.3)',
               color: 'var(--primary)', fontSize: '11px', fontWeight: 'bold'
             }}
           >

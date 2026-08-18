@@ -732,87 +732,80 @@ export async function parseFileToMarkdown(content: string, filePath: string, isB
   }
   
   // 3) HWPX XML 직접 압축해제 파싱 기전
+  // 3) HWPX XML 직접 압축해제 파싱 기전
   if (ext === 'hwpx') {
     try {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `zip`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const zip = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
       const zip = await JSZip.loadAsync(arrayBuffer)
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `sectionXml`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const sectionXml = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-      const sectionXml = await zip.file('Contents/section0.xml')?.async('text')
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `!sectionXml`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (!sectionXml)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-      if (!sectionXml) return 'Error parsing HWPX: section0.xml not found'
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `pMatches`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const pMatches = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-      const pMatches = sectionXml.match(/<hp:p[\s\S]*?>([\s\S]*?)<\/hp:p>/g) || []
+      const sectionFiles = Object.keys(zip.files).filter(name => 
+        name.includes('Contents/section') && name.endsWith('.xml')
+      ).sort((a, b) => {
+        const numA = parseInt(a.replace(/[^0-9]/g, '')) || 0
+        const numB = parseInt(b.replace(/[^0-9]/g, '')) || 0
+        return numA - numB
+      })
+
+      if (sectionFiles.length === 0) {
+        const sec0 = await zip.file('Contents/section0.xml')?.async('text')
+        if (!sec0) return 'Error parsing HWPX: section XML not found'
+        sectionFiles.push('Contents/section0.xml')
+      }
+
+      const parser = new DOMParser()
       const lines: string[] = []
-      /*
-       * [LOOP CONTROL ITERATION]
-       * - 루프 조건: `for (const pXml of pMatches) {`
-       * - 예상 시나리오: 지정된 조건 한계 도달 시점까지 콜렉션 항목의 순차 매핑, 변환 및 동기 적재 처리를 수행함.
-       * - 예시: `for (const item of list)` 루프 실행 시 모든 개별 블록의 html 포맷 정제 완료 후 스택 종결.
-       */
-      for (const pXml of pMatches) {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `tMatches`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const tMatches = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-        const tMatches = pXml.match(/<hp:t[\s\S]*?>([\s\S]*?)<\/hp:t>/g) || []
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `pText`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const pText = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-        let pText = ''
-      /*
-       * [LOOP CONTROL ITERATION]
-       * - 루프 조건: `for (const tXml of tMatches) {`
-       * - 예상 시나리오: 지정된 조건 한계 도달 시점까지 콜렉션 항목의 순차 매핑, 변환 및 동기 적재 처리를 수행함.
-       * - 예시: `for (const item of list)` 루프 실행 시 모든 개별 블록의 html 포맷 정제 완료 후 스택 종결.
-       */
-        for (const tXml of tMatches) {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `text`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const text = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-          const text = tXml.replace(/<hp:t[\s\S]*?>/, '').replace('</hp:t>', '')
-          pText += text
-            .replace(/&lt;/g, '<')
-            .replace(/&gt;/g, '>')
-            .replace(/&amp;/g, '&')
-            .replace(/&quot;/g, '"')
-            .replace(/&#39;/g, "'")
+
+      for (const sectionPath of sectionFiles) {
+        const fileData = zip.file(sectionPath)
+        if (!fileData) continue
+        const xmlString = await fileData.async('text')
+        const xmlDoc = parser.parseFromString(xmlString, "text/xml")
+
+        const pNodes = xmlDoc.getElementsByTagName('hp:p')
+        for (let i = 0; i < pNodes.length; i++) {
+          const pNode = pNodes[i]
+          
+          // 테이블 감지 (<hp:tbl>)
+          const tblNode = pNode.querySelector('hp\\:tbl, tbl')
+          if (tblNode) {
+            const trNodes = tblNode.querySelectorAll('hp\\:tr, tr')
+            if (trNodes.length > 0) {
+              const tableRows: string[][] = []
+              trNodes.forEach((tr) => {
+                const tcNodes = tr.querySelectorAll('hp\\:tc, tc')
+                const rowCells: string[] = []
+                tcNodes.forEach((tc) => {
+                  const tEls = tc.querySelectorAll('hp\\:t, t')
+                  let cellText = ''
+                  tEls.forEach(t => cellText += (t.textContent || '') + ' ')
+                  rowCells.push(cellText.trim().replace(/\|/g, '\\|') || ' ')
+                })
+                if (rowCells.length > 0) tableRows.push(rowCells)
+              })
+              if (tableRows.length > 0) {
+                const colCount = Math.max(...tableRows.map(r => r.length))
+                const headerRow = tableRows[0]
+                while (headerRow.length < colCount) headerRow.push(' ')
+                lines.push('| ' + headerRow.join(' | ') + ' |')
+                lines.push('| ' + Array(colCount).fill(':---').join(' | ') + ' |')
+                for (let r = 1; r < tableRows.length; r++) {
+                  const row = tableRows[r]
+                  while (row.length < colCount) row.push(' ')
+                  lines.push('| ' + row.join(' | ') + ' |')
+                }
+                continue
+              }
+            }
+          }
+
+          const tNodes = pNode.getElementsByTagName('hp:t')
+          let paraText = ''
+          for (let j = 0; j < tNodes.length; j++) {
+            paraText += tNodes[j].textContent || ''
+          }
+          const trimmed = paraText.trim()
+          if (trimmed) {
+            lines.push(trimmed)
+          }
         }
-        lines.push(pText.trim())
       }
       return lines.join('\n\n')
     } catch (err: any) {

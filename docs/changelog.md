@@ -1,4 +1,129 @@
 
+## 2026-08-19 (Release v0.8.19: Comprehensive AI-Powered Media Studio, WebGPU Document Intelligence, Interactive Geo-Mapping & VFS Stability Release)
+
+### 🚀 Major Release Features & Milestones
+- **Multi-Media In-App Editing Studio (`AmevaVideoBlock`, `AmevaImageBlock`, `AmevaAudioBlock`)**:
+  - **비디오 스튜디오**: 컷편집 모드에서 실시간 반응형 스케일링, 타임라인 구간 자르기, 상하좌우 8방향 리사이저 연동 및 미리보기 모드 클린 렌더링 지원.
+  - **이미지 갤러리 & 캔버스**: Fabric.js 기반 캔버스 그리기/자르기/필터, AI 배경 제거(Remove BG), 사진별 개별 8방향 리사이징(`ResizableImageCard`), 가로 스크롤 캐러셀 및 라이트박스 뷰어 탑재.
+  - **오디오 스튜디오**: 오디오 파형(Waveform) 시각화, 무음 구간 자동 감지(Silence Detection) 및 1-클릭 일괄 무음 삭제, 정밀 구간 컷팅 기능 제공.
+- **WebGPU On-Device Document Intelligence (`PdfMapReduceService`, `DocumentSummariesDeck`)**:
+  - PDF, Word(`.docx`), PowerPoint(`.pptx`), 한글(`.hwpx`) 뷰어 및 온디바이스 WebGPU AI 3단계 맵리듀스(Map-Reduce) 자동 분석.
+  - 소형 문서(1~3p) 3초 고속 패스(Fast-Pass) 요약 및 챕터/단계별 다단계 카드 요약 덱(Deck) 제공.
+- **Contextual Translation & Tone Refinement (`AIContextMenu`, `CodeIntelligenceService`)**:
+  - 에디터 내 텍스트 블록 드래그 시 1-클릭 다국어 번역(한/영/일/중 등) 및 학술/비즈니스/친근함/개발자 맞춤 문체 다듬기 WebGPU 로컬 추론 제공.
+- **Autonomous AI Agent & Chat Intelligence Panel (`AIPanel`, `WebLLM`)**:
+  - WebGPU Qwen2.5 0.5B/1.5B/7B 로컬 추론, RAG 벡터 검색, 에디터 도구 함수 호출, 문서 컨텍스트 실시간 연동 지원.
+- **Interactive Geo-Mapping & Route Documentation (`MapBlock`, `AmevaMapViewer`)**:
+  - OpenStreetMap & Leaflet 기반 인터랙티브 지도 블록, 장소/주소 실시간 검색, 다중 핀 꽂기, 출발지-도착지 경로 탐색 및 길찾기 시각화, 글로벌 메모 연동.
+- **Mermaid Syntax Sanitizer & Pyodide Iframe Sandbox Recovery (`InlineMermaidRenderer`, `InlineHtmlRenderer`)**:
+  - Mermaid Flowchart 내 잘못된 콜론 문법 자동 교정(`A --> B: text` → `A -->|text| B`), Pyodide WASM 샌드박스 404 원천 차단.
+
+### 📄 Files Modified / Added
+- [MODIFY] `packages/core/package.json`
+- [MODIFY] `packages/core/src/renderer/components/media/AmevaVideoBlock.tsx`
+- [MODIFY] `packages/core/src/renderer/components/media/AmevaImageBlock.tsx`
+- [MODIFY] `packages/core/src/renderer/components/media/AmevaAudioBlock.tsx`
+- [MODIFY] `packages/core/src/renderer/components/MapBlock.tsx`
+- [MODIFY] `packages/core/src/renderer/components/map/AmevaMapViewer.tsx`
+- [MODIFY] `packages/core/src/renderer/components/markdown/InlineMermaidRenderer.tsx`
+- [MODIFY] `packages/core/src/renderer/services/ai/CodeIntelligenceService.ts`
+- [MODIFY] `packages/core/src/renderer/hooks/code-runtime/usePythonRuntime.ts`
+- [MODIFY] `packages/core/src/renderer/components/jupyter/InlineHtmlRenderer.tsx`
+- [MODIFY] `packages/core/src/renderer/components/jupyter/JupyterCodeEditorTerminal.tsx`
+- [MODIFY] `README.md`
+- [MODIFY] `docs/changelog.md`
+
+## 2026-08-18 (SCRUM-174: Performance & Event Loop Zero-Lag Optimization, Reflow & Observer Throttle)
+
+### 🛠️ Major Architectural Changes
+- **App.tsx Context Value Complete Memoization (`App.tsx`)**:
+  - `App.tsx`의 `<AppProvider value={{ ... }}>`에 매 렌더링마다 주입되던 인라인 객체 리터럴을 `useMemo`로 래핑하여 하위 트리의 무차별 재렌더링 연쇄 폭포(Waterfall)를 100% 차단.
+- **Mouse Move Layout Thrashing Elimination (`useSideMenuHoverSync.ts`, `useHoverBlock.ts`)**:
+  - `mousemove` 리스너에 `requestAnimationFrame` 배칭 및 `{ passive: true }`를 적용하고, 사이드 메뉴 바깥 위치일 때 `document.elementFromPoint` 호출을 바이패스하여 144Hz~240Hz 마우스 이동 시의 동기식 강제 리플로우(Layout Thrashing)를 전면 제거.
+  - `useHoverBlock`에서 AI 태깅 비활성화 시 DOM 쿼리 및 `setHoverBlock` 상태 변경을 즉시 리턴하여 마우스 이동 중 `MarkdownEditor` 리렌더 발생 횟수를 0회로 억제.
+- **Invasive MutationObserver Debounce & Keystroke Overhead Removal (`Minimap.tsx`)**:
+  - `Minimap.tsx`의 `characterData` 옵션을 제거하고 `MutationObserver` 콜백에 200ms 디바운스를 적용하여 타이핑 중 실시간 연산 폭주 차단.
+- **RAG Chunk Memory TTL Caching (`useGhostText.ts`)**:
+  - 키보드 타이핑 후 디바운스 때마다 IndexedDB에서 대용량 청크를 디스크 I/O로 읽어오던 것을 30초 TTL 메모리 캐시(`cachedRAGChunks`)로 전환하여 디스크 읽기 지연 및 메인 스레드 블로킹 해소.
+- **Store Subscription Granularity Refactoring (`MarkdownEditor.tsx`, `AIPanel.tsx`, `StatusBar.tsx`, `AppLayout.tsx`)**:
+  - `useWorkspaceStore()` 전체 구독을 제거하고 필요한 상태만 Granular Selector(`s => s.isSplitView`, `s => s.taggedBlocks` 등)로 분리하여 타이핑 직렬화 시 불필요한 컴포넌트 리렌더 차단.
+- **Excel Block Unmount Exception Fix (`ExcelBlock.tsx`)**:
+  - `saveTimeoutRef` 미정의로 인한 `ReferenceError` 및 React Fiber 언마운트 루프 예외를 완벽히 수정.
+
+### 📄 Files Modified / Added
+- [MODIFY] `packages/core/src/renderer/App.tsx`
+- [MODIFY] `packages/core/src/renderer/hooks/editor/useSideMenuHoverSync.ts`
+- [MODIFY] `packages/core/src/renderer/hooks/editor/useHoverBlock.ts`
+- [MODIFY] `packages/core/src/renderer/components/Minimap.tsx`
+- [MODIFY] `packages/core/src/renderer/hooks/editor/useGhostText.ts`
+- [MODIFY] `packages/core/src/renderer/components/MarkdownEditor.tsx`
+- [MODIFY] `packages/core/src/renderer/components/layout/AppLayout.tsx`
+- [MODIFY] `packages/core/src/renderer/components/AIPanel.tsx`
+- [MODIFY] `packages/core/src/renderer/components/StatusBar.tsx`
+- [MODIFY] `packages/core/src/renderer/components/ExcelBlock.tsx`
+- [MODIFY] `docs/changelog.md`
+
+## 2026-08-18 (SCRUM-173: DOCX Default Viewer, AI Fast Path & Non-Blocking Warmup, UI Typography & Emoji Clean)
+
+### 🛠️ Major Architectural Changes
+- **Instant DOCX Browser Reader Initialization (`InlineDocumentBlock.tsx`)**:
+  - `OfficeDocViewer`의 기본 뷰 모드를 `'rich'`(mammoth HTML 완성형 브라우저 리더)로 기본 지정하여, Word(`.docx`) 문서 파일 로드 시 단번에 웹 리더로 즉시 렌더링되도록 수정.
+  - 상단 툴바 토글 버튼을 `[웹 리더 뷰어]` / `[A4 조판 뷰어]` 직관적 탭 라벨 및 테크 블루 디자인으로 전면 개편.
+- **AI Non-Blocking Background Warmup & Concurrency Protection (`useBackgroundInit.ts`)**:
+  - 앱 초기 기동 시 1초 뒤에 발생하던 무거운 WebGPU 가속기 적재를 지연하여, 메인 에디터와 DOM 블록 렌더링이 완전히 끝난 후 `requestIdleCallback` 및 3.5초 유휴 시간에 백그라운드 적재가 이뤄지도록 스케줄러 개선.
+  - 타 컴포넌트 마운트 및 VFS 데이터 파싱 지연/동기화 락 경합을 100% 방지.
+- **Fast-Path Single Pass Document AI Summary (`PdfMapReduceService.ts`, `useDocumentSummaryStore.ts`)**:
+  - 1~3페이지 소형 문서(또는 단일 클러스터)의 경우 불필요한 중간 3단계 맵리듀스를 생략하고 단일 패스(Single Pass) 종합 리포트 생성으로 직행하여 요약 속도를 기존 25초에서 **3~4초**로 대폭 가속.
+  - 프로세스 큐 데드락 방어: 모달 전환 시 고아 태스크로 인한 영구 큐 잠김을 방어하고, 큐 대기 화면에서 `[⚡ 즉시 분석 시작]` 버튼으로 즉시 분석 가능하도록 보장.
+- **UI & Typography Clarity & Zero-Tolerance Purple Color Purge (`JupyterBlock.tsx`, `editor.css`, `WebGPUBanner.tsx`, `ChatBubble.tsx`, `AIPanel.tsx`, `FloatingChat.tsx`, etc.)**:
+  - 코드 블록 카드 외곽선 테두리(`.bn-code-block-wrapper`), Mermaid 차트 스트로크, 블록 호버 스파클 버튼, 플로팅 챗, 인라인 AI 인텔리전스 패널 등 남아있던 모든 보라색 계열(`rgba(139, 92, 246)`, `#7c3aed`, `#8b5cf6`, `#a78bfa`, `#c4b5fd`)을 **Antigravity Deep Navy & Precision Tech Blue (`#0ea5e9`, `#2563eb`, `#38bdf8`, `#1e293b`)**로 전수 일괄 교체 (0건 잔존 검증).
+  - 에디터 내 남아있던 불필요한 상태 이모지들을 전면 제거하고 세련된 Lucide 벡터 아이콘과 고대비 폰트로 정돈.
+
+### 📄 Files Modified / Added
+- [MODIFY] `packages/core/src/renderer/components/InlineDocumentBlock.tsx`
+- [MODIFY] `packages/core/src/renderer/stores/useBackgroundInit.ts`
+- [MODIFY] `packages/core/src/renderer/stores/useDocumentSummaryStore.ts`
+- [MODIFY] `packages/core/src/renderer/services/pdf/PdfMapReduceService.ts`
+- [MODIFY] `packages/core/src/renderer/components/pdf/PdfMapReduceModal.tsx`
+- [MODIFY] `packages/core/src/renderer/components/pdf/DocumentSummariesDeck.tsx`
+- [MODIFY] `packages/core/src/renderer/components/JupyterBlock.tsx`
+- [MODIFY] `packages/core/src/renderer/components/jupyter/JupyterCodeEditorHeader.tsx`
+- [MODIFY] `packages/core/src/renderer/components/ai-panel/WebGPUBanner.tsx`
+- [MODIFY] `packages/core/src/renderer/components/ai-panel/ChatBubble.tsx`
+- [MODIFY] `packages/core/src/renderer/components/ai-panel/EngineSettingsModal.tsx`
+- [MODIFY] `packages/core/src/renderer/components/AIPanel.tsx`
+- [MODIFY] `packages/core/src/renderer/components/FloatingChat.tsx`
+- [MODIFY] `packages/core/src/renderer/components/MarkdownEditor.tsx`
+- [MODIFY] `packages/core/src/renderer/styles/editor.css`
+- [MODIFY] `packages/core/src/renderer/styles/components/Sidebar.css`
+- [MODIFY] `packages/core/src/renderer/components/statusbar/DocumentSummaryStatusIndicator.tsx`
+- [MODIFY] `docs/changelog.md`
+
+## 2026-08-18 (SCRUM-172: Multi-Image Gallery, Canvas Mosaic/AI Tooling & Ultra High-Density SI Comments Enforcement)
+
+### 🛠️ Major Architectural Changes
+- **Lossless Image Lightbox UX Enhancement (`ImageLightbox.tsx`, `useImageLightbox.ts`)**:
+  - 에디터 본문 내 이미지 단일 클릭 가로채기를 방지하고, 더블클릭 또는 `[👁️ 크게보기]` 버튼 시에만 라이트박스를 구동하도록 트리거 재정의.
+  - `ESC` 키, 상단 우측 명시적 `[✕ 닫기 (ESC)]` 버튼, 어두운 백드롭 영역 클릭 시 즉시 닫히는 3중 닫기 보장. 안티그래비티 테크 블루 테마 통일.
+- **AmevaImageBlock Multi-Image Gallery & Canvas Tooling (`AmevaImageBlock.tsx`)**:
+  - `ImageCanvasEditor` 내 Fabric.js 널 검사 및 비동기 스케일링 안전 가드 적용 (`Cannot set properties of undefined (setting 'width')` 런타임 에러 완전 해결).
+  - `@imgly/background-removal` jsdelivr 정식 CDN 미러 경로 지정 및 404 폴백 지우개 안내 처리.
+  - 개별/전체 모자이크 및 오브젝트 삭제 기능 (`Delete` / `Backspace` 키 바인딩, `[🗑️ 선택 삭제]`, `[🧹 효과 전체 초기화]`).
+  - 크기 조절 프리셋 (`[작게]`, `[중간]`, `[크게]`, `[100%]`) 및 상단 헤더바 편집 가위/`[➕ 사진 추가]` 버튼 배치.
+- **Background Auto-Load AI Engine Synchronization (`useBackgroundInit.ts`, `useAppSettingsManager.ts`)**:
+  - 부팅 시 `localStorage.getItem('ameva_auto_load_llm') === 'true'` 설정 감지 후 백그라운드에서 WebGPU 모델(`Qwen2.5`)을 자동 로드하도록 스토어-라이프사이클 연동.
+- **Ultra High-Density SI Documentation Enforcement**:
+  - 전수 조사 및 수정 대상 전체 파일에 대해 JSDoc 헤더, [설계 의도/ADR], [책임 범위], [절대 깨면 안 되는 계약/CONTRACT], [소비처/CONSUMERS], [FUNCTION CONTRACT], [RUN-TIME STATE / INVARIANT], [ALGORITHM BRANCH / DECISION]을 100% 빈틈없이 문서화.
+
+### 📄 Files Modified / Added
+- [MODIFY] `packages/core/src/renderer/components/media/AmevaImageBlock.tsx`
+- [MODIFY] `packages/core/src/renderer/components/ImageLightbox.tsx`
+- [MODIFY] `packages/core/src/renderer/hooks/editor/useImageLightbox.ts`
+- [MODIFY] `packages/core/src/renderer/stores/useBackgroundInit.ts`
+- [MODIFY] `packages/core/src/renderer/hooks/app/useAppSettingsManager.ts`
+- [MODIFY] `packages/core/src/renderer/components/useWebLLM.ts`
+- [MODIFY] `docs/changelog.md`
+
 ## 2026-08-18 (SCRUM-165: Comprehensive All-Button Full Feature Test Suite)
 
 ### 🛠️ Major Architectural Changes

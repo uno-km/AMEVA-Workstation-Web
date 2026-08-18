@@ -97,8 +97,8 @@ export function AsyncBlockWrapper({ children, name }: AsyncBlockWrapperProps) {
         }}>
           <div className="spinner" style={{
             width: '24px', height: '24px',
-            border: '3px solid rgba(139, 92, 246, 0.3)',
-            borderTopColor: '#8b5cf6',
+            border: '3px solid rgba(59, 130, 246, 0.3)',
+            borderTopColor: '#2563eb',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite'
           }} />

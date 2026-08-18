@@ -68,6 +68,7 @@ import { AIStatusIndicator } from './statusbar/AIStatusIndicator'
 import { EmbeddingStatusIndicator } from './statusbar/EmbeddingStatusIndicator'
 import { DocStatusIndicator } from './statusbar/DocStatusIndicator'
 import { DependencyStatusIndicator } from './statusbar/DependencyStatusIndicator'
+import { DocumentSummaryStatusIndicator } from './statusbar/DocumentSummaryStatusIndicator'
 
 /* 
  * [CONTEXT & STORES]
@@ -107,16 +108,21 @@ export function StatusBar({}: StatusBarProps = {}) {
    * - isProPlan: 멤버십 요금제 프로 가입 여부.
    */
   const { settings, handleUpdateSettings, mcpServers } = useAppContext()
-  const { setIsSettingsOpen } = useUIStore()
+  const setIsSettingsOpen = useUIStore(s => s.setIsSettingsOpen)
   
   // 줌 크기 및 모델 파일 다운로드 현황 스토어 구독
-  const { editorZoom: zoomLevel, browserZoom = 1.0 } = useProcessStore()
+  const zoomLevel = useProcessStore(s => s.editorZoom)
+  const browserZoom = useProcessStore(s => s.browserZoom ?? 1.0)
   const canUseMCP = true
-  const { filePath, currentContent, lastSavedTime, originalContent } = useWorkspaceStore()
-  const { downloadStatus } = useProcessStore()
+  const filePath = useWorkspaceStore(s => s.filePath)
+  const currentContent = useWorkspaceStore(s => s.currentContent)
+  const lastSavedTime = useWorkspaceStore(s => s.lastSavedTime)
+  const originalContent = useWorkspaceStore(s => s.originalContent)
+  const downloadStatus = useProcessStore(s => s.downloadStatus)
   
   // Document DNA 큐 상태
-  const { queue, isProcessing } = useDocumentProfilerStore()
+  const queue = useDocumentProfilerStore(s => s.queue)
+  const isProcessing = useDocumentProfilerStore(s => s.isProcessing)
   
   
   // 줄바꿈 옵션 상태 추출
@@ -204,7 +210,7 @@ export function StatusBar({}: StatusBarProps = {}) {
     bottom: '32px',
     background: 'rgba(15, 15, 20, 0.88)',
     backdropFilter: 'blur(14px)',
-    border: '1px solid rgba(139, 92, 246, 0.35)',
+    border: '1px solid rgba(59, 130, 246, 0.35)',
     boxShadow: '0 10px 30px rgba(0,0,0,0.65), inset 0 1px 1px rgba(255,255,255,0.05)',
     borderRadius: '8px',
     padding: '12px 14px',
@@ -258,8 +264,8 @@ export function StatusBar({}: StatusBarProps = {}) {
         {isProcessing && queue.length > 0 && (
           <div style={{
             display: 'flex', alignItems: 'center', gap: '8px',
-            background: 'rgba(139, 92, 246, 0.1)', border: '1px solid rgba(139, 92, 246, 0.3)',
-            borderRadius: '6px', padding: '2px 10px', color: '#a78bfa',
+            background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)',
+            borderRadius: '6px', padding: '2px 10px', color: '#38bdf8',
             fontWeight: 600, fontSize: '10.5px', height: '20px',
             animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
           }}>
@@ -289,6 +295,12 @@ export function StatusBar({}: StatusBarProps = {}) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
         {/* AI 서버 동작 상태 (미니 대시보드) */}
         <AIStatusIndicator 
+          activeTooltip={activeTooltip}
+          handleMouseEnter={handleMouseEnter}
+          handleMouseLeave={handleMouseLeave}
+          tooltipStyle={tooltipStyle}
+        />
+        <DocumentSummaryStatusIndicator
           activeTooltip={activeTooltip}
           handleMouseEnter={handleMouseEnter}
           handleMouseLeave={handleMouseLeave}

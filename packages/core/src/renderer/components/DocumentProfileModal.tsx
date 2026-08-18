@@ -12,7 +12,7 @@ import { X, FileText, CheckCircle, TrendingUp, Tags, AlertTriangle, Fingerprint,
 import type { DocumentProfileResult } from '../document-intelligence/types';
 import { documentFeedbackStore } from '../document-intelligence/feedback/documentFeedbackStore';
 import { userRuleGenerator } from '../document-intelligence/rules/user/userRuleGenerator';
-import { PdfMapReduceModal } from './pdf/PdfMapReduceModal';
+import { useDocumentSummaryStore } from '../stores/useDocumentSummaryStore';
 import { useUIStore } from '../stores/useUIStore';
 
 interface Props {
@@ -25,7 +25,6 @@ interface Props {
 export function DocumentProfileModal({ fileId, profile, pdf, onClose }: Props) {
   const { source, profile: classProfile, keywords, entities, importantPages } = profile;
   const [showFeedback, setShowFeedback] = useState(false);
-  const [showMapReduce, setShowMapReduce] = useState(false);
   
   // Feedback States
   const [selectedDomain, setSelectedDomain] = useState(classProfile.documentDomain?.primary || 'academic');
@@ -82,8 +81,16 @@ export function DocumentProfileModal({ fileId, profile, pdf, onClose }: Props) {
     useUIStore.getState().setShowAIPanel(true);
     useUIStore.getState().setActiveRightTab('ai');
 
-    // 2. 3단계 맵리듀스 모달 팝업 열기
-    setShowMapReduce(true);
+    // 2. 3단계 맵리듀스 모달 글로벌 오픈
+    const taskId = fileId || source.fileName;
+    useDocumentSummaryStore.getState().registerSummaryTask({
+      id: taskId,
+      fileId: fileId || undefined,
+      fileName: source.fileName,
+      docType: 'pdf',
+      numPages: source.pageCount || 1
+    });
+    useDocumentSummaryStore.getState().openModalForTask(taskId);
 
     // 3. AI 에이전트 프롬프트 브로드캐스팅
     window.dispatchEvent(new CustomEvent('ameva:trigger-ai-prompt', {
@@ -91,6 +98,8 @@ export function DocumentProfileModal({ fileId, profile, pdf, onClose }: Props) {
         prompt: `현재 문서(${source.fileName}, ${source.pageCount}페이지)를 3단계 계층형 맵리듀스(Map-Reduce) 방식으로 심층 분석하여, [총괄 요약], [주요 항목 비교 표], [섹션별 분석], [핵심 액션 아이템]으로 상세하게 요약 정리해줘.`
       }
     }));
+
+    onClose();
   };
 
   return createPortal(
@@ -113,7 +122,7 @@ export function DocumentProfileModal({ fileId, profile, pdf, onClose }: Props) {
           background: 'rgba(255,255,255,0.02)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Fingerprint size={20} style={{ color: '#a78bfa' }} />
+            <Fingerprint size={20} style={{ color: '#38bdf8' }} />
             <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#f9fafb' }}>AMEVA 문서 DNA 프로필</h3>
           </div>
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
@@ -158,7 +167,7 @@ export function DocumentProfileModal({ fileId, profile, pdf, onClose }: Props) {
                         <br />
                       </>
                     )}
-                    Domain: <span style={{ color: '#a78bfa' }}>{classProfile.documentDomain.primary}</span> ({classProfile.documentDomain.confidence}%)
+                    Domain: <span style={{ color: '#38bdf8' }}>{classProfile.documentDomain.primary}</span> ({classProfile.documentDomain.confidence}%)
                     {classProfile.documentSubDomain?.primary !== 'unknown' && classProfile.documentSubDomain && (
                       <>
                         <br />
@@ -194,11 +203,11 @@ export function DocumentProfileModal({ fileId, profile, pdf, onClose }: Props) {
                   onClick={handleStartAIAnalysis}
                   style={{ 
                     padding: '8px 16px', 
-                    background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)', 
+                    background: 'linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)', 
                     border: 'none', borderRadius: '6px', 
                     color: '#fff', cursor: 'pointer', fontSize: '13px', fontWeight: 700,
                     display: 'flex', alignItems: 'center', gap: '6px',
-                    boxShadow: '0 4px 14px rgba(139, 92, 246, 0.4)',
+                    boxShadow: '0 4px 14px rgba(37, 99, 235, 0.4)',
                     transition: 'all 0.2s ease'
                   }}>
                   <Sparkles size={14} />
@@ -317,7 +326,7 @@ export function DocumentProfileModal({ fileId, profile, pdf, onClose }: Props) {
               </div>
               <div style={{ background: 'rgba(255,255,255,0.06)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                 <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '8px', fontWeight: 500 }}>조직명</div>
-                <div style={{ fontSize: '13px', color: '#a78bfa', display: 'flex', flexDirection: 'column', gap: '6px', fontWeight: 500 }}>
+                <div style={{ fontSize: '13px', color: '#38bdf8', display: 'flex', flexDirection: 'column', gap: '6px', fontWeight: 500 }}>
                   {entities.organizations.length > 0 ? entities.organizations.slice(0, 5).map((m, i) => <div key={i}>{m}</div>) : '- 없음 -'}
                 </div>
               </div>
@@ -348,27 +357,6 @@ export function DocumentProfileModal({ fileId, profile, pdf, onClose }: Props) {
 
         </div>
       </div>
-
-      {/* 3단계 맵리듀스 상세 요약 모달 */}
-      {showMapReduce && (
-        <PdfMapReduceModal
-          pdf={pdf}
-          fileId={fileId}
-          fileName={source.fileName}
-          numPages={source.pageCount || 1}
-          onClose={() => {
-            setShowMapReduce(false);
-            onClose();
-          }}
-          onInsertToEditor={(reportText) => {
-            window.dispatchEvent(new CustomEvent('app:insert-markdown', {
-              detail: { content: reportText, fileName: `[AI 요약] ${source.fileName}` }
-            }));
-            setShowMapReduce(false);
-            onClose();
-          }}
-        />
-      )}
     </div>,
     document.body
   );

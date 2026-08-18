@@ -163,48 +163,27 @@ export function Minimap({ editor, editorContainerRef, blocks }: MinimapProps) {
     let interval: ReturnType<typeof setInterval> | null = null
 
     const attachListener = () => {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `activeContainer`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const activeContainer = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
       const activeContainer = getScrollContainer()
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `activeContainer && activeContainer !== container`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (activeContainer && activeContainer !== container)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
       if (activeContainer && activeContainer !== container) {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `container`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (container)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
         if (container) {
           container.removeEventListener('scroll', handleScroll)
         }
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `observer`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (observer)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
         if (observer) {
           observer.disconnect()
         }
 
         container = activeContainer
-        container.addEventListener('scroll', handleScroll)
+        container.addEventListener('scroll', handleScroll, { passive: true })
 
-        observer = new MutationObserver(handleScroll)
-        observer.observe(container, { childList: true, subtree: true, characterData: true })
+        // 타이핑 시마다 발생하는 잦은 재계산을 막기 위해 200ms 디바운스 적용 및 characterData 제외
+        let mutationTimeout = null
+        const handleDebouncedMutation = () => {
+          if (mutationTimeout) clearTimeout(mutationTimeout)
+          mutationTimeout = setTimeout(handleScroll, 200)
+        }
+
+        observer = new MutationObserver(handleDebouncedMutation)
+        observer.observe(container, { childList: true, subtree: true })
 
         handleScroll()
         if (interval) {
@@ -215,29 +194,13 @@ export function Minimap({ editor, editorContainerRef, blocks }: MinimapProps) {
     }
 
     attachListener()
-
-    // Ref 마운트 지연 대응을 위해 200ms 마다 폴링 확인 (연결 시 자동 해제됨)
     interval = setInterval(attachListener, 200)
 
     return () => {
       if (interval) clearInterval(interval)
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `container`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (container)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
       if (container) {
         container.removeEventListener('scroll', handleScroll)
       }
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `observer`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (observer)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
       if (observer) {
         observer.disconnect()
       }

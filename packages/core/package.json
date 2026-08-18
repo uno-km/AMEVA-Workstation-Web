@@ -1,6 +1,6 @@
 {
   "name": "@ameva/core",
-  "version": "0.0.0",
+  "version": "0.8.19",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,7 +12,6 @@
     "test:full": "npx tsx test/e2e/all-buttons-full-suite.test.ts"
   },
   "dependencies": {
-    "@babel/standalone": "^8.0.4",
     "@blocknote/core": "^0.51.4",
     "@blocknote/mantine": "^0.51.4",
     "@blocknote/react": "^0.51.4",
@@ -40,7 +39,6 @@
     "mermaid": "^11.16.0",
     "onnxruntime-web": "^1.14.0",
     "pdf-lib": "^1.17.1",
-    "pdf-parse": "^2.4.5",
     "pdfjs-dist": "^5.4.296",
     "pptx-preview": "^1.0.7",
     "pptxgenjs": "^4.0.1",

@@ -122,7 +122,7 @@ export function DiffModal({
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
-          boxShadow: '0 20px 50px rgba(139, 92, 246, 0.25)',
+          boxShadow: '0 20px 50px rgba(59, 130, 246, 0.25)',
         }}
       >
         {/* 헤더 */}

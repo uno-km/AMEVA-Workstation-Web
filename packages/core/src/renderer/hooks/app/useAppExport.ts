@@ -165,7 +165,7 @@ export function useAppExport(editor: AmevaEditor | null) {
         particleCount: 70,
         spread: 60,
         origin: { y: 0.8 },
-        colors: ['#8b5cf6', '#06b6d4', '#ec4899', '#10b981'],
+        colors: ['#2563eb', '#06b6d4', '#ec4899', '#10b981'],
       })
 
       // 2초 뒤 상태창 최소화 및 소멸 단계 진입 계약 준수

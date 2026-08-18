@@ -134,7 +134,7 @@ export const KnowledgeGraphViewer: React.FC<KnowledgeGraphViewerProps> = ({
         if (isSelected || isHovered) {
           ctx.beginPath();
           ctx.arc(node.x, node.y, nodeSize + 6, 0, Math.PI * 2);
-          ctx.fillStyle = isSelected ? 'rgba(139, 92, 246, 0.35)' : 'rgba(59, 130, 246, 0.25)';
+          ctx.fillStyle = isSelected ? 'rgba(59, 130, 246, 0.35)' : 'rgba(59, 130, 246, 0.25)';
           ctx.fill();
         }
 
@@ -149,7 +149,7 @@ export const KnowledgeGraphViewer: React.FC<KnowledgeGraphViewerProps> = ({
         ctx.stroke();
 
         // Label
-        ctx.fillStyle = isSelected ? '#a78bfa' : '#e2e8f0';
+        ctx.fillStyle = isSelected ? '#38bdf8' : '#e2e8f0';
         ctx.font = isSelected ? 'bold 12px sans-serif' : '11px sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(node.label || '', node.x, node.y + nodeSize + 13);

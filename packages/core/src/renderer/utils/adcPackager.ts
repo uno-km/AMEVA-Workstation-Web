@@ -30,36 +30,9 @@ import { getAttachment, saveAttachment } from './vfsDatabase'
  * - Rationale: 아카이빙된 zip 바이너리를 문서 블록(HTML/JSON) 내에 base64 텍스트 형태로 임베딩하기 위해 변환한다.
  */
 function arrayBufferToBase64(buffer: ArrayBuffer): string {
-  /*
-   * [RUN-TIME STATE / INVARIANT]
-   * - 변수 명: `binary`
-   * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-   * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-   * - 예시 코드: `const binary = ...` 형태로 안전 캐싱 후 가공 기동.
-   */
   let binary = ''
-  /*
-   * [RUN-TIME STATE / INVARIANT]
-   * - 변수 명: `bytes`
-   * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-   * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-   * - 예시 코드: `const bytes = ...` 형태로 안전 캐싱 후 가공 기동.
-   */
   const bytes = new Uint8Array(buffer)
-  /*
-   * [RUN-TIME STATE / INVARIANT]
-   * - 변수 명: `len`
-   * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-   * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-   * - 예시 코드: `const len = ...` 형태로 안전 캐싱 후 가공 기동.
-   */
   const len = bytes.byteLength
-  /*
-   * [LOOP CONTROL ITERATION]
-   * - 루프 조건: `for (let i = 0; i < len; i++) {`
-   * - 예상 시나리오: 지정된 조건 한계 도달 시점까지 콜렉션 항목의 순차 매핑, 변환 및 동기 적재 처리를 수행함.
-   * - 예시: `for (const item of list)` 루프 실행 시 모든 개별 블록의 html 포맷 정제 완료 후 스택 종결.
-   */
   for (let i = 0; i < len; i++) {
     binary += String.fromCharCode(bytes[i])
   }
@@ -71,36 +44,9 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
  * - Rationale: 아카이빙 시 base64 텍스트를 zip 라이브러리가 이해할 수 있는 ArrayBuffer 이진 포맷으로 복원한다.
  */
 function base64ToArrayBuffer(base64: string): ArrayBuffer {
-  /*
-   * [RUN-TIME STATE / INVARIANT]
-   * - 변수 명: `binaryString`
-   * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-   * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-   * - 예시 코드: `const binaryString = ...` 형태로 안전 캐싱 후 가공 기동.
-   */
   const binaryString = window.atob(base64)
-  /*
-   * [RUN-TIME STATE / INVARIANT]
-   * - 변수 명: `len`
-   * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-   * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-   * - 예시 코드: `const len = ...` 형태로 안전 캐싱 후 가공 기동.
-   */
   const len = binaryString.length
-  /*
-   * [RUN-TIME STATE / INVARIANT]
-   * - 변수 명: `bytes`
-   * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-   * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-   * - 예시 코드: `const bytes = ...` 형태로 안전 캐싱 후 가공 기동.
-   */
   const bytes = new Uint8Array(len)
-  /*
-   * [LOOP CONTROL ITERATION]
-   * - 루프 조건: `for (let i = 0; i < len; i++) {`
-   * - 예상 시나리오: 지정된 조건 한계 도달 시점까지 콜렉션 항목의 순차 매핑, 변환 및 동기 적재 처리를 수행함.
-   * - 예시: `for (const item of list)` 루프 실행 시 모든 개별 블록의 html 포맷 정제 완료 후 스택 종결.
-   */
   for (let i = 0; i < len; i++) {
     bytes[i] = binaryString.charCodeAt(i)
   }
@@ -132,6 +78,7 @@ export async function packMarkdownToADC(markdown: string, metadata?: any, rawBlo
     'image/webp',
     'video/mp4',
     'video/webm',
+    'video/quicktime',
   ])
 
   const getCompressionOptions = (mime: string) => {
@@ -202,17 +149,18 @@ export async function packMarkdownToADC(markdown: string, metadata?: any, rawBlo
     }
   }
 
-  // 1.5) ameva-vfs 가상 파일 시스템 내의 파일 감지 및 압축
-  const vfsMediaRegex = /ameva-vfs:\/\/([^\s"'()#?,]+)/g
+  // 1.5) ameva-vfs 가상 파일 시스템 내의 파일 감지 및 압축 (마크다운 및 블록 JSON 모두 탐색)
+  const vfsMediaRegex = /ameva-vfs:\/\/([^\s"'()#?,\\\]]+)/g
   const vfsMatches: { full: string; fileId: string }[] = []
   let vfsMatch
 
+  const fullSearchTarget = processedMarkdown + ' ' + (blocksJsonStr || '')
   const tempVfsRegex = new RegExp(vfsMediaRegex)
-  while ((vfsMatch = tempVfsRegex.exec(processedMarkdown)) !== null) {
+  while ((vfsMatch = tempVfsRegex.exec(fullSearchTarget)) !== null) {
     const full = vfsMatch[0]
     const fileId = vfsMatch[1]
 
-    if (vfsMatches.some(m => m.full === full)) continue
+    if (vfsMatches.some(m => m.fileId === fileId)) continue
 
     vfsMatches.push({ full, fileId })
   }
@@ -225,7 +173,11 @@ export async function packMarkdownToADC(markdown: string, metadata?: any, rawBlo
         const mime = blob.type || 'application/octet-stream'
         
         let ext = mime.split('/')[1] || 'png'
-        if (mime === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') ext = 'pptx'
+        if (mime.startsWith('video/')) {
+          ext = mime.replace('video/', '').replace('quicktime', 'mov').split(';')[0] || 'webm'
+        } else if (mime.startsWith('audio/')) {
+          ext = mime.replace('audio/', '').split(';')[0] || 'mp3'
+        } else if (mime === 'application/vnd.openxmlformats-officedocument.presentationml.presentation') ext = 'pptx'
         else if (mime === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') ext = 'xlsx'
         else if (mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') ext = 'docx'
         else if (mime === 'application/pdf') ext = 'pdf'
@@ -250,9 +202,8 @@ export async function packMarkdownToADC(markdown: string, metadata?: any, rawBlo
   }
 
   // 2) 기존 dataUrlRegex 매칭 (폴백 및 타 리소스용)
-  // MIME 타입에 점(.), 대시(-), 플러스(+) 등이 포함될 수 있으므로 더 넓게 매칭
   const dataUrlRegex = /data:([a-zA-Z0-9/+\-_.=]+);base64,([a-zA-Z0-9+/=]+)/g
-  const dataMatches: { full: string; mime: string; base64: string; path: string }[] = []
+  const dataMatches: { full: string; mime: string; base64: string; path: string; fileId: string }[] = []
   let dataMatch
   const tempRegex = new RegExp(dataUrlRegex)
   while ((dataMatch = tempRegex.exec(processedMarkdown)) !== null) {
@@ -263,7 +214,9 @@ export async function packMarkdownToADC(markdown: string, metadata?: any, rawBlo
     if (dataMatches.some(m => m.full === full)) continue
 
     let ext = mime.split('/')[1] || 'png'
-    if (mime === 'application/pdf') ext = 'pdf'
+    if (mime.startsWith('video/')) ext = mime.replace('video/', '').split(';')[0] || 'webm'
+    else if (mime.startsWith('audio/')) ext = mime.replace('audio/', '').split(';')[0] || 'mp3'
+    else if (mime === 'application/pdf') ext = 'pdf'
     else if (mime.includes('presentationml')) ext = 'pptx'
     else if (mime.includes('spreadsheetml')) ext = 'xlsx'
     else if (mime.includes('wordprocessingml')) ext = 'docx'

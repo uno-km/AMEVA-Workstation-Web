@@ -64,7 +64,7 @@ const COL_COLORS: Record<string, string> = {
  * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
 function getColColor(title: string): string {
-  return COL_COLORS[title] || '#8b5cf6'
+  return COL_COLORS[title] || '#2563eb'
 }
 
 /**

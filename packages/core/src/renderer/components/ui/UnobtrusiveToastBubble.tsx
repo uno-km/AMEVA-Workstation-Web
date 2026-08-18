@@ -55,10 +55,10 @@ const VARIANT_THEMES: Record<ToastVariant, {
   },
   indigo: {
     bg: 'rgba(15, 23, 42, 0.94)',
-    border: 'rgba(139, 92, 246, 0.6)',
-    shadow: '0 4px 16px rgba(139, 92, 246, 0.35), 0 2px 6px rgba(0,0,0,0.5)',
-    text: '#c4b5fd',
-    arrow: 'rgba(139, 92, 246, 0.6)'
+    border: 'rgba(59, 130, 246, 0.6)',
+    shadow: '0 4px 16px rgba(59, 130, 246, 0.35), 0 2px 6px rgba(0,0,0,0.5)',
+    text: '#93c5fd',
+    arrow: 'rgba(59, 130, 246, 0.6)'
   },
   cyan: {
     bg: 'rgba(15, 23, 42, 0.94)',

@@ -75,7 +75,7 @@ export const AiDiffBlockSpec = createReactBlockSpec(
         <div contentEditable={false} style={{
           width: '100%',
           background: 'rgba(24, 24, 27, 0.4)',
-          border: '1px solid rgba(139, 92, 246, 0.4)',
+          border: '1px solid rgba(59, 130, 246, 0.4)',
           borderRadius: '8px',
           padding: '12px',
           margin: '8px 0',

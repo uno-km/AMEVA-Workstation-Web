@@ -176,6 +176,9 @@ export const AmevaAudioBlockSpec = createReactBlockSpec(
       const [src, setSrc] = useState<string>('')
 
       useEffect(() => {
+        let active = true
+        let objectUrl: string | null = null
+
         if (!rawUrl) {
           setSrc('')
           return
@@ -183,10 +186,20 @@ export const AmevaAudioBlockSpec = createReactBlockSpec(
         if (rawUrl.startsWith('ameva-vfs://')) {
           const fileId = rawUrl.replace('ameva-vfs://', '')
           getAttachment(fileId).then(blob => {
-            if (blob) setSrc(URL.createObjectURL(blob))
+            if (active && blob) {
+              objectUrl = URL.createObjectURL(blob)
+              setSrc(objectUrl)
+            }
           }).catch(err => console.error("Failed to load VFS blob:", err))
         } else {
           setSrc(rawUrl)
+        }
+
+        return () => {
+          active = false
+          if (objectUrl) {
+            URL.revokeObjectURL(objectUrl)
+          }
         }
       }, [rawUrl])
 
@@ -370,7 +383,7 @@ export const AmevaAudioBlockSpec = createReactBlockSpec(
           }}>
             <div style={{
               width: '36px', height: '36px', borderRadius: '50%',
-              background: 'linear-gradient(135deg, #7c3aed, #818cf8)',
+              background: 'linear-gradient(135deg, #2563eb, #818cf8)',
               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px',
             }}>🎵</div>
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -384,7 +397,7 @@ export const AmevaAudioBlockSpec = createReactBlockSpec(
             <button
               onClick={() => setIsEditMode(m => !m)}
               style={{
-                background: isEditMode ? '#dc2626' : 'rgba(124,58,237,0.3)',
+                background: isEditMode ? '#dc2626' : 'rgba(37, 99, 235,0.3)',
                 border: '1px solid rgba(129,140,248,0.3)',
                 color: '#fff', borderRadius: '6px', padding: '5px 12px', fontSize: '12px', cursor: 'pointer',
               }}
@@ -398,7 +411,7 @@ export const AmevaAudioBlockSpec = createReactBlockSpec(
             <button
               onClick={togglePlay}
               style={{
-                background: 'linear-gradient(135deg, #7c3aed, #818cf8)',
+                background: 'linear-gradient(135deg, #2563eb, #818cf8)',
                 border: 'none', color: '#fff', borderRadius: '50%',
                 width: '36px', height: '36px', cursor: 'pointer', fontSize: '14px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -418,7 +431,7 @@ export const AmevaAudioBlockSpec = createReactBlockSpec(
             >
               <div style={{
                 height: '100%', borderRadius: '2px',
-                background: 'linear-gradient(90deg, #7c3aed, #818cf8)',
+                background: 'linear-gradient(90deg, #2563eb, #818cf8)',
                 width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%',
                 transition: 'width 0.05s',
               }} />
@@ -443,7 +456,7 @@ export const AmevaAudioBlockSpec = createReactBlockSpec(
                     type="range" min="0.001" max="0.1" step="0.001"
                     value={silenceThreshold}
                     onChange={e => setSilenceThreshold(parseFloat(e.target.value))}
-                    style={{ width: '60px', accentColor: '#7c3aed' }}
+                    style={{ width: '60px', accentColor: '#2563eb' }}
                   />
                   <span style={{ color: '#c4c4ff', fontSize: '10px' }}>
                     {(20 * Math.log10(silenceThreshold)).toFixed(0)}dB
@@ -455,7 +468,7 @@ export const AmevaAudioBlockSpec = createReactBlockSpec(
                     type="range" min="0.1" max="3" step="0.1"
                     value={minSilenceDuration}
                     onChange={e => setMinSilenceDuration(parseFloat(e.target.value))}
-                    style={{ width: '60px', accentColor: '#7c3aed' }}
+                    style={{ width: '60px', accentColor: '#2563eb' }}
                   />
                   <span style={{ color: '#c4c4ff', fontSize: '10px' }}>{minSilenceDuration}s</span>
                 </label>
@@ -463,7 +476,7 @@ export const AmevaAudioBlockSpec = createReactBlockSpec(
                   onClick={handleAnalyze}
                   disabled={isAnalyzing}
                   style={{
-                    background: isAnalyzing ? '#374151' : '#7c3aed',
+                    background: isAnalyzing ? '#374151' : '#2563eb',
                     border: 'none', color: '#fff', borderRadius: '5px',
                     padding: '5px 12px', cursor: 'pointer', fontSize: '11px',
                   }}
@@ -570,6 +583,13 @@ export const AmevaAudioBlockSpec = createReactBlockSpec(
               )}
             </div>
           )}
+        </div>
+      )
+    },
+    toExternalHTML: ({ block }) => {
+      return (
+        <div data-content-type="audio" data-url={block.props.url}>
+          <audio src={block.props.url} controls />
         </div>
       )
     }

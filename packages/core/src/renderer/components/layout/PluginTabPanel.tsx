@@ -28,7 +28,7 @@ const PLUGIN_META: Record<string, {
   'ai': {
     label: 'AI 어시스턴트',
     icon: <Globe size={24} />,
-    color: '#8b5cf6',
+    color: '#2563eb',
     description: 'AI 대화형 어시스턴트 패널',
     implemented: true,
   },
@@ -77,7 +77,7 @@ const PLUGIN_META: Record<string, {
   'voice-dictation': {
     label: '음성 회의록 작성',
     icon: <Mic size={24} />,
-    color: '#8b5cf6',
+    color: '#2563eb',
     description: '마이크 음성을 실시간으로 텍스트로 변환하여 문서에 삽입',
     implemented: false,
   },
@@ -112,7 +112,7 @@ const PLUGIN_META: Record<string, {
   'calendar': {
     label: '스케줄 캘린더',
     icon: <Calendar size={24} />,
-    color: '#8b5cf6',
+    color: '#2563eb',
     description: '일정 관리 및 구글 캘린더 연동',
     implemented: false,
   },
@@ -190,7 +190,7 @@ function DynamicPluginView({ tabId }: { tabId: string }) {
 
   const label = meta?.name || pluginInfo?.label || tabId;
   const description = meta?.description || pluginInfo?.description || '이 플러그인은 현재 로딩 중이거나 개발 중입니다.';
-  const color = pluginInfo?.color || '#8b5cf6';
+  const color = pluginInfo?.color || '#2563eb';
   const icon = pluginInfo?.icon || <Globe size={24} />;
 
   return (

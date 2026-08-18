@@ -3,50 +3,18 @@
  * @file FindReplaceBar.tsx
  * @description FindReplaceBar.tsx 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
  * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
- * @example
- * // 예시 로직 (자동 생성됨)
- * import { something } from './FindReplaceBar';
- * 
  * @created 2026-08-10 20:30:36
- * @updated 2026-08-10 20:30:36
+ * @updated 2026-08-18 18:35:00
  * @author uno-km
- * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * @commit refactor: Apply Antigravity Blue theme & Clean up syntax
  * ============================================================================
  */
 
-/**
- * @file FindReplaceBar.tsx
- * @system AMEVA OS Desktop Workstation
- * @location src/renderer/components/FindReplaceBar.tsx
- * @role Core module helper and integration logic
- * 
- * [소비처 - CONSUMERS / USAGE CONTEXT]
- * - 소비처 A (src/renderer/AppLayout.tsx): 레이아웃 그리드 내부 또는 플로팅 레이어 영역 내에서 그리기로 소비.
- * - 소비처 B (src/renderer/App.tsx): 전역 모달 매니저 및 뷰포트 상태 스위칭에 따라 동적 마운트되어 소비.
- * 
- * [책임 범위 - RESPONSIBILITY]
- * - 본 파일은 AMEVA 시스템 내에서 도메인 목적에 부합하는 연산 및 데이터 처리 흐름을 안전하게 캡슐화한다.
- * - 외부 라이브러리 및 하위 종속성을 조율하고 결과 규격을 일관되게 제공한다.
- * 
- * [절대 깨면 안 되는 계약 - CONTRACT]
- * - MUST: 모든 예외 발생 시 에러를 침묵시키지 말고 에러 로그를 명확하게 남길 것.
- * - MUST NOT: TypeScript any 형식을 우회 수단으로 함부로 선언하지 말 것.
- */
-
-// [외부 패키지 및 라이브러리 임포트: react]
 import React, { useEffect, useRef, useState } from 'react'
-// [외부 패키지 및 라이브러리 임포트: lucide-react]
 import { X, ChevronDown, ChevronUp, Replace, ReplaceAll, Search } from 'lucide-react'
-
-// [내부 프로젝트 의존성 모듈 임포트: ../editor/amevaBlockSchema]
 import { type AmevaEditor } from '../editor/amevaBlockSchema'
-// [내부 프로젝트 의존성 모듈 임포트: ../hooks/useFindReplace]
 import { useFindReplace } from '../hooks/useFindReplace'
 
-/**
- * FindReplaceBarProps 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 interface FindReplaceBarProps {
   isOpen: boolean
   onClose: () => void
@@ -55,15 +23,8 @@ interface FindReplaceBarProps {
   initialMode?: 'find' | 'replace'
 }
 
-  /*
-   * [FUNCTION CONTRACT]
-   * - 함수 명: `FindReplaceBar`
-   * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
-   * - 예시: `FindReplaceBar(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
-   */
 /**
  * FindReplaceBar 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
 export function FindReplaceBar({
   isOpen,
@@ -73,13 +34,6 @@ export function FindReplaceBar({
   initialMode = 'find'
 }: FindReplaceBarProps) {
   const [showReplace, setShowReplace] = useState(initialMode === 'replace')
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `findInputRef`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const findInputRef = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const findInputRef = useRef<HTMLInputElement>(null)
 
   const {
@@ -97,10 +51,6 @@ export function FindReplaceBar({
     performSearch
   } = useFindReplace({ isOpen, editor, onScrollToBlock })
 
-  /*
-   * [USER INPUT HANDLER / INTERACTION]
-   * - 역할: 찾기/바꾸기 인풋에서 Enter 키를 입력했을 때 찾기 모달창을 안전하게 종료(Close)합니다.
-   */
   const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault()
@@ -108,15 +58,7 @@ export function FindReplaceBar({
     }
   }
 
-  // 모드가 변경될 때 상태 동기화 및 인풋 포커스
   useEffect(() => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `isOpen`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (isOpen)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
     if (isOpen) {
       setShowReplace(initialMode === 'replace')
       setTimeout(() => {
@@ -127,23 +69,8 @@ export function FindReplaceBar({
     }
   }, [isOpen, initialMode])
 
-  // ESC 키 누르면 찾기 창 닫기
   useEffect(() => {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `handleEsc`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const handleEsc = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
     const handleEsc = (e: KeyboardEvent) => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `e.key === 'Escape' && isOpen`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (e.key === 'Escape' && isOpen)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
       if (e.key === 'Escape' && isOpen) {
         onClose()
       }
@@ -152,13 +79,6 @@ export function FindReplaceBar({
     return () => window.removeEventListener('keydown', handleEsc)
   }, [isOpen, onClose])
 
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `!isOpen`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (!isOpen)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
   if (!isOpen) return null
 
   return (
@@ -174,8 +94,8 @@ export function FindReplaceBar({
         background: 'rgba(10, 10, 15, 0.75)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        border: '1px solid rgba(139, 92, 246, 0.3)',
-        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4), 0 0 15px rgba(139, 92, 246, 0.1)',
+        border: '1px solid rgba(59, 130, 246, 0.3)',
+        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4), 0 0 15px rgba(59, 130, 246, 0.1)',
         color: '#fff',
         display: 'flex',
         flexDirection: 'column',
@@ -200,11 +120,11 @@ export function FindReplaceBar({
           <button
             onClick={() => setShowReplace(!showReplace)}
             style={{
-              background: showReplace ? 'rgba(139, 92, 246, 0.15)' : 'transparent',
+              background: showReplace ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
               border: 'none',
               borderRadius: '4px',
               padding: '2px 4px',
-              color: showReplace ? '#c084fc' : 'var(--text-muted)',
+              color: showReplace ? '#93c5fd' : 'var(--text-muted)',
               fontSize: '9.5px',
               fontWeight: 700,
               cursor: 'pointer',
@@ -341,9 +261,9 @@ export function FindReplaceBar({
                 disabled={currentMatchIndex < 0}
                 title="선택된 항목 바꾸기"
                 style={{
-                  background: 'rgba(139, 92, 246, 0.2)',
-                  border: '1px solid rgba(139, 92, 246, 0.35)',
-                  color: currentMatchIndex >= 0 ? '#d8b4fe' : 'rgba(255,255,255,0.2)',
+                  background: 'rgba(59, 130, 246, 0.2)',
+                  border: '1px solid rgba(59, 130, 246, 0.35)',
+                  color: currentMatchIndex >= 0 ? '#93c5fd' : 'rgba(255,255,255,0.2)',
                   borderRadius: '4px',
                   padding: '4px 8px',
                   cursor: currentMatchIndex >= 0 ? 'pointer' : 'not-allowed',
@@ -385,4 +305,3 @@ export function FindReplaceBar({
     </div>
   )
 }
-

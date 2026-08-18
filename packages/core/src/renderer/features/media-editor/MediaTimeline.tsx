@@ -47,7 +47,7 @@ export const MediaTimeline: React.FC<MediaTimelineProps> = ({ tracks, currentTim
                       left: `${leftPercent}%`,
                       width: `${widthPercent}%`,
                       height: '100%',
-                      background: clip.type === 'video' ? '#3b82f6' : '#8b5cf6',
+                      background: clip.type === 'video' ? '#3b82f6' : '#2563eb',
                       borderRadius: '4px',
                       padding: '4px',
                       fontSize: '10px',

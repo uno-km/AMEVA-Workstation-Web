@@ -54,7 +54,7 @@
 
 /* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
 .chat-bubble-mine {
-  background: linear-gradient(135deg, var(--primary), #7c3aed);
+  background: linear-gradient(135deg, var(--primary), #0284c7);
   color: #fff;
   margin-left: auto;
   border-bottom-right-radius: 4px;

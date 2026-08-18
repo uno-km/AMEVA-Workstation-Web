@@ -172,30 +172,7 @@ export function useAppFileOperations(
       return
     }
 
-    // [DOCS-TO-PDF-A4-VIEWER] DOCX/HWPX 문서는 PDF처럼 원본 조판 뷰어로 직접 렌더링
-    if (['docx', 'hwpx'].includes(ext || '') && isBinary) {
-      const fname = (path || filePath || `document.${ext}`).split(/[\\/]/).pop() || `document.${ext}`
-      const docBlock = {
-        id: Math.random().toString(36).substring(2, 10),
-        type: 'inlineDocument',
-        props: {
-          docType: ext,
-          fileName: fname,
-          fileBase64: rawContent,
-          sourceUrl: '',
-          height: '850'
-        },
-        content: []
-      }
-      targetEditor.replaceBlocks(targetEditor.document, [docBlock as any])
-      setCurrentContent('')
-      setOriginalContent('')
-      setLastSavedTime(null)
-      setEditorMode('edit')
-      return
-    }
-
-    // 바이너리 파일이 아닌 경우(md, docx 등) → pdfData 초기화
+    // 바이너리 파일이 아닌 경우(md, docx, hwpx 등) → pdfData 초기화
     setPdfData(null)
     setPdfFileName('')
 
@@ -210,24 +187,29 @@ export function useAppFileOperations(
        * - 예시 코드: `const lines = ...` 형태로 안전 캐싱 후 가공 기동.
        */
     const lines = normalized.split('\n')
-    // 1) 200줄 초과 대형 마크다운 분할 파싱 분기
-    if (lines.length > 200 && !isBinary) {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `firstChunk`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const firstChunk = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-      const firstChunk = lines.slice(0, 120).join('\n')
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `remainingChunk`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const remainingChunk = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-      const remainingChunk = lines.slice(120).join('\n')
+    // 1) 350줄 초과 대형 마크다운 안전 분할 파싱 분기 (표/코드블록 절단 방어)
+    let splitIdx = -1
+    if (lines.length > 350 && !isBinary) {
+      let insideCodeFence = false
+      for (let i = 0; i < Math.min(lines.length - 50, 250); i++) {
+        const line = lines[i].trim()
+        if (line.startsWith('```') || line.startsWith('~~~')) {
+          insideCodeFence = !insideCodeFence
+        }
+        if (i >= 120 && !insideCodeFence && !line.startsWith('|') && line === '') {
+          splitIdx = i
+          break
+        }
+      }
+    }
+
+    if (isAdc && sourceBlocks && sourceBlocks.length > 0) {
+      cleanCodeBlocks(sourceBlocks)
+      ensureBlockIds(sourceBlocks)
+      targetEditor.replaceBlocks(targetEditor.document, sourceBlocks)
+    } else if (splitIdx > 0) {
+      const firstChunk = lines.slice(0, splitIdx).join('\n')
+      const remainingChunk = lines.slice(splitIdx).join('\n')
 
       // 선두 120줄 파싱 및 에디터 즉시 대체
       const firstBlocks = await targetEditor.tryParseMarkdownToBlocks(firstChunk)
@@ -418,40 +400,7 @@ export function useAppFileOperations(
       return
     }
 
-    if (['docx', 'hwpx'].includes(ext) && isBinary) {
-      const newTabId = Math.random().toString(36).substring(2, 10)
-      const fname = path.split('/').pop() || path.split('\\').pop() || `document.${ext}`
-      const docBlock = {
-        id: Math.random().toString(36).substring(2, 10),
-        type: 'inlineDocument',
-        props: {
-          docType: ext,
-          fileName: fname,
-          fileBase64: fileContent,
-          sourceUrl: '',
-          height: '850'
-        },
-        content: []
-      }
-      const newTab = {
-        id: newTabId,
-        filePath: path,
-        content: '',
-        blocks: [docBlock as any],
-        originalContent: '',
-        lastSavedTime: null
-      }
-      addTab(newTab)
-      setActiveTabId(newTabId)
-      setFilePath(path)
-      setCurrentContent('')
-      setOriginalContent('')
-      setLastSavedTime(null)
-      setTimeout(() => {
-        targetEditor.replaceBlocks(targetEditor.document, [docBlock as any])
-      }, 0)
-      return
-    }
+
 
       /*
        * [RUN-TIME STATE / INVARIANT]

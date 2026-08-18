@@ -56,6 +56,15 @@ export interface CodeExplanationRequest {
   onStreamingChunk?: (chunk: string) => void;
 }
 
+export interface CodeConversionRequest {
+  code: string;
+  sourceLanguage: SupportedLanguage;
+  targetLanguage: SupportedLanguage;
+  engine: IAIEngineAdapter;
+  signal?: AbortSignal;
+  onStreamingChunk?: (chunk: string) => void;
+}
+
 export class CodeIntelligenceService {
   /**
    * 1. 지능형 다국어 코드 생성 (Code Generation)
@@ -68,20 +77,33 @@ export class CodeIntelligenceService {
     signal,
     onStreamingChunk
   }: CodeGenerationRequest): Promise<string> {
-    const systemPrompt = `당신은 세계 최고 수준의 수석 소프트웨어 엔지니어이자 ${language.toUpperCase()} 전문가입니다.
-사용자의 요구사항에 맞추어 완벽하고 실행 가능한 최적의 코드를 작성하십시오.
+    let systemPrompt = `당신은 최고 수준의 ${language.toUpperCase()} 소프트웨어 엔지니어입니다.
+사용자의 요구사항에 맞추어 오직 실행 가능한 깨끗하고 효율적인 ${language.toUpperCase()} 코드를 작성하십시오.
 
 [작성 원칙]
-1. 반드시 유효한 \`\`\`${language} ... \`\`\` 마크다운 코드 블록으로 코드를 감싸서 제공하십시오.
-2. 프로덕션 레벨의 에러 핸들링, 명확한 변수명, 필요한 경우 간결한 인라인 주석을 포함하십시오.
-3. 코드 작성 후, 핵심 구현 원리와 사용법을 2~3문장으로 간결하게 설명하십시오.`;
+1. 반드시 유효한 \`\`\`${language} ... \`\`\` 마크다운 코드 블록으로 완전한 코드를 감싸서 제공하십시오.
+2. 불필요하거나 반복적인 긴 주석(comment)을 생성하지 마십시오. 핵심 로직 구현에만 집중하십시오.
+3. 동일한 설명 문구나 단어를 절대 중복 반복(Degenerate Loop)하지 마십시오.`;
+
+    if (language === 'mermaid') {
+      systemPrompt = `당신은 최고 수준의 Mermaid.js 다이어그램 설계 전문가입니다.
+오직 렌더링 가능한 완벽한 Mermaid 코드만을 \`\`\`mermaid ... \`\`\` 블록으로 작성하십시오.
+
+[Mermaid 필수 문법 원칙]
+1. Flowchart/Graph에서는 노드 연결선 라벨에 콜론(:)을 절대 사용하지 말고, 반드시 파이프(|라벨|) 또는 화살표(-- 라벨 -->)를 사용하십시오.
+   - 올바른 예: A -->|Process| B 또는 A -- Process --> B
+   - 금지 예: A --> B: Process (이 문법은 sequenceDiagram 전용이므로 flowchart에서 절대 금지)
+2. 각 노드와 연결선은 반드시 줄바꿈으로 명확히 구분하십시오.
+3. 노드 텍스트에 한글/특수문자가 있을 때는 큰따옴표로 감싸십시오. (예: A["시작 (Start)"])
+4. 설명 텍스트 없이 오직 유효한 Mermaid 코드 블록만 출력하십시오.`;
+    }
 
     let userPrompt = `[요구 언어]: ${language}\n[작성 요구사항]:\n${prompt}`;
     if (contextCode) {
       userPrompt += `\n\n[기존/참조 코드 문맥]:\n\`\`\`${language}\n${contextCode}\n\`\`\``;
     }
 
-    return this.streamPrompt(engine, systemPrompt, userPrompt, { signal, temperature: 0.2 }, onStreamingChunk);
+    return this.streamPrompt(engine, systemPrompt, userPrompt, { signal, temperature: 0.35 }, onStreamingChunk);
   }
 
   /**
@@ -152,6 +174,40 @@ export class CodeIntelligenceService {
     const userPrompt = `다음 코드가 어떻게 동작하는지 자세하고 명확하게 해설해 주십시오:\n\n\`\`\`${language}\n${code}\n\`\`\``;
 
     return this.streamPrompt(engine, systemPrompt, userPrompt, { signal, temperature: 0.3 }, onStreamingChunk);
+  }
+
+  /**
+   * 5. 다국어 코드 상호 변환 (Language Conversion)
+   */
+  static async convertLanguage({
+    code,
+    sourceLanguage,
+    targetLanguage,
+    engine,
+    signal,
+    onStreamingChunk
+  }: CodeConversionRequest): Promise<string> {
+    const systemPrompt = `당신은 다국어 프로그래밍 언어 변환 및 트랜스파일러 전문가입니다.
+주어진 ${sourceLanguage.toUpperCase()} 코드를 동등한 동작을 수행하는 최적의 ${targetLanguage.toUpperCase()} 코드로 완벽하게 변환하십시오.
+[작성 원칙]
+1. 반드시 유효한 \`\`\`${targetLanguage} ... \`\`\` 마크다운 코드 블록으로 감싸십시오.
+2. 타겟 언어의 표준 관용구(Idiomatic style) 및 모범 사례를 따르십시오.`;
+
+    const userPrompt = `다음 ${sourceLanguage.toUpperCase()} 코드를 ${targetLanguage.toUpperCase()} 코드로 변환해 주십시오:\n\n\`\`\`${sourceLanguage}\n${code}\n\`\`\``;
+
+    return this.streamPrompt(engine, systemPrompt, userPrompt, { signal, temperature: 0.15 }, onStreamingChunk);
+  }
+
+  /**
+   * 6. 마크다운 블록에서 순수 소스코드만 안전 추출
+   */
+  static extractPureCode(rawResponse: string): string {
+    const codeBlockRegex = /```(?:\w+)?\n([\s\S]*?)```/g;
+    const matches = Array.from(rawResponse.matchAll(codeBlockRegex));
+    if (matches.length > 0) {
+      return matches[0][1].trim();
+    }
+    return rawResponse.trim();
   }
 
   /**

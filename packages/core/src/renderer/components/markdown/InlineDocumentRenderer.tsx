@@ -18,6 +18,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 // [내부 프로젝트 의존성 모듈 임포트: ../../utils/vfsDatabase]
 import { getAttachment } from '../../utils/vfsDatabase'
+import { base64ToBlob } from '../../utils/binaryUtils'
 // [내부 프로젝트 의존성 모듈 임포트: ../ResizableBlockContainer]
 import { ResizableBlockContainer } from '../ResizableBlockContainer'
 // [내부 프로젝트 의존성 모듈 임포트: ../InlineDocumentBlock]
@@ -71,15 +72,11 @@ export function InlineDocumentRenderer({ code }: { code: string }) {
       } else if (props.sourceUrl.startsWith('data:') || props.fileBase64) {
         try {
           const raw = props.sourceUrl.startsWith('data:') ? props.sourceUrl : props.fileBase64
-          const cleanBase64 = raw.includes(',') ? raw.split(',')[1] : raw
-          const binary = atob(cleanBase64.replace(/\s/g, ''))
-          const bytes = new Uint8Array(binary.length)
-          for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-          const blob = new Blob([bytes], { type: 'application/pdf' })
+          const blob = base64ToBlob(raw, 'application/pdf')
           createdUrl = URL.createObjectURL(blob)
           setResolvedBlobUrl(createdUrl)
         } catch (e) {
-          console.error(e)
+          console.error('[InlineDocumentRenderer] Base64 PDF blob creation failed:', e)
         }
       }
     } else {

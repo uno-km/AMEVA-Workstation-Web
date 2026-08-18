@@ -238,6 +238,71 @@ export function convertJupyterToCodeBlocks(blocks: any[]): any[] {
       copy.props = {
         language: 'ameva-mini-colab'
       }
+    } else if (copy.type === 'image') {
+      copy.type = 'codeBlock'
+      const imageData = JSON.stringify({
+        url: copy.props?.url || '',
+        caption: copy.props?.caption || '',
+        showPreview: copy.props?.showPreview || 'true',
+        previewWidth: copy.props?.previewWidth || '380',
+        viewMode: copy.props?.viewMode || 'grid',
+        cardSizes: copy.props?.cardSizes || '{}'
+      })
+      copy.content = [{ type: 'text', text: `// [AMEVA_LANG:ameva-image]\n${imageData}`, styles: {} }]
+      copy.props = {
+        language: 'ameva-image'
+      }
+    } else if (copy.type === 'video') {
+      copy.type = 'codeBlock'
+      const videoData = JSON.stringify({
+        url: copy.props?.url || '',
+        caption: copy.props?.caption || '',
+        showPreview: copy.props?.showPreview || 'true',
+        previewWidth: copy.props?.previewWidth || '512',
+        width: copy.props?.width || '100%',
+        height: copy.props?.height || '400'
+      })
+      copy.content = [{ type: 'text', text: `// [AMEVA_LANG:ameva-video]\n${videoData}`, styles: {} }]
+      copy.props = {
+        language: 'ameva-video'
+      }
+    } else if (copy.type === 'audio') {
+      copy.type = 'codeBlock'
+      const audioData = JSON.stringify({
+        url: copy.props?.url || '',
+        caption: copy.props?.caption || '',
+        showPreview: copy.props?.showPreview || 'true',
+        previewWidth: copy.props?.previewWidth || '512'
+      })
+      copy.content = [{ type: 'text', text: `// [AMEVA_LANG:ameva-audio]\n${audioData}`, styles: {} }]
+      copy.props = {
+        language: 'ameva-audio'
+      }
+    } else if (copy.type === 'chart') {
+      copy.type = 'codeBlock'
+      const chartData = JSON.stringify({
+        chartType: copy.props?.chartType || 'bar',
+        title: copy.props?.title || '',
+        data: copy.props?.data || '',
+        xAxisLabel: copy.props?.xAxisLabel || '',
+        yAxisLabel: copy.props?.yAxisLabel || ''
+      })
+      copy.content = [{ type: 'text', text: `// [AMEVA_LANG:ameva-chart]\n${chartData}`, styles: {} }]
+      copy.props = {
+        language: 'ameva-chart'
+      }
+    } else if (copy.type === 'aiDiff') {
+      copy.type = 'codeBlock'
+      const diffData = JSON.stringify({
+        oldText: copy.props?.oldText || '',
+        newText: copy.props?.newText || '',
+        title: copy.props?.title || '',
+        blockId: copy.props?.blockId || ''
+      })
+      copy.content = [{ type: 'text', text: `// [AMEVA_LANG:ameva-aidiff]\n${diffData}`, styles: {} }]
+      copy.props = {
+        language: 'ameva-aidiff'
+      }
     } else if (copy.children) {
       copy.children = convertJupyterToCodeBlocks(copy.children)
     }
@@ -338,7 +403,7 @@ export function cleanCodeBlocks(blocks: any[]) {
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const supportedLangs = ...` 형태로 안전 캐싱 후 가공 기동.
        */
-  const supportedLangs = ['python', 'py', 'javascript', 'js', 'html', 'css', 'c', 'cpp', 'java', 'xml', 'json', 'text', 'txt', 'plaintext', 'mermaid', 'bash', 'sh', 'typescript', 'ts', 'sql', 'ameva-drawing', 'ameva-map', 'ameva-youtube', 'ameva-link', 'ameva-presentation', 'ameva-excel', 'ameva-kanban', 'ameva-document', 'ameva-media-editor', 'ameva-knowledge-graph', 'ameva-mini-colab']
+  const supportedLangs = ['python', 'py', 'javascript', 'js', 'html', 'css', 'c', 'cpp', 'java', 'xml', 'json', 'text', 'txt', 'plaintext', 'mermaid', 'bash', 'sh', 'typescript', 'ts', 'sql', 'ameva-drawing', 'ameva-map', 'ameva-youtube', 'ameva-link', 'ameva-presentation', 'ameva-excel', 'ameva-kanban', 'ameva-document', 'ameva-media-editor', 'ameva-knowledge-graph', 'ameva-mini-colab', 'ameva-image', 'ameva-video', 'ameva-audio', 'ameva-chart', 'ameva-aidiff']
   blocks.forEach(block => {
       /*
        * [ALGORITHM BRANCH / DECISION]
@@ -672,6 +737,96 @@ export function cleanCodeBlocks(blocks: any[]) {
         return
       }
 
+      if (lang === 'ameva-image') {
+        block.type = 'image'
+        try {
+          const parsed = JSON.parse(finalCode)
+          block.props = {
+            url: parsed.url || '',
+            caption: parsed.caption || '',
+            showPreview: parsed.showPreview || 'true',
+            previewWidth: parsed.previewWidth || '380',
+            viewMode: parsed.viewMode || 'grid',
+            cardSizes: parsed.cardSizes || '{}'
+          }
+        } catch (err) {
+          block.props = { url: '', caption: '', showPreview: 'true', previewWidth: '380', viewMode: 'grid', cardSizes: '{}' }
+        }
+        block.content = undefined
+        return
+      }
+
+      if (lang === 'ameva-video') {
+        block.type = 'video'
+        try {
+          const parsed = JSON.parse(finalCode)
+          block.props = {
+            url: parsed.url || '',
+            caption: parsed.caption || '',
+            showPreview: parsed.showPreview || 'true',
+            previewWidth: parsed.previewWidth || '512',
+            width: parsed.width || '100%',
+            height: parsed.height || '400'
+          }
+        } catch (err) {
+          block.props = { url: '', caption: '', showPreview: 'true', previewWidth: '512', width: '100%', height: '400' }
+        }
+        block.content = undefined
+        return
+      }
+
+      if (lang === 'ameva-audio') {
+        block.type = 'audio'
+        try {
+          const parsed = JSON.parse(finalCode)
+          block.props = {
+            url: parsed.url || '',
+            caption: parsed.caption || '',
+            showPreview: parsed.showPreview || 'true',
+            previewWidth: parsed.previewWidth || '512'
+          }
+        } catch (err) {
+          block.props = { url: '', caption: '', showPreview: 'true', previewWidth: '512' }
+        }
+        block.content = undefined
+        return
+      }
+
+      if (lang === 'ameva-chart') {
+        block.type = 'chart'
+        try {
+          const parsed = JSON.parse(finalCode)
+          block.props = {
+            chartType: parsed.chartType || 'bar',
+            title: parsed.title || '',
+            data: parsed.data || '',
+            xAxisLabel: parsed.xAxisLabel || '',
+            yAxisLabel: parsed.yAxisLabel || ''
+          }
+        } catch (err) {
+          block.props = { chartType: 'bar', title: '', data: '', xAxisLabel: '', yAxisLabel: '' }
+        }
+        block.content = undefined
+        return
+      }
+
+      if (lang === 'ameva-aidiff') {
+        block.type = 'aiDiff'
+        try {
+          const parsed = JSON.parse(finalCode)
+          block.props = {
+            oldText: parsed.oldText || '',
+            newText: parsed.newText || '',
+            title: parsed.title || '',
+            blockId: parsed.blockId || ''
+          }
+        } catch (err) {
+          block.props = { oldText: '', newText: '', title: '', blockId: '' }
+        }
+        block.content = undefined
+        return
+      }
+
       block.type = 'jupyter'
       block.props = {
         language: lang,
@@ -719,13 +874,36 @@ export function cleanCodeBlocks(blocks: any[]) {
         block.type = 'video'
       }
     }
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `block.children`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (block.children)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
+
+    // [TABLE DEFENSIVE NORMALIZATION] BlockNote Table Handle의 mouseMoveHandler 크래시 (reading 'rows') 원천 차단
+    if (block.type === 'table') {
+      if (!block.content || typeof block.content !== 'object' || !Array.isArray((block.content as any).rows)) {
+        if (Array.isArray(block.content)) {
+          block.content = {
+            type: 'tableContent',
+            rows: (block.content as any[]).map((row: any) => ({
+              cells: Array.isArray(row?.cells) 
+                ? row.cells.map((c: any) => Array.isArray(c) ? c : [{ type: 'text', text: String(c ?? ''), styles: {} }])
+                : Array.isArray(row) 
+                  ? row.map((c: any) => Array.isArray(c) ? c : [{ type: 'text', text: String(c ?? ''), styles: {} }])
+                  : [[{ type: 'text', text: '', styles: {} }]]
+            }))
+          }
+        } else {
+          block.content = {
+            type: 'tableContent',
+            rows: [{ cells: [[{ type: 'text', text: '', styles: {} }]] }]
+          }
+        }
+      } else {
+        (block.content as any).rows = (block.content as any).rows.map((row: any) => ({
+          cells: Array.isArray(row?.cells)
+            ? row.cells.map((cell: any) => Array.isArray(cell) ? cell : [{ type: 'text', text: String(cell ?? ''), styles: {} }])
+            : [[{ type: 'text', text: '', styles: {} }]]
+        }))
+      }
+    }
+
     if (block.children) {
       cleanCodeBlocks(block.children)
     }
@@ -918,4 +1096,55 @@ export function convertMediaSchemaToLocalPaths(text: string): string {
   if (!text) return text
   return text.replace(/media:\/\//g, 'file:///')
 }
+
+/**
+ * [FUNCTION CONTRACT - Normalize Markdown Tables]
+ * - 역할: LLM이 표(Table)를 생성할 때 행과 행 사이에 공백 줄(\\n\\n)을 삽입하여
+ *   마크다운 파서가 테이블을 첫 행 이후 일반 텍스트 문단으로 파싱하는 이탈 현상을 방지하고,
+ *   인접한 표 행(| ... |)들을 단일 테이블로 정상 연결합니다.
+ * - 매개변수: `md` - 원본 마크다운 텍스트 문자열
+ * - 반환값: 표 행 간 빈 줄이 정돈된 표준 마크다운 텍스트
+ * - 예시: `normalizeMarkdownTables(reportResult)`
+ */
+export function normalizeMarkdownTables(md: string): string {
+  if (!md) return ''
+  const lines = md.split('\n')
+  const result: string[] = []
+  let inTable = false
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    const trimmed = line.trim()
+    const isTableRow = trimmed.startsWith('|') && trimmed.endsWith('|')
+
+    if (isTableRow) {
+      inTable = true
+      result.push(trimmed)
+    } else if (trimmed === '' && inTable) {
+      // 다음 유효 라인이 표 행인지 사전 탐색
+      let nextIsTableRow = false
+      for (let j = i + 1; j < lines.length; j++) {
+        const nextTrimmed = lines[j].trim()
+        if (nextTrimmed === '') continue
+        if (nextTrimmed.startsWith('|') && nextTrimmed.endsWith('|')) {
+          nextIsTableRow = true
+        }
+        break
+      }
+      if (nextIsTableRow) {
+        // 표 내부의 불필요한 공백 줄을 건너뜀
+        continue
+      } else {
+        inTable = false
+        result.push(line)
+      }
+    } else {
+      inTable = false
+      result.push(line)
+    }
+  }
+
+  return result.join('\n')
+}
+
 

@@ -284,92 +284,16 @@ export function useAppAISuggestions(
        */
     if (!editor) return
     try {
-      // 1. 코딩 블록 삽입 요청인 경우 Jupyter 셀로 자동 변환 생성
-      if (isCodeBlock) {
-        try {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `finalLang`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const finalLang = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-          const finalLang = lang === 'js' ? 'javascript' : lang === 'ts' ? 'typescript' : lang === 'py' ? 'python' : (lang || 'javascript')
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `blockPayload`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const blockPayload = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-          const blockPayload = {
-            type: 'jupyter' as const,
-            props: {
-              language: finalLang,
-              code: text,
-              runState: JSON.stringify({ hasRun: false, success: null, outputLines: [] })
-            }
-          }
-          
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `doc`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const doc = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-          const doc = editor.document || []
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `activeBlock`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const activeBlock = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-          const activeBlock = editor.getTextCursorPosition()?.block
-          
-          // 현재 커서 뒤에 삽입하거나, 문서 최하단 뒤에 이어 붙임
-          if (activeBlock) {
-            editor.insertBlocks([blockPayload], activeBlock, 'after')
-          } else {
-            editor.insertBlocks([blockPayload], doc[doc.length - 1], 'after')
-          }
-          return
-        } catch (jErr) {
-          console.error('[Jupyter Auto-Insert Failed]', jErr)
-        }
-      }
-
-      // 2. 특정 타깃 블록 ID가 지정되어 단락을 직접 교체해야 하는 경우
+      // 1. 특정 타깃 블록 ID가 지정된 경우: 해당 블록을 정확히 찾아 그 자리에서 업데이트
       if (blockId) {
         try {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `targetBlock`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const targetBlock = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
           const targetBlock = editor.getBlock(blockId)
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `targetBlock`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (targetBlock)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
           if (targetBlock) {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `targetBlock.type === 'jupyter'`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (targetBlock.type === 'jupyter')` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-            if (targetBlock.type === 'jupyter') {
+            if (targetBlock.type === 'jupyter' || isCodeBlock) {
+              const finalLang = lang === 'js' ? 'javascript' : lang === 'ts' ? 'typescript' : lang === 'py' ? 'python' : (lang || targetBlock.props?.language || 'javascript')
               editor.updateBlock(blockId, {
                 type: 'jupyter',
-                props: { ...targetBlock.props, code: text }
+                props: { ...targetBlock.props, code: text, language: finalLang }
               } as AmevaPartialBlock)
             } else {
               editor.updateBlock(blockId, {
@@ -379,7 +303,34 @@ export function useAppAISuggestions(
             return
           }
         } catch (bErr) {
-          console.warn('블록 단위 직접 업데이트 실패, selection 폴백 실행:', bErr)
+          console.warn('블록 단위 직접 업데이트 실패, fallback 실행:', bErr)
+        }
+      }
+
+      // 2. 신규 코딩 블록 삽입 요청인 경우 (타깃 블록 없음)
+      if (isCodeBlock) {
+        try {
+          const finalLang = lang === 'js' ? 'javascript' : lang === 'ts' ? 'typescript' : lang === 'py' ? 'python' : (lang || 'javascript')
+          const blockPayload = {
+            type: 'jupyter' as const,
+            props: {
+              language: finalLang,
+              code: text,
+              runState: JSON.stringify({ hasRun: false, success: null, outputLines: [] })
+            }
+          }
+          
+          const doc = editor.document || []
+          const activeBlock = editor.getTextCursorPosition()?.block
+          
+          if (activeBlock) {
+            editor.insertBlocks([blockPayload], activeBlock, 'after')
+          } else {
+            editor.insertBlocks([blockPayload], doc[doc.length - 1], 'after')
+          }
+          return
+        } catch (jErr) {
+          console.error('[Jupyter Auto-Insert Failed]', jErr)
         }
       }
 

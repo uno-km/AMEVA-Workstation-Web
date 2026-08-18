@@ -475,7 +475,7 @@ export function MarketplaceModal({
       initialWidth={800}
       initialHeight={600}
       headerExtra={
-        <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '12px', backgroundColor: 'rgba(168, 85, 247, 0.15)', color: 'var(--primary)' }}>
+        <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '12px', backgroundColor: 'rgba(59, 130, 246, 0.15)', color: 'var(--primary)' }}>
           {installedPlugins.length} Installed
         </span>
       }

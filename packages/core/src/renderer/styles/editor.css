@@ -265,7 +265,7 @@
 /* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
 .mermaid-chart-container svg .node polygon {
   fill: #1e1e2e !important;
-  stroke: #8b5cf6 !important;
+  stroke: #3b82f6 !important;
 }
 
 /* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
@@ -293,12 +293,12 @@
 
 /* ── 텍스트 선택 색상 강화 ── */
 .bn-editor ::selection {
-  background-color: rgba(139, 92, 246, 0.35) !important;
+  background-color: rgba(59, 130, 246, 0.35) !important;
   color: inherit !important;
 }
 /* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
 .bn-editor ::-moz-selection {
-  background-color: rgba(139, 92, 246, 0.35) !important;
+  background-color: rgba(59, 130, 246, 0.35) !important;
   color: inherit !important;
 }
 
@@ -323,18 +323,18 @@
 .bn-block-outer[data-bn-hover-sync="true"] {
   background-color: var(--bg-glass-active);
   border-left-color: var(--primary);
-  /* 훨씬 눈에 잘 띄게 보라색 계열의 투명한 테두리 및 은은한 빛 반사 추가 */
-  box-shadow: inset 0 0 0 1px rgba(139, 92, 246, 0.5), 0 0 12px rgba(139, 92, 246, 0.2);
+  /* 훨씬 눈에 잘 띄게 안티그래비티 블루 계열의 투명한 테두리 및 은은한 빛 반사 추가 */
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.5), 0 0 12px rgba(59, 130, 246, 0.2);
   border-radius: 6px;
 }
 
 /* ── Active (JS로 data-bn-active 부여): 현재 커서 블록 ── */
 .bn-block-outer[data-bn-active="true"] {
-  background-color: rgba(139, 92, 246, 0.07);
+  background-color: rgba(59, 130, 246, 0.07);
   border-left-color: var(--primary);
   box-shadow:
-    -2px 0 12px rgba(139, 92, 246, 0.18),
-    inset 2px 0 0 rgba(139, 92, 246, 0.08);
+    -2px 0 12px rgba(59, 130, 246, 0.18),
+    inset 2px 0 0 rgba(59, 130, 246, 0.08);
   border-radius: 0 6px 6px 0;
 }
 
@@ -345,9 +345,9 @@
 
 /* ── CSS-native 폴백: focus-within (JS 추적 실패 시 보조) ── */
 .bn-block-outer:has(.bn-block-content:focus-within) {
-  background-color: rgba(139, 92, 246, 0.07);
+  background-color: rgba(59, 130, 246, 0.07);
   border-left-color: var(--primary);
-  box-shadow: -2px 0 12px rgba(139, 92, 246, 0.18);
+  box-shadow: -2px 0 12px rgba(59, 130, 246, 0.18);
   border-radius: 0 6px 6px 0;
 }
 
@@ -360,7 +360,7 @@
 /* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
 .bn-block-outer[data-bn-active="true"]:has([contenteditable]:focus) {
   animation: bn-block-editing-pulse 2.5s ease-in-out infinite;
-  background-color: rgba(139, 92, 246, 0.10);
+  background-color: rgba(59, 130, 246, 0.10);
 }
 
 /* ── Heading 블록 active: 약간 더 강한 강조 ── */
@@ -368,7 +368,7 @@
 .bn-block-outer[data-bn-active="true"]:has(h2),
 /* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
 .bn-block-outer[data-bn-active="true"]:has(h3) {
-  background-color: rgba(139, 92, 246, 0.09);
+  background-color: rgba(59, 130, 246, 0.09);
   border-left-width: 4px;
 }
 
@@ -388,24 +388,24 @@
 .bn-editor[data-bn-editor-focused] {
   outline: none !important;
   /* 에디터 전체 soft glow */
-  box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.08);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.08);
   border-radius: 6px;
 }
 
 /* ── 선택 영역이 있는 블록(멀티 블록 드래그) ── */
 .bn-editor .ProseMirror-selectednode {
-  outline: 2px solid rgba(139, 92, 246, 0.5) !important;
+  outline: 2px solid rgba(59, 130, 246, 0.5) !important;
   border-radius: 4px;
 }
 
 /* ── 테이블 셀 선택 ── */
 .bn-editor .ProseMirror .selectedCell::after {
-  background: rgba(139, 92, 246, 0.20) !important;
+  background: rgba(59, 130, 246, 0.20) !important;
 }
 
 /* ── Slash menu 트리거 문자 하이라이트 ── */
 .bn-editor .bn-mention {
-  background: rgba(139, 92, 246, 0.15);
+  background: rgba(59, 130, 246, 0.15);
   border-radius: 3px;
   padding: 1px 3px;
 }
@@ -456,7 +456,7 @@
 /* 3. 코드블록의 실제 '카드 형태' 컨테이너 (.bn-code-block-wrapper) 리폼 */
 .bn-block-outer[data-content-type="codeBlock"] .bn-code-block-wrapper {
   background-color: #12131a !important; /* 뷰어와 동일한 일체형 어두운 배경색 지정 */
-  border: 1.5px solid rgba(139, 92, 246, 0.25) !important;
+  border: 1.5px solid rgba(59, 130, 246, 0.25) !important;
   border-radius: 10px !important;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
   box-sizing: border-box !important;
@@ -591,8 +591,8 @@
 @keyframes tempHighlightPulse {
 /* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
   0% {
-    background-color: rgba(139, 92, 246, 0.35);
-    box-shadow: 0 0 16px rgba(139, 92, 246, 0.4);
+    background-color: rgba(59, 130, 246, 0.35);
+    box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
   }
 /* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
   100% {
