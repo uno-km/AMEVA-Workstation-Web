@@ -1080,7 +1080,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
         onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click() }}
       >
         <span style={{ color: config.color, opacity: 0.8 }}>
-          {React.cloneElement(config.icon as React.ReactElement, { size: 32 })}
+          {React.cloneElement(config.icon as React.ReactElement<any>, { size: 32 })}
         </span>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0' }}>{config.label} 파일을 드래그하거나 클릭하여 업로드</div>
@@ -1400,7 +1400,7 @@ export function PptxMiniViewer({ sourceUrl, fileBase64, height }: { sourceUrl: s
         if (cancelled || !containerRef.current) return
 
         const pptxjs = await import('pptx-preview')
-        const previewer = pptxjs.init(containerRef.current, {
+        const previewer = (pptxjs as any).init(containerRef.current, {
           width: 800,
           height: 600,
           autoScale: true
@@ -1678,8 +1678,7 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
                 docxContainerRef.current.innerHTML = ''
                 await docxPreview.renderAsync(arrayBuffer, docxContainerRef.current, undefined, {
                   className: 'docx-preview-container',
-                  inBreak: true,
-                  ignoreWidth: false,
+                                    ignoreWidth: false,
                   ignoreHeight: false,
                   ignoreFonts: false,
                   breakPages: true,
@@ -1739,8 +1738,7 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
           docxContainerRef.current.innerHTML = ''
           docxPreview.renderAsync(cachedBuffer, docxContainerRef.current, undefined, {
             className: 'docx-preview-container',
-            inBreak: true,
-            ignoreWidth: false,
+                        ignoreWidth: false,
             ignoreHeight: false,
             ignoreFonts: false,
             breakPages: true,

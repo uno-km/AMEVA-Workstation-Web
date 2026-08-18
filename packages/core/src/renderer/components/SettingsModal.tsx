@@ -67,14 +67,15 @@ import { SettingsTransitionOverlay } from './overlay/SettingsTransitionOverlay'
  * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
 export interface HotkeyConfig {
-  save: string
-  open: string
-  newFile: string
-  pdfExport: string
-  toggleMode: string
-  zoomIn: string
-  zoomOut: string
-  zoomReset: string
+  save?: string
+  open?: string
+  newFile?: string
+  pdfExport?: string
+  toggleAI?: string
+  toggleMode?: string
+  zoomIn?: string
+  zoomOut?: string
+  zoomReset?: string
 }
 
 /**
