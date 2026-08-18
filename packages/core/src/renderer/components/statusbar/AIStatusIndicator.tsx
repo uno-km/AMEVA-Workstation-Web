@@ -19,7 +19,7 @@ import React, { useState, useEffect, useRef } from 'react'
 // [외부 패키지 및 라이브러리 임포트: lucide-react]
 import { Bot, Play, Square, Cpu, Clock, Activity, Sparkles, Info } from 'lucide-react'
 // [내부 프로젝트 의존성 모듈 임포트: ../useWebLLM]
-import { useWebLLM, SUPPORTED_WEBGPU_MODELS } from '../useWebLLM'
+import { useWebLLM, SUPPORTED_WEBGPU_MODELS, DEFAULT_WEBGPU_MODEL } from '../useWebLLM'
 import { UnobtrusiveToastBubble } from '../ui/UnobtrusiveToastBubble'
 import { useConditionToast } from '../../hooks/useUnobtrusiveToast'
 
@@ -49,7 +49,7 @@ export function AIStatusIndicator({
   const [selectedModel, setSelectedModel] = useState(() => {
     const saved = localStorage.getItem('ameva_selected_llm_model')
     if (!saved || saved.includes('q4f16') || saved.includes('3B')) {
-      return 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC'
+      return DEFAULT_WEBGPU_MODEL
     }
     return saved
   })
