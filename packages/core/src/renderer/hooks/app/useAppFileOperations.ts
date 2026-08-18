@@ -162,6 +162,239 @@ export function useAppFileOperations(
     // rawContent(base64)를 pdfData에 분리 보존하여 모드 전환 시에도 데이터 보존
     const ext = (path || filePath || '').split('.').pop()?.toLowerCase()
     if (ext === 'pdf' && isBinary) {
+      const fname = (path || filePath || 'document.pdf').split(/[\\/]/).pop() || 'document.pdf'
+      setPdfData(rawContent)          // base64 원본 데이터를 pdfData에 저장
+      setPdfFileName(fname)
+      setCurrentContent('')           // currentContent는 비움로 유지
+      setOriginalContent('')
+      setLastSavedTime(null)
+      setEditorMode('edit')
+      return
+    }
+
+    // [DOCS-TO-PDF-A4-VIEWER] DOCX/HWPX 문서는 PDF처럼 원본 조판 뷰어로 직접 렌더링
+    if (['docx', 'hwpx'].includes(ext || '') && isBinary) {
+      const fname = (path || filePath || `document.${ext}`).split(/[\\/]/).pop() || `document.${ext}`
+      const docBlock = {
+        id: Math.random().toString(36).substring(2, 10),
+        type: 'inlineDocument',
+        props: {
+          docType: ext,
+          fileName: fname,
+          fileBase64: rawContent,
+          sourceUrl: '',
+          height: '850'
+        },
+        content: []
+      }
+      targetEditor.replaceBlocks(targetEditor.document, [docBlock as any])
+      setCurrentContent('')
+      setOriginalContent('')
+      setLastSavedTime(null)
+      setEditorMode('edit')
+      return
+    }
+
+    // 바이너리 파일이 아닌 경우(md, docx 등) → pdfData 초기화
+    setPdfData(null)
+    setPdfFileName('')
+
+    const converted = convertLocalPathsToMediaSchema(markdown)
+    const normalized = normalizeMarkdown(converted)
+
+      /*
+       * [RUN-TIME STATE / INVARIANT]
+       * - 변수 명: `lines`
+       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
+       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
+       * - 예시 코드: `const lines = ...` 형태로 안전 캐싱 후 가공 기동.
+       */
+    const lines = normalized.split('\n')
+    // 1) 200줄 초과 대형 마크다운 분할 파싱 분기
+    if (lines.length > 200 && !isBinary) {
+      /*
+       * [RUN-TIME STATE / INVARIANT]
+       * - 변수 명: `firstChunk`
+       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
+       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
+       * - 예시 코드: `const firstChunk = ...` 형태로 안전 캐싱 후 가공 기동.
+       */
+      const firstChunk = lines.slice(0, 120).join('\n')
+      /*
+       * [RUN-TIME STATE / INVARIANT]
+       * - 변수 명: `remainingChunk`
+       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
+       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
+       * - 예시 코드: `const remainingChunk = ...` 형태로 안전 캐싱 후 가공 기동.
+       */
+      const remainingChunk = lines.slice(120).join('\n')
+
+      // 선두 120줄 파싱 및 에디터 즉시 대체
+      const firstBlocks = await targetEditor.tryParseMarkdownToBlocks(firstChunk)
+      cleanCodeBlocks(firstBlocks)
+      ensureBlockIds(firstBlocks)
+      targetEditor.replaceBlocks(targetEditor.document, firstBlocks)
+
+      // 350ms 대기 후 나머지 잔여 청크를 하단에 끼워 넣음
+      setTimeout(async () => {
+        // 방어 로직: 대기 중 다른 파일이 열렸다면(세션 변경) 이전 파일 청크 삽입 취소
+        if (loadSessionRef.current !== currentSession) {
+          console.warn('[useAppFileOperations] 파일 로딩 취소됨 (Race Condition 방어)')
+          return
+        }
+
+      /*
+       * [RUN-TIME STATE / INVARIANT]
+       * - 변수 명: `remainingBlocks`
+       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
+       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
+       * - 예시 코드: `const remainingBlocks = ...` 형태로 안전 캐싱 후 가공 기동.
+       */
+        const remainingBlocks = await targetEditor.tryParseMarkdownToBlocks(remainingChunk)
+        cleanCodeBlocks(remainingBlocks)
+        ensureBlockIds(remainingBlocks)
+      /*
+       * [RUN-TIME STATE / INVARIANT]
+       * - 변수 명: `doc`
+       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
+       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
+       * - 예시 코드: `const doc = ...` 형태로 안전 캐싱 후 가공 기동.
+       */
+        const doc = targetEditor.document
+      /*
+       * [ALGORITHM BRANCH / DECISION]
+       * - 조건 식: `doc.length > 0`
+       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
+       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
+       * - 예시: `if (doc.length > 0)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
+       */
+        if (doc.length > 0) {
+          targetEditor.insertBlocks(remainingBlocks, doc[doc.length - 1], 'after')
+        }
+        
+        // 최종 결합 완성본의 마크다운 직렬화 취합
+        const derived = await targetEditor.blocksToMarkdownLossy(convertJupyterToCodeBlocks(targetEditor.document))
+        setCurrentContent(derived)
+      }, 350)
+    } 
+    // 2) 일반 파일 동기 즉시 마운트
+    else {
+      /*
+       * [RUN-TIME STATE / INVARIANT]
+       * - 변수 명: `blocks`
+       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
+       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
+       * - 예시 코드: `const blocks = ...` 형태로 안전 캐싱 후 가공 기동.
+       */
+      const blocks = await targetEditor.tryParseMarkdownToBlocks(normalized)
+      cleanCodeBlocks(blocks)
+      ensureBlockIds(blocks)
+      targetEditor.replaceBlocks(targetEditor.document, blocks)
+    }
+
+    setOriginalContent(converted)
+    setCurrentContent(converted)
+    setLastSavedTime(null)
+  }, [filePath, setEditorMode, setOriginalContent, setCurrentContent, setLastSavedTime])
+
+  /**
+   * [CONTRACT - Append Markdown into Editor]
+   * - Rationale: 가져온 파일 내용을 현재 편집실 맨 마지막 노드 뒤에 덧붙이고, appendedFiles 목록에 앵커를 추가한다.
+   */
+  const appendMarkdownIntoEditor = useCallback(async (targetEditor: AppEditor, rawContent: string, fileName: string, isBinary = false, path = '') => {
+      /*
+       * [RUN-TIME STATE / INVARIANT]
+       * - 변수 명: `markdown`
+       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
+       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
+       * - 예시 코드: `const markdown = ...` 형태로 안전 캐싱 후 가공 기동.
+       */
+    const parsedResult = await parseFileToMarkdown(rawContent, path, isBinary)
+    const isAdc = typeof parsedResult !== 'string' && parsedResult && 'markdown' in parsedResult
+    const markdown = isAdc ? (parsedResult as any).markdown : parsedResult
+    const sourceBlocks = isAdc ? (parsedResult as any).blocks : undefined
+      /*
+       * [RUN-TIME STATE / INVARIANT]
+       * - 변수 명: `normalized`
+       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
+       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
+       * - 예시 코드: `const normalized = ...` 형태로 안전 캐싱 후 가공 기동.
+       */
+    const normalized = normalizeMarkdown(markdown)
+      /*
+       * [RUN-TIME STATE / INVARIANT]
+       * - 변수 명: `newBlocks`
+       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
+       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
+       * - 예시 코드: `const newBlocks = ...` 형태로 안전 캐싱 후 가공 기동.
+       */
+    const newBlocks = sourceBlocks || await targetEditor.tryParseMarkdownToBlocks(normalized)
+    cleanCodeBlocks(newBlocks)
+    ensureBlockIds(newBlocks)
+
+      /*
+       * [RUN-TIME STATE / INVARIANT]
+       * - 변수 명: `doc`
+       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
+       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
+       * - 예시 코드: `const doc = ...` 형태로 안전 캐싱 후 가공 기동.
+       */
+    const doc = targetEditor.document
+      /*
+       * [ALGORITHM BRANCH / DECISION]
+       * - 조건 식: `doc.length > 0`
+       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
+       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
+       * - 예시: `if (doc.length > 0)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
+       */
+    if (doc.length > 0) {
+      targetEditor.insertBlocks(newBlocks, doc[doc.length - 1], 'after')
+    } else {
+      targetEditor.replaceBlocks(doc, newBlocks)
+    }
+
+      /*
+       * [RUN-TIME STATE / INVARIANT]
+       * - 변수 명: `firstBlockId`
+       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
+       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
+       * - 예시 코드: `const firstBlockId = ...` 형태로 안전 캐싱 후 가공 기동.
+       */
+    const firstBlockId = newBlocks[0]?.id || ''
+    setAppendedFiles([...appendedFiles, { id: `append-${Date.now()}`, filePath: fileName, startBlockId: firstBlockId }])
+
+      /*
+       * [RUN-TIME STATE / INVARIANT]
+       * - 변수 명: `derived`
+       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
+       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
+       * - 예시 코드: `const derived = ...` 형태로 안전 캐싱 후 가공 기동.
+       */
+    const derived = await targetEditor.blocksToMarkdownLossy(convertJupyterToCodeBlocks(targetEditor.document))
+    setCurrentContent(derived)
+  }, [appendedFiles, setAppendedFiles, setCurrentContent])
+
+  /**
+   * [CONTRACT - Open File in New Tab]
+   * - Rationale: 기존 탭의 문서 변경 사항을 Zustand 탭 목록에 역매핑 저장하고, 새로운 고유 ID의 탭 레코드를 구성하여 교체 로드한다.
+   */
+  const openFileInTab = useCallback(async (targetEditor: AppEditor, fileContent: string, path: string, isBinary = false) => {
+      /*
+       * [RUN-TIME STATE / INVARIANT]
+       * - 변수 명: `currentBlocks`
+       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
+       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
+       * - 예시 코드: `const currentBlocks = ...` 형태로 안전 캐싱 후 가공 기동.
+       */
+    const currentBlocks = [...targetEditor.document]
+    
+    // 현재 열려있는 구 문서 탭 정보 갱신 저장
+    const { pdfData: currentPdfData, pdfFileName: currentPdfFileName, setPdfData, setPdfFileName } = useWorkspaceStore.getState()
+    updateActiveTab({ filePath, content: currentContent, blocks: currentBlocks, originalContent, lastSavedTime, pdfData: currentPdfData, pdfFileName: currentPdfFileName })
+
+    const ext = path.split('.').pop()?.toLowerCase() || ''
+
+    if (ext === 'pdf' && isBinary) {
       const newTabId = Math.random().toString(36).substring(2, 10)
       const pdfFileName = path.split('/').pop() || path.split('\\').pop() || 'document.pdf'
       const newTab = {
@@ -220,6 +453,13 @@ export function useAppFileOperations(
       return
     }
 
+      /*
+       * [RUN-TIME STATE / INVARIANT]
+       * - 변수 명: `markdown`
+       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
+       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
+       * - 예시 코드: `const markdown = ...` 형태로 안전 캐싱 후 가공 기동.
+       */
     const parsedResult = await parseFileToMarkdown(fileContent, path, isBinary)
     const isAdc = typeof parsedResult !== 'string' && parsedResult && 'markdown' in parsedResult
     const markdown = isAdc ? (parsedResult as any).markdown : parsedResult
