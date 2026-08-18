@@ -20,6 +20,8 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Bot, Play, Square, Cpu, Clock, Activity, Sparkles, Info } from 'lucide-react'
 // [내부 프로젝트 의존성 모듈 임포트: ../useWebLLM]
 import { useWebLLM, SUPPORTED_WEBGPU_MODELS } from '../useWebLLM'
+import { UnobtrusiveToastBubble } from '../ui/UnobtrusiveToastBubble'
+import { useConditionToast } from '../../hooks/useUnobtrusiveToast'
 
 /**
  * AIStatusIndicatorProps 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
@@ -92,21 +94,12 @@ export function AIStatusIndicator({
     ? '0 0 12px #10b981, 0 0 24px rgba(16, 185, 129, 0.6)' 
     : (isLoading ? `0 0 10px ${dynamicColor}, 0 0 20px ${dynamicColor}66` : 'none');
 
-  // 로딩 완료 토스트 말풍선 상태 (2초 후 자동 소멸, 비간섭 pointer-events: none)
-  const [showToastBubble, setShowToastBubble] = useState(false)
-  const prevReadyRef = useRef(isMainReady)
-  const toastTimerRef = useRef<any>(null)
-
-  useEffect(() => {
-    if (!prevReadyRef.current && isMainReady) {
-      setShowToastBubble(true)
-      if (toastTimerRef.current) clearTimeout(toastTimerRef.current)
-      toastTimerRef.current = setTimeout(() => {
-        setShowToastBubble(false)
-      }, 2000)
-    }
-    prevReadyRef.current = isMainReady
-  }, [isMainReady])
+  // 추상화된 2초 자동 소멸 비간섭 미니 말풍선 훅 연동
+  const { isVisible: isAiToastVisible } = useConditionToast(
+    isMainReady,
+    'AI 로딩 완료!',
+    { variant: 'emerald', icon: <Sparkles size={11} color="#34d399" />, durationMs: 2000 }
+  );
 
   return (
     <div style={{ position: 'relative' }} ref={dashboardRef}>
@@ -116,56 +109,17 @@ export function AIStatusIndicator({
           50% { box-shadow: 0 0 14px #10b981, 0 0 28px rgba(16, 185, 129, 0.7); transform: scale(1.08); }
           100% { box-shadow: 0 0 8px #10b981, 0 0 16px rgba(16, 185, 129, 0.4); transform: scale(1); }
         }
-        @keyframes amevaToastFade {
-          0% { opacity: 0; transform: translate(-50%, 6px); }
-          100% { opacity: 1; transform: translate(-50%, 0); }
-        }
       `}</style>
 
-      {/* 2초 자동 소멸 미니 말풍선 */}
-      {showToastBubble && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 'calc(100% + 8px)',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'rgba(15, 23, 42, 0.94)',
-            border: '1px solid rgba(16, 185, 129, 0.6)',
-            boxShadow: '0 4px 16px rgba(16, 185, 129, 0.35), 0 2px 6px rgba(0,0,0,0.5)',
-            backdropFilter: 'blur(8px)',
-            color: '#34d399',
-            fontSize: '11px',
-            fontWeight: 700,
-            padding: '3px 8px',
-            borderRadius: '6px',
-            whiteSpace: 'nowrap',
-            pointerEvents: 'none',
-            userSelect: 'none',
-            zIndex: 99999,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            animation: 'amevaToastFade 0.2s ease-out'
-          }}
-        >
-          <Sparkles size={11} color="#34d399" />
-          <span>AI 로딩 완료!</span>
-          <div
-            style={{
-              position: 'absolute',
-              top: '100%',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              width: 0,
-              height: 0,
-              borderLeft: '4px solid transparent',
-              borderRight: '4px solid transparent',
-              borderTop: '4px solid rgba(16, 185, 129, 0.6)'
-            }}
-          />
-        </div>
-      )}
+      {/* 추상화된 비간섭 말풍선 컴포넌트 */}
+      <UnobtrusiveToastBubble
+        show={isAiToastVisible}
+        message="AI 로딩 완료!"
+        icon={<Sparkles size={11} color="#34d399" />}
+        variant="emerald"
+        placement="top"
+        offset={8}
+      />
 
       <div
         style={{
