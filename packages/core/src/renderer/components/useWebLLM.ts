@@ -202,11 +202,11 @@ export const useWebLLM = () => {
           logLevel: 'WARN'
         },
         {
-          context_window_size: 1536,
-          sliding_window_size: 1024,
+          context_window_size: 2048,
+          sliding_window_size: -1,
           temperature: 0.25,
           top_p: 0.85
-        } as any
+        }
       );
 
       globalMainEngine = engine;

@@ -14,7 +14,8 @@
  * 3. 테마 프리셋: emerald(성공/완료), indigo(AI/지능), cyan(임베딩/시스템), amber(주의), rose(경고), dark(모던 글래스).
  */
 
-import React, { CSSProperties, ReactNode } from 'react';
+import React from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 export type ToastVariant = 'emerald' | 'indigo' | 'cyan' | 'amber' | 'rose' | 'dark';
 export type ToastPlacement = 'top' | 'bottom' | 'left' | 'right';

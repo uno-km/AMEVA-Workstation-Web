@@ -7,7 +7,8 @@
  * ============================================================================
  */
 
-import { useState, useRef, useEffect, useCallback, ReactNode } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import type { ReactNode } from 'react';
 import type { ToastVariant, ToastPlacement } from '../components/ui/UnobtrusiveToastBubble';
 
 export interface UnobtrusiveToastOptions {
