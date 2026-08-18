@@ -698,29 +698,142 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
     return () => { cancelled = true }
   }, [docType, props.sourceUrl, props.fileBase64])
 
-  // PDF 검색 실행
+  const [docMatchElements, setDocMatchElements] = useState<HTMLElement[]>([])
+
+  const clearDocHighlights = useCallback(() => {
+    const container = blockContainerRef.current
+    if (!container) return
+    const marks = Array.from(container.querySelectorAll('mark.doc-search-match'))
+    marks.forEach(mark => {
+      const parent = mark.parentNode
+      if (parent) {
+        parent.replaceChild(document.createTextNode(mark.textContent || ''), mark)
+        parent.normalize()
+      }
+    })
+  }, [])
+
+  const highlightDocText = useCallback((query: string) => {
+    clearDocHighlights()
+    const container = blockContainerRef.current
+    if (!container) return []
+
+    const inner = container.querySelector('[data-viewer-inner]') || container
+    const walker = document.createTreeWalker(
+      inner,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode: (node) => {
+          if (node.parentElement?.closest('[data-pdf-search-overlay], [data-search-ignore], button, input, style, script')) {
+            return NodeFilter.FILTER_REJECT
+          }
+          return node.nodeValue?.toLowerCase().includes(query.toLowerCase()) 
+            ? NodeFilter.FILTER_ACCEPT 
+            : NodeFilter.FILTER_REJECT
+        }
+      }
+    )
+
+    const nodesToProcess: Text[] = []
+    while (walker.nextNode()) {
+      nodesToProcess.push(walker.currentNode as Text)
+    }
+
+    const matches: HTMLElement[] = []
+    const qLen = query.length
+    const qLower = query.toLowerCase()
+
+    nodesToProcess.forEach(textNode => {
+      const parent = textNode.parentNode
+      if (!parent) return
+      const text = textNode.nodeValue || ''
+      let idx = text.toLowerCase().indexOf(qLower)
+      if (idx === -1) return
+
+      const frag = document.createDocumentFragment()
+      let lastIdx = 0
+
+      while (idx !== -1) {
+        if (idx > lastIdx) {
+          frag.appendChild(document.createTextNode(text.substring(lastIdx, idx)))
+        }
+        const mark = document.createElement('mark')
+        mark.className = 'doc-search-match'
+        mark.style.backgroundColor = '#fde047'
+        mark.style.color = '#0f172a'
+        mark.style.padding = '1px 3px'
+        mark.style.borderRadius = '2px'
+        mark.style.fontWeight = '700'
+        mark.style.boxShadow = '0 0 4px rgba(250, 204, 21, 0.6)'
+        mark.textContent = text.substring(idx, idx + qLen)
+        frag.appendChild(mark)
+        matches.push(mark)
+
+        lastIdx = idx + qLen
+        idx = text.toLowerCase().indexOf(qLower, lastIdx)
+      }
+
+      if (lastIdx < text.length) {
+        frag.appendChild(document.createTextNode(text.substring(lastIdx)))
+      }
+
+      parent.replaceChild(frag, textNode)
+    })
+
+    return matches
+  }, [clearDocHighlights])
+
+  const updateActiveDocMatch = (matches: HTMLElement[], activeIdx: number) => {
+    matches.forEach((m, i) => {
+      if (i === activeIdx) {
+        m.style.backgroundColor = '#f97316'
+        m.style.color = '#ffffff'
+        m.style.outline = '2px solid #ea580c'
+        m.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      } else {
+        m.style.backgroundColor = '#fde047'
+        m.style.color = '#0f172a'
+        m.style.outline = 'none'
+      }
+    })
+  }
+
+  // 검색 실행 (PDF 및 DOCX/XLSX 통합 지원)
   const handlePerformSearch = (q: string) => {
     setSearchQuery(q)
-    const trimmed = q.trim().toLowerCase()
+    const trimmed = q.trim()
     if (!trimmed) {
+      clearDocHighlights()
       setSearchResults([])
       setSearchResultIdx(0)
+      setDocMatchElements([])
       return
     }
 
-    const results: { page: number; count: number }[] = []
-    Object.entries(searchIndex).forEach(([pageNumStr, text]) => {
-      const pageNum = parseInt(pageNumStr, 10)
-      const count = (text.toLowerCase().match(new RegExp(trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length
-      if (count > 0) {
-        results.push({ page: pageNum, count })
+    if (docType === 'pdf') {
+      const results: { page: number; count: number }[] = []
+      Object.entries(searchIndex).forEach(([pageNumStr, text]) => {
+        const pageNum = parseInt(pageNumStr, 10)
+        const count = (text.toLowerCase().match(new RegExp(trimmed.toLowerCase().replace(/[.*+?^$\{\}()|[\]\\]/g, '\\$&'), 'g')) || []).length
+        if (count > 0) {
+          results.push({ page: pageNum, count })
+        }
+      })
+      results.sort((a, b) => a.page - b.page)
+      setSearchResults(results)
+      setSearchResultIdx(0)
+      if (results.length > 0) {
+        setTargetPageNum(results[0].page)
       }
-    })
-    results.sort((a, b) => a.page - b.page)
-    setSearchResults(results)
-    setSearchResultIdx(0)
-    if (results.length > 0) {
-      setTargetPageNum(results[0].page)
+    } else {
+      const matches = highlightDocText(trimmed)
+      setDocMatchElements(matches)
+      const mapped = matches.map((_, i) => ({ page: i + 1, count: 1 }))
+      setSearchResults(mapped)
+      setSearchResultIdx(0)
+      if (matches.length > 0) {
+        updateActiveDocMatch(matches, 0)
+      }
     }
   }
 
@@ -728,22 +841,39 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
     if (searchResults.length === 0) return
     const nextIdx = (searchResultIdx + 1) % searchResults.length
     setSearchResultIdx(nextIdx)
-    setTargetPageNum(searchResults[nextIdx].page)
+    if (docType === 'pdf') {
+      setTargetPageNum(searchResults[nextIdx].page)
+    } else if (docMatchElements.length > 0) {
+      updateActiveDocMatch(docMatchElements, nextIdx)
+    }
   }
 
   const goToPrevMatch = () => {
     if (searchResults.length === 0) return
     const prevIdx = (searchResultIdx - 1 + searchResults.length) % searchResults.length
     setSearchResultIdx(prevIdx)
-    setTargetPageNum(searchResults[prevIdx].page)
+    if (docType === 'pdf') {
+      setTargetPageNum(searchResults[prevIdx].page)
+    } else if (docMatchElements.length > 0) {
+      updateActiveDocMatch(docMatchElements, prevIdx)
+    }
   }
 
-  // Ctrl+Shift+F 단축키 인터셉트 (이 PDF 블록에 마우스가 있거나 포커스된 경우)
+  const closeDocSearch = () => {
+    closeDocSearch()
+    setSearchQuery('')
+    clearDocHighlights()
+    setSearchResults([])
+    setSearchResultIdx(0)
+    setDocMatchElements([])
+  }
+
+  // Ctrl+Shift+F 단축키 인터셉트 (이 문서 블록에 마우스가 있거나 포커스된 경우)
   useEffect(() => {
-    if (docType !== 'pdf') return
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'f') {
-        if (isHovered || document.activeElement?.closest(`[data-block-id="${block.id}"]`)) {
+        const isTarget = isHovered || !!document.activeElement?.closest(`[data-block-id="${block.id}"]`)
+        if (isTarget) {
           e.preventDefault()
           e.stopPropagation()
           setShowSearch(true)
@@ -759,7 +889,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
     }
     window.addEventListener('keydown', onKey, { capture: true })
     return () => window.removeEventListener('keydown', onKey, { capture: true })
-  }, [docType, isHovered, block.id])
+  }, [isHovered, block.id])
 
   // PDF용 Blob URL 사전 해석 (Chromium/Edge 내장 PDF 뷰어 연동)
   useEffect(() => {
@@ -1070,7 +1200,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
                       else goToNextMatch()
                     }
                   }}
-                  placeholder="PDF 내 텍스트 검색..."
+                  placeholder={docType === 'pdf' ? "PDF 내 텍스트 검색..." : "문서 내 텍스트 검색..."}
                   style={{
                     background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)',
                     borderRadius: '4px', color: '#fff', fontSize: '11px', padding: '4px 8px', outline: 'none', width: '150px'
@@ -1078,7 +1208,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
                 />
                 <span style={{ fontSize: '10px', color: searchResults.length > 0 ? '#60a5fa' : '#f87171', whiteSpace: 'nowrap', minWidth: '70px', textAlign: 'center' }}>
                   {searchResults.length > 0 
-                    ? `${searchResultIdx + 1}/${searchResults.length}건 (P.${searchResults[searchResultIdx]?.page})` 
+                    ? `${searchResultIdx + 1}/${searchResults.length}건${docType === 'pdf' ? ` (P.${searchResults[searchResultIdx]?.page})` : ''}` 
                     : searchQuery ? '일치 없음' : '0건'}
                 </span>
                 {searchResults.length > 0 && (
@@ -1648,21 +1778,47 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
                 title="다음 페이지"
               >›</button>
             </div>
-            {tocHeadings.length > 0 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <button
-                onClick={() => setShowToc(!showToc)}
+                onClick={() => {
+                  const root = docxContainerRef.current?.closest('[data-viewer-inner]');
+                  const searchInp = root?.querySelector('input[data-pdf-search-input]') as HTMLInputElement;
+                  if (searchInp) {
+                    searchInp.focus();
+                    searchInp.select();
+                  } else {
+                    const btn = document.querySelector('button[title*="Ctrl+Shift+F"]') as HTMLButtonElement;
+                    if (btn) btn.click();
+                  }
+                }}
                 style={{
-                  background: showToc ? '#3b82f633' : 'transparent',
-                  border: '1px solid ' + (showToc ? '#3b82f6' : 'rgba(255,255,255,0.2)'),
-                  color: showToc ? '#60a5fa' : '#94a3b8',
-                  borderRadius: 4, padding: '3px 10px', fontSize: 11, cursor: 'pointer',
+                  background: 'rgba(59, 130, 246, 0.2)',
+                  border: '1px solid rgba(59, 130, 246, 0.4)',
+                  color: '#93c5fd',
+                  borderRadius: 4, padding: '3px 8px', fontSize: 11, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600
                 }}
+                title="문서 내 텍스트 검색 (Ctrl+Shift+F)"
               >
-                <List size={12} />
-                {showToc ? '목차 닫기' : `문서 목차 (${tocHeadings.length})`}
+                <Search size={12} />
+                검색 (Ctrl+Shift+F)
               </button>
-            )}
+              {tocHeadings.length > 0 && (
+                <button
+                  onClick={() => setShowToc(!showToc)}
+                  style={{
+                    background: showToc ? '#3b82f633' : 'transparent',
+                    border: '1px solid ' + (showToc ? '#3b82f6' : 'rgba(255,255,255,0.2)'),
+                    color: showToc ? '#60a5fa' : '#94a3b8',
+                    borderRadius: 4, padding: '3px 10px', fontSize: 11, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600
+                  }}
+                >
+                  <List size={12} />
+                  {showToc ? '목차 닫기' : `문서 목차 (${tocHeadings.length})`}
+                </button>
+              )}
+            </div>
           </div>
         )}
 
