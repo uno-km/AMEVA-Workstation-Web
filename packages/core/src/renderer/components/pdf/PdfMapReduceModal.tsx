@@ -34,7 +34,7 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
   onClose,
   onInsertToEditor
 }) => {
-  const { generateStream, isLLMReady, initModel, activeModelId } = useWebLLM();
+  const { generateStream, isMainReady, initModel, activeModelId } = useWebLLM();
   const [activeTab, setActiveTab] = useState<'report' | 'logs'>('logs');
   const [status, setStatus] = useState<MapReduceProgress>({
     stage: 'extracting',
@@ -87,7 +87,7 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
         });
         adapter = http;
       } else {
-        if (!isLLMReady) {
+        if (!isMainReady) {
           setStatus({
             stage: 'extracting',
             progressPercent: 10,

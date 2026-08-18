@@ -3,7 +3,8 @@
  * 역할: RAG 임베딩 상태를 표시하는 상태바 아이콘 컴포넌트
  */
 
-import React, { CSSProperties } from 'react';
+import React from 'react';
+import type { CSSProperties } from 'react';
 import { useEmbeddingEngine } from '../../features/rag-embedding';
 import { Sparkles } from 'lucide-react';
 import { UnobtrusiveToastBubble } from '../ui/UnobtrusiveToastBubble';
