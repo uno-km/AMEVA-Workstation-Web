@@ -150,7 +150,7 @@ export function AIStatusIndicator({
                 >
                   <option value="Qwen2.5-3B-Instruct-q4f32_1-MLC" style={{ color: '#000' }}>Qwen2.5 3B (기본)</option>
                   <option value="Llama-3.2-3B-Instruct-q4f32_1-MLC" style={{ color: '#000' }}>Llama 3.2 3B</option>
-                  <option value="Qwen2.5-7B-Instruct-q4f16_1-MLC" style={{ color: '#000' }}>Qwen2.5 7B (고성능)</option>
+                  <option value="Qwen2.5-3B-Instruct-q4f32_1-MLC" style={{ color: '#000' }}>Qwen2.5 7B (고성능)</option>
                 </select>
               ) : (
                 <span style={{ fontWeight: 600, color: '#e2e8f0' }}>

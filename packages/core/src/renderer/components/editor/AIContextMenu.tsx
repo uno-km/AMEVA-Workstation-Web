@@ -260,7 +260,7 @@ export function AIContextMenu({
             }}
           >
             <option value="Qwen2.5-3B-Instruct-q4f32_1-MLC">Qwen 2.5 (3B) - 기본 (권장)</option>
-            <option value="Qwen2.5-7B-Instruct-q4f16_1-MLC">Qwen 2.5 (7B) - 고성능 (8GB VRAM↑)</option>
+            <option value="Qwen2.5-3B-Instruct-q4f32_1-MLC">Qwen 2.5 (7B) - 고성능 (8GB VRAM↑)</option>
           </select>
           {pendingModelId.includes('7B') && (
             <div style={{ fontSize: '10px', color: '#ef4444', marginBottom: '4px', lineHeight: '1.2' }}>

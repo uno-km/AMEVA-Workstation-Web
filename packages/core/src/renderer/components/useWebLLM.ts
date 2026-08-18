@@ -17,13 +17,14 @@ import { useState, useCallback, useEffect } from 'react';
 import type { MLCEngine, InitProgressReport } from '@mlc-ai/web-llm';
 
 export const SUPPORTED_WEBGPU_MODELS = [
-  { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC', label: 'Qwen2.5 1.5B (기본 추천·우수한 추론·850MB VRAM)', vram: '850MB' },
-  { id: 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC', label: 'Qwen2.5 0.5B (초경량·저사양 내장그래픽용·380MB)', vram: '380MB' },
-  { id: 'Qwen2.5-3B-Instruct-q4f32_1-MLC', label: 'Qwen2.5 3B (외장 RTX 고성능 전용·2.2GB)', vram: '2.2GB' },
-  { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC', label: 'Llama-3.2 1B (Meta 공식·750MB)', vram: '750MB' }
+  { id: 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC', label: 'Qwen2.5 1.5B (기본 추천·모든 GPU 100% 호환 f32·890MB VRAM)', vram: '890MB' },
+  { id: 'Qwen2.5-0.5B-Instruct-q4f32_1-MLC', label: 'Qwen2.5 0.5B (초경량·내장그래픽 100% 호환·390MB)', vram: '390MB' },
+  { id: 'Qwen2.5-3B-Instruct-q4f32_1-MLC', label: 'Qwen2.5 3B (고성능 추론 전용·2.2GB)', vram: '2.2GB' },
+  { id: 'Llama-3.2-1B-Instruct-q4f32_1-MLC', label: 'Llama-3.2 1B (Meta 공식·f32 호환·790MB)', vram: '790MB' },
+  { id: 'SmolLM2-1.7B-Instruct-q4f32_1-MLC', label: 'SmolLM2 1.7B (HuggingFace 고속 모델·920MB)', vram: '920MB' }
 ];
 
-export const DEFAULT_WEBGPU_MODEL = 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC';
+export const DEFAULT_WEBGPU_MODEL = 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC';
 
 let globalMainEngine: MLCEngine | null = null;
 let globalGhostEngine: MLCEngine | null = null;
@@ -36,7 +37,7 @@ let globalGhostProgressText = '';
 let globalMainProgress = 0;
 let globalGhostProgress = 0;
 let globalActiveModelId = DEFAULT_WEBGPU_MODEL;
-const GHOST_MODEL_ID = 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC';
+const GHOST_MODEL_ID = 'Qwen2.5-0.5B-Instruct-q4f32_1-MLC';
 
 // Smart Eco-Lifecycle Timers
 let idleTimer: any = null;
