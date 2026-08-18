@@ -190,7 +190,10 @@ export const useWebLLM = () => {
     try {
       const { CreateMLCEngine } = await import('@mlc-ai/web-llm');
 
-      // 1. Load Main Model into GPU VRAM with 4K Bounded KV-cache
+      // VRAM 상한선 초과 방지 & 메모리 공유 우회 최적화: 대형 모델은 1024 토큰으로 동적 버퍼링
+      const isLargeModel = targetModelId.includes('1.5B') || targetModelId.includes('3B') || targetModelId.includes('1.7B');
+      const boundedContextWindow = isLargeModel ? 1024 : 1536;
+
       const engine = await CreateMLCEngine(
         targetModelId,
         {
@@ -202,8 +205,9 @@ export const useWebLLM = () => {
           logLevel: 'WARN'
         },
         {
-          context_window_size: 2048,
+          context_window_size: boundedContextWindow,
           sliding_window_size: -1,
+          attention_sink_size: 4,
           temperature: 0.25,
           top_p: 0.85
         }
