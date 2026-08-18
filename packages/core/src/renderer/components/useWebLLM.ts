@@ -255,7 +255,11 @@ export const useWebLLM = () => {
       }
 
       if (autoLoad && !globalIsMainReady && !globalIsMainLoading && !globalMainEngine) {
-        const targetModel = localStorage.getItem('ameva_selected_llm_model') || DEFAULT_WEBGPU_MODEL;
+        let targetModel = localStorage.getItem('ameva_selected_llm_model') || DEFAULT_WEBGPU_MODEL;
+        if (!targetModel || targetModel.includes('3B') || targetModel.includes('q4f16')) {
+          targetModel = DEFAULT_WEBGPU_MODEL;
+          localStorage.setItem('ameva_selected_llm_model', DEFAULT_WEBGPU_MODEL);
+        }
         initModel(targetModel).catch(e => console.warn('[WebLLM AutoLoad] Skipped:', e));
       }
     } catch (e) {

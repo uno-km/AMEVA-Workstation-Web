@@ -32,14 +32,14 @@ export class OllamaWizardService {
   /**
    * Generates Windows .bat script
    */
-  static generateWindowsBatScript(modelName: string = 'qwen2.5:3b'): string {
+  static generateWindowsBatScript(modelName: string = 'qwen2.5:1.5b'): string {
     return `@echo off
 chcp 65001 >nul
 title [AMEVA Workstation] Ollama & Qwen One-Click Auto-Setup
 color 0b
 
 echo =====================================================================
-echo    🚀 AMEVA Workstation - Ollama ^& Qwen 3B One-Click Auto-Setup (Windows)
+echo    🚀 AMEVA Workstation - Ollama ^& Qwen 1.5B One-Click Auto-Setup (Windows)
 echo =====================================================================
 echo.
 
@@ -87,7 +87,7 @@ exit
   /**
    * Generates macOS .command / .sh script
    */
-  static generateMacScript(modelName: string = 'qwen2.5:3b'): string {
+  static generateMacScript(modelName: string = 'qwen2.5:1.5b'): string {
     return `#!/bin/bash
 echo "====================================================================="
 echo "   🚀 AMEVA Workstation - Ollama & Qwen One-Click Setup (macOS)"
@@ -121,7 +121,7 @@ echo "🎉 Setup Complete! You can return to AMEVA Workstation in your browser."
   /**
    * Generates Linux .sh script
    */
-  static generateLinuxScript(modelName: string = 'qwen2.5:3b'): string {
+  static generateLinuxScript(modelName: string = 'qwen2.5:1.5b'): string {
     return `#!/bin/bash
 echo "====================================================================="
 echo "   🚀 AMEVA Workstation - Ollama & Qwen One-Click Setup (Linux)"
@@ -154,7 +154,7 @@ echo "🎉 Setup Complete! AMEVA Workstation is now connected!"
   /**
    * Triggers the appropriate setup script download or instruction based on detected OS
    */
-  static triggerAutoSetup(modelName: string = 'qwen2.5:3b'): { os: TargetOS; isMobile: boolean; filename?: string } {
+  static triggerAutoSetup(modelName: string = 'qwen2.5:1.5b'): { os: TargetOS; isMobile: boolean; filename?: string } {
     const os = this.detectOS();
 
     if (os === 'android' || os === 'ios') {

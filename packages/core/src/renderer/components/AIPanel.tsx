@@ -60,7 +60,8 @@ export function AIPanel() {
   const [engineMode, setEngineMode] = useState<'webgpu' | 'api'>('webgpu');
   const [webgpuModel, setWebgpuModel] = useState(() => {
     const saved = localStorage.getItem('ameva_selected_llm_model');
-    if (!saved || saved.includes('q4f16')) {
+    if (!saved || saved.includes('q4f16') || saved.includes('3B')) {
+      localStorage.setItem('ameva_selected_llm_model', DEFAULT_WEBGPU_MODEL);
       return DEFAULT_WEBGPU_MODEL;
     }
     return saved;
@@ -71,7 +72,7 @@ export function AIPanel() {
 
   // API Config State
   const [apiEndpoint, setApiEndpoint] = useState('http://localhost:11434/v1/chat/completions');
-  const [apiModel, setApiModel] = useState('qwen2.5:3b');
+  const [apiModel, setApiModel] = useState('qwen2.5:1.5b');
   const [apiKey, setApiKey] = useState('');
 
   const [outline, setOutline] = useState<Array<{ id: string; text: string; level: number }>>([]);
@@ -171,6 +172,18 @@ export function AIPanel() {
       await orchestratorRef.current.processUserPrompt(text, tagged);
     }
   }, [input, isStreaming, taggedBlocks, clearTaggedBlocks, engineMode, isLLMReady, isModelLoading, initModel, webgpuModel]);
+
+  // Global event listener for external triggers (e.g. DocumentProfileModal 'AI로 상세분석하기')
+  useEffect(() => {
+    const handler = (e: any) => {
+      const prompt = e.detail?.prompt;
+      if (prompt) {
+        handleSend(prompt);
+      }
+    };
+    window.addEventListener('ameva:trigger-ai-prompt', handler);
+    return () => window.removeEventListener('ameva:trigger-ai-prompt', handler);
+  }, [handleSend]);
 
   const handleAbort = useCallback(() => {
     orchestratorRef.current?.abort();

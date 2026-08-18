@@ -491,11 +491,21 @@ export function MarkdownEditor({
         setHwpxModalData(customEvent.detail.parsedData)
       }
     }
+    const handleInsertMarkdown = async (e: Event) => {
+      const customEvent = e as CustomEvent
+      if (customEvent.detail?.content && editor) {
+        await loadMarkdownIntoEditor(editor, customEvent.detail.content, false, customEvent.detail.fileName || 'AI 요약 리포트')
+        setPdfData(null)
+        setPdfFileName(null)
+      }
+    }
     window.addEventListener('app:hwpx-parsed', handleHwpxParsed)
+    window.addEventListener('app:insert-markdown', handleInsertMarkdown)
     return () => {
       window.removeEventListener('app:hwpx-parsed', handleHwpxParsed)
+      window.removeEventListener('app:insert-markdown', handleInsertMarkdown)
     }
-  }, [])
+  }, [editor])
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     if (editorMode !== 'edit') return
@@ -751,6 +761,12 @@ export function MarkdownEditor({
                   if (!editor) return
                   // loadMarkdownIntoEditor 내부에서 pdfData(rawContent)를 파싱하여 에디터에 주입하고 모드를 전환함
                   await loadMarkdownIntoEditor(editor, pdfData, true, pdfFileName || filePath || 'document.pdf')
+                  setPdfData(null)
+                  setPdfFileName(null)
+                }}
+                onInsertReport={async (reportText) => {
+                  if (!editor) return
+                  await loadMarkdownIntoEditor(editor, reportText, false, `[AI 요약] ${pdfFileName || 'document.pdf'}`)
                   setPdfData(null)
                   setPdfFileName(null)
                 }}

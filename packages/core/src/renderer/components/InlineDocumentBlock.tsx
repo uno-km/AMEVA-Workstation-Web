@@ -1218,6 +1218,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
               <DocumentProfileModal 
                 fileId={fileId || ''}
                 profile={profile} 
+                pdf={pdfRef.current}
                 onClose={() => setShowDNA(false)} 
               />
             )}

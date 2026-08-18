@@ -20,13 +20,14 @@ import PdfWorker from 'pdfjs-dist/build/pdf.worker.mjs?worker'
 import {
   ChevronLeft, ChevronRight, ZoomIn, ZoomOut, RotateCw,
   Download, Maximize2, Minimize2, FileText, Search,
-  Highlighter, Type, PenLine, Square, ArrowRight, Eraser, Save, Minus, List, Bookmark
+  Highlighter, Type, PenLine, Square, ArrowRight, Eraser, Save, Minus, List, Bookmark, Sparkles
 } from 'lucide-react'
 import { PdfAnnotationLayer } from './PdfAnnotationLayer'
 import { usePdfAnnotations } from '../hooks/usePdfAnnotations'
 import type { AnnotationTool } from '../hooks/usePdfAnnotations'
 import { uint8ArrayToBase64 } from '../utils/pdfAnnotationWriter'
 import { getAttachment } from '../utils/vfsDatabase'
+import { PdfMapReduceModal } from './pdf/PdfMapReduceModal'
 
 
 // [NEW] 50페이지 제한을 없애고 레이지 로딩을 지원하는 썸네일 컴포넌트
@@ -222,13 +223,15 @@ interface PdfViewerProps {
   onClose?: () => void
   /** AMEVA 문서로 변환 콜백 (선택) */
   onConvertToAmeva?: () => void
+  /** AI 맵리듀스 요약 리포트를 에디터에 삽입하는 콜백 (선택) */
+  onInsertReport?: (reportText: string) => void
 }
 
 /**
  * PDF 뷰어 - Canvas 직접 렌더링 방식
  * Adobe/알씨 수준의 레이아웃 보존 뷰어
  */
-export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConvertToAmeva }: PdfViewerProps) {
+export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConvertToAmeva, onInsertReport }: PdfViewerProps) {
   const [pdf, setPdf] = useState<any>(null)
   const [numPages, setNumPages] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
@@ -249,6 +252,7 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
   const [pageInput, setPageInput] = useState('1')
   const [searchQuery, setSearchQuery] = useState('')
   const [showSearch, setShowSearch] = useState(false)
+  const [showMapReduceModal, setShowMapReduceModal] = useState(false)
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 })
   const [showAnnotationTools, setShowAnnotationTools] = useState(false)
   const [annotationOpacity, setAnnotationOpacity] = useState(0.85)
@@ -937,6 +941,27 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
           <Download size={14} />
         </button>
 
+        {/* 3단계 맵리듀스 AI 상세 요약 버튼 */}
+        <button
+          style={{
+            ...btnStyle,
+            width: 'auto',
+            padding: '0 10px',
+            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.25) 0%, rgba(59, 130, 246, 0.2) 100%)',
+            color: '#c4b5fd',
+            borderColor: 'rgba(139, 92, 246, 0.4)',
+            fontWeight: 700,
+            fontSize: '11px',
+            gap: '6px',
+            boxShadow: '0 0 12px rgba(139, 92, 246, 0.25)'
+          }}
+          onClick={() => setShowMapReduceModal(true)}
+          title="대용량 PDF 3단계 계층형 맵리듀스(Map-Reduce) AI 상세 분석을 실행합니다"
+        >
+          <Sparkles size={13} color="#a78bfa" />
+          <span>AI 맵리듀스 상세 요약</span>
+        </button>
+
         {onConvertToAmeva && (
           <>
             <div style={divider} />
@@ -1285,6 +1310,17 @@ export function PdfViewer({ pdfData, fileName = 'document.pdf', onClose, onConve
           ← → 이동 | + - 줌 | F 검색 | C 연속/단일
         </span>
       </div>
+
+      {/* 대용량 PDF 3단계 맵리듀스 AI 상세 요약 모달 */}
+      {showMapReduceModal && (
+        <PdfMapReduceModal
+          pdf={pdf}
+          fileName={fileName}
+          numPages={numPages}
+          onClose={() => setShowMapReduceModal(false)}
+          onInsertToEditor={onInsertReport}
+        />
+      )}
     </div>
   )
 }

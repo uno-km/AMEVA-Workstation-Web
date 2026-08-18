@@ -3,47 +3,29 @@
  * @file DocumentProfileModal.tsx
  * @description DocumentProfileModal.tsx 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
  * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
- * @example
- * // 예시 로직 (자동 생성됨)
- * import { something } from './DocumentProfileModal';
- * 
- * @created 2026-08-10 20:30:36
- * @updated 2026-08-10 20:30:36
- * @author uno-km
- * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
  * ============================================================================
  */
 
-// [외부 패키지 및 라이브러리 임포트: react]
 import React, { useState } from 'react';
-// [외부 패키지 및 라이브러리 임포트: react-dom]
 import { createPortal } from 'react-dom';
-// [외부 패키지 및 라이브러리 임포트: lucide-react]
-import { X, FileText, CheckCircle, TrendingUp, Tags, AlertTriangle, Fingerprint } from 'lucide-react';
-// [내부 프로젝트 의존성 모듈 임포트: ../document-intelligence/types]
+import { X, FileText, CheckCircle, TrendingUp, Tags, AlertTriangle, Fingerprint, Sparkles } from 'lucide-react';
 import type { DocumentProfileResult } from '../document-intelligence/types';
-// [내부 프로젝트 의존성 모듈 임포트: ../document-intelligence/feedback/documentFeedbackStore]
 import { documentFeedbackStore } from '../document-intelligence/feedback/documentFeedbackStore';
-// [내부 프로젝트 의존성 모듈 임포트: ../document-intelligence/rules/user/userRuleGenerator]
 import { userRuleGenerator } from '../document-intelligence/rules/user/userRuleGenerator';
+import { PdfMapReduceModal } from './pdf/PdfMapReduceModal';
+import { useUIStore } from '../stores/useUIStore';
 
-/**
- * Props 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 interface Props {
   fileId: string;
   profile: DocumentProfileResult;
+  pdf?: any;
   onClose: () => void;
 }
 
-/**
- * DocumentProfileModal 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
-export function DocumentProfileModal({ fileId, profile, onClose }: Props) {
+export function DocumentProfileModal({ fileId, profile, pdf, onClose }: Props) {
   const { source, profile: classProfile, keywords, entities, importantPages } = profile;
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showMapReduce, setShowMapReduce] = useState(false);
   
   // Feedback States
   const [selectedDomain, setSelectedDomain] = useState(classProfile.documentDomain?.primary || 'academic');
@@ -78,7 +60,7 @@ export function DocumentProfileModal({ fileId, profile, onClose }: Props) {
           primaryType: `${selectedDomain}_${selectedShape}`,
           displayLabel: `사용자 피드백 (${selectedDomain} / ${selectedShape})`,
           selectedKeywords,
-          selectedSections: [], // TODO: Section hints
+          selectedSections: [],
           notes
         }
       });
@@ -95,6 +77,22 @@ export function DocumentProfileModal({ fileId, profile, onClose }: Props) {
     }
   };
 
+  const handleStartAIAnalysis = () => {
+    // 1. 우측 AI 패널 활성화 & 열기
+    useUIStore.getState().setShowAIPanel(true);
+    useUIStore.getState().setActiveRightTab('ai');
+
+    // 2. 3단계 맵리듀스 모달 팝업 열기
+    setShowMapReduce(true);
+
+    // 3. AI 에이전트 프롬프트 브로드캐스팅
+    window.dispatchEvent(new CustomEvent('ameva:trigger-ai-prompt', {
+      detail: { 
+        prompt: `현재 문서(${source.fileName}, ${source.pageCount}페이지)를 3단계 계층형 맵리듀스(Map-Reduce) 방식으로 심층 분석하여, [총괄 요약], [주요 항목 비교 표], [섹션별 분석], [핵심 액션 아이템]으로 상세하게 요약 정리해줘.`
+      }
+    }));
+  };
+
   return createPortal(
     <div style={{
       position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
@@ -108,6 +106,7 @@ export function DocumentProfileModal({ fileId, profile, onClose }: Props) {
         display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.7)',
         overflow: 'hidden'
       }}>
+        {/* Modal Header */}
         <div style={{
           padding: '12px 16px', borderBottom: '1px solid var(--border-muted)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -137,7 +136,7 @@ export function DocumentProfileModal({ fileId, profile, onClose }: Props) {
 
           {/* 1. 요약 카드 */}
           <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '10px' }}>
-            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '14px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '4px', display: 'flex', justifyContent: 'space-between', fontWeight: 500 }}>
                   추정 문서 유형 
@@ -177,17 +176,37 @@ export function DocumentProfileModal({ fileId, profile, onClose }: Props) {
                   </div>
                 )}
               </div>
-              <button 
-                onClick={() => setShowFeedback(!showFeedback)}
-                style={{ 
-                  marginTop: '16px', padding: '8px 14px', background: 'rgba(59, 130, 246, 0.15)', 
-                  border: '1px solid rgba(59, 130, 246, 0.4)', borderRadius: '6px', 
-                  color: '#60a5fa', cursor: 'pointer', fontSize: '13px', fontWeight: 600, alignSelf: 'flex-start',
-                  transition: 'background 0.2s'
-                }}>
-                분류 수정 (Feedback)
-              </button>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
+                <button 
+                  onClick={() => setShowFeedback(!showFeedback)}
+                  style={{ 
+                    padding: '8px 14px', background: 'rgba(59, 130, 246, 0.15)', 
+                    border: '1px solid rgba(59, 130, 246, 0.4)', borderRadius: '6px', 
+                    color: '#60a5fa', cursor: 'pointer', fontSize: '13px', fontWeight: 600,
+                    transition: 'background 0.2s'
+                  }}>
+                  분류 수정 (Feedback)
+                </button>
+
+                <button 
+                  onClick={handleStartAIAnalysis}
+                  style={{ 
+                    padding: '8px 16px', 
+                    background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)', 
+                    border: 'none', borderRadius: '6px', 
+                    color: '#fff', cursor: 'pointer', fontSize: '13px', fontWeight: 700,
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    boxShadow: '0 4px 14px rgba(139, 92, 246, 0.4)',
+                    transition: 'all 0.2s ease'
+                  }}>
+                  <Sparkles size={14} />
+                  <span>AI로 상세분석하기</span>
+                </button>
+              </div>
             </div>
+
             <div style={{ background: 'rgba(255,255,255,0.04)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
               <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '6px', fontWeight: 500 }}>기본 메타데이터</div>
               <div style={{ fontSize: '14px', color: '#f3f4f6', fontWeight: 500 }}>
@@ -329,6 +348,26 @@ export function DocumentProfileModal({ fileId, profile, onClose }: Props) {
 
         </div>
       </div>
+
+      {/* 3단계 맵리듀스 상세 요약 모달 */}
+      {showMapReduce && (
+        <PdfMapReduceModal
+          pdf={pdf}
+          fileName={source.fileName}
+          numPages={source.pageCount || 1}
+          onClose={() => {
+            setShowMapReduce(false);
+            onClose();
+          }}
+          onInsertToEditor={(reportText) => {
+            window.dispatchEvent(new CustomEvent('app:insert-markdown', {
+              detail: { content: reportText, fileName: `[AI 요약] ${source.fileName}` }
+            }));
+            setShowMapReduce(false);
+            onClose();
+          }}
+        />
+      )}
     </div>,
     document.body
   );

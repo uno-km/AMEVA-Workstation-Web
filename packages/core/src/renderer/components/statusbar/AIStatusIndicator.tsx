@@ -46,8 +46,8 @@ export function AIStatusIndicator({
   const [showDashboard, setShowDashboard] = useState(false)
   const [selectedModel, setSelectedModel] = useState(() => {
     const saved = localStorage.getItem('ameva_selected_llm_model')
-    if (!saved || saved.includes('q4f16')) {
-      return 'Qwen2.5-3B-Instruct-q4f32_1-MLC'
+    if (!saved || saved.includes('q4f16') || saved.includes('3B')) {
+      return 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC'
     }
     return saved
   })
@@ -81,8 +81,26 @@ export function AIStatusIndicator({
   const pMain = Math.round((mainProgress || 0) * 100);
   const pGhost = Math.round((ghostProgress || 0) * 100);
 
+  // 0% (Red) -> 50% (Yellow) -> 100% (Green) 동적 색상 계산
+  const getDynamicColor = (pct: number) => {
+    const hue = Math.min(145, Math.max(0, Math.round(pct * 1.45)));
+    return `hsl(${hue}, 88%, 52%)`;
+  };
+
+  const dynamicColor = isReady ? '#10b981' : (!isLoading ? '#ef4444' : getDynamicColor(pMain));
+  const dynamicGlow = isReady 
+    ? '0 0 12px #10b981, 0 0 24px rgba(16, 185, 129, 0.6)' 
+    : (isLoading ? `0 0 10px ${dynamicColor}, 0 0 20px ${dynamicColor}66` : 'none');
+
   return (
     <div style={{ position: 'relative' }} ref={dashboardRef}>
+      <style>{`
+        @keyframes amevaReadyPulse {
+          0% { box-shadow: 0 0 8px #10b981, 0 0 16px rgba(16, 185, 129, 0.4); transform: scale(1); }
+          50% { box-shadow: 0 0 14px #10b981, 0 0 28px rgba(16, 185, 129, 0.7); transform: scale(1.08); }
+          100% { box-shadow: 0 0 8px #10b981, 0 0 16px rgba(16, 185, 129, 0.4); transform: scale(1); }
+        }
+      `}</style>
       <div
         style={{
           display: 'flex',
@@ -100,9 +118,10 @@ export function AIStatusIndicator({
       >
         <div style={{
           width: '8px', height: '8px', borderRadius: '50%',
-          background: isReady ? '#10b981' : (isLoading ? '#f59e0b' : '#ef4444'),
-          boxShadow: isReady ? '0 0 8px #10b981' : (isLoading ? '0 0 8px #f59e0b' : 'none'),
-          transition: 'background 0.3s, box-shadow 0.3s'
+          background: dynamicColor,
+          boxShadow: dynamicGlow,
+          animation: isReady ? 'amevaReadyPulse 2.4s infinite ease-in-out' : 'none',
+          transition: 'background 0.3s ease, box-shadow 0.3s ease'
         }} />
         <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-main)' }}>AI</span>
       </div>
@@ -115,26 +134,27 @@ export function AIStatusIndicator({
           width: '280px',
           background: 'rgba(24, 24, 27, 0.95)',
           backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255,255,255,0.1)',
+          border: `1px solid ${isReady ? 'rgba(16, 185, 129, 0.3)' : (isLoading ? `${dynamicColor}55` : 'rgba(255,255,255,0.1)')}`,
           borderRadius: '12px',
           padding: '16px',
-          boxShadow: '0 -8px 32px rgba(0,0,0,0.6)',
+          boxShadow: isReady ? '0 -8px 32px rgba(0,0,0,0.6), 0 0 24px rgba(16, 185, 129, 0.15)' : '0 -8px 32px rgba(0,0,0,0.6)',
           zIndex: 10000,
           color: 'var(--text-main)',
           display: 'flex',
           flexDirection: 'column',
           gap: '14px',
-          cursor: 'default'
+          cursor: 'default',
+          transition: 'border 0.3s ease, box-shadow 0.3s ease'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ padding: '4px', borderRadius: '6px', background: isReady ? 'rgba(16,185,129,0.1)' : 'rgba(168,85,247,0.1)' }}>
-                <Bot size={16} color={isReady ? '#10b981' : '#a855f7'} />
+              <div style={{ padding: '4px', borderRadius: '6px', background: isReady ? 'rgba(16,185,129,0.15)' : `${dynamicColor}22` }}>
+                <Bot size={16} color={dynamicColor} />
               </div>
               <strong style={{ fontSize: '13px', letterSpacing: '-0.3px' }}>AMEVA AI 대시보드</strong>
             </div>
-            <span style={{ fontSize: '11px', fontWeight: 600, color: isReady ? '#10b981' : (isLoading ? '#f59e0b' : '#ef4444') }}>
-              {isReady ? '온라인' : (isLoading ? '로딩 중...' : '오프라인')}
+            <span style={{ fontSize: '11px', fontWeight: 600, color: dynamicColor, transition: 'color 0.3s ease' }}>
+              {isReady ? '온라인 (가동 중)' : (isLoading ? `로딩 중 (${pMain}%)...` : '오프라인')}
             </span>
           </div>
 
@@ -191,13 +211,21 @@ export function AIStatusIndicator({
           
           {isLoading && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#f59e0b', fontWeight: 600 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: dynamicColor, fontWeight: 600, transition: 'color 0.3s ease' }}>
                 <span>⚡ GPU VRAM 모델 로딩 중...</span>
                 <span>{pMain}%</span>
               </div>
               
-              <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
-                <div style={{ width: `${pMain}%`, height: '100%', background: 'linear-gradient(90deg, #059669, #10b981)', transition: 'width 0.2s ease-out' }} />
+              <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.08)', borderRadius: '3px', overflow: 'hidden', position: 'relative' }}>
+                <div style={{
+                  width: `${pMain}%`,
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #10b981 100%)',
+                  backgroundSize: '280px 100%',
+                  borderRadius: '3px',
+                  boxShadow: `0 0 10px ${dynamicColor}99`,
+                  transition: 'width 0.25s ease-out, box-shadow 0.3s ease'
+                }} />
               </div>
               <div style={{ fontSize: '9.5px', color: '#94a3b8', textAlign: 'left', wordBreak: 'break-all', marginTop: '2px' }}>
                 {mainProgressText || '가중치 다운로드 및 GPU 파이프라인 초기화 중...'}
@@ -237,16 +265,30 @@ export function AIStatusIndicator({
             ) : isLoading ? (
               <button 
                 disabled
-                style={{ width: '100%', padding: '10px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.3)', borderRadius: '8px', cursor: 'wait', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 600 }}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  background: `${dynamicColor}18`,
+                  color: dynamicColor,
+                  border: `1px solid ${dynamicColor}44`,
+                  borderRadius: '8px',
+                  cursor: 'wait',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  fontWeight: 600,
+                  transition: 'all 0.3s ease'
+                }}
               >
-                <Clock size={16} /> 모델 로딩 대기 중...
+                <Clock size={16} /> 모델 로딩 대기 중 ({pMain}%)...
               </button>
             ) : (
               <button 
                 disabled
-                style={{ width: '100%', padding: '10px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)', color: '#10b981', borderRadius: '8px', cursor: 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 600 }}
+                style={{ width: '100%', padding: '10px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#34d399', borderRadius: '8px', cursor: 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 700, boxShadow: '0 0 16px rgba(16, 185, 129, 0.2)' }}
               >
-                <Cpu size={16} /> AI 가동 중
+                <Cpu size={16} /> AI 가동 중 (온라인)
               </button>
             )}
           </div>
