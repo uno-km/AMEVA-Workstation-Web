@@ -314,7 +314,7 @@ export function AIPanel() {
           setWebgpuModel={(m) => {
             setWebgpuModel(m);
             if (isLLMReady) {
-              initModel(m);
+              initModel(m).catch((e) => console.warn('[AIPanel] Model switch error:', e));
             }
           }}
           apiEndpoint={apiEndpoint}
@@ -335,7 +335,9 @@ export function AIPanel() {
           downloadProgress={downloadProgress}
           mainProgressText={mainProgressText}
           activeModelId={activeModelId}
-          onInit={() => initModel(webgpuModel)}
+          onInit={() => {
+            initModel(webgpuModel).catch((e) => console.warn('[AIPanel] WebGPU Banner init error:', e));
+          }}
           onUnload={() => unloadModel('all')}
         />
       )}

@@ -211,7 +211,10 @@ export function AIStatusIndicator({
           <div style={{ marginTop: '2px' }}>
             {!isReady && !isLoading ? (
               <button 
-                onClick={(e) => { e.stopPropagation(); initModel(selectedModel); }}
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  initModel(selectedModel).catch(err => console.warn('[AIStatusIndicator] initModel error:', err)); 
+                }}
                 style={{ width: '100%', padding: '10px', background: 'linear-gradient(135deg, #a855f7 0%, #8b5cf6 100%)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 600, boxShadow: '0 4px 12px rgba(168,85,247,0.3)', transition: 'transform 0.1s' }}
                 onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.98)'}
                 onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}

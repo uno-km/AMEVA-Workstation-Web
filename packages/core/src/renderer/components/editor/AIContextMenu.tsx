@@ -295,7 +295,11 @@ export function AIContextMenu({
               style={{ display: 'flex', alignItems: 'center', gap: '6px', textAlign: 'left', padding: '6px 8px', borderRadius: '6px', background: 'transparent', color: '#a855f7', border: 'none', cursor: 'pointer', fontSize: '12px' }}
               onClick={() => {
                 if (isMainLoading || isGhostLoading) return;
-                initModel(pendingModelId);
+                try {
+                  Promise.resolve(initModel(pendingModelId)).catch(e => console.warn('[AIContextMenu] init error:', e));
+                } catch (e) {
+                  console.warn('[AIContextMenu] init sync error:', e);
+                }
               }}
               onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'rgba(168,85,247,0.1)' }}
               onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
