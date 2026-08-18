@@ -18,7 +18,7 @@ import { WebLLMEngineAdapter } from '../features/ai-agent/adapters/WebLLMEngineA
 import { RemoteHttpEngineAdapter } from '../features/ai-agent/adapters/RemoteHttpEngineAdapter';
 import { LocalRAGRetrieverAdapter } from '../features/ai-agent/adapters/LocalRAGRetrieverAdapter';
 import { editorToolAdapter } from '../features/ai-agent/adapters/EditorToolAdapter';
-import { useWebLLM } from './useWebLLM';
+import { useWebLLM, DEFAULT_WEBGPU_MODEL } from './useWebLLM';
 import { useWorkspaceStore } from '../stores/useWorkspaceStore';
 import type { InsertSuggestion } from '../features/ai-agent/types';
 
@@ -48,6 +48,7 @@ export function AIPanel() {
     isMainLoading: isModelLoading,
     mainProgress: downloadProgress,
     mainProgressText,
+    activeModelId,
     initModel,
     unloadModel
   } = useWebLLM();
@@ -55,6 +56,7 @@ export function AIPanel() {
   const [input, setInput] = useState('');
   const [activeTab, setActiveTab] = useState<'chat' | 'outline'>('chat');
   const [engineMode, setEngineMode] = useState<'webgpu' | 'api'>('webgpu');
+  const [webgpuModel, setWebgpuModel] = useState(DEFAULT_WEBGPU_MODEL);
   const [showSettings, setShowSettings] = useState(false);
 
   // API Config State
@@ -128,7 +130,7 @@ export function AIPanel() {
     if (!text || isStreaming) return;
 
     if (engineMode === 'webgpu' && !isLLMReady && !isModelLoading) {
-      await initModel('Qwen2.5-3B-Instruct-q4f32_1-MLC');
+      await initModel(webgpuModel);
     }
 
     setInput('');
@@ -138,7 +140,7 @@ export function AIPanel() {
     if (orchestratorRef.current) {
       await orchestratorRef.current.processUserPrompt(text, tagged);
     }
-  }, [input, isStreaming, taggedBlocks, clearTaggedBlocks, engineMode, isLLMReady, isModelLoading, initModel]);
+  }, [input, isStreaming, taggedBlocks, clearTaggedBlocks, engineMode, isLLMReady, isModelLoading, initModel, webgpuModel]);
 
   const handleAbort = useCallback(() => {
     orchestratorRef.current?.abort();
@@ -179,64 +181,57 @@ export function AIPanel() {
         height: '100%',
         backgroundColor: 'var(--bg-panel, #121216)',
         color: 'var(--text-main, #f8fafc)',
-        fontFamily: 'Inter, system-ui, sans-serif',
-        overflow: 'hidden',
+        borderLeft: '1px solid var(--border-muted, #27272a)',
         position: 'relative'
       }}
     >
-      {/* 1. Header */}
-      <div style={{
-        padding: '12px 16px',
-        borderBottom: '1px solid var(--border-muted, rgba(255,255,255,0.08))',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexShrink: 0,
-        background: 'rgba(0,0,0,0.15)'
-      }}>
+      {/* 1. Header Toolbar */}
+      <div
+        data-testid="ai-panel-header"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '10px 14px',
+          borderBottom: '1px solid var(--border-muted, #27272a)',
+          backgroundColor: 'rgba(255, 255, 255, 0.02)'
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{
-            width: '24px',
-            height: '24px',
-            borderRadius: '6px',
-            background: engineMode === 'webgpu'
-              ? 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)'
-              : 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(139, 92, 246, 0.4)'
-          }}>
-            <Sparkles size={14} color="#fff" />
+          <div
+            style={{
+              width: '24px',
+              height: '24px',
+              borderRadius: '6px',
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#fff'
+            }}
+          >
+            <Sparkles size={14} />
           </div>
           <div>
-            <div style={{ fontSize: '13px', fontWeight: 700, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <span>AMEVA AI 에이전트</span>
+            <div style={{ fontSize: '12px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
+              AMEVA AI 에이전트
               <button
                 data-testid="ai-engine-mode-toggle"
-                onClick={() => setEngineMode(m => m === 'webgpu' ? 'api' : 'webgpu')}
+                onClick={() => setEngineMode(engineMode === 'webgpu' ? 'api' : 'webgpu')}
                 style={{
-                  background: 'rgba(255,255,255,0.08)',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  color: engineMode === 'webgpu' ? '#a78bfa' : '#34d399',
-                  borderRadius: '4px',
-                  padding: '1px 5px',
                   fontSize: '9px',
+                  padding: '1px 5px',
+                  borderRadius: '3px',
+                  border: 'none',
+                  background: engineMode === 'webgpu' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(59, 130, 246, 0.2)',
+                  color: engineMode === 'webgpu' ? '#a78bfa' : '#60a5fa',
                   cursor: 'pointer',
                   fontWeight: 600
                 }}
-                title="엔진 모드 전환 (WebGPU <-> 백엔드 API)"
+                title="엔진 모드 전환 (WebGPU ↔ Remote API)"
               >
                 {engineMode === 'webgpu' ? '⚡ WebGPU' : '🌐 API'}
               </button>
-            </div>
-            <div style={{ fontSize: '10px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Cpu size={10} color={engineMode === 'webgpu' ? '#10b981' : '#38bdf8'} />
-              <span data-testid="ai-active-engine-badge">
-                {engineMode === 'webgpu'
-                  ? (isLLMReady ? 'WebGPU 온디바이스' : isModelLoading ? `로딩 중 (${downloadProgress}%)` : '준비 중')
-                  : `API (${apiModel})`}
-              </span>
             </div>
           </div>
         </div>
@@ -311,6 +306,13 @@ export function AIPanel() {
         <EngineSettingsModal
           engineMode={engineMode}
           setEngineMode={setEngineMode}
+          webgpuModel={webgpuModel}
+          setWebgpuModel={(m) => {
+            setWebgpuModel(m);
+            if (isLLMReady) {
+              initModel(m);
+            }
+          }}
           apiEndpoint={apiEndpoint}
           setApiEndpoint={setApiEndpoint}
           apiModel={apiModel}
@@ -328,7 +330,8 @@ export function AIPanel() {
           isModelLoading={isModelLoading}
           downloadProgress={downloadProgress}
           mainProgressText={mainProgressText}
-          onInit={() => initModel('Qwen2.5-3B-Instruct-q4f32_1-MLC')}
+          activeModelId={activeModelId}
+          onInit={() => initModel(webgpuModel)}
           onUnload={() => unloadModel('all')}
         />
       )}

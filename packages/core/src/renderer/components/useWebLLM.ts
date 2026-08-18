@@ -3,17 +3,27 @@
  * @file useWebLLM.ts
  * @system AMEVA OS Desktop Workstation - Core LLM Engine Layer
  * @location packages/core/src/renderer/components/useWebLLM.ts
- * @role High-Performance WebGPU VRAM-Optimized Engine Manager
+ * @role High-Performance WebGPU VRAM-Optimized Engine Manager with DX12 TDR Fault-Tolerance
  * 
  * [Optimization Architecture]
- * 1. Single-Engine Multiplexing: Uses Qwen2.5-3B for both Chat & GhostText by default (1.8GB VRAM vs 3.5GB).
- * 2. Smart Eco-Lifecycle: 10-minute Idle Auto-Unload & 3-minute Tab-Hidden Sleep.
- * 3. Explicit VRAM Deallocation: Exposes unloadModel() to reclaim GPU buffers via engine.unload().
+ * 1. Default Ultra-Stable Model: Qwen2.5-1.5B (q4f16_1, ~850MB VRAM) - Prevents DXGI_ERROR_DEVICE_HUNG.
+ * 2. Single-Engine Multiplexing: Uses 1.5B/3B for both Chat & GhostText by default.
+ * 3. Fault-Tolerant Auto-Recovery: Catches GPUDeviceLostInfo / Disposed objects and resets gracefully.
+ * 4. Smart Eco-Lifecycle: 10-minute Idle Auto-Unload & 3-minute Tab-Hidden Sleep.
  * ============================================================================
  */
 
 import { useState, useCallback, useEffect } from 'react';
 import type { MLCEngine, InitProgressReport } from '@mlc-ai/web-llm';
+
+export const SUPPORTED_WEBGPU_MODELS = [
+  { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC', label: 'Qwen2.5 1.5B (권장·고속·850MB VRAM)', vram: '850MB' },
+  { id: 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC', label: 'Qwen2.5 0.5B (초경량·내장그래픽·380MB)', vram: '380MB' },
+  { id: 'Qwen2.5-3B-Instruct-q4f32_1-MLC', label: 'Qwen2.5 3B (외장 RTX GPU 전용·2.2GB)', vram: '2.2GB' },
+  { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC', label: 'Llama-3.2 1B (Meta 공식·750MB)', vram: '750MB' }
+];
+
+export const DEFAULT_WEBGPU_MODEL = 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC';
 
 let globalMainEngine: MLCEngine | null = null;
 let globalGhostEngine: MLCEngine | null = null;
@@ -25,8 +35,8 @@ let globalMainProgressText = '';
 let globalGhostProgressText = '';
 let globalMainProgress = 0;
 let globalGhostProgress = 0;
-let globalActiveModelId = 'Qwen2.5-3B-Instruct-q4f32_1-MLC';
-const GHOST_MODEL_ID = 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC';
+let globalActiveModelId = DEFAULT_WEBGPU_MODEL;
+const GHOST_MODEL_ID = 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC';
 
 // Smart Eco-Lifecycle Timers
 let idleTimer: any = null;
@@ -44,7 +54,11 @@ async function performUnload(target: 'main' | 'ghost' | 'all' = 'all') {
   try {
     if ((target === 'main' || target === 'all') && globalMainEngine) {
       console.log('[WebLLM Eco] Releasing Main Engine VRAM buffers...');
-      await globalMainEngine.unload();
+      try {
+        await globalMainEngine.unload();
+      } catch (e) {
+        console.warn('[WebLLM Eco] Main engine unload error suppressed:', e);
+      }
       globalMainEngine = null;
       globalIsMainReady = false;
       globalMainProgress = 0;
@@ -53,7 +67,11 @@ async function performUnload(target: 'main' | 'ghost' | 'all' = 'all') {
 
     if ((target === 'ghost' || target === 'all') && globalGhostEngine) {
       console.log('[WebLLM Eco] Releasing Ghost Engine VRAM buffers...');
-      await globalGhostEngine.unload();
+      try {
+        await globalGhostEngine.unload();
+      } catch (e) {
+        console.warn('[WebLLM Eco] Ghost engine unload error suppressed:', e);
+      }
       globalGhostEngine = null;
       globalIsGhostReady = false;
       globalGhostProgress = 0;
@@ -62,7 +80,7 @@ async function performUnload(target: 'main' | 'ghost' | 'all' = 'all') {
 
     notify();
   } catch (err) {
-    console.error('[WebLLM Eco] Error unloading engine:', err);
+    console.error('[WebLLM Eco] Error in performUnload:', err);
   }
 }
 
@@ -83,7 +101,6 @@ function touchEngineActivity() {
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') {
-      // 탭이 백그라운드로 전환되면 3분 타이머 구동
       if (visibilityTimer) clearTimeout(visibilityTimer);
       visibilityTimer = setTimeout(() => {
         if (globalMainEngine || globalGhostEngine) {
@@ -92,7 +109,6 @@ if (typeof document !== 'undefined') {
         }
       }, HIDDEN_TAB_TIMEOUT_MS);
     } else {
-      // 탭이 다시 활성화되면 절전 타이머 취소
       if (visibilityTimer) {
         clearTimeout(visibilityTimer);
         visibilityTimer = null;
@@ -117,7 +133,7 @@ export interface WebLLMState {
 export const useWebLLM = () => {
   const [state, setState] = useState<WebLLMState>({
     isMainReady: globalIsMainReady,
-    isGhostReady: globalIsGhostReady || globalIsMainReady, // Main engine can serve ghost tasks
+    isGhostReady: globalIsGhostReady || globalIsMainReady,
     isMainLoading: globalIsMainLoading,
     isGhostLoading: globalIsGhostLoading,
     mainProgressText: globalMainProgressText,
@@ -146,13 +162,21 @@ export const useWebLLM = () => {
   }, []);
 
   /**
-   * Main Model Loader (Qwen2.5-3B by default)
+   * Main Model Loader (Qwen2.5-1.5B by default)
    * Only loads the targeted main model into VRAM on-demand.
    */
   const initModel = useCallback(async (modelId?: string, loadGhostSeparately: boolean = false) => {
-    if (globalMainEngine || globalIsMainLoading) return;
+    const targetModelId = modelId || globalActiveModelId || DEFAULT_WEBGPU_MODEL;
+    
+    // If different model is requested or already ready, reload clean
+    if (globalMainEngine && globalActiveModelId !== targetModelId) {
+      await performUnload('main');
+    } else if (globalMainEngine && globalIsMainReady) {
+      return;
+    }
 
-    const targetModelId = modelId || globalActiveModelId;
+    if (globalIsMainLoading) return;
+
     globalActiveModelId = targetModelId;
     globalIsMainLoading = true;
     globalMainProgress = 0;
@@ -174,7 +198,8 @@ export const useWebLLM = () => {
       globalMainEngine = engine;
       globalIsMainReady = true;
       globalMainProgress = 1;
-      globalMainProgressText = 'Qwen2.5-3B VRAM 로드 완료';
+      const modelMeta = SUPPORTED_WEBGPU_MODELS.find(m => m.id === targetModelId);
+      globalMainProgressText = `${modelMeta?.label.split(' ')[0] || 'WebGPU'} VRAM 로드 완료`;
       touchEngineActivity();
       notify();
 
@@ -198,10 +223,11 @@ export const useWebLLM = () => {
           notify();
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('[WebLLM] Failed to initialize WebGPU model:', error);
       globalIsMainReady = false;
-      globalMainProgressText = '초기화 실패 (WebGPU 미지원 또는 메모리 부족)';
+      globalMainEngine = null;
+      globalMainProgressText = '초기화 실패 (더 가벼운 모델을 선택하거나 원격 API를 사용하세요)';
       notify();
       throw error;
     } finally {
@@ -219,43 +245,63 @@ export const useWebLLM = () => {
   }, []);
 
   /**
-   * Main Chat Generation Stream
+   * Main Chat Generation Stream with Fault-Tolerant Recovery
    */
   const generateStream = useCallback(async function* (
     systemPrompt: string,
     userPrompt: string,
     options?: any
   ): AsyncGenerator<string, void, unknown> {
-    if (!globalMainEngine) {
-      throw new Error('[WebLLM] Main model is not loaded in VRAM');
+    if (!globalMainEngine || !globalIsMainReady) {
+      throw new Error('[WebLLM] WebGPU 모델이 로드되지 않았습니다. 상단 배너에서 모델을 먼저 로드해 주세요.');
     }
 
     touchEngineActivity();
 
-    const chunks = await globalMainEngine.chat.completions.create({
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      stream: true,
-      temperature: options?.temperature ?? 0.3,
-      max_tokens: options?.max_tokens ?? 1024,
-      stop: options?.stop,
-    });
+    try {
+      const chunks = await globalMainEngine.chat.completions.create({
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        stream: true,
+        temperature: options?.temperature ?? 0.3,
+        max_tokens: options?.max_tokens ?? 1024,
+        stop: options?.stop,
+      });
 
-    for await (const chunk of chunks) {
-      const content = chunk.choices[0]?.delta?.content;
-      if (content) {
-        yield content;
+      for await (const chunk of chunks) {
+        const content = chunk.choices[0]?.delta?.content;
+        if (content) {
+          yield content;
+        }
       }
-    }
 
-    touchEngineActivity();
+      touchEngineActivity();
+    } catch (err: any) {
+      console.error('[WebLLM] GPU Runtime Error during inference:', err);
+      const errMsg = err?.message || String(err);
+      
+      // Auto-detect device loss / disposed objects
+      if (
+        errMsg.includes('disposed') ||
+        errMsg.includes('Device was lost') ||
+        errMsg.includes('DXGI_ERROR') ||
+        errMsg.includes('Model not loaded')
+      ) {
+        globalMainEngine = null;
+        globalIsMainReady = false;
+        notify();
+        throw new Error(
+          'GPU VRAM 한계 또는 Windows 드라이버 재설정으로 인해 WebGPU 모델이 초기화되었습니다. 상단 [엔진 설정(⚙️)]에서 더 가벼운 모델(1.5B / 0.5B)을 선택하거나 [HTTP API 모드]로 전환해 주세요.'
+        );
+      }
+      throw err;
+    }
   }, []);
 
   /**
    * GhostText Autocompletion Stream
-   * Multiplexes to Main Engine if Ghost Engine is not separately loaded (0 extra VRAM cost).
    */
   const generateGhostStream = useCallback(async function* (
     systemPrompt: string,
@@ -270,25 +316,29 @@ export const useWebLLM = () => {
 
     touchEngineActivity();
 
-    const chunks = await activeEngine.chat.completions.create({
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      stream: true,
-      temperature: options?.temperature ?? 0.2,
-      max_tokens: options?.max_tokens ?? 32,
-      stop: options?.stop,
-    });
+    try {
+      const chunks = await activeEngine.chat.completions.create({
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt }
+        ],
+        stream: true,
+        temperature: options?.temperature ?? 0.2,
+        max_tokens: options?.max_tokens ?? 32,
+        stop: options?.stop,
+      });
 
-    for await (const chunk of chunks) {
-      const content = chunk.choices[0]?.delta?.content;
-      if (content) {
-        yield content;
+      for await (const chunk of chunks) {
+        const content = chunk.choices[0]?.delta?.content;
+        if (content) {
+          yield content;
+        }
       }
-    }
 
-    touchEngineActivity();
+      touchEngineActivity();
+    } catch (err: any) {
+      console.warn('[WebLLM Ghost] Generation error:', err);
+    }
   }, []);
 
   return {

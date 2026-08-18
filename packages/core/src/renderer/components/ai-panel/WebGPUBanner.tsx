@@ -9,12 +9,14 @@
 
 import React from 'react';
 import { Cpu } from 'lucide-react';
+import { SUPPORTED_WEBGPU_MODELS } from '../useWebLLM';
 
 interface WebGPUBannerProps {
   isLLMReady: boolean;
   isModelLoading: boolean;
   downloadProgress: number;
   mainProgressText: string;
+  activeModelId?: string;
   onInit: () => void;
   onUnload: () => void;
 }
@@ -24,9 +26,13 @@ export const WebGPUBanner: React.FC<WebGPUBannerProps> = ({
   isModelLoading,
   downloadProgress,
   mainProgressText,
+  activeModelId,
   onInit,
   onUnload
 }) => {
+  const modelMeta = SUPPORTED_WEBGPU_MODELS.find(m => m.id === activeModelId);
+  const shortModelLabel = modelMeta?.label.split(' ')[0] || 'Qwen2.5';
+
   return (
     <div
       data-testid="webgpu-vram-banner"
@@ -52,10 +58,10 @@ export const WebGPUBanner: React.FC<WebGPUBannerProps> = ({
             style={{ fontWeight: 600, color: isLLMReady ? '#34d399' : '#e2e8f0' }}
           >
             {isLLMReady
-              ? '⚡ GPU 가속 준비 완료 (Qwen2.5-3B)'
+              ? `⚡ GPU 가속 준비 완료 (${shortModelLabel})`
               : isModelLoading
               ? '⚡ WebGPU VRAM 가중치 로딩 중...'
-              : '⚡ Qwen 2.5 3B (WebGPU)'}
+              : `⚡ ${shortModelLabel} (WebGPU)`}
           </span>
         </div>
 
@@ -101,30 +107,22 @@ export const WebGPUBanner: React.FC<WebGPUBannerProps> = ({
       </div>
 
       {isModelLoading && (
-        <div data-testid="webgpu-progress-container">
-          <div style={{
-            height: '4px',
-            width: '100%',
-            background: 'rgba(255,255,255,0.1)',
-            borderRadius: '2px',
-            overflow: 'hidden',
-            marginTop: '4px'
-          }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#94a3b8' }}>
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}>
+              {mainProgressText}
+            </span>
+            <span>{Math.round(downloadProgress * 100)}%</span>
+          </div>
+          <div style={{ height: '3px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
             <div
-              data-testid="webgpu-progress-bar"
               style={{
                 height: '100%',
-                width: `${Math.max(5, downloadProgress * 100)}%`,
-                background: '#38bdf8',
-                transition: 'width 0.2s ease'
+                width: `${downloadProgress * 100}%`,
+                background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)',
+                transition: 'width 0.2s'
               }}
             />
-          </div>
-          <div
-            data-testid="webgpu-progress-text"
-            style={{ fontSize: '9px', color: '#94a3b8', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-          >
-            {mainProgressText || `GPU 가중치 다운로드 및 셰이더 컴파일 중 (${Math.round(downloadProgress * 100)}%)`}
           </div>
         </div>
       )}

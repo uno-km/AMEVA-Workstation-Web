@@ -9,10 +9,13 @@
 
 import React from 'react';
 import { X } from 'lucide-react';
+import { SUPPORTED_WEBGPU_MODELS } from '../useWebLLM';
 
 interface EngineSettingsModalProps {
   engineMode: 'webgpu' | 'api';
   setEngineMode: (mode: 'webgpu' | 'api') => void;
+  webgpuModel: string;
+  setWebgpuModel: (model: string) => void;
   apiEndpoint: string;
   setApiEndpoint: (val: string) => void;
   apiModel: string;
@@ -25,6 +28,8 @@ interface EngineSettingsModalProps {
 export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
   engineMode,
   setEngineMode,
+  webgpuModel,
+  setWebgpuModel,
   apiEndpoint,
   setApiEndpoint,
   apiModel,
@@ -66,6 +71,26 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
             <option value="api">🌐 HTTP API (Ollama / Cloud / DeepInfra / Local)</option>
           </select>
         </div>
+
+        {engineMode === 'webgpu' && (
+          <div>
+            <label style={{ color: '#94a3b8', display: 'block', marginBottom: '2px' }}>WebGPU 모델 선택:</label>
+            <select
+              value={webgpuModel}
+              onChange={(e) => setWebgpuModel(e.target.value)}
+              style={{ width: '100%', background: '#0f172a', color: '#fff', border: '1px solid #334155', borderRadius: '4px', padding: '4px' }}
+            >
+              {SUPPORTED_WEBGPU_MODELS.map(m => (
+                <option key={m.id} value={m.id}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+            <div style={{ color: '#64748b', fontSize: '10px', marginTop: '3px' }}>
+              💡 GPU 멈춤/오류 시 1.5B 또는 0.5B 초경량 모델을 권장합니다.
+            </div>
+          </div>
+        )}
 
         {engineMode === 'api' && (
           <>
