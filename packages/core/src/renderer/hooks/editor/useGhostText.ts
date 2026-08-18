@@ -385,9 +385,20 @@ export function useGhostText({
   useEffect(() => {
     if (!editor || !isLLMReady || !enabled) return;
 
-    // BlockNote 에디터에서 ProseMirror view 획득 (기존 코드베이스 패턴 준수)
-    const view: any = (editor as any).proseMirrorView || (editor as any)._tiptapEditor?.view;
-    if (!view) return;
+    // BlockNote 에디터에서 ProseMirror view 획득 및 마운트 상태 안전 가드
+    let view: any = null;
+    try {
+      if ((editor as any).proseMirrorView) {
+        view = (editor as any).proseMirrorView;
+      } else if ((editor as any)._tiptapEditor) {
+        view = (editor as any)._tiptapEditor.view;
+      }
+    } catch {
+      view = null;
+    }
+
+    if (!view || !view.dom) return;
+    const dom = view.dom;
 
     // ── onAccept/onDismiss 콜백 설정 (callbacksRef.current 갱신) ──
 
@@ -494,7 +505,6 @@ export function useGhostText({
     const handleMouseDown = () => clearAndAbort(view);
     const handleDrop      = () => clearAndAbort(view);
 
-    const dom = view.dom;
     dom.addEventListener('beforeinput',      handleBeforeInput as EventListener);
     dom.addEventListener('keydown',          handleKeyDown as EventListener);
     dom.addEventListener('compositionstart', handleCompositionStart);
@@ -505,22 +515,28 @@ export function useGhostText({
 
     // ── Cleanup ──
     return () => {
-      clearAndAbort(view);
-      editor.off?.('update', handleEditorUpdate);
+      try {
+        clearAndAbort(view);
+        editor.off?.('update', handleEditorUpdate);
 
-      // Plugin 제거
-      if (tiptap?.unregisterPlugin) {
-        tiptap.unregisterPlugin(ghostTextKey);
+        // Plugin 제거
+        if (tiptap?.unregisterPlugin) {
+          tiptap.unregisterPlugin(ghostTextKey);
+        }
+
+        // 모든 DOM 이벤트 리스너 제거
+        if (dom) {
+          dom.removeEventListener('beforeinput',      handleBeforeInput as EventListener);
+          dom.removeEventListener('keydown',          handleKeyDown);
+          dom.removeEventListener('compositionstart', handleCompositionStart);
+          dom.removeEventListener('compositionend',   handleCompositionEnd);
+          dom.removeEventListener('blur',             handleBlur);
+          dom.removeEventListener('mousedown',        handleMouseDown);
+          dom.removeEventListener('drop',             handleDrop);
+        }
+      } catch (err) {
+        console.warn('[useGhostText] Cleanup error suppressed:', err);
       }
-
-      // 모든 DOM 이벤트 리스너 제거
-      dom.removeEventListener('beforeinput',      handleBeforeInput as EventListener);
-      dom.removeEventListener('keydown',          handleKeyDown);
-      dom.removeEventListener('compositionstart', handleCompositionStart);
-      dom.removeEventListener('compositionend',   handleCompositionEnd);
-      dom.removeEventListener('blur',             handleBlur);
-      dom.removeEventListener('mousedown',        handleMouseDown);
-      dom.removeEventListener('drop',             handleDrop);
     };
   }, [editor, isLLMReady, enabled, clearAndAbort, scheduleGhost]);
 }
