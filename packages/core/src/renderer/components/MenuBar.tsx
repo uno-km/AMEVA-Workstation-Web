@@ -618,13 +618,44 @@ export function MenuBar({}: MenuBarProps = {}) {
             </button>
             {activeMenu === 'help' && (
               <div style={dropdownStyle}>
+                <button 
+                  style={itemStyle} 
+                  onClick={() => triggerAction(() => window.open('/promo/index.html', '_blank'))}
+                >
+                  <span style={{ color: '#38bdf8', fontWeight: 700 }}>
+                    {renderLabel('🌐 공식 소개 웹사이트 (Showcase Landing)...', 'w')}
+                  </span>
+                </button>
+                <button 
+                  style={itemStyle} 
+                  onClick={() => triggerAction(onOpenGithub)}
+                >
+                  <span style={{ color: '#f59e0b', fontWeight: 700 }}>
+                    {renderLabel('⭐ GitHub 오픈소스 저장소 (Star/Fork)...', 'h')}
+                  </span>
+                </button>
+                <div style={{ height: '1px', backgroundColor: 'var(--border-muted)', margin: '4px 0' }} />
+                <button 
+                  style={itemStyle} 
+                  onClick={() => triggerAction(() => window.open('https://github.com/uno-km/AMEVA-Workstation-Web/blob/main/docs/IR_PITCH_DECK.md', '_blank'))}
+                >
+                  <span style={{ color: '#34d399', fontWeight: 600 }}>
+                    {renderLabel('📑 투자자용 12-Slide Pitch Deck...', 'd')}
+                  </span>
+                </button>
+                <button 
+                  style={itemStyle} 
+                  onClick={() => triggerAction(() => window.open('https://github.com/uno-km/AMEVA-Workstation-Web/blob/main/docs/GOV_STARTUP_BUSINESS_PLAN_PSST.md', '_blank'))}
+                >
+                  {renderLabel('🏛️ 표준 PSST 사업계획서...', 'b')}
+                </button>
+                <div style={{ height: '1px', backgroundColor: 'var(--border-muted)', margin: '4px 0' }} />
                 <button style={itemStyle} onClick={() => triggerAction(onOpenAbout)}>
                   {renderLabel('아메바 생태계 소개...', 'a')}
                 </button>
                 <button style={itemStyle} onClick={() => triggerAction(onOpenGuide)}>
                   {renderLabel('마크다운 작성 가이드', 'g')}
                 </button>
-                <div style={{ height: '1px', backgroundColor: 'var(--border-muted)', margin: '4px 0' }} />
                 <button style={itemStyle} onClick={() => triggerAction(onOpenPricing)}>
                   <span style={{ color: 'var(--primary)', fontWeight: 700 }}>
                     {renderLabel('💰 Pricing Plans...', 'p')}

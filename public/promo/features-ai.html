@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Technology | AMEVA Workstation</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <header>
+    <a href="index.html" class="brand">
+      <div class="brand-icon"><i class="fas fa-cubes"></i></div>
+      <span>AMEVA Workstation</span>
+    </a>
+    <nav class="nav-menu">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="features.html" class="nav-link">Features</a>
+      <a href="demo.html" class="nav-link">Playground</a>
+      <a href="demo-collab.html" class="nav-link">Collaboration</a>
+      <a href="solutions-enterprise.html" class="nav-link">Solutions</a>
+      <a href="pricing.html" class="nav-link">Pricing</a>
+      <a href="contact.html" class="nav-link">Contact</a>
+    </nav>
+    <div class="header-actions">
+      <button id="theme-toggle" class="btn-theme"><i class="fas fa-sun"></i></button>
+      <a href="contact.html" class="btn-primary" style="padding: 8px 16px; font-size: 11px;">Request Demo</a>
+    </div>
+  </header>
+
+  <main class="promo-container">
+    <section style="margin-bottom: 40px;">
+      <div class="badge-tag"><i class="fas fa-brain"></i> AI Deep-Dive</div>
+      <h2 style="font-size:32px; font-weight:800;">온디바이스 LLM 및 지능형 코드 교정</h2>
+      <p style="color:var(--text-muted); font-size:14px; margin-top:6px;">
+        인터넷이 차단된 방공호 안에서도, AMEVA는 로컬 GPU 연산 가속을 통해 개발 문맥을 실시간으로 추론합니다.
+      </p>
+    </section>
+
+    <div style="background:var(--bg-card); border:1px solid var(--border-muted); border-radius:16px; padding:32px; line-height:1.8;">
+      <h3 style="font-weight:700; color:var(--primary); margin-bottom:12px;"><i class="fas fa-sparkles"></i> AI Copilot의 작동 원리</h3>
+      <p style="color:var(--text-muted); margin-bottom:20px; font-size:13px;">
+        1. **컨텍스트 로컬 분석**: 사용자가 텍스트 영역을 선택하거나 코드 셀을 수정 요청하면, AMEVA는 실시간으로 해당 블록 주위의 코드 종속성 및 단어들을 벡터화하여 LLM의 프롬프트 컨텍스트로 구성합니다.<br>
+        2. **GGUF 추론 최적화**: 윈도우 OS의 CUDA Core 혹은 Apple Silicon의 Neural Engine을 가동해 1초에 수십 개의 토큰을 스트리밍 렌더링합니다.<br>
+        3. **비파괴적 Diff Acceptor**: 원본 코드와 생성안을 분리하여 Git 충돌 해결 창 형태로 비교 렌더링하고, 수락(Accept) 버튼 클릭 즉시 Y.js CRDT 모델을 통해 모든 동료들의 화면에 동시 동기화 적용됩니다.
+      </p>
+      <a href="demo.html" class="btn-primary">AI 맛보기 체험하기 <i class="fas fa-arrow-right"></i></a>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initTheme } from './js/common/theme.js';
+    import { initNavigation } from './js/common/navigation.js';
+
+    initTheme();
+    initNavigation();
+  </script>
+</body>
+</html>

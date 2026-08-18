@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collaboration Tech | AMEVA Workstation</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <header>
+    <a href="index.html" class="brand">
+      <div class="brand-icon"><i class="fas fa-cubes"></i></div>
+      <span>AMEVA Workstation</span>
+    </a>
+    <nav class="nav-menu">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="features.html" class="nav-link">Features</a>
+      <a href="demo.html" class="nav-link">Playground</a>
+      <a href="demo-collab.html" class="nav-link">Collaboration</a>
+      <a href="solutions-enterprise.html" class="nav-link">Solutions</a>
+      <a href="pricing.html" class="nav-link">Pricing</a>
+      <a href="contact.html" class="nav-link">Contact</a>
+    </nav>
+    <div class="header-actions">
+      <button id="theme-toggle" class="btn-theme"><i class="fas fa-sun"></i></button>
+      <a href="contact.html" class="btn-primary" style="padding: 8px 16px; font-size: 11px;">Request Demo</a>
+    </div>
+  </header>
+
+  <main class="promo-container">
+    <section style="margin-bottom: 40px;">
+      <div class="badge-tag"><i class="fas fa-users"></i> CRDT Sync</div>
+      <h2 style="font-size:32px; font-weight:800;">Y.js CRDT 기반 실시간 다자간 문서 공유</h2>
+      <p style="color:var(--text-muted); font-size:14px; margin-top:6px;">
+        복잡한 중앙 분쟁 조정 알고리즘 없이, 로컬 단말들끼리 랙 없는 병합 상태를 유지합니다.
+      </p>
+    </section>
+
+    <div style="background:var(--bg-card); border:1px solid var(--border-muted); border-radius:16px; padding:32px; line-height:1.8;">
+      <h3 style="font-weight:700; color:var(--secondary); margin-bottom:12px;"><i class="fas fa-network-wired"></i> 동시 편집의 비밀: Y.js</h3>
+      <p style="color:var(--text-muted); margin-bottom:20px; font-size:13px;">
+        기존의 수기 협업 에디터들은 중앙 서버의 판단 하에 텍스트 인덱스를 재조정하는 OT 방식을 사용하여 지연율이 컸습니다. AMEVA는 데이터 분산 병합을 보장하는 **CRDT** 모델을 적용하여:
+        <br><br>
+        - 각 사용자의 커서 위치와 하이라이트 영역이 개별 노드 ID로 매핑되어 데이터 오버헤드 없이 스트리밍됩니다.<br>
+        - 인터넷 전송이 불가능한 보안 격리 연구실 내에서도, 특정 컴퓨터의 포트(1234)를 방화벽 허용하는 것만으로 완벽한 독자적 로컬 협업 서버가 기동됩니다.
+      </p>
+      <a href="solutions-enterprise.html" class="btn-primary">엔터프라이즈 도입 문의 <i class="fas fa-arrow-right"></i></a>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initTheme } from './js/common/theme.js';
+    import { initNavigation } from './js/common/navigation.js';
+
+    initTheme();
+    initNavigation();
+  </script>
+</body>
+</html>

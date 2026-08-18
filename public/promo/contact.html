@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us | AMEVA Workstation</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .form-group {
+      margin-bottom: 18px;
+      text-align: left;
+    }
+    .form-group label {
+      display: block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+    .form-control {
+      width: 100%;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-muted);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text-main);
+      font-size: 13px;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+    .modal-success-content {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      text-align: left;
+    }
+    .modal-success-content strong {
+      color: var(--secondary);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="index.html" class="brand">
+      <div class="brand-icon"><i class="fas fa-cubes"></i></div>
+      <span>AMEVA Workstation</span>
+    </a>
+    <nav class="nav-menu">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="features.html" class="nav-link">Features</a>
+      <a href="demo.html" class="nav-link">Playground</a>
+      <a href="demo-collab.html" class="nav-link">Collaboration</a>
+      <a href="solutions-enterprise.html" class="nav-link">Solutions</a>
+      <a href="pricing.html" class="nav-link">Pricing</a>
+      <a href="contact.html" class="nav-link">Contact</a>
+    </nav>
+    <div class="header-actions">
+      <button id="theme-toggle" class="btn-theme"><i class="fas fa-sun"></i></button>
+      <a href="contact.html" class="btn-primary" style="padding: 8px 16px; font-size: 11px;">Request Demo</a>
+    </div>
+  </header>
+
+  <main class="promo-container">
+    <section style="text-align: center; max-width: 600px; margin: 0 auto;">
+      <div class="badge-tag"><i class="fas fa-paper-plane"></i> Enterprise Support</div>
+      <h2 style="font-size:36px; font-weight:800; margin-bottom:12px;">도입 요청 및 기술 제안 문의</h2>
+      <p style="color:var(--text-muted); font-size:14px; margin-bottom:40px;">
+        페이퍼, 이메일, 깃허브를 완벽히 대체하는 사내 보안 온프레미스 AI 샌드박스 도입을 원하시는 팀은 문의사항을 남겨주세요.
+      </p>
+
+      <div style="background:var(--bg-card); border:1px solid var(--border-muted); border-radius:16px; padding:32px; backdrop-filter:blur(20px); box-shadow:0 15px 40px rgba(0,0,0,0.3);">
+        <form id="promo-contact-form">
+          <div class="form-group">
+            <label for="contact-name">성명 / Name *</label>
+            <input type="text" id="contact-name" class="form-control" placeholder="홍길동" required>
+          </div>
+          <div class="form-group">
+            <label for="contact-email">이메일 주소 / Email *</label>
+            <input type="email" id="contact-email" class="form-control" placeholder="work@company.com" required>
+          </div>
+          <div class="form-group">
+            <label for="contact-company">소속 기업 및 연구기관 / Company</label>
+            <input type="text" id="contact-company" class="form-control" placeholder="AMEVA 파트너스">
+          </div>
+          <div class="form-group">
+            <label for="contact-message">도입 문의 사항 / Message</label>
+            <textarea id="contact-message" class="form-control" rows="4" placeholder="온프레미스 LLM 구성 관련 상세 스펙 요청..." style="resize:none;"></textarea>
+          </div>
+          <button type="submit" class="btn-primary" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; font-size:13px; padding:12px 0;">
+            <i class="fas fa-paper-plane"></i> 데모 요청 전송 (Request Demo)
+          </button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initTheme } from './js/common/theme.js';
+    import { initNavigation } from './js/common/navigation.js';
+    import { initContact } from './js/pages/contact.js';
+
+    initTheme();
+    initNavigation();
+    initContact();
+  </script>
+</body>
+</html>

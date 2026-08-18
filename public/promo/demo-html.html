@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTML Live Sandbox Demo | AMEVA Workstation</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <header>
+    <a href="index.html" class="brand">
+      <div class="brand-icon"><i class="fas fa-cubes"></i></div>
+      <span>AMEVA Workstation</span>
+    </a>
+    <nav class="nav-menu">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="features.html" class="nav-link">Features</a>
+      <a href="solutions-enterprise.html" class="nav-link">Solutions</a>
+      <a href="pricing.html" class="nav-link">Pricing</a>
+      <a href="contact.html" class="nav-link">Contact</a>
+    </nav>
+    <div class="header-actions">
+      <button id="theme-toggle" class="btn-theme"><i class="fas fa-sun"></i></button>
+      <a href="contact.html" class="btn-primary" style="padding: 8px 16px; font-size: 11px;">Request Demo</a>
+    </div>
+  </header>
+
+  <main class="promo-container">
+    <section style="margin-bottom: 30px;">
+      <div class="badge-tag"><i class="fab fa-html5"></i> Live Rendering</div>
+      <h2 style="font-size:28px; font-weight:800;">HTML/CSS Live Sandbox 미리보기</h2>
+      <p style="color:var(--text-muted); font-size:14px; margin-top:6px;">
+        가상 에디터에 HTML 마크업을 입력하는 즉시 우측 격리된 가상 샌드박스 영역에 컴포넌트가 실시간 동적 렌더링되어 가시화됩니다.
+      </p>
+    </section>
+
+    <!-- 시뮬레이터 박스 -->
+    <div class="simulator-box">
+      <!-- 좌측 입력 -->
+      <div class="sim-input-panel">
+        <div class="sim-label"><i class="fas fa-code"></i> HTML Markup Input</div>
+        <textarea id="html-code-input" class="sim-textarea" style="color: #fca5a5;"><div style="padding: 20px; font-family: sans-serif; text-align: center;">
+  <h2 style="color: #a855f7;">🎈 AMEVA Live Canvas</h2>
+  <p style="color: #6b7280; font-size:13px;">에디터에 마크다운과 마크업을 쓰면 0초 만에 화면이 렌더링됩니다.</p>
+</div></textarea>
+        <button id="apply-html-sample-btn" class="run-btn" style="background:var(--primary);"><i class="fas fa-magic"></i> Load Premium Sample</button>
+      </div>
+
+      <!-- 우측 결과 -->
+      <div class="sim-output-panel">
+        <div class="sim-label"><i class="fas fa-eye"></i> Sandbox Preview</div>
+        <iframe id="html-preview-frame" style="flex:1; border: 1px solid var(--border-muted); border-radius:8px; background:white; min-height:180px; width:100%;"></iframe>
+      </div>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initTheme } from './js/common/theme.js';
+    import { initNavigation } from './js/common/navigation.js';
+    import { initDemoHTML } from './js/pages/demo-html.js';
+
+    initTheme();
+    initNavigation();
+    initDemoHTML();
+  </script>
+</body>
+</html>

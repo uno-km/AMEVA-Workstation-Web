@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JS Demo Playground | AMEVA Workstation</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <header>
+    <a href="index.html" class="brand">
+      <div class="brand-icon"><i class="fas fa-cubes"></i></div>
+      <span>AMEVA Workstation</span>
+    </a>
+    <nav class="nav-menu">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="features.html" class="nav-link">Features</a>
+      <a href="solutions-enterprise.html" class="nav-link">Solutions</a>
+      <a href="pricing.html" class="nav-link">Pricing</a>
+      <a href="contact.html" class="nav-link">Contact</a>
+    </nav>
+    <div class="header-actions">
+      <button id="theme-toggle" class="btn-theme"><i class="fas fa-sun"></i></button>
+      <a href="contact.html" class="btn-primary" style="padding: 8px 16px; font-size: 11px;">Request Demo</a>
+    </div>
+  </header>
+
+  <main class="promo-container">
+    <section style="margin-bottom: 30px;">
+      <div class="badge-tag"><i class="fab fa-js"></i> Interactive Play</div>
+      <h2 style="font-size:28px; font-weight:800;">JavaScript 런타임 & AI 수정 맛보기</h2>
+      <p style="color:var(--text-muted); font-size:14px; margin-top:6px;">
+        아래 가상 에디터에 코드를 짜고 실행해 보세요. AI 수정창에 프롬프트를 입력하면 실시간 Diff 및 Accept 수락 연출을 직접 확인하실 수 있습니다!
+      </p>
+    </section>
+
+    <!-- 시뮬레이터 본체 -->
+    <div class="simulator-box">
+      <!-- 좌측 입력 -->
+      <div class="sim-input-panel">
+        <div class="sim-label"><i class="fas fa-edit"></i> Virtual JS Editor</div>
+        <textarea id="js-code-input" class="sim-textarea">// JavaScript 가상 런타임 실습
+const mockUsers = ['Ameva', 'Antigravity', 'Explorer'];
+const welcome = mockUsers.map(user => `Hello, ${user}!`);
+
+console.log('--- 가상 세션 구동 ---');
+console.log(welcome.join('\n'));
+console.log('생산성 400% 초고속 가동 중...');
+</textarea>
+        <button id="run-js-btn" class="run-btn"><i class="fas fa-play"></i> Run JavaScript</button>
+      </div>
+
+      <!-- 우측 가상 터미널 -->
+      <div class="sim-output-panel">
+        <div class="sim-label"><i class="fas fa-terminal"></i> Console Output</div>
+        <div id="js-console-output" class="sim-console">실행 결과가 여기에 표출됩니다.</div>
+      </div>
+    </div>
+
+    <!-- AI 인라인 수락/거절 체험판 (에디터 통합 컨트롤러) -->
+    <section style="margin-top: 6px; padding: 20px 24px; border-radius: 16px; background: var(--bg-main); border: 1px solid rgba(139, 92, 246, 0.3); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); position: relative; overflow: hidden;">
+      <div style="position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--primary), var(--secondary));"></div>
+      
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+        <h4 style="font-weight: 700; color: var(--text-main); font-size: 15px; display: flex; align-items: center; gap: 8px; margin: 0;">
+          <span style="background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: 4px 8px; border-radius: 6px; color: white; font-size: 11px;">
+            <i class="fas fa-sparkles"></i> AI Co-Pilot
+          </span>
+          상단 에디터 AI 인라인 승인/거절(Accept/Reject) 모션 시뮬레이션
+        </h4>
+        <span style="font-size: 11px; color: var(--text-muted); font-weight: 500;">
+          <i class="fas fa-info-circle" style="color: var(--primary);"></i> 프롬프트 입력 후 Diff 수락 시 상단 에디터에 즉시 반영됩니다
+        </span>
+      </div>
+
+      <div style="display:flex; gap:12px; margin-bottom: 8px; position: relative; z-index: 1;">
+        <div style="position: relative; flex: 1;">
+          <i class="fas fa-magic" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--primary); opacity: 0.7;"></i>
+          <input type="text" id="ai-sim-prompt" class="sim-prompt-input" placeholder="예: 구동율 100% 문구를 가속 구동으로 변경하고 개선해줘" style="width: 100%; padding: 12px 14px 12px 40px; border-radius: 10px; background: var(--bg-glass); border: 1px solid var(--border-muted); color: var(--text-main); font-size: 13px; transition: all 0.3s ease; outline: none; box-sizing: border-box;" onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 2px var(--primary-glow)';" onblur="this.style.borderColor='var(--border-muted)'; this.style.boxShadow='none';">
+        </div>
+        <button id="ai-sim-btn" class="run-btn" style="margin:0; background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: 0 24px; border-radius: 10px; font-weight: 600; font-size: 13px; border: none; color: white; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='translateY(0)';">
+          <i class="fas fa-paper-plane"></i> AI 제안 요청
+        </button>
+      </div>
+      <div id="ai-sim-output-container" style="position: relative; z-index: 1; margin-top: 12px;"></div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initTheme } from './js/common/theme.js';
+    import { initNavigation } from './js/common/navigation.js';
+    import { initDemoJS } from './js/pages/demo-js.js';
+    import { runAISimulation } from './js/utils/ai-sim.js';
+
+    initTheme();
+    initNavigation();
+    initDemoJS();
+
+    // AI 시뮬레이션 버튼 바인딩
+    document.getElementById('ai-sim-btn').addEventListener('click', () => {
+      const prompt = document.getElementById('ai-sim-prompt').value;
+      const editorText = document.getElementById('js-code-input').value;
+      const container = document.getElementById('ai-sim-output-container');
+      
+      runAISimulation(prompt, editorText, container, (newText) => {
+        document.getElementById('js-code-input').value = newText;
+      });
+    });
+  </script>
+</body>
+</html>
