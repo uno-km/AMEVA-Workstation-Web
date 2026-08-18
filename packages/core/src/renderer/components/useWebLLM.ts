@@ -17,8 +17,10 @@ import { useState, useCallback, useEffect } from 'react';
 import type { MLCEngine, InitProgressReport } from '@mlc-ai/web-llm';
 
 export const SUPPORTED_WEBGPU_MODELS = [
-  { id: 'Qwen2.5-0.5B-Instruct-q4f32_1-MLC', label: 'Qwen2.5 0.5B (초경량·초안정 디폴트·390MB)', vram: '390MB' },
-  { id: 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC', label: 'Qwen2.5 1.5B (고품질 모델·890MB)', vram: '890MB' },
+  { id: 'Qwen2.5-0.5B-Instruct-q4f32_1-MLC', label: 'Qwen2.5 0.5B (범용 초경량 디폴트·390MB)', vram: '390MB' },
+  { id: 'Qwen2.5-Coder-0.5B-Instruct-q4f32_1-MLC', label: 'Qwen2.5-Coder 0.5B (코딩/디버깅 특화 초경량·390MB)', vram: '390MB' },
+  { id: 'Qwen2.5-Coder-1.5B-Instruct-q4f32_1-MLC', label: 'Qwen2.5-Coder 1.5B (코딩/디버깅 고품질·890MB)', vram: '890MB' },
+  { id: 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC', label: 'Qwen2.5 1.5B (범용 고품질 모델·890MB)', vram: '890MB' },
   { id: 'Qwen2.5-3B-Instruct-q4f32_1-MLC', label: 'Qwen2.5 3B (고성능 요약·1.8GB)', vram: '1.8GB' },
   { id: 'Llama-3.2-1B-Instruct-q4f32_1-MLC', label: 'Llama-3.2 1B (Meta 공식·790MB)', vram: '790MB' },
   { id: 'SmolLM2-1.7B-Instruct-q4f32_1-MLC', label: 'SmolLM2 1.7B (HuggingFace 고속 모델·920MB)', vram: '920MB' }

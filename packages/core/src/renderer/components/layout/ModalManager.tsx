@@ -59,6 +59,7 @@ import { RefreshConfirmModal } from '../RefreshConfirmModal'
 // [내부 프로젝트 의존성 모듈 임포트: ../ui/modals/NewDocumentConfirmModal]
 import { NewDocumentConfirmModal } from '../ui/modals/NewDocumentConfirmModal'
 import { ConfirmModal } from '../ui/modals/ConfirmModal'
+import { CodeAssistantModal } from '../ai-panel/CodeAssistantModal'
 import { Trash2 } from 'lucide-react'
 
 // [내부 프로젝트 의존성 모듈 임포트: ../../contexts/AppContext]
@@ -93,7 +94,8 @@ export function ModalManager({}: ModalManagerProps = {}) {
   const {
     settings, handleUpdateSettings, handleInstallPlugin, handleUninstallPlugin,
     username, setUsername, userColor, setUserColor, getLineDiff, handleRollback,
-    handleOpenGithub, refreshMcpServers, handleCloseApp, handleStartNewDocument
+    handleOpenGithub, refreshMcpServers, handleCloseApp, handleStartNewDocument,
+    editor
   } = useAppContext()
   
   const {
@@ -102,7 +104,8 @@ export function ModalManager({}: ModalManagerProps = {}) {
     showMarketplaceModal, setShowMarketplaceModal, showPricingModal, setShowPricingModal,
     isQuitConfirmOpen, setIsQuitConfirmOpen, isRefreshConfirmOpen, setIsRefreshConfirmOpen,
     isInstallPromptOpen, setIsInstallPromptOpen, isNewDocumentConfirmOpen, setIsNewDocumentConfirmOpen,
-    blockDeleteConfirmState, closeBlockDeleteConfirm
+    blockDeleteConfirmState, closeBlockDeleteConfirm,
+    isCodeAssistantOpen, codeAssistantOptions, closeCodeAssistant
   } = useUIStore(useShallow((s) => ({
     isDiffOpen: s.isDiffOpen,
     setIsDiffOpen: s.setIsDiffOpen,
@@ -127,7 +130,10 @@ export function ModalManager({}: ModalManagerProps = {}) {
     isNewDocumentConfirmOpen: s.isNewDocumentConfirmOpen,
     setIsNewDocumentConfirmOpen: s.setIsNewDocumentConfirmOpen,
     blockDeleteConfirmState: s.blockDeleteConfirmState,
-    closeBlockDeleteConfirm: s.closeBlockDeleteConfirm
+    closeBlockDeleteConfirm: s.closeBlockDeleteConfirm,
+    isCodeAssistantOpen: s.isCodeAssistantOpen,
+    codeAssistantOptions: s.codeAssistantOptions,
+    closeCodeAssistant: s.closeCodeAssistant
   })))
 
   const { selectedSnapshot, currentContent } = useWorkspaceStore()
@@ -268,6 +274,27 @@ export function ModalManager({}: ModalManagerProps = {}) {
           confirmText="삭제"
           confirmButtonColor="#ef4444"
           icon={<Trash2 size={20} color="#ef4444" />}
+        />
+      )}
+
+      {isCodeAssistantOpen && (
+        <CodeAssistantModal
+          initialMode={codeAssistantOptions?.initialMode}
+          initialCode={codeAssistantOptions?.initialCode}
+          initialLanguage={codeAssistantOptions?.initialLanguage as any}
+          initialErrorLog={codeAssistantOptions?.initialErrorLog}
+          onClose={closeCodeAssistant}
+          onInsertToEditor={(content) => {
+            if (editor) {
+              const currentBlock = editor.getTextCursorPosition()?.block;
+              if (currentBlock) {
+                editor.insertBlocks([{ type: 'paragraph', content: [{ type: 'text', text: content, styles: {} }] }], currentBlock, 'after');
+              } else if (editor.document.length > 0) {
+                editor.insertBlocks([{ type: 'paragraph', content: [{ type: 'text', text: content, styles: {} }] }], editor.document[editor.document.length - 1], 'after');
+              }
+            }
+            closeCodeAssistant();
+          }}
         />
       )}
     </>

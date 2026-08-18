@@ -55,10 +55,11 @@
 // [외부 패키지 및 라이브러리 임포트: react]
 import React, { useState, useEffect } from 'react'
 // [외부 패키지 및 라이브러리 임포트: lucide-react]
-import { Play, Eye, Copy, ChevronDown } from 'lucide-react'
+import { Play, Eye, Copy, ChevronDown, Sparkles, Bug } from 'lucide-react'
 // [외부 패키지 및 라이브러리 임포트: marked]
 import { marked } from 'marked'
 import mermaid from 'mermaid'
+import { useUIStore } from '../stores/useUIStore'
 
 
 
@@ -361,6 +362,41 @@ export function JupyterCodeViewer({
         )}
 
         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {resolvedCode.trim() && (
+            <>
+              <button
+                onClick={() => useUIStore.getState().openCodeAssistant({ initialMode: 'explain', initialCode: resolvedCode, initialLanguage: resolvedLanguage as any })}
+                title="AI로 이 코드 동작 원리 해설하기"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '3px',
+                  background: 'rgba(59, 130, 246, 0.15)',
+                  border: '1px solid rgba(59, 130, 246, 0.35)',
+                  color: '#93c5fd', borderRadius: '4px',
+                  padding: '2px 7px', fontSize: '10px', fontWeight: 600, cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <Sparkles size={10} color="#60a5fa" />
+                AI 해설
+              </button>
+              <button
+                onClick={() => useUIStore.getState().openCodeAssistant({ initialMode: 'debug', initialCode: resolvedCode, initialLanguage: resolvedLanguage as any })}
+                title="AI로 이 코드 디버깅 및 리뷰하기"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '3px',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  border: '1px solid rgba(239, 68, 68, 0.35)',
+                  color: '#fca5a5', borderRadius: '4px',
+                  padding: '2px 7px', fontSize: '10px', fontWeight: 600, cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <Bug size={10} color="#f87171" />
+                AI 디버그
+              </button>
+            </>
+          )}
+
           <button
             onClick={() => setIsCollapsed(c => !c)}
             title={isCollapsed ? '펼치기' : '접기'}
@@ -466,21 +502,12 @@ export function JupyterCodeViewer({
             onAskAgent(errorLog, resolvedCode);
           } : () => {
             const errorLog = outputLines.filter(l => l.type === 'stderr').map(l => l.text).join('\n');
-            const payload = {
-              type: 'code_analyze_error',
-              data: {
-                requestId: `err_${Date.now()}`,
-                language: resolvedLanguage,
-                executionContextType: resolvedLanguage === 'python' ? 'python' : 'typescript',
-                rawErrorLog: errorLog,
-                fullSourceAvailable: true,
-                codeSnippet: resolvedCode,
-                errorLineNumber: null,
-                surroundingStartLine: null,
-                surroundingEndLine: null
-              }
-            };
-            window.dispatchEvent(new CustomEvent('ameva:ask-agent-direct', { detail: JSON.stringify(payload) }));
+            useUIStore.getState().openCodeAssistant({
+              initialMode: 'debug',
+              initialCode: resolvedCode,
+              initialLanguage: resolvedLanguage as any,
+              initialErrorLog: errorLog
+            });
           }}
         />
       )}

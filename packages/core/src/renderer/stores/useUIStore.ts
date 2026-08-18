@@ -227,14 +227,30 @@ export interface UIState {
    */
   dynamicMenus: { id: string; label: string; action: () => void }[]
   addDynamicMenu: (menu: { id: string; label: string; action: () => void }) => void
-  removeDynamicMenu: (id: string) => void
-
   /*
    * [MARKETPLACE METADATA]
    * - marketplacePlugins: 동적으로 로드된 전체 플러그인 목록
    */
   marketplacePlugins: PluginMetadata[]
   setMarketplacePlugins: (plugins: PluginMetadata[]) => void
+
+  /*
+   * [CODE INTELLIGENCE ASSISTANT MODAL (SCRUM-172)]
+   */
+  isCodeAssistantOpen: boolean
+  codeAssistantOptions?: {
+    initialMode?: 'generate' | 'debug' | 'review' | 'explain'
+    initialCode?: string
+    initialLanguage?: string
+    initialErrorLog?: string
+  }
+  openCodeAssistant: (options?: {
+    initialMode?: 'generate' | 'debug' | 'review' | 'explain'
+    initialCode?: string
+    initialLanguage?: string
+    initialErrorLog?: string
+  }) => void
+  closeCodeAssistant: () => void
 }
 
 /**
@@ -375,6 +391,11 @@ export const useUIStore = create<UIState>((set, get) => ({
   })),
 
   marketplacePlugins: [],
-  setMarketplacePlugins: (plugins) => set({ marketplacePlugins: plugins })
+  setMarketplacePlugins: (plugins) => set({ marketplacePlugins: plugins }),
+
+  isCodeAssistantOpen: false,
+  codeAssistantOptions: undefined,
+  openCodeAssistant: (options) => set({ isCodeAssistantOpen: true, codeAssistantOptions: options }),
+  closeCodeAssistant: () => set({ isCodeAssistantOpen: false, codeAssistantOptions: undefined })
 }))
 
