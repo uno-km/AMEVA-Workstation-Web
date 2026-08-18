@@ -166,13 +166,6 @@ export function useFindReplace({ isOpen, editor, onScrollToBlock }: UseFindRepla
 
   // 실질적인 검색 매칭 탐색 로직
   const performSearch = (keepIndex = false) => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `!editor || !findQuery`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (!editor || !findQuery)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
     if (!editor || !findQuery) {
       setMatches([])
       setCurrentMatchIndex(-1)
@@ -180,103 +173,48 @@ export function useFindReplace({ isOpen, editor, onScrollToBlock }: UseFindRepla
     }
 
     const flatBlocks: any[] = []
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `traverse`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const traverse = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
     const traverse = (blks: any[]) => {
-      /*
-       * [LOOP CONTROL ITERATION]
-       * - 루프 조건: `for (const b of blks) {`
-       * - 예상 시나리오: 지정된 조건 한계 도달 시점까지 콜렉션 항목의 순차 매핑, 변환 및 동기 적재 처리를 수행함.
-       * - 예시: `for (const item of list)` 루프 실행 시 모든 개별 블록의 html 포맷 정제 완료 후 스택 종결.
-       */
+      if (!Array.isArray(blks)) return
       for (const b of blks) {
         flatBlocks.push(b)
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `b.children) traverse(b.children`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (b.children) traverse(b.children)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
         if (b.children) traverse(b.children)
       }
     }
     traverse(editor.document)
 
     const newMatches: SearchMatch[] = []
-    
+
     flatBlocks.forEach(block => {
-      // 블록 내 텍스트 추출 (Rich Text의 텍스트만 합산)
-      const text = getBlockPlainText(block)
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `!text`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (!text)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
+      // 1) 블록 AST 및 DOM 텍스트 통합 추출
+      let text = getBlockPlainText(block)
+      
+      // 만약 AST에서 텍스트를 못 찾았더라도 DOM에 해당 블록 텍스트가 있다면 결합
+      if (block.id) {
+        const domEl = document.querySelector(`[data-id="${block.id}"], [data-block-id="${block.id}"]`)
+        if (domEl) {
+          const domText = (domEl.textContent || '').replace(/\s+/g, ' ').trim()
+          if (domText && !text.includes(domText)) {
+            text = text ? `${text} ${domText}` : domText
+          }
+        }
+      }
+
       if (!text) return
 
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `searchTarget`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const searchTarget = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
       let searchTarget = text
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `queryTarget`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const queryTarget = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
       let queryTarget = findQuery
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `!matchCase`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (!matchCase)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
       if (!matchCase) {
         searchTarget = text.toLowerCase()
         queryTarget = findQuery.toLowerCase()
       }
 
       const indices: number[] = []
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `startIdx`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const startIdx = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
       let startIdx = searchTarget.indexOf(queryTarget)
-      /*
-       * [LOOP CONTROL ITERATION]
-       * - 루프 조건: `while (startIdx !== -1) {`
-       * - 예상 시나리오: 지정된 조건 한계 도달 시점까지 콜렉션 항목의 순차 매핑, 변환 및 동기 적재 처리를 수행함.
-       * - 예시: `for (const item of list)` 루프 실행 시 모든 개별 블록의 html 포맷 정제 완료 후 스택 종결.
-       */
       while (startIdx !== -1) {
         indices.push(startIdx)
         startIdx = searchTarget.indexOf(queryTarget, startIdx + queryTarget.length)
       }
 
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `indices.length > 0`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (indices.length > 0)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
       if (indices.length > 0) {
         newMatches.push({
           blockId: block.id,
@@ -291,23 +229,9 @@ export function useFindReplace({ isOpen, editor, onScrollToBlock }: UseFindRepla
 
     // 인덱스 보정
     const totalCount = newMatches.reduce((acc, m) => acc + m.matchIndices.length, 0)
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `totalCount === 0`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (totalCount === 0)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
     if (totalCount === 0) {
       setCurrentMatchIndex(-1)
     } else if (keepIndex) {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `currentMatchIndex >= totalCount`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (currentMatchIndex >= totalCount)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
       if (currentMatchIndex >= totalCount) {
         setCurrentMatchIndex(totalCount - 1)
       } else if (currentMatchIndex < 0) {
@@ -315,85 +239,70 @@ export function useFindReplace({ isOpen, editor, onScrollToBlock }: UseFindRepla
       }
     } else {
       setCurrentMatchIndex(0)
+      if (newMatches.length > 0) {
+        onScrollToBlock(newMatches[0].blockId)
+      }
     }
   }
 
-  // 블록에서 순수 텍스트 문자열 가져오기 (재귀 강화 버전)
+  // 블록에서 순수 텍스트 문자열 가져오기 (완벽 재귀 범용 추출기: Table, Props, Rows, Cells, Nested)
   const getBlockPlainText = (block: any): string => {
+    if (!block) return ''
+    if (typeof block === 'string') return block
+    if (typeof block === 'number' || typeof block === 'boolean') return String(block)
+
     const parts: string[] = []
 
-    // 1) block.content 처리 (기본 단락/제목 등)
-    if (block.content) {
-      if (typeof block.content === 'string') {
-        parts.push(block.content)
-      } else if (Array.isArray(block.content)) {
-        for (const item of block.content) {
-          if (!item) continue
-          // InlineContent: { type: 'text', text: '...' } 또는 중첩 스타일
-          if (item.text) {
-            parts.push(item.text)
-          } else if (item.type === 'text' && typeof item.text === 'string') {
-            parts.push(item.text)
-          } else if (Array.isArray(item.content)) {
-            // 중첩 inline content (link 등)
-            for (const sub of item.content) {
-              if (sub?.text) parts.push(sub.text)
-            }
-          } else if (item.type === 'tableRow' || item.type === 'tableCell') {
-            // table row/cell 재귀 탐색
-            parts.push(getBlockPlainText(item))
-          } else if (Array.isArray(item.cells)) {
-            // 테이블 행의 cells
-            for (const cell of item.cells) {
-              if (Array.isArray(cell)) {
-                for (const cellItem of cell) {
-                  if (cellItem?.text) parts.push(cellItem.text)
-                }
-              }
-            }
-          }
-        }
+    const extractText = (val: any) => {
+      if (!val) return
+      if (typeof val === 'string') {
+        const trimmed = val.trim()
+        if (trimmed) parts.push(trimmed)
+        return
       }
-    }
-
-    // 2) block.rows 처리 (table 블록 전용)
-    if (Array.isArray(block.rows)) {
-      for (const row of block.rows) {
-        if (Array.isArray(row.cells)) {
-          for (const cell of row.cells) {
-            if (Array.isArray(cell)) {
-              for (const cellItem of cell) {
-                if (cellItem?.text) parts.push(cellItem.text)
-              }
-            } else if (typeof cell === 'object' && cell !== null) {
-              parts.push(getBlockPlainText(cell))
+      if (typeof val === 'number') {
+        parts.push(String(val))
+        return
+      }
+      if (Array.isArray(val)) {
+        for (const item of val) extractText(item)
+        return
+      }
+      if (typeof val === 'object') {
+        // inline text
+        if (val.text && typeof val.text === 'string') {
+          parts.push(val.text)
+        }
+        // tableContent / rows
+        if (val.rows && Array.isArray(val.rows)) {
+          for (const row of val.rows) extractText(row)
+        }
+        // table cells
+        if (val.cells && Array.isArray(val.cells)) {
+          for (const cell of val.cells) extractText(cell)
+        }
+        // nested content
+        if (val.content) {
+          extractText(val.content)
+        }
+        // props
+        if (val.props && typeof val.props === 'object') {
+          for (const [k, v] of Object.entries(val.props)) {
+            if (k !== 'fileBase64' && k !== 'sourceUrl') {
+              extractText(v)
             }
           }
         }
-      }
-    }
-
-    // 3) block.props에서 텍스트 성격 필드 추출 (map, linkPreview, youtube, excel 등)
-    if (block.props && typeof block.props === 'object') {
-      const textProps = ['locationName', 'destination', 'legend', 'memo', 'url', 'title', 'caption', 'alt']
-      for (const key of textProps) {
-        if (block.props[key] && typeof block.props[key] === 'string') {
-          parts.push(block.props[key])
+        // children
+        if (Array.isArray(val.children)) {
+          for (const child of val.children) extractText(child)
         }
       }
     }
 
-    // 4) block.children 재귀 처리
-    if (Array.isArray(block.children)) {
-      for (const child of block.children) {
-        const childText = getBlockPlainText(child)
-        if (childText) parts.push(childText)
-      }
-    }
-
+    extractText(block)
     return parts.filter(Boolean).join(' ')
   }
-
 
   // 이전/다음 이동 핸들러
   const handleNavigate = (direction: 'next' | 'prev') => {
