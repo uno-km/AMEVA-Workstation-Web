@@ -8,9 +8,10 @@
  */
 
 import React, { useState } from 'react';
-import { Brain, ChevronDown, ChevronUp, ShieldCheck, Copy } from 'lucide-react';
+import { Brain, ChevronDown, ChevronUp, ShieldCheck, Copy, Zap } from 'lucide-react';
 import type { AgentMessage } from '../../features/ai-agent/types';
 import { InsertPreviewCard } from './InsertPreviewCard';
+import { useWebLLM } from '../useWebLLM';
 
 interface ChatBubbleProps {
   message: AgentMessage;
@@ -145,7 +146,10 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
         </div>
       )}
 
-      {/* 메시지 본문 말풍선 */}
+      const { initModel } = useWebLLM();
+  const isGpuError = !isUser && (msg.content?.includes('GPU VRAM') || msg.content?.includes('WebGPU') || msg.content?.includes('초기화되었습니다'));
+
+  {/* 메시지 본문 말풍선 */}
       <div
         data-testid="ai-message-content"
         style={{
@@ -154,8 +158,10 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
           borderRadius: isUser ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
           background: isUser
             ? 'linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%)'
+            : isGpuError
+            ? 'rgba(239, 68, 68, 0.08)'
             : 'rgba(255, 255, 255, 0.05)',
-          border: isUser ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
+          border: isUser ? 'none' : isGpuError ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(255, 255, 255, 0.08)',
           color: '#f8fafc',
           fontSize: '12px',
           lineHeight: '1.6',
@@ -167,6 +173,34 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
         }}
       >
         {msg.content || (msg.isStreaming ? '생각하는 중...' : '')}
+        
+        {isGpuError && (
+          <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid rgba(239, 68, 68, 0.2)' }}>
+            <button
+              onClick={() => {
+                localStorage.setItem('ameva_selected_llm_model', 'Qwen2.5-0.5B-Instruct-q4f32_1-MLC');
+                initModel('Qwen2.5-0.5B-Instruct-q4f32_1-MLC').catch(e => console.warn(e));
+              }}
+              style={{
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '6px 12px',
+                fontSize: '11px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 2px 8px rgba(16, 185, 129, 0.4)'
+              }}
+            >
+              <Zap size={13} />
+              ⚡ 0.5B 초경량 모델로 1초 복구하기
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 블록 삽입 제안 카드들 */}
