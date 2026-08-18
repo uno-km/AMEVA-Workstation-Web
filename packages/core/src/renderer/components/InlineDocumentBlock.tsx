@@ -36,7 +36,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react'
 // [외부 패키지 및 라이브러리 임포트: @blocknote/react]
 import { createReactBlockSpec } from '@blocknote/react'
 // [외부 패키지 및 라이브러리 임포트: lucide-react]
-import { Upload, FileText, FileSpreadsheet, Presentation, FileType2, X, Maximize2, Minimize2, ExternalLink, Dna, List } from 'lucide-react'
+import { Upload, FileText, FileSpreadsheet, Presentation, FileType2, X, Maximize2, Minimize2, ExternalLink, Dna, List, Search } from 'lucide-react'
 // [외부 패키지 및 라이브러리 임포트: pdfjs-dist]
 import * as pdfjsLib from 'pdfjs-dist'
 // [내부 프로젝트 의존성 모듈 임포트: ../utils/vfsDatabase]
@@ -143,13 +143,15 @@ function MiniContinuousPageCanvas({ pdf, pageNum, isActive, onVisible }: any) {
 
 /** PDF Mini Viewer (Canvas 렌더링) - 향상된 UX 버전 */
 export function PdfMiniViewer({ 
-  sourceUrl, height, savedBookmarks = [], onBookmarksChange 
+  sourceUrl, height, targetPage, savedBookmarks = [], onBookmarksChange 
 }: { 
   sourceUrl: string; height: number;
+  targetPage?: number;
   savedBookmarks?: { page: number, label: string }[];
   onBookmarksChange?: (b: { page: number, label: string }[]) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [numPages, setNumPages] = useState(0)
   const [currentPage, setCurrentPage] = useState(1)
   const [loading, setLoading] = useState(true)
@@ -170,6 +172,12 @@ export function PdfMiniViewer({
   useEffect(() => {
     setBookmarks(savedBookmarks)
   }, [savedBookmarks])
+
+  useEffect(() => {
+    if (targetPage && targetPage >= 1 && targetPage <= numPages) {
+      goToPage(targetPage)
+    }
+  }, [targetPage, numPages])
 
   useEffect(() => {
     let cancelled = false
@@ -623,6 +631,16 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
   const [pdfMode, setPdfMode] = useState<'native' | 'canvas'>('native')
   const [resolvedBlobUrl, setResolvedBlobUrl] = useState<string | null>(null)
 
+  // [PDF IN-BLOCK SEARCH] 해당 PDF 블록 전용 검색 상태
+  const [showSearch, setShowSearch] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchIndex, setSearchIndex] = useState<Record<number, string>>({})
+  const [searchResults, setSearchResults] = useState<{ page: number; count: number }[]>([])
+  const [searchResultIdx, setSearchResultIdx] = useState(0)
+  const [targetPageNum, setTargetPageNum] = useState<number>(1)
+  const [isHovered, setIsHovered] = useState(false)
+  const blockContainerRef = useRef<HTMLDivElement>(null)
+
   const { profiles, enqueue } = useDocumentProfilerStore()
   const fileId = props.sourceUrl?.startsWith('ameva-vfs://') ? props.sourceUrl.replace('ameva-vfs://', '') : null
   const profile = fileId ? profiles[fileId] : undefined
@@ -632,6 +650,116 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
   const isLocalMemory = props.sourceUrl?.startsWith('blob:') || props.sourceUrl?.startsWith('ameva-vfs://') || props.sourceUrl?.startsWith('data:')
   const hasFile = (!!props.sourceUrl && isLocalMemory) || !!props.fileBase64
   const hasUrl = !!props.sourceUrl && !isLocalMemory
+
+  // PDF 텍스트 인덱싱 (해당 PDF 전용 검색용)
+  useEffect(() => {
+    if (docType !== 'pdf' || (!props.sourceUrl && !props.fileBase64)) return
+    let cancelled = false
+
+    const buildPdfIndex = async () => {
+      try {
+        let getDocumentArg: any = null
+        if (props.sourceUrl?.startsWith('ameva-vfs://')) {
+          const id = props.sourceUrl.replace('ameva-vfs://', '')
+          const blob = await getAttachment(id)
+          if (!blob) return
+          getDocumentArg = { data: new Uint8Array(await blob.arrayBuffer()) }
+        } else if (props.sourceUrl?.startsWith('blob:') || props.sourceUrl?.startsWith('http')) {
+          getDocumentArg = { url: props.sourceUrl }
+        } else if (props.fileBase64) {
+          const clean = props.fileBase64.includes(',') ? props.fileBase64.split(',')[1] : props.fileBase64
+          const binary = atob(clean.replace(/\s/g, ''))
+          const bytes = new Uint8Array(binary.length)
+          for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
+          getDocumentArg = { data: bytes }
+        }
+
+        if (!getDocumentArg) return
+        const pdf = await pdfjsLib.getDocument(getDocumentArg).promise
+        if (cancelled) return
+        const idx: Record<number, string> = {}
+        for (let i = 1; i <= pdf.numPages; i++) {
+          if (cancelled) break
+          try {
+            const p = await pdf.getPage(i)
+            const tc = await p.getTextContent()
+            idx[i] = tc.items.map((it: any) => it.str || '').join(' ')
+          } catch {}
+        }
+        if (!cancelled) {
+          setSearchIndex(idx)
+        }
+      } catch (err) {
+        console.warn('[InlineDocumentBlock] PDF index build error:', err)
+      }
+    }
+
+    buildPdfIndex()
+    return () => { cancelled = true }
+  }, [docType, props.sourceUrl, props.fileBase64])
+
+  // PDF 검색 실행
+  const handlePerformSearch = (q: string) => {
+    setSearchQuery(q)
+    const trimmed = q.trim().toLowerCase()
+    if (!trimmed) {
+      setSearchResults([])
+      setSearchResultIdx(0)
+      return
+    }
+
+    const results: { page: number; count: number }[] = []
+    Object.entries(searchIndex).forEach(([pageNumStr, text]) => {
+      const pageNum = parseInt(pageNumStr, 10)
+      const count = (text.toLowerCase().match(new RegExp(trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g')) || []).length
+      if (count > 0) {
+        results.push({ page: pageNum, count })
+      }
+    })
+    results.sort((a, b) => a.page - b.page)
+    setSearchResults(results)
+    setSearchResultIdx(0)
+    if (results.length > 0) {
+      setTargetPageNum(results[0].page)
+    }
+  }
+
+  const goToNextMatch = () => {
+    if (searchResults.length === 0) return
+    const nextIdx = (searchResultIdx + 1) % searchResults.length
+    setSearchResultIdx(nextIdx)
+    setTargetPageNum(searchResults[nextIdx].page)
+  }
+
+  const goToPrevMatch = () => {
+    if (searchResults.length === 0) return
+    const prevIdx = (searchResultIdx - 1 + searchResults.length) % searchResults.length
+    setSearchResultIdx(prevIdx)
+    setTargetPageNum(searchResults[prevIdx].page)
+  }
+
+  // Ctrl+Shift+F 단축키 인터셉트 (이 PDF 블록에 마우스가 있거나 포커스된 경우)
+  useEffect(() => {
+    if (docType !== 'pdf') return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'f') {
+        if (isHovered || document.activeElement?.closest(`[data-block-id="${block.id}"]`)) {
+          e.preventDefault()
+          e.stopPropagation()
+          setShowSearch(true)
+          setTimeout(() => {
+            const inp = blockContainerRef.current?.querySelector('input[data-pdf-search-input]') as HTMLInputElement
+            if (inp) {
+              inp.focus()
+              inp.select()
+            }
+          }, 50)
+        }
+      }
+    }
+    window.addEventListener('keydown', onKey, { capture: true })
+    return () => window.removeEventListener('keydown', onKey, { capture: true })
+  }, [docType, isHovered, block.id])
 
   // PDF용 Blob URL 사전 해석 (Chromium/Edge 내장 PDF 뷰어 연동)
   useEffect(() => {
@@ -732,17 +860,42 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
         {props.fileName || `${config.label} 문서`}
       </span>
       {docType === 'pdf' && (hasFile || hasUrl) && (
-        <button
-          onClick={() => setPdfMode(prev => prev === 'native' ? 'canvas' : 'native')}
-          style={{
-            marginLeft: '8px', padding: '3px 8px', background: 'rgba(239, 68, 68, 0.18)',
-            border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '4px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: '4px', color: '#fca5a5', fontSize: '11px', fontWeight: 600,
-          }}
-          title={pdfMode === 'native' ? '커스텀 캔버스 뷰어로 전환' : 'Edge/Chrome 브라우저 기본 PDF 리더로 전환'}
-        >
-          {pdfMode === 'native' ? '🖥️ 브라우저 뷰어' : '📑 캔버스 뷰어'}
-        </button>
+        <>
+          <button
+            onClick={() => {
+              setShowSearch(s => !s)
+              if (!showSearch) {
+                setTimeout(() => {
+                  const inp = blockContainerRef.current?.querySelector('input[data-pdf-search-input]') as HTMLInputElement
+                  if (inp) { inp.focus(); inp.select() }
+                }, 50)
+              }
+            }}
+            style={{
+              marginLeft: '8px', padding: '3px 8px',
+              background: showSearch ? 'rgba(59, 130, 246, 0.35)' : 'rgba(59, 130, 246, 0.15)',
+              border: '1px solid ' + (showSearch ? '#60a5fa' : 'rgba(59, 130, 246, 0.4)'),
+              borderRadius: '4px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: '4px',
+              color: showSearch ? '#93c5fd' : '#60a5fa', fontSize: '11px', fontWeight: 600,
+            }}
+            title="이 PDF 전용 검색기 열기 (Ctrl+Shift+F)"
+          >
+            <Search size={12} />
+            PDF 검색
+          </button>
+          <button
+            onClick={() => setPdfMode(prev => prev === 'native' ? 'canvas' : 'native')}
+            style={{
+              marginLeft: '4px', padding: '3px 8px', background: 'rgba(239, 68, 68, 0.18)',
+              border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '4px', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: '4px', color: '#fca5a5', fontSize: '11px', fontWeight: 600,
+            }}
+            title={pdfMode === 'native' ? '커스텀 캔버스 뷰어로 전환' : 'Edge/Chrome 브라우저 기본 PDF 리더로 전환'}
+          >
+            {pdfMode === 'native' ? '🖥️ 브라우저 뷰어' : '📑 캔버스 뷰어'}
+          </button>
+        </>
       )}
       {docType === 'pdf' && profile && (
         <button
@@ -881,7 +1034,75 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
         const viewHeight = blockHeight
 
         return (
-          <div data-viewer-inner style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}>
+          <div 
+            ref={blockContainerRef}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            data-viewer-inner 
+            style={{ width: '100%', height: '100%', overflow: 'hidden', position: 'relative' }}
+          >
+            {/* [PDF IN-BLOCK SEARCH OVERLAY] */}
+            {docType === 'pdf' && showSearch && (
+              <div 
+                style={{
+                  position: 'absolute', top: 10, right: 14, zIndex: 60,
+                  background: 'rgba(15, 23, 42, 0.96)', backdropFilter: 'blur(16px)',
+                  border: '1px solid rgba(59, 130, 246, 0.5)', borderRadius: '8px',
+                  padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '8px',
+                  boxShadow: '0 8px 30px rgba(0,0,0,0.7)',
+                  animation: 'fadeIn 0.15s ease'
+                }}
+              >
+                <Search size={13} color="#60a5fa" />
+                <input
+                  data-pdf-search-input
+                  autoFocus
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => handlePerformSearch(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Escape') {
+                      e.preventDefault()
+                      setShowSearch(false)
+                    } else if (e.key === 'Enter') {
+                      e.preventDefault()
+                      if (e.shiftKey) goToPrevMatch()
+                      else goToNextMatch()
+                    }
+                  }}
+                  placeholder="PDF 내 텍스트 검색..."
+                  style={{
+                    background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.2)',
+                    borderRadius: '4px', color: '#fff', fontSize: '11px', padding: '4px 8px', outline: 'none', width: '150px'
+                  }}
+                />
+                <span style={{ fontSize: '10px', color: searchResults.length > 0 ? '#60a5fa' : '#f87171', whiteSpace: 'nowrap', minWidth: '70px', textAlign: 'center' }}>
+                  {searchResults.length > 0 
+                    ? `${searchResultIdx + 1}/${searchResults.length}건 (P.${searchResults[searchResultIdx]?.page})` 
+                    : searchQuery ? '일치 없음' : '0건'}
+                </span>
+                {searchResults.length > 0 && (
+                  <div style={{ display: 'flex', gap: '2px' }}>
+                    <button 
+                      onClick={goToPrevMatch} 
+                      title="이전 결과 (Shift+Enter)"
+                      style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', borderRadius: '3px', padding: '2px 6px', cursor: 'pointer', fontSize: '10px' }}
+                    >↑</button>
+                    <button 
+                      onClick={goToNextMatch} 
+                      title="다음 결과 (Enter)"
+                      style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', borderRadius: '3px', padding: '2px 6px', cursor: 'pointer', fontSize: '10px' }}
+                    >↓</button>
+                  </div>
+                )}
+                <button 
+                  onClick={() => setShowSearch(false)} 
+                  title="닫기 (ESC)"
+                  style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '2px 4px', fontSize: '11px' }}
+                >✕</button>
+              </div>
+            )}
+
             {showDNA && profile && (
               <DocumentProfileModal 
                 fileId={fileId || ''}
@@ -891,7 +1112,8 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
             )}
             {docType === 'pdf' && pdfMode === 'native' && (resolvedBlobUrl || props.sourceUrl.startsWith('http')) ? (
               <iframe
-                src={resolvedBlobUrl || props.sourceUrl}
+                key={`${resolvedBlobUrl || props.sourceUrl}-${targetPageNum}`}
+                src={`${resolvedBlobUrl || props.sourceUrl}${targetPageNum > 1 ? `#page=${targetPageNum}` : ''}`}
                 style={{ width: '100%', height: '100%', border: 'none', display: 'block', background: '#525659' }}
                 title={props.fileName || 'PDF'}
                 allowFullScreen
@@ -905,6 +1127,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
               <PdfMiniViewer 
                 sourceUrl={props.sourceUrl} 
                 height={viewHeight} 
+                targetPage={targetPageNum}
                 savedBookmarks={(() => { try { return JSON.parse(props.bookmarks || '[]') } catch { return [] } })()}
                 onBookmarksChange={(b) => editor.updateBlock(block.id, { props: { ...props, bookmarks: JSON.stringify(b) } })}
               />
