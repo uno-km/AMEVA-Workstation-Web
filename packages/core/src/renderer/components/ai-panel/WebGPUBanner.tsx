@@ -126,6 +126,20 @@ export const WebGPUBanner: React.FC<WebGPUBannerProps> = ({
           </div>
         </div>
       )}
+
+      {!isLLMReady && !isModelLoading && mainProgressText && (
+        <div style={{
+          fontSize: '9.5px',
+          color: mainProgressText.includes('재설정') || mainProgressText.includes('실패') ? '#fbbf24' : '#94a3b8',
+          lineHeight: '1.4',
+          marginTop: '2px',
+          padding: '4px 6px',
+          background: 'rgba(0,0,0,0.2)',
+          borderRadius: '4px'
+        }}>
+          {mainProgressText}
+        </div>
+      )}
     </div>
   );
 };
