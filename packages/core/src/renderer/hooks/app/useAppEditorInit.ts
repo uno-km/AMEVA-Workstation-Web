@@ -250,6 +250,342 @@ export function useAppEditorInit({
 
 ---
 
+### 🆕 [2026-08-18 메이저 업데이트] 🤖 AMEVA 로컬 AI 에이전트 & GraphRAG & 스마트 오피스 뷰어 전격 출시!
+- **⚡ 100% 프라이빗 WebGPU 로컬 AI 에이전트 (`Qwen2.5-3B-Instruct`):**
+  - 외부 클라우드 API 키나 유료 구독 없이, 사용자 PC 브라우저의 GPU(WebGPU)에서 **100% 로컬 프라이빗으로 동작**하는 초경량·고성능 AI 챗봇이 탑재되었습니다.
+  - **4대 퀵 액션 버튼**: **`📝 3줄 요약`**, **`✨ 문장/톤 개선`**, **`🔍 RAG 질의`**, **`📊 표 정리`** 원클릭 실행.
+  - **사고 과정(`<think>` CoT)** 시각화 및 에디터 **`[✓ 에디터에 삽입]`** 제안 카드 연동!
+- **🕸️ 하이브리드 RAG & 지식 그래프 (GraphRAG):**
+  - 단순 키워드 검색을 넘어, **Vector Cosine 유사도 + Reciprocal Rank Fusion (RRF)** 및 문서 내 엔티티 관계를 추출하는 **지식 그래프(GraphRAG)**를 융합하여 장문 보고서도 정확하게 분석합니다.
+  - **초고속 시맨틱 캐시(Semantic Cache)**: 동일/유사 질문은 0.001초 만에 즉각 응답!
+- **📑 차세대 오피스 & PDF A4 조판 뷰어 및 문서 검색 (`Ctrl+Shift+F`):**
+  - Word(`.docx`), HWPX(`.hwpx`), Excel(`.xlsx`), PDF 파일을 마크다운 변환 시 깨짐 없이 **실제 인쇄용 A4 규격(`📄 1 / 17 페이지`) 및 목차(TOC)**로 완벽 렌더링합니다.
+  - **`[ 📑 A4 내장 뷰어 ] ↔ [ 🖥️ 브라우저 뷰어 ]`** 실시간 듀얼 뷰어 모드 스위칭 지원.
+  - **문서 내 실시간 단어 하이라이트 & 점프 탐색 (`Ctrl+Shift+F`)** 및 목차 클릭 시 해당 섹션 부드러운 스크롤 이동 지원.
+- **🛡️ 리치 마크다운 블록(PDF, 지도, 칸반, 드로잉 등) 삭제 보호 모달:**
+  - 작업 중 실수로 백스페이스나 삭제 버튼을 눌러 소중한 블록이 지워지지 않도록 **통합 컨펌 모달(ConfirmModal)**과 `Enter`(예)/`Esc`(아니오) 키보드 UX를 탑재했습니다.
+
+---
+
+### 🎬 인터랙티브 튜토리얼: AMEVA AI 에이전트 & 실시간 에디터 삽입 시뮬레이션
+우측 상단의 **[✨ AI 에이전트]** 패널과 퀵 액션 기능이 어떻게 유기적으로 동작하는지 아래 인터랙티브 애니메이션으로 한눈에 확인해보세요!
+
+```html
+<div class="ai-demo-wrapper">
+  <!-- Left Side: Markdown Document Area -->
+  <div class="ai-demo-editor">
+    <div class="demo-win-header">
+      <span class="doc-icon">📄</span>
+      <span class="doc-title">2026_신규_사업기획서.md</span>
+    </div>
+    <div class="demo-doc-body">
+      <div class="doc-h3">1. 프로젝트 개요 및 핵심 목표</div>
+      <p class="doc-p">본 프로젝트는 외부 클라우드 의존 없이 브라우저 GPU 가속을 통해 완벽한 데이터 보안을 보장하는 차세대 로컬 AI 워크스테이션을 구축합니다.</p>
+      
+      <!-- AI Inserted Result Block (Appears after click) -->
+      <div class="demo-ai-inserted">
+        <div class="inserted-head">✨ AMEVA AI 3줄 핵심 요약</div>
+        <div class="inserted-item">1. 🚀 <b>WebGPU 로컬 추론:</b> 100% 프라이빗 브라우저 GPU 가속</div>
+        <div class="inserted-item">2. 🕸️ <b>하이브리드 GraphRAG:</b> Vector + 지식 그래프 결합 정밀 분석</div>
+        <div class="inserted-item">3. 📑 <b>원클릭 에디터 주입:</b> AI 분석 결과를 문서 블록으로 즉시 삽입</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: AI Agent Chat Panel -->
+  <div class="ai-demo-panel">
+    <div class="panel-head">
+      <div class="head-left">
+        <span class="bot-icon">🤖</span>
+        <span class="bot-title">AMEVA AI Agent</span>
+      </div>
+      <span class="engine-tag">⚡ WebGPU 3B</span>
+    </div>
+
+    <div class="qa-bar">
+      <span class="qa-pill qa-highlight">📝 3줄 요약</span>
+      <span class="qa-pill">✨ 문장 개선</span>
+      <span class="qa-pill">🔍 RAG 질의</span>
+      <span class="qa-pill">📊 표 정리</span>
+    </div>
+
+    <div class="chat-area">
+      <div class="user-msg">이 기획서의 핵심 내용을 3줄로 요약해줘!</div>
+      
+      <div class="ai-msg-box">
+        <div class="think-badge">💭 &lt;think&gt; GraphRAG 문서 청크 및 엔티티 분석 완료</div>
+        <div class="ai-msg-text">
+          문서의 3대 핵심 요약입니다:
+          <div class="ai-summary-lines">
+            • 🚀 WebGPU 기반 100% 로컬 프라이빗 AI<br/>
+            • 🕸️ 하이브리드 RAG & 지식 그래프 결합<br/>
+            • 📑 원클릭 에디터 삽입 및 A4 뷰어 지원
+          </div>
+        </div>
+        <div class="card-action-box">
+          <span class="btn-insert-demo">✓ 에디터에 삽입</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Animated Virtual Cursor -->
+  <div class="ai-virtual-cursor"></div>
+</div>
+
+<style>
+.ai-demo-wrapper {
+  position: relative;
+  width: 100%;
+  height: 420px;
+  background: #0f111a;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #e2e8f0;
+  display: flex;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.6);
+  box-sizing: border-box;
+}
+
+/* Left Document */
+.ai-demo-editor {
+  flex: 1.1;
+  background: #141724;
+  border-right: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  flex-direction: column;
+}
+.demo-win-header {
+  padding: 10px 14px;
+  background: #1a1e2e;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.demo-doc-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow: hidden;
+}
+.doc-h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: #60a5fa;
+  margin-bottom: 4px;
+}
+.doc-p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #94a3b8;
+  margin: 0;
+}
+.demo-ai-inserted {
+  margin-top: 8px;
+  padding: 12px 14px;
+  background: rgba(16, 185, 129, 0.08);
+  border-left: 3px solid #10b981;
+  border-radius: 6px;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: insertDocAnimation 10s infinite;
+}
+.inserted-head {
+  font-size: 12px;
+  font-weight: 700;
+  color: #34d399;
+  margin-bottom: 6px;
+}
+.inserted-item {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #e2e8f0;
+}
+
+/* Right AI Panel */
+.ai-demo-panel {
+  flex: 0.9;
+  background: #0f111a;
+  display: flex;
+  flex-direction: column;
+}
+.panel-head {
+  padding: 10px 14px;
+  background: #181c2d;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.head-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.bot-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #a855f7;
+}
+.engine-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border-radius: 4px;
+}
+.qa-bar {
+  display: flex;
+  gap: 4px;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.qa-pill {
+  font-size: 10px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.06);
+  color: #94a3b8;
+  cursor: pointer;
+}
+.qa-highlight {
+  animation: qaClick 10s infinite;
+}
+.chat-area {
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+.user-msg {
+  align-self: flex-end;
+  background: #3b82f6;
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 8px 8px 0 8px;
+  font-size: 11px;
+  max-width: 85%;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: showUserMsg 10s infinite;
+}
+.ai-msg-box {
+  background: #181c2d;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  opacity: 0;
+  transform: translateY(8px);
+  animation: showAiResponse 10s infinite;
+}
+.think-badge {
+  font-size: 9.5px;
+  color: #c084fc;
+  background: rgba(168, 85, 247, 0.15);
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  align-self: flex-start;
+}
+.ai-msg-text {
+  font-size: 11px;
+  line-height: 1.4;
+  color: #cbd5e1;
+}
+.ai-summary-lines {
+  margin-top: 4px;
+  color: #f1f5f9;
+  font-size: 10.5px;
+}
+.card-action-box {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+.btn-insert-demo {
+  padding: 4px 10px;
+  background: #10b981;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+  animation: pulseInsertBtn 10s infinite;
+}
+
+/* Virtual Mouse Cursor */
+.ai-virtual-cursor {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>');
+  background-size: contain;
+  background-repeat: no-repeat;
+  z-index: 50;
+  animation: moveAiDemoCursor 10s infinite;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.6));
+}
+
+/* Keyframe Animations */
+@keyframes moveAiDemoCursor {
+  0% { top: 250px; left: 20%; transform: scale(1); }
+  12% { top: 50px; left: 58%; transform: scale(1); } /* Move to 3줄 요약 pill */
+  16% { top: 50px; left: 58%; transform: scale(0.9); } /* Click 3줄 요약 */
+  20% { top: 50px; left: 58%; transform: scale(1); }
+  65% { top: 275px; left: 88%; transform: scale(1); } /* Move to [✓ 에디터에 삽입] */
+  70% { top: 275px; left: 88%; transform: scale(0.9); } /* Click insert button */
+  75% { top: 275px; left: 88%; transform: scale(1); }
+  90% { top: 320px; left: 40%; transform: scale(1); }
+  100% { top: 250px; left: 20%; transform: scale(1); }
+}
+
+@keyframes qaClick {
+  0%, 14% { background: rgba(255,255,255,0.06); color: #94a3b8; }
+  16%, 30% { background: #3b82f6; color: #fff; box-shadow: 0 0 8px rgba(59,130,246,0.6); }
+  32%, 100% { background: rgba(255,255,255,0.06); color: #94a3b8; }
+}
+
+@keyframes showUserMsg {
+  0%, 16% { opacity: 0; transform: translateY(6px); }
+  20%, 92% { opacity: 1; transform: translateY(0); }
+  96%, 100% { opacity: 0; transform: translateY(6px); }
+}
+
+@keyframes showAiResponse {
+  0%, 25% { opacity: 0; transform: translateY(8px); }
+  30%, 92% { opacity: 1; transform: translateY(0); }
+  96%, 100% { opacity: 0; transform: translateY(8px); }
+}
+
+@keyframes pulseInsertBtn {
+  0%, 65% { transform: scale(1); }
+  68%, 74% { transform: scale(1.08); background: #059669; }
+  78%, 100% { transform: scale(1); background: #10b981; }
+}
+
+@keyframes insertDocAnimation {
+  0%, 72% { opacity: 0; transform: translateY(10px); }
+  76%, 92% { opacity: 1; transform: translateY(0); box-shadow: 0 0 16px rgba(16, 185, 129, 0.3); }
+  96%, 100% { opacity: 0; transform: translateY(10px); }
+}
+</style>
+```
+
+---
+
 ### 🆕 [2026-08-11 개선사항] 🚀 지도 및 미디어 컴포넌트 메이저 업데이트
 - **🗺️ 지도 V3.5 (공유 & 스마트 검색):** 한국형 Vworld 검색엔진 탑재로 '교회, 상호명' 등 로컬 장소 검색 완벽 지원! 네이버/카카오/구글 지도 다이렉트 딥링크(공유하기) 기능 및 경로 상세 턴바이턴 안내가 추가되었습니다. (핀 및 경로 저장 버그 100% 수정 완료)
 - **▶️ 유튜브 타임라인 안정화:** 에디터 및 미리보기 환경에서 \`01:00\` 등 유튜브 타임라인 텍스트 클릭 시, 즉시 해당 영상 위치로 점프하는 기능이 정교하게 개선되었습니다.
