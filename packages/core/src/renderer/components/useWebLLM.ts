@@ -17,13 +17,13 @@ import { useState, useCallback, useEffect } from 'react';
 import type { MLCEngine, InitProgressReport } from '@mlc-ai/web-llm';
 
 export const SUPPORTED_WEBGPU_MODELS = [
-  { id: 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC', label: 'Qwen2.5 0.5B (초경량·안정성 100%·380MB)', vram: '380MB' },
-  { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC', label: 'Qwen2.5 1.5B (고성능·빠른속도·850MB)', vram: '850MB' },
-  { id: 'Qwen2.5-3B-Instruct-q4f32_1-MLC', label: 'Qwen2.5 3B (외장 RTX GPU 전용·2.2GB)', vram: '2.2GB' },
+  { id: 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC', label: 'Qwen2.5 1.5B (기본 추천·우수한 추론·850MB VRAM)', vram: '850MB' },
+  { id: 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC', label: 'Qwen2.5 0.5B (초경량·저사양 내장그래픽용·380MB)', vram: '380MB' },
+  { id: 'Qwen2.5-3B-Instruct-q4f32_1-MLC', label: 'Qwen2.5 3B (외장 RTX 고성능 전용·2.2GB)', vram: '2.2GB' },
   { id: 'Llama-3.2-1B-Instruct-q4f16_1-MLC', label: 'Llama-3.2 1B (Meta 공식·750MB)', vram: '750MB' }
 ];
 
-export const DEFAULT_WEBGPU_MODEL = 'Qwen2.5-0.5B-Instruct-q4f16_1-MLC';
+export const DEFAULT_WEBGPU_MODEL = 'Qwen2.5-1.5B-Instruct-q4f16_1-MLC';
 
 let globalMainEngine: MLCEngine | null = null;
 let globalGhostEngine: MLCEngine | null = null;
