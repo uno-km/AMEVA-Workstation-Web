@@ -72,8 +72,8 @@ export class RemoteHttpEngineAdapter implements IAIEngineAdapter {
         { role: 'user', content: userPrompt }
       ],
       stream: true,
-      temperature: options?.temperature ?? 0.6,
-      max_tokens: options?.max_tokens ?? 1024,
+      temperature: options?.temperature ?? 0.3,
+      max_tokens: options?.max_tokens ?? 2048,
       stop: options?.stop
     };
 

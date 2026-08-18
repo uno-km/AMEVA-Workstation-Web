@@ -316,7 +316,7 @@ export const useWebLLM = () => {
         messages: fullMessages as any,
         stream: true,
         temperature: options?.temperature ?? 0.3,
-        max_tokens: options?.max_tokens ?? 512,
+        max_tokens: options?.max_tokens ?? 2048,
         stop: options?.stop,
       });
 

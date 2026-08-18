@@ -7,13 +7,14 @@
  * ============================================================================
  */
 
-import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, X, Check, Copy, FileText, Loader2, StopCircle, RefreshCw, Layers, Terminal, ChevronDown, ChevronRight, Activity, Cpu } from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Sparkles, X, Check, Copy, FileText, Loader2, StopCircle, RefreshCw, Layers, Terminal, ChevronDown, ChevronRight, Activity, Cpu, Globe, Eye, Code } from 'lucide-react';
+import { marked } from 'marked';
 import { PdfMapReduceService } from '../../services/pdf/PdfMapReduceService';
 import type { MapReduceProgress, MapReduceLogItem } from '../../services/pdf/PdfMapReduceService';
 import { WebLLMEngineAdapter } from '../../features/ai-agent/adapters/WebLLMEngineAdapter';
 import { RemoteHttpEngineAdapter } from '../../features/ai-agent/adapters/RemoteHttpEngineAdapter';
-import { useWebLLM, DEFAULT_WEBGPU_MODEL } from '../useWebLLM';
+import { useWebLLM, DEFAULT_WEBGPU_MODEL, SUPPORTED_WEBGPU_MODELS } from '../useWebLLM';
 
 interface PdfMapReduceModalProps {
   pdf?: any;
@@ -36,6 +37,15 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
 }) => {
   const { generateStream, isMainReady, initModel, activeModelId } = useWebLLM();
   const [activeTab, setActiveTab] = useState<'report' | 'logs'>('logs');
+  const [viewMode, setViewMode] = useState<'rendered' | 'raw'>('rendered');
+  const [selectedEngine, setSelectedEngine] = useState<'webgpu-0.5b' | 'webgpu-1.5b' | 'api'>(() => {
+    const mode = localStorage.getItem('ameva_engine_mode');
+    if (mode === 'api') return 'api';
+    const model = localStorage.getItem('ameva_selected_llm_model');
+    if (model?.includes('1.5B')) return 'webgpu-1.5b';
+    return 'webgpu-0.5b';
+  });
+
   const [status, setStatus] = useState<MapReduceProgress>({
     stage: 'extracting',
     progressPercent: 5,
@@ -57,7 +67,16 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
     setLogs((prev) => [...prev, log]);
   };
 
-  const startAnalysis = async () => {
+  const renderedHtml = useMemo(() => {
+    if (!reportResult) return '';
+    try {
+      return marked.parse(reportResult, { gfm: true, breaks: true }) as string;
+    } catch {
+      return reportResult;
+    }
+  }, [reportResult]);
+
+  const startAnalysisWithEngine = async (engineChoice = selectedEngine) => {
     setIsRunning(true);
     setReportResult('');
     setInserted(false);
@@ -67,46 +86,53 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
     const ac = new AbortController();
     abortControllerRef.current = ac;
 
-    const isApiMode = localStorage.getItem('ameva_engine_mode') === 'api';
-
     try {
       // 1. AI Engine Auto-Preparation
       let adapter: any;
-      if (isApiMode) {
+      if (engineChoice === 'api') {
+        const endpoint = localStorage.getItem('ameva_api_endpoint') || 'http://localhost:11434/v1/chat/completions';
+        const model = localStorage.getItem('ameva_api_model') || 'qwen2.5:3b';
         addLog({
           id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
           time: new Date().toLocaleTimeString(),
           stage: 'system',
-          message: '🌐 로컬 Ollama / 원격 API 엔진에 연결합니다...'
+          message: `🌐 로컬 Ollama / 원격 API 엔진(${model})에 연결합니다...`
         });
-        const http = new RemoteHttpEngineAdapter();
-        http.setConfig({
-          endpoint: localStorage.getItem('ameva_api_endpoint') || 'http://localhost:11434/v1/chat/completions',
-          model: localStorage.getItem('ameva_api_model') || 'qwen2.5:1.5b',
+        const http = new RemoteHttpEngineAdapter({
+          endpoint,
+          model,
           apiKey: localStorage.getItem('ameva_api_key') || ''
         });
         adapter = http;
       } else {
-        if (!isMainReady) {
+        const targetModel = engineChoice === 'webgpu-1.5b' 
+          ? 'Qwen2.5-1.5B-Instruct-q4f32_1-MLC' 
+          : 'Qwen2.5-0.5B-Instruct-q4f32_1-MLC';
+        
+        localStorage.setItem('ameva_selected_llm_model', targetModel);
+        localStorage.setItem('ameva_engine_mode', 'webgpu');
+
+        if (!isMainReady || activeModelId !== targetModel) {
+          const modelLabel = targetModel.includes('1.5B') ? '1.5B (890MB)' : '0.5B (390MB)';
           setStatus({
             stage: 'extracting',
             progressPercent: 10,
             currentStep: 0,
             totalSteps: numPages,
-            message: '⚡ [AI 엔진 가동] 온디바이스 Qwen2.5 1.5B (890MB) VRAM 로드 중...'
+            message: `⚡ [AI 엔진 가동] 온디바이스 Qwen2.5 ${modelLabel} VRAM 로드 중...`
           });
           addLog({
             id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
             time: new Date().toLocaleTimeString(),
             stage: 'system',
-            message: '⚡ WebGPU AI 엔진이 오프라인 상태입니다. Qwen2.5 1.5B (890MB) 모델을 자동으로 VRAM에 가동합니다...'
+            message: `⚡ WebGPU Qwen2.5 ${modelLabel} 모델을 GPU VRAM에 가동합니다...`
           });
-          await initModel(DEFAULT_WEBGPU_MODEL);
+          await initModel(targetModel);
           addLog({
             id: `log_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
             time: new Date().toLocaleTimeString(),
             stage: 'system',
-            message: '✅ WebGPU AI 모델 가동 완료! 맵리듀스 분석을 시작합니다.'
+            message: `✅ WebGPU AI 모델 가동 완료! 맵리듀스 분석을 시작합니다.`
           });
         }
         adapter = new WebLLMEngineAdapter((sys, user, opt) => generateStream(sys, user, opt), true);
@@ -151,7 +177,7 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
         });
       } else {
         const errorText = isGpuCrash 
-          ? 'GPU VRAM 버퍼 한계로 인퍼런스가 중단되었습니다. 0.5B 초경량 모델 또는 API 모드로 즉시 복구 가능합니다.'
+          ? 'GPU VRAM 버퍼 한계로 인퍼런스가 중단되었습니다. 0.5B 초경량 모델 또는 Ollama API 모드로 즉시 복구 가능합니다.'
           : (err?.message || '알 수 없는 오류');
         setStatus({
           stage: 'error',
@@ -202,7 +228,7 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
 
   // Auto start on mount
   useEffect(() => {
-    startAnalysis();
+    startAnalysisWithEngine();
     return () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
@@ -225,10 +251,93 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
       zIndex: 99999,
       padding: '20px'
     }}>
+      <style>{`
+        .ameva-report-markdown {
+          font-size: 13.5px;
+          line-height: 1.7;
+          color: #f1f5f9;
+        }
+        .ameva-report-markdown h1 {
+          font-size: 18px;
+          font-weight: 800;
+          color: #60a5fa;
+          margin-top: 0;
+          margin-bottom: 16px;
+          padding-bottom: 8px;
+          border-bottom: 1px solid rgba(96, 165, 250, 0.3);
+        }
+        .ameva-report-markdown h2 {
+          font-size: 15px;
+          font-weight: 700;
+          color: #a78bfa;
+          margin-top: 20px;
+          margin-bottom: 10px;
+        }
+        .ameva-report-markdown h3 {
+          font-size: 13.5px;
+          font-weight: 600;
+          color: #34d399;
+          margin-top: 14px;
+          margin-bottom: 8px;
+        }
+        .ameva-report-markdown p {
+          margin-bottom: 10px;
+        }
+        .ameva-report-markdown ul, .ameva-report-markdown ol {
+          margin-bottom: 12px;
+          padding-left: 20px;
+        }
+        .ameva-report-markdown li {
+          margin-bottom: 4px;
+        }
+        .ameva-report-markdown table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 14px 0;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 8px;
+          overflow: hidden;
+          background: rgba(15, 23, 42, 0.6);
+        }
+        .ameva-report-markdown th {
+          background: rgba(30, 41, 59, 0.95);
+          color: #93c5fd;
+          font-weight: 700;
+          text-align: left;
+          padding: 8px 12px;
+          font-size: 12px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .ameva-report-markdown td {
+          padding: 8px 12px;
+          font-size: 12px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+          color: #e2e8f0;
+        }
+        .ameva-report-markdown tr:last-child td {
+          border-bottom: none;
+        }
+        .ameva-report-markdown tr:hover td {
+          background: rgba(255, 255, 255, 0.03);
+        }
+        .ameva-report-markdown blockquote {
+          margin: 12px 0;
+          padding: 8px 14px;
+          border-left: 3px solid #8b5cf6;
+          background: rgba(139, 92, 246, 0.08);
+          border-radius: 0 6px 6px 0;
+          color: #cbd5e1;
+        }
+        .ameva-report-markdown strong {
+          color: #f8fafc;
+          font-weight: 700;
+        }
+      `}</style>
+
       <div style={{
         width: '100%',
-        maxWidth: '860px',
-        height: '85vh',
+        maxWidth: '920px',
+        height: '86vh',
         background: '#0e111a',
         border: '1px solid rgba(139, 92, 246, 0.4)',
         borderRadius: '12px',
@@ -273,6 +382,70 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Engine Quick Selector */}
+            <div style={{ display: 'flex', background: 'rgba(0,0,0,0.4)', padding: '2px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <button
+                onClick={() => {
+                  setSelectedEngine('webgpu-0.5b');
+                  startAnalysisWithEngine('webgpu-0.5b');
+                }}
+                disabled={isRunning}
+                title="Qwen2.5 0.5B (390MB) 초경량 온디바이스 모델"
+                style={{
+                  padding: '3px 8px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  background: selectedEngine === 'webgpu-0.5b' ? 'rgba(16, 185, 129, 0.3)' : 'transparent',
+                  color: selectedEngine === 'webgpu-0.5b' ? '#34d399' : '#64748b',
+                  fontSize: '10.5px',
+                  fontWeight: 600,
+                  cursor: isRunning ? 'not-allowed' : 'pointer'
+                }}
+              >
+                ⚡ 0.5B
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedEngine('webgpu-1.5b');
+                  startAnalysisWithEngine('webgpu-1.5b');
+                }}
+                disabled={isRunning}
+                title="Qwen2.5 1.5B (890MB) 고품질 온디바이스 모델"
+                style={{
+                  padding: '3px 8px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  background: selectedEngine === 'webgpu-1.5b' ? 'rgba(139, 92, 246, 0.3)' : 'transparent',
+                  color: selectedEngine === 'webgpu-1.5b' ? '#c4b5fd' : '#64748b',
+                  fontSize: '10.5px',
+                  fontWeight: 600,
+                  cursor: isRunning ? 'not-allowed' : 'pointer'
+                }}
+              >
+                🚀 1.5B
+              </button>
+              <button
+                onClick={() => {
+                  setSelectedEngine('api');
+                  startAnalysisWithEngine('api');
+                }}
+                disabled={isRunning}
+                title="로컬 Ollama / 원격 API (DeepSeek/Qwen 7B/14B 등 고성능)"
+                style={{
+                  padding: '3px 8px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  background: selectedEngine === 'api' ? 'rgba(59, 130, 246, 0.3)' : 'transparent',
+                  color: selectedEngine === 'api' ? '#60a5fa' : '#64748b',
+                  fontSize: '10.5px',
+                  fontWeight: 600,
+                  cursor: isRunning ? 'not-allowed' : 'pointer'
+                }}
+              >
+                🌐 Ollama
+              </button>
+            </div>
+
             {/* View Switcher Tabs */}
             <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', padding: '2px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)' }}>
               <button
@@ -406,9 +579,9 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
           flex: 1,
           overflowY: 'auto',
           background: '#070a12',
-          padding: '16px 18px',
-          fontSize: '12px',
-          lineHeight: '1.6',
+          padding: '16px 20px',
+          fontSize: '12.5px',
+          lineHeight: '1.65',
           color: '#e2e8f0',
           fontFamily: activeTab === 'logs' ? "'JetBrains Mono', Consolas, monospace" : "'Inter', -apple-system, sans-serif"
         }}>
@@ -479,9 +652,64 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
             </div>
           ) : (
             /* Final Report Markdown View */
-            <div style={{ whiteSpace: 'pre-wrap' }}>
+            <div>
+              {/* Render View Mode Toggle */}
+              {reportResult && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', padding: '2px', borderRadius: '5px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <button
+                      onClick={() => setViewMode('rendered')}
+                      style={{
+                        padding: '3px 8px',
+                        borderRadius: '3px',
+                        border: 'none',
+                        background: viewMode === 'rendered' ? '#8b5cf6' : 'transparent',
+                        color: viewMode === 'rendered' ? '#fff' : '#94a3b8',
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '3px'
+                      }}
+                    >
+                      <Eye size={11} />
+                      렌더링
+                    </button>
+                    <button
+                      onClick={() => setViewMode('raw')}
+                      style={{
+                        padding: '3px 8px',
+                        borderRadius: '3px',
+                        border: 'none',
+                        background: viewMode === 'raw' ? '#8b5cf6' : 'transparent',
+                        color: viewMode === 'raw' ? '#fff' : '#94a3b8',
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '3px'
+                      }}
+                    >
+                      <Code size={11} />
+                      마크다운 원본
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {reportResult ? (
-                <div>{reportResult}</div>
+                viewMode === 'rendered' ? (
+                  <div
+                    className="ameva-report-markdown"
+                    dangerouslySetInnerHTML={{ __html: renderedHtml }}
+                  />
+                ) : (
+                  <div style={{ whiteSpace: 'pre-wrap', fontFamily: "'JetBrains Mono', Consolas, monospace", fontSize: '11.5px', color: '#cbd5e1' }}>
+                    {reportResult}
+                  </div>
+                )
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '240px', color: '#64748b', gap: '10px' }}>
                   <Loader2 size={28} className="animate-spin" color="#ec4899" />
@@ -526,11 +754,9 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
             ) : status.stage === 'error' ? (
               <div style={{ display: 'flex', gap: '6px' }}>
                 <button
-                  onClick={async () => {
-                    localStorage.setItem('ameva_selected_llm_model', 'Qwen2.5-0.5B-Instruct-q4f32_1-MLC');
-                    localStorage.setItem('ameva_engine_mode', 'webgpu');
-                    await initModel('Qwen2.5-0.5B-Instruct-q4f32_1-MLC');
-                    startAnalysis();
+                  onClick={() => {
+                    setSelectedEngine('webgpu-0.5b');
+                    startAnalysisWithEngine('webgpu-0.5b');
                   }}
                   style={{
                     background: 'rgba(16, 185, 129, 0.15)',
@@ -551,8 +777,8 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
                 </button>
                 <button
                   onClick={() => {
-                    localStorage.setItem('ameva_engine_mode', 'api');
-                    startAnalysis();
+                    setSelectedEngine('api');
+                    startAnalysisWithEngine('api');
                   }}
                   style={{
                     background: 'rgba(59, 130, 246, 0.15)',
@@ -568,12 +794,13 @@ export const PdfMapReduceModal: React.FC<PdfMapReduceModalProps> = ({
                     gap: '4px'
                   }}
                 >
+                  <Globe size={12} />
                   🌐 Ollama API로 전환
                 </button>
               </div>
             ) : (
               <button
-                onClick={startAnalysis}
+                onClick={() => startAnalysisWithEngine()}
                 style={{
                   background: 'rgba(59, 130, 246, 0.15)',
                   border: '1px solid rgba(59, 130, 246, 0.3)',
