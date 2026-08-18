@@ -149,6 +149,7 @@ import { useSelectionTracking } from '../hooks/editor/useSelectionTracking'
 import { useAppContext } from '../contexts/AppContext'
 import { useWorkspaceStore } from '../stores/useWorkspaceStore'
 import { useProcessStore } from '../stores/useProcessStore'
+import { useUIStore } from '../stores/useUIStore'
 
 /**
  * @interface MarkdownEditorProps
