@@ -2,14 +2,19 @@
 
 <div align="center">
 
-![AMEVA Workstation Banner](https://img.shields.io/badge/AMEVA-Workstation%20v0.8.19-0ea5e9?style=for-the-badge&logo=electron&logoColor=white)
-![WebGPU Accelerated](https://img.shields.io/badge/WebGPU-On--Device%20AI-2563eb?style=for-the-badge&logo=webgpu&logoColor=white)
-![Multi-Media In-App Studio](https://img.shields.io/badge/Studio-Video%20%7C%20Image%20%7C%20Audio-10b981?style=for-the-badge)
-![Zero Server Dependency](https://img.shields.io/badge/Security-100%25%20Local%20Privacy-f59e0b?style=for-the-badge)
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-Open_in_Browser-2563eb?style=for-the-badge&logo=vercel&logoColor=white)](https://ameva-workstation-web-core.vercel.app/)
+[![GitHub Stars](https://img.shields.io/github/stars/uno-km/AMEVA-Workstation-Web?style=for-the-badge&color=f59e0b&logo=github)](https://github.com/uno-km/AMEVA-Workstation-Web/stargazers)
+![Release](https://img.shields.io/badge/Release-v0.8.19-0ea5e9?style=for-the-badge&logo=electron&logoColor=white)
+![WebGPU](https://img.shields.io/badge/WebGPU-On--Device%20AI-10b981?style=for-the-badge&logo=webgpu&logoColor=white)
+![Privacy](https://img.shields.io/badge/Privacy-100%25%20Local-8b5cf6?style=for-the-badge)
+
+<br/>
+
+### 🔗 **[👉 브라우저에서 즉시 체험하기 (Live Web Demo)](https://ameva-workstation-web-core.vercel.app/)**
 
 **오프라인 100% 프라이버시가 보장되는 온디바이스 WebGPU 로컬 AI 에이전트와 통합 멀티미디어(동영상·이미지·오디오) 저작 스튜디오, 인터랙티브 지능형 문서화 시스템**
 
-[✨ 주요 기능](#-핵심-기능-상세-매뉴얼-user-manual) • [🎬 미디어 스튜디오](#1-멀티미디어-인앱-저작-스튜디오-video--image--audio) • [📑 문서 AI 요약](#2-온디바이스-webgpu-문서-인텔리전스--다단계-요약-덱) • [🌐 번역 & 문체 다듬기](#3-지능형-번역--문체말투-다듬기-시스템) • [🤖 챗봇 & 에이전트](#4-차세대-ai-어시스턴트--자율-에이전트-패널) • [🗺️ 지능형 지도](#5-인터랙티브-지도-문서화--경로-탐색-시스템) • [🚀 시작하기](#-빠른-시작-가이드)
+[🌐 라이브 데모](https://ameva-workstation-web-core.vercel.app/) • [✨ 주요 기능](#-핵심-기능-상세-매뉴얼-user-manual) • [🎬 미디어 스튜디오](#1-멀티미디어-인앱-저작-스튜디오-video--image--audio) • [📑 문서 AI 요약](#2-온디바이스-webgpu-문서-인텔리전스--다단계-요약-덱) • [🌐 번역 & 문체 다듬기](#3-지능형-번역--문체말투-다듬기-시스템) • [🤖 챗봇 & 에이전트](#4-차세대-ai-어시스턴트--자율-에이전트-패널) • [🗺️ 지능형 지도](#5-인터랙티브-지도-문서화--경로-탐색-시스템) • [🚀 시작하기](#-빠른-시작-가이드)
 
 </div>
 
