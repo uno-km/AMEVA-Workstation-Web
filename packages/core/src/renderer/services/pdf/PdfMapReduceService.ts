@@ -216,8 +216,8 @@ export class PdfMapReduceService {
         message: `🧩 [2/3 단계] 섹션별 중간 요약 생성 중 (섹션 ${i + 1}/${totalClusters}: p.${cluster.startPage}~${cluster.endPage})...`
       });
 
-      // 토큰 예산 보호: 800자 내외로 슬라이스하여 2048 KV-Cache 초과 및 VRAM OOM 방지
-      const boundedText = cluster.rawText.length > 1000 ? cluster.rawText.slice(0, 1000) + '...' : cluster.rawText;
+      // 안정적인 토큰 예산: 700자 내외로 슬라이스하여 VRAM 버퍼 및 OOM 방지
+      const boundedText = cluster.rawText.length > 700 ? cluster.rawText.slice(0, 700) + '...' : cluster.rawText;
       const userPrompt = `[페이지 ${cluster.startPage} ~ ${cluster.endPage} 내용]:\n${boundedText}`;
 
       try {
@@ -226,8 +226,8 @@ export class PdfMapReduceService {
         level1Summaries.push(`### 📌 [페이지 ${cluster.startPage}~${cluster.endPage} 요약]\n${summary}`);
         onLog?.(this.createLog('mapping', `✅ [섹션 ${i + 1}/${totalClusters}] 요약 완료`, summary));
 
-        // Windows D3D12 TDR (0x887A0006) 방지를 위한 GPU 이벤트 루프 쿨다운 양보
-        await new Promise((resolve) => setTimeout(resolve, 400));
+        // GPU 버퍼 GC 및 D3D12 TDR 방지를 위한 1.0초 안정적 페이싱 딜레이
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       } catch (err: any) {
         level1Summaries.push(`### 📌 [페이지 ${cluster.startPage}~${cluster.endPage}]\n- (요약 생성 생략: ${err?.message || '처리 오류'})`);
         onLog?.(this.createLog('mapping', `⚠️ [섹션 ${i + 1}] 요약 중 예외: ${err?.message}`));
@@ -246,12 +246,12 @@ export class PdfMapReduceService {
       onLog?.(this.createLog('reducing', `🔄 [Recursive Reduce] ${level1Summaries.length}개 섹션 요약을 통합 재압축합니다...`));
 
       const joined = level1Summaries.join('\n\n');
-      const reducePrompt = `다음 중간 요약들의 중복을 제거하고 핵심 흐름을 유지하며 5~6개의 체계적인 문맥으로 재압축하십시오:\n\n${joined.slice(0, 2000)}`;
+      const reducePrompt = `다음 중간 요약들의 중복을 제거하고 핵심 흐름을 유지하며 5~6개의 체계적인 문맥으로 재압축하십시오:\n\n${joined.slice(0, 1500)}`;
       const reduced = await this.runPrompt(engine, mapSystemPrompt, reducePrompt, signal);
       onLog?.(this.createLog('reducing', `✅ 2차 재귀 압축 완료!`, reduced));
 
       // GPU 쿨다운
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       return [reduced];
     }
 
@@ -280,10 +280,10 @@ export class PdfMapReduceService {
     });
     onLog?.(this.createLog('synthesizing', `✨ [3/3 단계] 최고 수석 분석가 모드로 종합 마크다운 표 & 액션 리포트 작성 시작!`));
 
-    // Stage 2와 Stage 3 사이 GPU TDR 방지 쿨다운
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    // Stage 2와 Stage 3 사이 GPU TDR 방지 및 버퍼 정리 1.2초 쿨다운
+    await new Promise((resolve) => setTimeout(resolve, 1200));
 
-    const contextText = reducedSummaries.join('\n\n').slice(0, 1500);
+    const contextText = reducedSummaries.join('\n\n').slice(0, 1200);
 
     const synthesisSystemPrompt = `당신은 최고 경영진을 위한 수석 문서 분석가입니다.
 제공된 섹션별 요약 데이터를 종합하여 전문적이고 완성도 높은 [최종 종합 분석 리포트]를 작성하십시오.

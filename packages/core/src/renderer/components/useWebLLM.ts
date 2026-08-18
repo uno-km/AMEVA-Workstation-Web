@@ -260,7 +260,7 @@ export const useWebLLM = () => {
 
       if (autoLoad && !globalIsMainReady && !globalIsMainLoading && !globalMainEngine) {
         let targetModel = localStorage.getItem('ameva_selected_llm_model') || DEFAULT_WEBGPU_MODEL;
-        if (!targetModel || targetModel.includes('3B') || targetModel.includes('q4f16')) {
+        if (!targetModel || targetModel.includes('1.5B') || targetModel.includes('3B') || targetModel.includes('q4f16')) {
           targetModel = DEFAULT_WEBGPU_MODEL;
           localStorage.setItem('ameva_selected_llm_model', DEFAULT_WEBGPU_MODEL);
         }
