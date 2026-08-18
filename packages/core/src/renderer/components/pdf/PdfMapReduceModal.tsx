@@ -9,7 +9,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Sparkles, X, Check, Copy, FileText, Loader2, StopCircle, RefreshCw, Layers } from 'lucide-react';
-import { PdfMapReduceService, MapReduceProgress } from '../../services/pdf/PdfMapReduceService';
+import { PdfMapReduceService } from '../../services/pdf/PdfMapReduceService';
+import type { MapReduceProgress } from '../../services/pdf/PdfMapReduceService';
 import { WebLLMEngineAdapter } from '../../features/ai-agent/adapters/WebLLMEngineAdapter';
 import { RemoteHttpEngineAdapter } from '../../features/ai-agent/adapters/RemoteHttpEngineAdapter';
 import { useWebLLM } from '../useWebLLM';
