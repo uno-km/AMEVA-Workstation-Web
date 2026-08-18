@@ -259,8 +259,10 @@ export function AIContextMenu({
               marginBottom: '2px'
             }}
           >
-            <option value="Qwen2.5-3B-Instruct-q4f32_1-MLC">Qwen 2.5 (3B) - 기본 (권장)</option>
-            <option value="Qwen2.5-3B-Instruct-q4f32_1-MLC">Qwen 2.5 (7B) - 고성능 (8GB VRAM↑)</option>
+            <option value="Qwen2.5-1.5B-Instruct-q4f32_1-MLC">Qwen 2.5 (1.5B) - 기본 추천 (빠르고 안정적)</option>
+            <option value="Qwen2.5-0.5B-Instruct-q4f32_1-MLC">Qwen 2.5 (0.5B) - 초경량 내장그래픽용</option>
+            <option value="Qwen2.5-3B-Instruct-q4f32_1-MLC">Qwen 2.5 (3B) - 고성능 추론용</option>
+            <option value="Llama-3.2-1B-Instruct-q4f32_1-MLC">Llama 3.2 (1B) - Meta 공식</option>
           </select>
           {pendingModelId.includes('7B') && (
             <div style={{ fontSize: '10px', color: '#ef4444', marginBottom: '4px', lineHeight: '1.2' }}>
@@ -269,25 +271,33 @@ export function AIContextMenu({
           )}
           {isMainLoading || isGhostLoading ? (
             <div style={{ padding: '8px', fontSize: '12px', color: '#666', borderTop: '1px solid var(--border-muted)', textAlign: 'center' }}>
-              <div style={{ marginBottom: '6px' }}>AI 모델 병렬 로딩 중...</div>
+              <div style={{ marginBottom: '6px', fontWeight: 600, color: '#f59e0b', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                <span>⚡ GPU VRAM 모델 로딩 중...</span>
+              </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#10b981', opacity: 0.9 }}>
-                <span>Main (3B/7B)</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#10b981', fontWeight: 600 }}>
+                <span>{pendingModelId.split('-')[0]} {pendingModelId.split('-')[1]} (통합 엔진)</span>
                 <span>{pMain}%</span>
               </div>
-              <div style={{ width: '100%', height: '4px', background: 'rgba(0,0,0,0.1)', borderRadius: '2px', overflow: 'hidden', marginBottom: '2px' }}>
+              <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden', margin: '4px 0 6px' }}>
                 <div style={{ width: `${pMain}%`, height: '100%', background: 'linear-gradient(90deg, #059669, #10b981)', transition: 'width 0.2s ease-out' }} />
               </div>
-              <div style={{ color: '#10b981', fontSize: '9px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left', marginBottom: '6px' }}>{mainProgressText}</div>
+              <div style={{ color: '#94a3b8', fontSize: '9px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left' }}>
+                {mainProgressText || '가중치 다운로드 및 GPU 파이프라인 초기화 중...'}
+              </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#8b5cf6', opacity: 0.9 }}>
-                <span>Ghost (1.5B)</span>
-                <span>{pGhost}%</span>
-              </div>
-              <div style={{ width: '100%', height: '4px', background: 'rgba(0,0,0,0.1)', borderRadius: '2px', overflow: 'hidden', marginBottom: '2px' }}>
-                <div style={{ width: `${pGhost}%`, height: '100%', background: 'linear-gradient(90deg, #7c3aed, #8b5cf6)', transition: 'width 0.2s ease-out' }} />
-              </div>
-              <div style={{ color: '#8b5cf6', fontSize: '9px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left' }}>{ghostProgressText}</div>
+              {isGhostLoading && (
+                <div style={{ marginTop: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#8b5cf6', opacity: 0.9 }}>
+                    <span>Ghost 보조 모델</span>
+                    <span>{pGhost}%</span>
+                  </div>
+                  <div style={{ width: '100%', height: '4px', background: 'rgba(0,0,0,0.1)', borderRadius: '2px', overflow: 'hidden', margin: '2px 0' }}>
+                    <div style={{ width: `${pGhost}%`, height: '100%', background: 'linear-gradient(90deg, #7c3aed, #8b5cf6)', transition: 'width 0.2s ease-out' }} />
+                  </div>
+                  <div style={{ color: '#8b5cf6', fontSize: '9px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textAlign: 'left' }}>{ghostProgressText}</div>
+                </div>
+              )}
             </div>
           ) : (
             <button
