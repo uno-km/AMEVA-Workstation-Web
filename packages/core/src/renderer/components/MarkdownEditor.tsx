@@ -230,7 +230,11 @@ const CustomAddBlockButton = () => {
     if (isBlockEmpty) {
       // 빈 블록인 경우: 기존 위치에 커서 포커스하고 슬래시 메뉴 열기
       editor.setTextCursorPosition(block)
-      suggestionMenu.openSuggestionMenu('/')
+      try {
+        suggestionMenu?.openSuggestionMenu('/')
+      } catch (err) {
+        console.warn('[CustomAddBlockButton] SuggestionMenu not ready:', err)
+      }
     } else {
       // 내용이 있는 블록인 경우: 아래에 새 빈 단락을 삽입하고 커서 이동 후 슬래시 메뉴 열기
       const insertedBlock = editor.insertBlocks(
@@ -238,8 +242,14 @@ const CustomAddBlockButton = () => {
         block,
         'after',
       )[0]
-      editor.setTextCursorPosition(insertedBlock)
-      suggestionMenu.openSuggestionMenu('/')
+      if (insertedBlock) {
+        editor.setTextCursorPosition(insertedBlock)
+        try {
+          suggestionMenu?.openSuggestionMenu('/')
+        } catch (err) {
+          console.warn('[CustomAddBlockButton] SuggestionMenu not ready:', err)
+        }
+      }
     }
   }, [block, editor, suggestionMenu])
 
@@ -368,7 +378,7 @@ const SafeDragHandleMenu = () => {
  */
 const SafeCustomSideMenu = () => (
   <SideMenu>
-    <AddBlockButton />
+    <CustomAddBlockButton />
     <DragHandleButton dragHandleMenu={SafeDragHandleMenu} />
   </SideMenu>
 )
