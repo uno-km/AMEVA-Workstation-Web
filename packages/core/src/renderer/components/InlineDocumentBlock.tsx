@@ -1403,20 +1403,25 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
   const [totalPages, setTotalPages] = useState(1)
   const [showToc, setShowToc] = useState(false)
 
+  const [activeHeadingId, setActiveHeadingId] = useState<string | null>(null)
+
   // Word 렌더링 완료 후 구조(섹션/페이지, Heading 목차) 파싱
   const parseWordStructure = useCallback(() => {
     const container = docxContainerRef.current
     if (!container) return
 
     // 1) docx-preview 섹션/페이지 수 파싱
-    const sections = Array.from(container.querySelectorAll('section.docx, .docx-wrapper > section, .docx')) as HTMLElement[]
+    const sections = Array.from(container.querySelectorAll('section.docx, .docx-wrapper > section, .docx, section, article')) as HTMLElement[]
     if (sections.length > 0) {
       setTotalPages(sections.length)
+    } else {
+      const approx = Math.max(1, Math.round(container.scrollHeight / 1000))
+      setTotalPages(approx)
     }
 
     // 2) Headings (h1, h2, h3, docx heading classes) 목차 파싱
     const headingElements = Array.from(container.querySelectorAll(
-      'h1, h2, h3, h4, h5, h6, .heading, [class*="heading"], [class*="Heading"], [class*="title"], [class*="Title"]'
+      'h1, h2, h3, h4, h5, h6, .heading, [class*="heading"], [class*="Heading"], [class*="title"], [class*="Title"], p[class*="heading"]'
     )) as HTMLElement[]
 
     const validHeadings = headingElements.filter(el => {
@@ -1455,13 +1460,16 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
     }
   }, [])
 
-  const scrollToHeading = useCallback((el: HTMLElement) => {
-    const container = docxContainerRef.current
-    if (!container || !el) return
-    const containerRect = container.getBoundingClientRect()
-    const elemRect = el.getBoundingClientRect()
-    const offset = elemRect.top - containerRect.top + container.scrollTop
-    container.scrollTo({ top: Math.max(0, offset - 12), behavior: 'smooth' })
+  const scrollToHeading = useCallback((el: HTMLElement, id?: string) => {
+    if (!el) return
+    if (id) setActiveHeadingId(id)
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    const origBg = el.style.backgroundColor
+    el.style.transition = 'background-color 0.3s ease'
+    el.style.backgroundColor = 'rgba(59, 130, 246, 0.25)'
+    setTimeout(() => {
+      el.style.backgroundColor = origBg
+    }, 1200)
   }, [])
 
   // 스크롤 시 현재 페이지 추적
@@ -1470,25 +1478,28 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
     if (!container) return
 
     const handleScroll = () => {
-      const sections = Array.from(container.querySelectorAll('section.docx, .docx-wrapper > section')) as HTMLElement[]
-      if (sections.length === 0) return
+      const sections = Array.from(container.querySelectorAll('section.docx, .docx-wrapper > section, .docx, section, article')) as HTMLElement[]
+      if (sections.length > 0) {
+        const containerRect = container.getBoundingClientRect()
+        const containerCenter = containerRect.top + containerRect.height / 2
 
-      const containerRect = container.getBoundingClientRect()
-      const containerCenter = containerRect.top + containerRect.height / 2
+        let closestPage = 1
+        let minDistance = Infinity
 
-      let closestPage = 1
-      let minDistance = Infinity
-
-      sections.forEach((sec, idx) => {
-        const rect = sec.getBoundingClientRect()
-        const secCenter = rect.top + rect.height / 2
-        const dist = Math.abs(secCenter - containerCenter)
-        if (dist < minDistance) {
-          minDistance = dist
-          closestPage = idx + 1
-        }
-      })
-      setCurrentPage(closestPage)
+        sections.forEach((sec, idx) => {
+          const rect = sec.getBoundingClientRect()
+          const secCenter = rect.top + rect.height / 2
+          const dist = Math.abs(secCenter - containerCenter)
+          if (dist < minDistance) {
+            minDistance = dist
+            closestPage = idx + 1
+          }
+        })
+        setCurrentPage(closestPage)
+      } else {
+        const p = Math.min(totalPages, Math.max(1, Math.floor(container.scrollTop / 1000) + 1))
+        setCurrentPage(p)
+      }
     }
 
     container.addEventListener('scroll', handleScroll, { passive: true, capture: true })
@@ -1597,9 +1608,23 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
       </div>
     )
 
+    const goToDocxPage = (targetP: number) => {
+      const p = Math.max(1, Math.min(totalPages, targetP))
+      const container = docxContainerRef.current
+      if (!container) return
+      const sections = Array.from(container.querySelectorAll('section.docx, .docx-wrapper > section, .docx, section, article')) as HTMLElement[]
+      if (sections.length >= p) {
+        sections[p - 1].scrollIntoView({ behavior: 'smooth', block: 'start' })
+        setCurrentPage(p)
+      } else {
+        container.scrollTo({ top: (p - 1) * 1000, behavior: 'smooth' })
+        setCurrentPage(p)
+      }
+    }
+
     return (
-      <div style={{ position: 'relative', width: '100%', height, background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
-        {/* Word 상단 툴바: 현재 페이지 번호 및 목차 버튼 */}
+      <div style={{ position: 'relative', width: '100%', height, background: '#0b0f19', display: 'flex', flexDirection: 'column' }}>
+        {/* Word/Docs 상단 툴바: PDF 뷰어와 동일한 페이지 이동 및 목차 버튼 */}
         {docType === 'docx' && (
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -1607,23 +1632,35 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
             color: '#e2e8f0', fontSize: 11, fontWeight: 600, zIndex: 15, flexShrink: 0
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ padding: '2px 6px', background: '#3b82f633', color: '#60a5fa', borderRadius: 4, fontSize: 10 }}>
+              <button
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '2px 6px', fontSize: 14, lineHeight: 1 }}
+                onClick={() => goToDocxPage(currentPage - 1)}
+                disabled={currentPage <= 1}
+                title="이전 페이지"
+              >‹</button>
+              <span style={{ padding: '2px 8px', background: '#3b82f633', color: '#60a5fa', borderRadius: 4, fontSize: 11, fontWeight: 700 }}>
                 📄 {currentPage} / {totalPages} 페이지
               </span>
+              <button
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '2px 6px', fontSize: 14, lineHeight: 1 }}
+                onClick={() => goToDocxPage(currentPage + 1)}
+                disabled={currentPage >= totalPages}
+                title="다음 페이지"
+              >›</button>
             </div>
             {tocHeadings.length > 0 && (
               <button
                 onClick={() => setShowToc(!showToc)}
                 style={{
-                  background: showToc ? '#3b82f622' : 'transparent',
-                  border: '1px solid ' + (showToc ? '#3b82f666' : 'rgba(255,255,255,0.2)'),
+                  background: showToc ? '#3b82f633' : 'transparent',
+                  border: '1px solid ' + (showToc ? '#3b82f6' : 'rgba(255,255,255,0.2)'),
                   color: showToc ? '#60a5fa' : '#94a3b8',
-                  borderRadius: 4, padding: '2px 8px', fontSize: 11, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: 4
+                  borderRadius: 4, padding: '3px 10px', fontSize: 11, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600
                 }}
               >
                 <List size={12} />
-                {showToc ? '목차 닫기' : '문서 목차'}
+                {showToc ? '목차 닫기' : `문서 목차 (${tocHeadings.length})`}
               </button>
             )}
           </div>
@@ -1640,7 +1677,7 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
               flex: 1,
               height: '100%',
               overflow: 'auto',
-              background: '#f8fafc',
+              background: '#0b0f19',
               color: '#0f172a',
               fontSize: 13,
               lineHeight: 1.6,
@@ -1649,25 +1686,43 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
           >
             <style>{`
               .docx-preview-container {
-                background: #f1f5f9 !important;
-                padding: 20px !important;
+                background: #0b0f19 !important;
+                padding: 24px 16px !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
               }
               .docx-preview-container .docx-wrapper {
                 background: transparent !important;
                 padding: 0 !important;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                gap: 20px !important;
+                width: 100% !important;
               }
               .docx-preview-container section.docx {
                 background: #ffffff !important;
-                box-shadow: 0 4px 16px rgba(0,0,0,0.1) !important;
-                margin: 0 auto 20px auto !important;
-                padding: 40px !important;
-                color: #0f172a !important;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.45) !important;
+                border-radius: 4px !important;
+                margin: 0 auto !important;
+                padding: 48px 56px !important;
+                max-width: 820px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+                color: #1e293b !important;
+                min-height: 1050px !important;
               }
               .docx-styled-html {
-                padding: 24px 32px;
+                max-width: 820px;
+                margin: 24px auto;
+                padding: 48px 56px;
                 background: #ffffff;
+                border-radius: 4px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.45);
                 min-height: 100%;
-                font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+                font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+                color: #1e293b;
               }
               .docx-styled-html table {
                 border-collapse: collapse !important;
@@ -1731,22 +1786,27 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
               {tocHeadings.map(item => (
                 <div
                   key={item.id}
-                  onClick={() => scrollToHeading(item.element)}
+                  onClick={() => scrollToHeading(item.element, item.id)}
                   style={{
                     padding: '6px 8px', borderRadius: 4, marginBottom: 3, cursor: 'pointer', fontSize: 11,
                     paddingLeft: `${Math.min(24, (item.level - 1) * 10 + 8)}px`,
-                    background: 'transparent',
-                    color: '#cbd5e1',
+                    background: activeHeadingId === item.id ? 'rgba(59, 130, 246, 0.25)' : 'transparent',
+                    color: activeHeadingId === item.id ? '#60a5fa' : '#cbd5e1',
+                    borderLeft: activeHeadingId === item.id ? '3px solid #3b82f6' : '3px solid transparent',
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                     transition: 'all 0.15s',
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.background = 'rgba(59, 130, 246, 0.2)'
-                    e.currentTarget.style.color = '#60a5fa'
+                    if (activeHeadingId !== item.id) {
+                      e.currentTarget.style.background = 'rgba(59, 130, 246, 0.15)'
+                      e.currentTarget.style.color = '#93c5fd'
+                    }
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.background = 'transparent'
-                    e.currentTarget.style.color = '#cbd5e1'
+                    if (activeHeadingId !== item.id) {
+                      e.currentTarget.style.background = 'transparent'
+                      e.currentTarget.style.color = '#cbd5e1'
+                    }
                   }}
                   title={item.text}
                 >
