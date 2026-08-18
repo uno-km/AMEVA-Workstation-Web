@@ -1,8 +1,23 @@
 import { useEffect } from 'react'
 import { useDependencyStore } from './useDependencyStore'
 
+import { useWebLLM } from '../components/useWebLLM';
+
 export function useBackgroundInit() {
   const { initDependency, setDependencyStatus } = useDependencyStore()
+  const { initModel } = useWebLLM()
+
+  useEffect(() => {
+    // 자동 복구 리로드 플래그 검사
+    if (sessionStorage.getItem('ameva_auto_init_webgpu') === '1') {
+      sessionStorage.removeItem('ameva_auto_init_webgpu');
+      setTimeout(() => {
+        const model = localStorage.getItem('ameva_selected_llm_model') || 'Qwen2.5-0.5B-Instruct-q4f32_1-MLC';
+        console.log('[AutoInitWebGPU] Seamlessly starting WebGPU model after recovery:', model);
+        initModel(model).catch(e => console.warn('[AutoInitWebGPU] error:', e));
+      }, 600);
+    }
+  }, [initModel]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
