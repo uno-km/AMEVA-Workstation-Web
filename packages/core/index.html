@@ -7,8 +7,14 @@
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' http://localhost:* https://*; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: http://localhost:* https://*; style-src 'self' 'unsafe-inline' http://localhost:* https://*; font-src 'self' data: http://localhost:* https://*; img-src 'self' data: blob: http://localhost:* https://*; media-src 'self' data: blob: http://localhost:* https://*; frame-src 'self' blob: data: http://localhost:* https://*; connect-src 'self' data: blob: ws://localhost:* wss://localhost:* ws://127.0.0.1:* http://127.0.0.1:* wss://demos.yjs.dev http://localhost:* https://*; worker-src 'self' blob: http://localhost:* https://*;" />
     <script>
       window.onerror = function(message, source, lineno, colno, error) {
-        if (typeof message === 'string' && message.includes('ResizeObserver')) {
-          return true; // prevent default error handling (no alert popup)
+        if (
+          typeof message === 'string' && (
+            message.includes('ResizeObserver') ||
+            message.includes('uninitialized suggestions menu') ||
+            message.includes('Attempting to update uninitialized')
+          )
+        ) {
+          return true; // prevent default error handling (benign library lifecycle noise)
         }
         console.group("🚨 [AMEVA Runtime Error]");
         console.error(message);
