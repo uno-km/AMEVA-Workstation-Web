@@ -390,15 +390,25 @@ export function useGhostText({
     try {
       if ((editor as any).proseMirrorView) {
         view = (editor as any).proseMirrorView;
-      } else if ((editor as any)._tiptapEditor) {
-        view = (editor as any)._tiptapEditor.view;
+      } else if ((editor as any)._tiptapEditor && !(editor as any)._tiptapEditor.isDestroyed) {
+        try {
+          view = (editor as any)._tiptapEditor.view;
+        } catch {
+          view = null;
+        }
       }
     } catch {
       view = null;
     }
 
-    if (!view || !view.dom) return;
-    const dom = view.dom;
+    if (!view) return;
+    let dom: HTMLElement | null = null;
+    try {
+      dom = view.dom;
+    } catch {
+      dom = null;
+    }
+    if (!dom) return;
 
     // ── onAccept/onDismiss 콜백 설정 (callbacksRef.current 갱신) ──
 

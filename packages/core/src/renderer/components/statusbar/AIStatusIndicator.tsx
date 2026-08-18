@@ -179,32 +179,31 @@ export function AIStatusIndicator({
           {isLoading && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#f59e0b', fontWeight: 600 }}>
-                <span>모델 병렬 로딩 중...</span>
-              </div>
-              
-              {/* Main Model Progress Bar */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#10b981', opacity: 0.9 }}>
-                <span>Main (3B/7B)</span>
+                <span>⚡ GPU VRAM 모델 로딩 중...</span>
                 <span>{pMain}%</span>
               </div>
-              <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+              
+              <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
                 <div style={{ width: `${pMain}%`, height: '100%', background: 'linear-gradient(90deg, #059669, #10b981)', transition: 'width 0.2s ease-out' }} />
               </div>
-              <div style={{ fontSize: '9px', color: '#10b981', textAlign: 'left', wordBreak: 'break-all', opacity: 0.9, marginTop: '2px' }}>
-                {mainProgressText}
+              <div style={{ fontSize: '9.5px', color: '#94a3b8', textAlign: 'left', wordBreak: 'break-all', marginTop: '2px' }}>
+                {mainProgressText || '가중치 다운로드 및 GPU 파이프라인 초기화 중...'}
               </div>
 
-              {/* Ghost Model Progress Bar */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#8b5cf6', opacity: 0.9, marginTop: '4px' }}>
-                <span>Ghost (1.5B)</span>
-                <span>{pGhost}%</span>
-              </div>
-              <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
-                <div style={{ width: `${pGhost}%`, height: '100%', background: 'linear-gradient(90deg, #7c3aed, #8b5cf6)', transition: 'width 0.2s ease-out' }} />
-              </div>
-              <div style={{ fontSize: '9px', color: '#8b5cf6', textAlign: 'left', wordBreak: 'break-all', opacity: 0.9, marginTop: '2px' }}>
-                {ghostProgressText}
-              </div>
+              {isGhostLoading && (
+                <div style={{ marginTop: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#8b5cf6', opacity: 0.9 }}>
+                    <span>Ghost 보조 모델</span>
+                    <span>{pGhost}%</span>
+                  </div>
+                  <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                    <div style={{ width: `${pGhost}%`, height: '100%', background: 'linear-gradient(90deg, #7c3aed, #8b5cf6)', transition: 'width 0.2s ease-out' }} />
+                  </div>
+                  <div style={{ fontSize: '9px', color: '#8b5cf6', textAlign: 'left', wordBreak: 'break-all', marginTop: '2px' }}>
+                    {ghostProgressText}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
