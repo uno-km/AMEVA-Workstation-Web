@@ -353,6 +353,7 @@ export function DocumentProfileModal({ fileId, profile, pdf, onClose }: Props) {
       {showMapReduce && (
         <PdfMapReduceModal
           pdf={pdf}
+          fileId={fileId}
           fileName={source.fileName}
           numPages={source.pageCount || 1}
           onClose={() => {
