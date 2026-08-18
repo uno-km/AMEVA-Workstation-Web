@@ -29,20 +29,33 @@ export function formatRAGContext(
   contextChunks: Array<EmbeddingChunk | { text: string; heading?: string; section?: string; score?: number }> | string
 ): string {
   if (typeof contextChunks === 'string') {
-    return contextChunks.trim();
+    const str = contextChunks.trim();
+    return str.length > 1500 ? str.slice(0, 1500) + '... (이하 생략)' : str;
   }
 
   if (!Array.isArray(contextChunks) || contextChunks.length === 0) {
     return '제공된 참조 문서 정보가 없습니다.';
   }
 
-  return contextChunks.map((chunk, idx) => {
+  // Windows DX12 TDR / Device Lost 방지: 상위 3개 청크, 최대 1500자로 안전 캡핑
+  const topChunks = contextChunks.slice(0, 3);
+  let totalLen = 0;
+  const filtered: typeof topChunks = [];
+  for (const c of topChunks) {
+    const text = typeof c === 'string' ? c : c.text;
+    if (totalLen + text.length > 1500 && filtered.length > 0) break;
+    filtered.push(c);
+    totalLen += text.length;
+  }
+
+  return filtered.map((chunk, idx) => {
     const text = typeof chunk === 'string' ? chunk : chunk.text;
     const heading = typeof chunk === 'object' && chunk.heading ? ` [위치/섹션: ${chunk.heading}]` : '';
     const scoreInfo = typeof chunk === 'object' && chunk.score !== undefined && chunk.score > 0
       ? ` (관련도 점수: ${(chunk.score * 100).toFixed(1)}%)`
       : '';
-    return `### [참조 문서 ${idx + 1}${heading}${scoreInfo}]\n${text.trim()}`;
+    const boundedText = text.length > 600 ? text.slice(0, 600) + '...' : text;
+    return `### [참조 문서 ${idx + 1}${heading}${scoreInfo}]\n${boundedText.trim()}`;
   }).join('\n\n');
 }
 

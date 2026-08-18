@@ -45,7 +45,7 @@ export function AIStatusIndicator({
   const { isMainReady, isGhostReady, isMainLoading, isGhostLoading, mainProgressText, ghostProgressText, mainProgress, ghostProgress, initModel, activeModelId } = useWebLLM()
   const [showDashboard, setShowDashboard] = useState(false)
   const [selectedModel, setSelectedModel] = useState(() => {
-    return localStorage.getItem('ameva_selected_llm_model') || 'Qwen2.5-3B-Instruct-q4f32_1-MLC'
+    return localStorage.getItem('ameva_selected_llm_model') || 'Qwen2.5-0.5B-Instruct-q4f32_1-MLC'
   })
 
   useEffect(() => {
