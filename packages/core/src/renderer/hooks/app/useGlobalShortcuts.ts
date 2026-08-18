@@ -227,15 +227,6 @@ export function useGlobalShortcuts(params: GlobalShortcutsParams) {
     } else if (matchHotkey(e, hotkeys.zoomReset || 'Control+0')) {
       e.preventDefault()
       onZoomReset()
-    } else if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'f') {
-      e.preventDefault()
-      const searchInput = document.querySelector('input[placeholder*="PDF 내 텍스트 검색"]') as HTMLInputElement
-      if (searchInput) {
-        searchInput.focus()
-        searchInput.select()
-      } else {
-        useUIStore.getState().toggleFindReplace()
-      }
     } else if (e.ctrlKey && e.key === ',') {
       e.preventDefault()
       useUIStore.getState().toggleSettings()

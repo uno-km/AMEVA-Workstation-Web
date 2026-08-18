@@ -860,7 +860,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
   }
 
   const closeDocSearch = () => {
-    closeDocSearch()
+    setShowSearch(false)
     setSearchQuery('')
     clearDocHighlights()
     setSearchResults([])
@@ -868,28 +868,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
     setDocMatchElements([])
   }
 
-  // Ctrl+Shift+F 단축키 인터셉트 (이 문서 블록에 마우스가 있거나 포커스된 경우)
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'f') {
-        const isTarget = isHovered || !!document.activeElement?.closest(`[data-block-id="${block.id}"]`)
-        if (isTarget) {
-          e.preventDefault()
-          e.stopPropagation()
-          setShowSearch(true)
-          setTimeout(() => {
-            const inp = blockContainerRef.current?.querySelector('input[data-pdf-search-input]') as HTMLInputElement
-            if (inp) {
-              inp.focus()
-              inp.select()
-            }
-          }, 50)
-        }
-      }
-    }
-    window.addEventListener('keydown', onKey, { capture: true })
-    return () => window.removeEventListener('keydown', onKey, { capture: true })
-  }, [isHovered, block.id])
+// [SEARCH TRIGGER] 버튼 클릭을 통해서만 검색창 활성화
 
   // PDF용 Blob URL 사전 해석 (Chromium/Edge 내장 PDF 뷰어 연동)
   useEffect(() => {
@@ -1527,6 +1506,8 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
 }) {
   const [htmlContent, setHtmlContent] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [docViewMode, setDocViewMode] = useState<'native' | 'rich'>('native')
+  const [cachedBuffer, setCachedBuffer] = useState<ArrayBuffer | null>(null)
   const docxContainerRef = useRef<HTMLDivElement>(null)
   const [tocHeadings, setTocHeadings] = useState<{ id: string; text: string; level: number; element: HTMLElement }[]>([])
   const [currentPage, setCurrentPage] = useState(1)
@@ -1593,13 +1574,23 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
   const scrollToHeading = useCallback((el: HTMLElement, id?: string) => {
     if (!el) return
     if (id) setActiveHeadingId(id)
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    const container = docxContainerRef.current
+    if (container) {
+      const containerRect = container.getBoundingClientRect()
+      const elRect = el.getBoundingClientRect()
+      const scrollOffset = elRect.top - containerRect.top
+      container.scrollBy({ top: scrollOffset - 20, behavior: 'smooth' })
+    } else {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
     const origBg = el.style.backgroundColor
+    const origTransition = el.style.transition
     el.style.transition = 'background-color 0.3s ease'
-    el.style.backgroundColor = 'rgba(59, 130, 246, 0.25)'
+    el.style.backgroundColor = 'rgba(59, 130, 246, 0.4)'
     setTimeout(() => {
       el.style.backgroundColor = origBg
-    }, 1200)
+      el.style.transition = origTransition
+    }, 1500)
   }, [])
 
   // 스크롤 시 현재 페이지 추적
@@ -1668,33 +1659,41 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
           throw new Error('Local file only')
         }
 
-        if (docType === 'docx') {
-          // 1) docx-preview를 활용하여 고품질 MS Word 문서 렌더링 시도
-          try {
-            const docxPreview = await import('docx-preview')
-            if (docxContainerRef.current) {
-              docxContainerRef.current.innerHTML = ''
-              await docxPreview.renderAsync(arrayBuffer, docxContainerRef.current, undefined, {
-                className: 'docx-preview-container',
-                inBreak: true,
-                ignoreWidth: false,
-                ignoreHeight: false,
-                ignoreFonts: false,
-                breakPages: true,
-                useBase64URL: true,
-              })
-              setLoading(false)
-              setTimeout(parseWordStructure, 400)
-              return
-            }
-          } catch (previewErr) {
-            console.warn('[OfficeDocViewer] docx-preview 렌더링 실패, mammoth 폴백 사용:', previewErr)
-          }
+        setCachedBuffer(arrayBuffer)
 
-          // 2) mammoth.js HTML 변환 폴백 (스타일링 보정)
+        // 1) mammoth HTML 항상 생성 (브라우저 뷰어용)
+        try {
           const mammoth = await import('mammoth')
           const result = await mammoth.convertToHtml({ arrayBuffer })
           setHtmlContent(result.value)
+        } catch (mErr) {
+          console.warn('[OfficeDocViewer] mammoth convert error:', mErr)
+        }
+
+        if (docType === 'docx') {
+          if (docViewMode === 'native') {
+            try {
+              const docxPreview = await import('docx-preview')
+              if (docxContainerRef.current) {
+                docxContainerRef.current.innerHTML = ''
+                await docxPreview.renderAsync(arrayBuffer, docxContainerRef.current, undefined, {
+                  className: 'docx-preview-container',
+                  inBreak: true,
+                  ignoreWidth: false,
+                  ignoreHeight: false,
+                  ignoreFonts: false,
+                  breakPages: true,
+                  useBase64URL: true,
+                })
+                setLoading(false)
+                setTimeout(parseWordStructure, 400)
+                return
+              }
+            } catch (previewErr) {
+              console.warn('[OfficeDocViewer] docx-preview 렌더링 실패, mammoth 폴백 사용:', previewErr)
+            }
+          }
+          setLoading(false)
           setTimeout(parseWordStructure, 400)
         } else if (docType === 'xlsx') {
           const ExcelJS = await import('exceljs')
@@ -1729,7 +1728,32 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
       }
     }
     loadDoc()
-  }, [sourceUrl, docType, fileBase64, parseWordStructure])
+  }, [sourceUrl, docType, fileBase64, docViewMode, parseWordStructure])
+
+  // 모드 전환 시 렌더링 재실행
+  useEffect(() => {
+    if (!cachedBuffer || docType !== 'docx') return
+    if (docViewMode === 'native' && docxContainerRef.current) {
+      import('docx-preview').then(docxPreview => {
+        if (docxContainerRef.current) {
+          docxContainerRef.current.innerHTML = ''
+          docxPreview.renderAsync(cachedBuffer, docxContainerRef.current, undefined, {
+            className: 'docx-preview-container',
+            inBreak: true,
+            ignoreWidth: false,
+            ignoreHeight: false,
+            ignoreFonts: false,
+            breakPages: true,
+            useBase64URL: true,
+          }).then(() => {
+            setTimeout(parseWordStructure, 300)
+          })
+        }
+      })
+    } else {
+      setTimeout(parseWordStructure, 300)
+    }
+  }, [docViewMode, cachedBuffer, docType, parseWordStructure])
 
   if (docType === 'docx' || docType === 'xlsx') {
     if (loading) return (
@@ -1780,15 +1804,26 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <button
+                onClick={() => setDocViewMode(prev => prev === 'native' ? 'rich' : 'native')}
+                style={{
+                  background: docViewMode === 'rich' ? 'rgba(168, 85, 247, 0.25)' : 'rgba(59, 130, 246, 0.2)',
+                  border: '1px solid ' + (docViewMode === 'rich' ? 'rgba(168, 85, 247, 0.5)' : 'rgba(59, 130, 246, 0.4)'),
+                  color: docViewMode === 'rich' ? '#d8b4fe' : '#93c5fd',
+                  borderRadius: 4, padding: '3px 8px', fontSize: 11, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600
+                }}
+                title={docViewMode === 'native' ? '웹 리더 브라우저 뷰어로 전환' : 'A4 원본 조판 내장 뷰어로 전환'}
+              >
+                {docViewMode === 'native' ? '🖥️ 브라우저 뷰어' : '📑 A4 내장 뷰어'}
+              </button>
+              <button
                 onClick={() => {
                   const root = docxContainerRef.current?.closest('[data-viewer-inner]');
-                  const searchInp = root?.querySelector('input[data-pdf-search-input]') as HTMLInputElement;
-                  if (searchInp) {
-                    searchInp.focus();
-                    searchInp.select();
-                  } else {
-                    const btn = document.querySelector('button[title*="Ctrl+Shift+F"]') as HTMLButtonElement;
-                    if (btn) btn.click();
+                  const searchBtn = root?.parentElement?.querySelector('button[title*="문서 검색"]') as HTMLButtonElement;
+                  if (searchBtn) searchBtn.click();
+                  else {
+                    const searchInp = root?.querySelector('input[data-pdf-search-input]') as HTMLInputElement;
+                    if (searchInp) { searchInp.focus(); searchInp.select(); }
                   }
                 }}
                 style={{
@@ -1798,10 +1833,10 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
                   borderRadius: 4, padding: '3px 8px', fontSize: 11, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600
                 }}
-                title="문서 내 텍스트 검색 (Ctrl+Shift+F)"
+                title="문서 검색 열기"
               >
                 <Search size={12} />
-                검색 (Ctrl+Shift+F)
+                검색
               </button>
               {tocHeadings.length > 0 && (
                 <button
@@ -1913,21 +1948,20 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
               }
             `}</style>
             
-            {docType === 'docx' ? (
-              <div style={{ width: '100%', minHeight: '100%' }}>
-                {htmlContent && (
-                  <div
-                    className="docx-styled-html"
-                    dangerouslySetInnerHTML={{ __html: htmlContent }}
-                  />
-                )}
+            {docType === 'docx' && docViewMode === 'rich' ? (
+              <div style={{ width: '100%', minHeight: '100%', padding: '24px 16px', display: 'flex', justifyContent: 'center' }}>
+                <div
+                  className="docx-styled-html"
+                  style={{ maxWidth: '880px', width: '100%', margin: '0 auto', background: '#ffffff', padding: '48px 56px', borderRadius: '6px', boxShadow: '0 8px 32px rgba(0,0,0,0.45)' }}
+                  dangerouslySetInnerHTML={{ __html: htmlContent || '' }}
+                />
               </div>
-            ) : (
+            ) : docType === 'xlsx' ? (
               <div
                 className="docx-styled-html"
                 dangerouslySetInnerHTML={{ __html: htmlContent || '' }}
               />
-            )}
+            ) : null}
           </div>
 
           {/* Word 목차 사이드 드로어 */}
