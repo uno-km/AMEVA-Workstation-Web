@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Features & 16-Core Matrix | AMEVA Workstation</title>
+  <title>Features & 16-Core Flagship Matrix | AMEVA Workstation</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -40,7 +40,7 @@
   </header>
 
   <!-- ── 메인 컨테이너 ── -->
-  <main class="promo-container" style="max-width: 1240px; margin: 0 auto; padding-top: 40px;">
+  <main class="promo-container" style="max-width: 1280px; margin: 0 auto; padding-top: 40px;">
     
     <!-- 헤더 인트로 섹션 -->
     <section style="text-align: center; margin-bottom: 40px;">
@@ -50,8 +50,8 @@
       <h1 style="font-size: 42px; font-weight: 900; letter-spacing: -1.5px; margin: 16px 0 12px 0;">
         <span class="grad-text">기존 8개 SaaS를 단 하나의 에디터로 압도하다.</span>
       </h1>
-      <p style="color: #94a3b8; max-width: 780px; margin: 0 auto 28px auto; font-size: 15px; line-height: 1.7;">
-        외부 서버 데이터 유출 0%의 <strong>온디바이스 WebGPU AI</strong>부터 <strong>인앱 비디오 컷편집, 오디오 무음 자동 삭제, 대용량 PDF 맵리듀스, 인터랙티브 엑셀/지오매핑</strong>까지 — 엔지니어링의 정점을 담았습니다.
+      <p style="color: #94a3b8; max-width: 860px; margin: 0 auto 28px auto; font-size: 15px; line-height: 1.8;">
+        외부 서버 데이터 유출 0%의 <strong>온디바이스 WebGPU AI</strong>부터 <strong>인앱 비디오 4K 컷편집, 오디오 무음 일괄 삭제, 대용량 PDF 맵리듀스, 인터랙티브 엑셀/지오매핑</strong>까지 — 엔지니어링의 정점을 담았습니다.
       </p>
 
       <!-- 카테고리 필터 버튼 탭 -->
@@ -77,15 +77,25 @@
             In-App Video DSP
           </div>
         </div>
-        <div class="matrix-slash-tag"><code>/video</code> 명령어 지원</div>
-        <h3 class="matrix-title">인앱 비디오 타임라인 컷편집 스튜디오</h3>
-        <p class="matrix-desc">
-          프리미어 프로 없이 문서 내에서 시작/종료 지점을 초 단위로 정밀하게 자르고(Trim), 8방향 모서리 핸들로 비례 해상도를 실시간 리사이징합니다.
-        </p>
+        <div class="matrix-slash-tag"><code>/video</code> 슬래시 커맨드 지원</div>
+        <h3 class="matrix-title">1. 인앱 비디오 타임라인 컷편집 스튜디오</h3>
+        
+        <div class="matrix-why-box">
+          <div class="matrix-why-title"><i class="fas fa-bolt"></i> 왜 압도적인 기술적 해자인가?</div>
+          프리미어 프로나 복잡한 무거운 툴을 켤 필요 없이, 마크다운 본문 안에서 0.1초 단위로 원하는 영상 구간을 즉시 자르고 8방향 비례 리사이징으로 화면 크기를 직관적으로 조정합니다.
+        </div>
+
         <ul class="matrix-specs">
-          <li><strong>정밀 타임코드</strong>: 0.1초 단위 슬라이더 트림 & 썸네일 실시간 스크러빙</li>
-          <li><strong>마크다운 직렬화</strong>: <code>:::video[start=2.4 end=14.8 width="100%"]:::</code> 무손실 저장</li>
-          <li><strong>성능 지표</strong>: GPU 하드웨어 가속 디코딩으로 메모리 점유율 60% 절감</li>
+          <li><strong>정밀 타임코드</strong>: 0.1초 단위 슬라이더 트림 & 썸네일 실시간 스크러빙 프리뷰</li>
+          <li><strong>8방향 리사이징</strong>: 코너/에지 바운딩 박스 비례 리사이징 및 16:9, 4:3 고정 종횡비 지원</li>
+          <li><strong>마크다운 직렬화</strong>: <code>:::video[src="demo.mp4" start=2.4 end=14.8 width="100%"]:::</code> 무손실 저장</li>
+          <li><strong>GPU 하드웨어 가속</strong>: WebCodecs/WebGL 하드웨어 디코더를 통한 0ms 렌더링 딜레이</li>
+          <li><strong>청크 스트리밍</strong>: IndexedDB VFS 청크 캐싱으로 4K 대용량 영상도 메모리 누수 없이 실시간 재생</li>
+          <li><strong>1-클릭 프레임 캡처</strong>: 영상 재생 중 원하는 프레임을 캡처하여 즉시 본문 이미지로 삽입</li>
+          <li><strong>드래그 앤 드롭</strong>: 로컬 MP4/WebM 파일을 브라우저 에디터로 드래그 시 즉시 인라인 로딩</li>
+          <li><strong>제로-트러스트 보안</strong>: 외부 서버 트래픽 전송 0%로 민감한 기업 회의 녹화본 완벽 보안 보장</li>
+          <li><strong>메모리 최적화</strong>: 렌더링 파이프라인 최적화로 브라우저 메모리 점유율 60% 이상 절감</li>
+          <li><strong>실시간 협업 동기화</strong>: Y.js CRDT 기반 재생 위치 및 비디오 편집 메타데이터 다자간 동시 동기화</li>
         </ul>
       </div>
 
@@ -99,15 +109,25 @@
             Web Audio DSP
           </div>
         </div>
-        <div class="matrix-slash-tag"><code>/audio</code> 명령어 지원</div>
-        <h3 class="matrix-title">오디오 주파수 분석 & 무음존 1-클릭 일괄 삭제</h3>
-        <p class="matrix-desc">
-          Web Audio API FFT 주파수 스펙트럼으로 파형을 실시간 시각화하고, AI 침묵 감지 알고리즘으로 무음 구간을 찾아 1초 만에 압축 삭제합니다.
-        </p>
+        <div class="matrix-slash-tag"><code>/audio</code> 슬래시 커맨드 지원</div>
+        <h3 class="matrix-title">2. 오디오 주파수 분석 & 무음존 1-클릭 일괄 삭제</h3>
+        
+        <div class="matrix-why-box">
+          <div class="matrix-why-title"><i class="fas fa-bolt"></i> 왜 압도적인 기술적 해자인가?</div>
+          1시간짜리 인터뷰나 회의 녹음본에서 말 안 하는 답답한 무음 구간을 찾느라 시간을 허비할 필요가 없습니다. Web Audio DSP가 침묵 구간을 자동 판별하여 1-클릭으로 전부 잘라내 재생 시간을 최대 42% 단축시킵니다.
+        </div>
+
         <ul class="matrix-specs">
-          <li><strong>실시간 FFT 파형</strong>: 40개 주파수 밴드 실시간 캔버스 이퀄라이저 시각화</li>
-          <li><strong>1-클릭 Silence Purge</strong>: 녹음본의 불필요한 침묵 구간 일괄 컷팅 (재생시간 42% 단축)</li>
-          <li><strong>무손실 재생</strong>: 음질 손실 없는 클라이언트 DSP 오디오 버퍼 조작</li>
+          <li><strong>실시간 FFT 파형</strong>: Web Audio API 40~60밴드 고해상도 FFT 주파수 스펙트럼 캔버스 시각화</li>
+          <li><strong>1-클릭 Silence Purge</strong>: AI 침묵 감지 알고리즘(-48dB 임계값)으로 무음 존 일괄 압축 삭제</li>
+          <li><strong>재생시간 42% 단축</strong>: 음질 손실 없는 클라이언트 DSP 오디오 버퍼 조작으로 청취 시간 극대화</li>
+          <li><strong>가변 배속 재생</strong>: 0.5x ~ 3.0x 음정 보정(Pitch Preserving) 오디오 엔진 탑재</li>
+          <li><strong>초정밀 셔틀 점프</strong>: 파형 캔버스 클릭 시 해당 타임코드로 즉각 점프하여 재생</li>
+          <li><strong>마크다운 직렬화</strong>: <code>:::audio[src="call.mp3" silencePurge=true speed=1.2]:::</code> 표준 저장</li>
+          <li><strong>인프라 비용 $0</strong>: 서버 전송 없이 100% 클라이언트 연산으로 서버 인프라 유지비 제로화</li>
+          <li><strong>타임스탬프 앵커</strong>: 녹취록 마크다운 작성 시 타임코드 클릭으로 해당 발언 구간 즉시 재생</li>
+          <li><strong>Noise Gate Filter</strong>: 배경 잡음 제거 필터 내장으로 선명한 음성 주파수 대역 분리</li>
+          <li><strong>STT 전처리 표준</strong>: 다국어 음성 인식 파이프라인 연결을 위한 무음 정제 전처리 자동화</li>
         </ul>
       </div>
 
@@ -121,15 +141,25 @@
             ONNX Vision AI
           </div>
         </div>
-        <div class="matrix-slash-tag"><code>/image</code> 명령어 지원</div>
-        <h3 class="matrix-title">이미지 AI 1초 배경 제거(누끼) & 캔버스 스튜디오</h3>
-        <p class="matrix-desc">
-          포토샵 없이 브라우저 온디바이스 비전 모델로 피사체를 정밀 분리하여 투명 배경 PNG를 만들고, Fabric.js 벡터 캔버스로 주석을 작성합니다.
-        </p>
+        <div class="matrix-slash-tag"><code>/image</code> 슬래시 커맨드 지원</div>
+        <h3 class="matrix-title">3. 이미지 AI 1초 배경 제거(누끼) & 캔버스 스튜디오</h3>
+        
+        <div class="matrix-why-box">
+          <div class="matrix-why-title"><i class="fas fa-bolt"></i> 왜 압도적인 기술적 해자인가?</div>
+          누끼 따기 사이트에 접속해서 개인/기업 기밀 사진을 업로드하고 유료 결제할 필요가 없습니다. 100% 온디바이스 ONNX 비전 신경망이 1.2초 만에 완벽한 알파 투명 마스크를 추출하고, Fabric.js 벡터 캔버스로 주석을 자유롭게 그립니다.
+        </div>
+
         <ul class="matrix-specs">
-          <li><strong>온디바이스 누끼 분리</strong>: 100% 로컬 연산으로 1.2초 만에 객체 마스크 추출</li>
+          <li><strong>온디바이스 누끼 분리</strong>: ONNX Runtime Web 기반 로컬 신경망으로 1.2초 만에 객체 마스크 분리</li>
+          <li><strong>Fabric.js 벡터 캔버스</strong>: 자유형 펜, 화살표, 텍스트 라벨, 사각형 하이라이트 박스 주석 작성</li>
           <li><strong>개별 리사이즈 영구 저장</strong>: 사진별 크기 비율 및 캡션 마크다운 메타데이터 영구 보존</li>
-          <li><strong>Fabric.js 벡터 도구</strong>: 화살표, 하이라이트 박스, 텍스트 드로잉 지원</li>
+          <li><strong>투명 바둑판 그리드</strong>: 알파 채널 투명 배경 실시간 뷰어 토글 및 투명 PNG 1-클릭 내보내기</li>
+          <li><strong>GPU 셰이더 필터</strong>: Grayscale, Sepia, Blur, 대비/밝기 조절 실시간 셰이더 적용</li>
+          <li><strong>마크다운 직렬화</strong>: <code>:::image[src="asset.png" bgRemoved=true annotations="[...]"]:::</code> 무손실 저장</li>
+          <li><strong>외부 업로드 0%</strong>: 기업 내부 문서 및 개인정보 유출 리스크 원천 차단</li>
+          <li><strong>클립보드 즉시 삽입</strong>: 웹 이미지 또는 캡처본 붙여넣기(<code>Ctrl+V</code>) 시 즉시 인라인 캔버스 활성화</li>
+          <li><strong>VFS 영구 보존</strong>: 대용량 이미지도 IndexedDB VFS에 영구 저장되어 새로고침 후에도 유지</li>
+          <li><strong>반응형 레이아웃</strong>: 뷰포트 크기에 맞춰 모바일/데스크톱 최적화 이미지 렌더링</li>
         </ul>
       </div>
 
@@ -143,103 +173,153 @@
             WebGPU Map-Reduce
           </div>
         </div>
-        <div class="matrix-slash-tag"><code>/doc</code> 명령어 지원</div>
-        <h3 class="matrix-title">대용량 PDF/DOCX 3단계 맵리듀스 지능형 요약 덱</h3>
-        <p class="matrix-desc">
-          100페이지가 넘는 대형 PDF, Word, PPTX, HWPX 문서를 16개 청크로 분할하여 로컬 GPU 병렬 연산으로 요약하고 도메인별 4대 카드 덱을 생성합니다.
-        </p>
+        <div class="matrix-slash-tag"><code>/doc</code> 슬래시 커맨드 지원</div>
+        <h3 class="matrix-title">4. 대용량 문서 인텔리전스 & 3단계 맵리듀스 요약 덱</h3>
+        
+        <div class="matrix-why-box">
+          <div class="matrix-why-title"><i class="fas fa-bolt"></i> 왜 압도적인 기술적 해자인가?</div>
+          100페이지가 넘는 대형 PDF를 열람하기 위해 무거운 뷰어를 띄우거나 ChatGPT 토큰 한도 초과 오류로 쩔쩔맬 필요가 없습니다. 16개 청크 병렬 WebGPU 맵리듀스 엔진이 128페이지를 순식간에 분석하여 4대 도메인 카드 덱을 생성합니다.
+        </div>
+
         <ul class="matrix-specs">
-          <li><strong>Fast-Pass 3초 요약</strong>: 1~3페이지 소형 문서는 3초 만에 핵심 요약 추출</li>
-          <li><strong>3단계 계층형 맵리듀스</strong>: 토큰화 ➔ 클러스터 맵리듀스 ➔ 인사이트 합성 덱 완성</li>
-          <li><strong>완전 다중 포맷 호환</strong>: PDF, Word(.docx), PPT(.pptx), 한글(.hwpx) 네이티브 파싱</li>
+          <li><strong>4대 포맷 네이티브 파싱</strong>: PDF(.pdf), Word(.docx), PPT(.pptx), 한글(.hwpx) 인앱 뷰어 완벽 탑재</li>
+          <li><strong>3초 Fast-Pass 고속 요약</strong>: 1~3페이지 소형 문서는 3~4초 만에 핵심 요약과 키워드를 즉시 도출</li>
+          <li><strong>3단계 맵리듀스 (Map-Reduce)</strong>: 수백 페이지 문서를 챕터별 분할(Map) 후 종합 취합(Reduce)</li>
+          <li><strong>지능형 요약 카드 덱</strong>: 개요, 재무/수치, 리스크 분석, 액션 플랜 4대 축으로 구조화 카드 생성</li>
+          <li><strong>1-클릭 본문 카드 삽입</strong>: 원하는 단락 카드만 골라 마크다운 블록으로 즉시 꽂아넣기 지원</li>
+          <li><strong>주석 하이라이트 레이어</strong>: 원본 문서 내 하이라이트 및 메모 작성 시 본문과 양방향 동기화</li>
+          <li><strong>100% 로컬 WebGPU 구동</strong>: 대외비 기업 보고서, 계약서 데이터의 외부 서버 전송 0%</li>
+          <li><strong>도메인별 특화 템플릿</strong>: 법률 계약서, 학술 논문, 기업 실적 보고서(IR) 맞춤형 분석 엔진</li>
+          <li><strong>로컬 캐싱 엔진</strong>: 동일 문서 재분석 시 0ms 즉시 응답하는 지능형 토큰 캐시</li>
+          <li><strong>마크다운 직렬화</strong>: <code>:::doc-summary[file="ir_2026.pdf" stage=3 chunks=16]:::</code> 무손실 저장</li>
         </ul>
       </div>
 
-      <!-- 5. Mini-Colab WebGPU 텐서 셰이더 브릿지 -->
+      <!-- 5. Mini-Colab & 브라우저 WebGPU 텐서 셰이더 연산기 -->
       <div class="matrix-card" data-cat="ai">
         <div class="matrix-card-header">
-          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #6366f1, #4338ca);">
             <i class="fas fa-microchip"></i>
           </div>
-          <div class="matrix-badge" style="background: rgba(139,92,246,0.15); color: #c084fc; border-color: rgba(139,92,246,0.3);">
-            WGSL GPU Kernel
+          <div class="matrix-badge" style="background: rgba(99,102,241,0.15); color: #818cf8; border-color: rgba(99,102,241,0.3);">
+            WGSL Shader Core
           </div>
         </div>
-        <div class="matrix-slash-tag"><code>/colab</code> 명령어 지원</div>
-        <h3 class="matrix-title">Mini-Colab & 브라우저 WebGPU 텐서 셰이더 연산기</h3>
-        <p class="matrix-desc">
-          파이썬 백엔드 서버 없이 브라우저 WGSL 셰이더 커널을 통해 행렬곱(MatMul), 딥러닝 텐서 연산 및 Qwen2.5 언어 모델을 초당 35+ 토큰으로 추론합니다.
-        </p>
+        <div class="matrix-slash-tag"><code>/colab</code> 슬래시 커맨드 지원</div>
+        <h3 class="matrix-title">5. Mini-Colab & 브라우저 WebGPU 텐서 연산 셰이더</h3>
+        
+        <div class="matrix-why-box">
+          <div class="matrix-why-title"><i class="fas fa-bolt"></i> 왜 압도적인 기술적 해자인가?</div>
+          파이썬 가상환경 설치, 무거운 CUDA 드라이버 세팅, 클라우드 GPU 서버 비용 결제 없이, 순수 웹 브라우저 안에서 내장 WebGPU 셰이더를 통해 딥러닝 텐서 연산과 행렬곱을 초고속으로 가속 구동합니다.
+        </div>
+
         <ul class="matrix-specs">
-          <li><strong>Zero-Copy Buffer Mapping</strong>: CPU-GPU 간 데이터 전송 병목 없는 직접 메모리 매핑</li>
-          <li><strong>4비트 양자화 모델</strong>: Qwen2.5 0.5B / 1.5B / 7B 로컬 구동 최적화</li>
-          <li><strong>서버비 $0</strong>: 모든 AI 추론을 클라이언트 디바이스 하드웨어가 100% 전담</li>
+          <li><strong>브라우저 네이티브 WGSL 브릿지</strong>: <code>gpuCore.ts</code>를 통해 하드웨어 직접 제어 셰이더 커널 컴파일</li>
+          <li><strong>고속 행렬곱 셰이더</strong>: <code>matmul.wgsl</code> 및 <code>elementwise.wgsl</code> 내장으로 초당 수십억 회 텐서 연산</li>
+          <li><strong>Qwen2.5 언어 모델 가속</strong>: 온디바이스 SLM 모델 로컬 추론 시 초당 35+ 토큰 스트리밍 달성</li>
+          <li><strong>Zero-Copy Buffer Mapping</strong>: CPU-GPU 간 데이터 전송 병목 현상을 최소화한 고속 파이프라인</li>
+          <li><strong>웹 워커 멀티스레드 격리</strong>: 딥러닝 추론 중에도 에디터 UI가 60fps로 매끄럽게 반응</li>
+          <li><strong>인터랙티브 파라미터 조절</strong>: 가중치 및 활성화 함수를 변경하며 실시간 수렴 곡선 차트 렌더링</li>
+          <li><strong>VRAM 자동 회수 아키텍처</strong>: 메모리 누수 없는 가비지 컬렉션(GC) 자동 관리 시스템</li>
+          <li><strong>클라우드 비용 $0</strong>: 서버 인프라 의존성 완전 제거로 운영 한계 비용 제로화 달성</li>
+          <li><strong>오프라인 완벽 지원</strong>: 비행기, 격리망 환경에서도 딥러닝 텐서 연산 100% 정상 작동</li>
+          <li><strong>마크다운 직렬화</strong>: <code>:::colab[kernel="wgsl-tensor" vram="4.2GB" model="Qwen2.5"]:::</code> 표준 저장</li>
         </ul>
       </div>
 
-      <!-- 6. 2D/3D 지식 관계망 시각화 (Knowledge Graph) -->
+      <!-- 6. 3D/2D 지식 관계망 시각화 뷰어 -->
       <div class="matrix-card" data-cat="ai">
         <div class="matrix-card-header">
-          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
-            <i class="fas fa-network-wired"></i>
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);">
+            <i class="fas fa-circle-nodes"></i>
           </div>
-          <div class="matrix-badge" style="background: rgba(6,182,212,0.15); color: #22d3ee; border-color: rgba(6,182,212,0.3);">
-            60fps Web Worker
+          <div class="matrix-badge" style="background: rgba(14,165,233,0.15); color: #38bdf8; border-color: rgba(14,165,233,0.3);">
+            Knowledge Graph
           </div>
         </div>
-        <div class="matrix-slash-tag"><code>/graph</code> 명령어 지원</div>
-        <h3 class="matrix-title">2D/3D 지식 관계망 시각화 뷰어 (Knowledge Graph)</h3>
-        <p class="matrix-desc">
-          수천 개의 마크다운 문서 간의 상호 참조 태그, 링크, 의미론적 임베딩 거리를 백그라운드 웹 워커 기반 60fps 포스-지향 그래프로 인터랙티브 렌더링합니다.
-        </p>
+        <div class="matrix-slash-tag"><code>/graph</code> 슬래시 커맨드 지원</div>
+        <h3 class="matrix-title">6. Knowledge Graph 3D/2D 지식 관계망 시각화</h3>
+        
+        <div class="matrix-why-box">
+          <div class="matrix-why-title"><i class="fas fa-bolt"></i> 왜 압도적인 기술적 해자인가?</div>
+          수십 수백 개의 방대한 노트들이 서로 어떻게 연결되어 있는지 한눈에 파악할 수 있습니다. 수천 개 노드도 버벅임 없이 60fps로 부드럽게 탐색하는 3D/2D 포스-지향 그래프를 통해 아이디어의 맥락과 새로운 지식의 고리를 발견합니다.
+        </div>
+
         <ul class="matrix-specs">
-          <li><strong>멀티스레드 물리 연산</strong>: UI 멈춤 현상 없는 웹 워커 백그라운드 레이아웃 계산</li>
-          <li><strong>의미론적 클러스터링</strong>: 벡터 유사도 기반 노드 자동 그룹화 및 필터링</li>
-          <li><strong>1-클릭 노드 점프</strong>: 그래프 노드 클릭 시 해당 문서 블록으로 즉시 앵커 이동</li>
+          <li><strong>포스-지향 그래프 엔진</strong>: 문서 내 키워드, 태그(#tag), 헤딩, 위키링크(<code>[[Note]]</code>) 유기적 연결</li>
+          <li><strong>웹 워커 물리 시뮬레이션</strong>: <code>graphWorker.ts</code> 기반 물리 엔진으로 수천 개 노드도 60fps 렌더링</li>
+          <li><strong>3D/2D 자유 시점 전환</strong>: 3차원 공간 회전 및 평면 줌/팬/드래그 인터랙티브 탐색</li>
+          <li><strong>임베딩 기반 군집화</strong>: 벡터 임베딩 코사인 유사도 기반 노드 자동 클러스터링 및 컬러 분류</li>
+          <li><strong>1-클릭 앵커 점프</strong>: 노드 클릭 시 해당 마크다운 문서의 정확한 단락 위치로 즉시 이동</li>
+          <li><strong>허브 & 고아 노드 필터</strong>: 연결성이 높은 핵심 허브와 고립된 고아 노드(Orphan) 즉시 식별</li>
+          <li><strong>네트워크 통계 리포트</strong>: 지식 베이스의 연결 밀도 및 지식 구조 분석 통계 제공</li>
+          <li><strong>로컬 메모리 인덱싱</strong>: 서버 요청 없이 0ms 즉각 반응하는 클라이언트 지식 그래프</li>
+          <li><strong>마크다운 직렬화</strong>: <code>:::graph[layout="force-3d" depth=3 minWeight=0.4]:::` 무손실 저장</li>
+          <li><strong>실시간 협업 동기화</strong>: 팀원들이 새 노드/문서를 추가하면 실시간으로 그래프 확장</li>
         </ul>
       </div>
 
-      <!-- 7. FortuneSheet 엑셀 스프레드시트 -->
+      <!-- 7. FortuneSheet 인앱 엑셀 스프레드시트 -->
       <div class="matrix-card" data-cat="office">
         <div class="matrix-card-header">
           <div class="matrix-icon-box" style="background: linear-gradient(135deg, #10b981, #047857);">
             <i class="fas fa-file-excel"></i>
           </div>
           <div class="matrix-badge" style="background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.3);">
-            MS Excel Interop
+            Excel Compatible
           </div>
         </div>
-        <div class="matrix-slash-tag"><code>/excel</code> 명령어 지원</div>
-        <h3 class="matrix-title">FortuneSheet 완전 호환 인앱 엑셀 스프레드시트</h3>
-        <p class="matrix-desc">
-          정적인 마크다운 표의 한계를 넘어, MS Excel .xlsx 파일을 양방향 무손실로 임포트/익스포트하고 400여 개 수식 연산(SUM, VLOOKUP)을 지원합니다.
-        </p>
+        <div class="matrix-slash-tag"><code>/excel</code> 슬래시 커맨드 지원</div>
+        <h3 class="matrix-title">7. FortuneSheet 완전 호환 인앱 엑셀 스프레드시트</h3>
+        
+        <div class="matrix-why-box">
+          <div class="matrix-why-title"><i class="fas fa-bolt"></i> 왜 압도적인 기술적 해자인가?</div>
+          엑셀 표를 캡처해서 이미지로 붙이거나 볼품없는 마크다운 텍스트 표로 변환하며 서식이 깨지는 고통을 끝냅니다. 실제 MS Excel 파일(.xlsx)을 에디터로 드래그하면 400여 개 함수 수식과 서식이 100% 보존된 채 즉시 작동합니다.
+        </div>
+
         <ul class="matrix-specs">
-          <li><strong>양방향 무손실 변환</strong>: 셀 서식, 다중 탭, 수식 구조를 100% 보존하며 .xlsx 내보내기</li>
-          <li><strong>실시간 셀 연산</strong>: 통계, 재무, 논리 함수 실시간 계산 및 마크다운 자동 동기화</li>
-          <li><strong>대규모 데이터 처리</strong>: 10만 행 이상의 대용량 테이블도 렉 없이 매끄럽게 렌더링</li>
+          <li><strong>MS Excel .xlsx 무손실 호환</strong>: 서식, 폰트, 색상, 테두리, 병합 셀 100% 양방향 임포트/익스포트</li>
+          <li><strong>400+ 엑셀 함수 엔진</strong>: SUM, AVERAGE, VLOOKUP, INDEX, MATCH, IF, COUNTIF 등 완벽 계산</li>
+          <li><strong>다중 워크시트 탭</strong>: 시트 생성, 삭제, 이름 변경 및 시트 간 참조 수식(Cross-sheet formula) 구동</li>
+          <li><strong>10만 행 가상 스크롤</strong>: 대규모 금융/통계 데이터셋도 Virtual Scrolling 기법으로 60fps 렌더링</li>
+          <li><strong>풍부한 셀 서식</strong>: 통화 단위, 백분율, 날짜, 조건부 서식, 텍스트 줄바꿈 및 정렬 지원</li>
+          <li><strong>인라인 차트 연동</strong>: 엑셀 데이터를 바탕으로 막대/꺾은선/원형 차트 1-클릭 즉시 생성</li>
+          <li><strong>클립보드 완벽 연동</strong>: 실제 엑셀 프로그램과의 복사/붙여넣기(<code>Ctrl+C / Ctrl+V</code>) 100% 호환</li>
+          <li><strong>마크다운 JSON 직렬화</strong>: <code>:::excel[file="budget.xlsx" activeSheet="Sheet1"]:::</code> 무손실 저장</li>
+          <li><strong>실시간 셀 동시 편집</strong>: Y.js CRDT 기반 다자간 동시 셀 입력 및 충돌 없는 자동 병합</li>
+          <li><strong>오프라인 완벽 작동</strong>: 외부 오피스 라이선스 인증 없이 브라우저 단독으로 엑셀 작업 완결</li>
         </ul>
       </div>
 
-      <!-- 8. Excalidraw 통합 화이트보드 -->
+      <!-- 8. Excalidraw 완전 내장 화이트보드 드로잉 -->
       <div class="matrix-card" data-cat="office">
         <div class="matrix-card-header">
-          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #ec4899, #be185d);">
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #a855f7, #7e22ce);">
             <i class="fas fa-draw-polygon"></i>
           </div>
-          <div class="matrix-badge" style="background: rgba(236,72,153,0.15); color: #f472b6; border-color: rgba(236,72,153,0.3);">
+          <div class="matrix-badge" style="background: rgba(168,85,247,0.15); color: #c084fc; border-color: rgba(168,85,247,0.3);">
             Vector Whiteboard
           </div>
         </div>
-        <div class="matrix-slash-tag"><code>/drawing</code> 명령어 지원</div>
-        <h3 class="matrix-title">Excalidraw 완전 내장 화이트보드 캔버스</h3>
-        <p class="matrix-desc">
-          시스템 아키텍처 다이어그램, 소프트웨어 와이어프레임, 자유형 손그림 스케치를 문서 본문 내에서 자유자재로 작성하고 벡터 그래픽으로 영구 보관합니다.
-        </p>
+        <div class="matrix-slash-tag"><code>/drawing</code> 슬래시 커맨드 지원</div>
+        <h3 class="matrix-title">8. Excalidraw 완전 내장 화이트보드 캔버스</h3>
+        
+        <div class="matrix-why-box">
+          <div class="matrix-why-title"><i class="fas fa-bolt"></i> 왜 압도적인 기술적 해자인가?</div>
+          Miro나 FigJam 같은 유료 화이트보드 구독 서비스를 별도로 결제할 필요가 없습니다. 손그림 스타일의 감성적인 스케치부터 정밀한 시스템 아키텍처 다이어그램까지 마크다운 문서 안에서 자유롭게 그리고 실시간으로 협업합니다.
+        </div>
+
         <ul class="matrix-specs">
-          <li><strong>풍부한 다이어그램 라이브러리</strong>: 클라우드 아키텍처, UI 컴포넌트 프리셋 제공</li>
-          <li><strong>무손실 SVG/PNG 추출</strong>: 캔버스 작업물을 원클릭으로 고화질 이미지 추출</li>
-          <li><strong>실시간 공동 스케치</strong>: Y.js CRDT 연동을 통한 팀원 간 실시간 동시 드로잉</li>
+          <li><strong>Excalidraw 완전 내장</strong>: 글로벌 표준 벡터 드로잉 화이트보드 엔진 브라우저 인앱 탑재</li>
+          <li><strong>자유형 스케치 & 도형</strong>: 손그림 펜, 화살표, 사각형, 원형, 다이아몬드, 텍스트 완벽 지원</li>
+          <li><strong>시스템 아키텍처 다이어그램</strong>: 클라우드 인프라, 소프트웨어 설계도, UI 와이어프레임 제작 최적화</li>
+          <li><strong>듀얼 폰트 스타일</strong>: 감성적인 핸드드로운(Hand-drawn) 폰트와 모던 산세리프 폰트 자유 전환</li>
+          <li><strong>인앱 템플릿 라이브러리</strong>: AWS/GCP 아키텍처 아이콘 및 UI 키트 라이브러리 기본 내장</li>
+          <li><strong>고해상도 벡터 내보내기</strong>: 무손실 SVG 및 투명 배경 PNG 1-클릭 파일 저장 지원</li>
+          <li><strong>장면 데이터 무손실 임베디드</strong>: 마크다운 본문에 장면 데이터가 JSON으로 안전하게 보존</li>
+          <li><strong>다자간 실시간 협업</strong>: Y.js WebSocket 브릿지 연동으로 팀원들의 마우스 커서 및 실시간 스케치 공유</li>
+          <li><strong>다크 모드 자동 컬러 반전</strong>: 에디터 테마 변경 시 다이어그램 선과 배경색 자동 스마트 반전</li>
+          <li><strong>마크다운 직렬화</strong>: <code>:::drawing[sceneId="arch_v1" theme="dark"]:::</code> 무손실 저장</li>
         </ul>
       </div>
 
@@ -253,19 +333,29 @@
             Interactive Kanban
           </div>
         </div>
-        <div class="matrix-slash-tag"><code>/kanban</code> 명령어 지원</div>
-        <h3 class="matrix-title">인라인 인터랙티브 칸반(Kanban) 보드</h3>
-        <p class="matrix-desc">
-          마크다운 문서 본문 내에서 드래그 앤 드롭으로 태스크 카드를 옮기고(To Do, In Progress, Done), 마감일과 담당자를 지정하는 스마트 프로젝트 보드입니다.
-        </p>
+        <div class="matrix-slash-tag"><code>/kanban</code> 슬래시 커맨드 지원</div>
+        <h3 class="matrix-title">9. 인라인 인터랙티브 칸반(Kanban) 보드</h3>
+        
+        <div class="matrix-why-box">
+          <div class="matrix-why-title"><i class="fas fa-bolt"></i> 왜 압도적인 기술적 해자인가?</div>
+          Trello나 Jira를 켜기 위해 브라우저 탭을 수십 개 열어둘 필요가 없습니다. 회의록이나 기획서 마크다운 본문 안에 인터랙티브 칸반 보드를 삽입하여 드래그 앤 드롭으로 업무 진행 상태를 직관적으로 추적합니다.
+        </div>
+
         <ul class="matrix-specs">
-          <li><strong>드래그 앤 드롭 인터랙션</strong>: 부드러운 물리 애니메이션과 실시간 컬럼 이동</li>
-          <li><strong>마크다운 직렬화</strong>: 칸반 카드 상태를 순수 마크다운 AST로 자동 상호 변환</li>
-          <li><strong>태스크 필터링 & 라벨링</strong>: 중요도별 색상 태그 및 담당자 배지 실시간 표시</li>
+          <li><strong>HTML5 Drag & Drop</strong>: 마크다운 본문 내에서 물리적으로 카드를 집어 컬럼 간 이동</li>
+          <li><strong>무제한 맞춤형 컬럼</strong>: To Do, In Progress, Review, Done 등 사용자 정의 컬럼 무제한 생성</li>
+          <li><strong>본문 상태 자동 갱신</strong>: 카드 이동 시 마크다운 텍스트 문서의 상태 태그가 즉시 양방향 동기화</li>
+          <li><strong>태스크 메타데이터</strong>: 담당자 아바타, 마감 D-Day, 우선순위(High/Med/Low) 컬러 태그 지원</li>
+          <li><strong>체크리스트 진행률</strong>: 카드 내부 서브태스크 체크 시 프로그레스 바 실시간 반영</li>
+          <li><strong>마크다운 목록 양방향 호환</strong>: <code>- [ ] 할 일</code> 체크박스 목록을 1-클릭 칸반 보드로 변환</li>
+          <li><strong>실시간 카드 필터링</strong>: 담당자별, 라벨 태그별, 우선순위별 실시간 카드 검색</li>
+          <li><strong>팀 실시간 동기화</strong>: 팀원이 카드를 옮기면 내 화면에서도 실시간 애니메이션으로 이동</li>
+          <li><strong>마크다운 직렬화</strong>: <code>:::kanban[columns="To Do,In Progress,Done" id="sprint_1"]:::</code> 표준 저장</li>
+          <li><strong>스프린트 생산성 극대화</strong>: 기획 문서와 업무 관리 보드가 하나의 문서에서 완결</li>
         </ul>
       </div>
 
-      <!-- 10. 지능형 지오매핑 & 최적 경로 탐색 -->
+      <!-- 10. 인터랙티브 지오매핑 & OSRM 최적 경로 탐색 -->
       <div class="matrix-card" data-cat="office">
         <div class="matrix-card-header">
           <div class="matrix-icon-box" style="background: linear-gradient(135deg, #10b981, #047857);">
@@ -275,19 +365,29 @@
             OSM & OSRM Engine
           </div>
         </div>
-        <div class="matrix-slash-tag"><code>/map</code> 명령어 지원</div>
-        <h3 class="matrix-title">지능형 지오매핑 & OSRM 최적 경로 탐색 시스템</h3>
-        <p class="matrix-desc">
-          OpenStreetMap 기반 실시간 장소 검색, 지도 위 클릭으로 다중 핀 꽂기, 출발지-도착지 OSRM 최적 경로 탐색 및 위경도 마크다운 직렬화를 지원합니다.
-        </p>
+        <div class="matrix-slash-tag"><code>/map</code> 슬래시 커맨드 지원</div>
+        <h3 class="matrix-title">10. 지능형 지오매핑 & OSRM 최적 경로 탐색 시스템</h3>
+        
+        <div class="matrix-why-box">
+          <div class="matrix-why-title"><i class="fas fa-bolt"></i> 왜 압도적인 기술적 해자인가?</div>
+          출장 계획서나 현장 답사 보고서를 쓸 때 외부 지도 캡처 이미지를 번거롭게 붙일 필요가 없습니다. OpenStreetMap과 OSRM 경로 탐색 엔진이 내장되어 원하는 장소를 검색하고 핀을 꽂으면 최적 주행/도보 경로가 지도 위에 인터랙티브하게 그려집니다.
+        </div>
+
         <ul class="matrix-specs">
-          <li><strong>인터랙티브 핀 꽂기</strong>: 클릭 즉시 지리 좌표와 커스텀 장소 라벨 생성</li>
-          <li><strong>OSRM 턴바이턴 경로 생성</strong>: 실시간 주행 경로 폴리라인 및 이동 거리 계산</li>
-          <li><strong>오프라인 지도 캐싱</strong>: 네트워크 불안정 시에도 로컬에 저장된 타일 맵 오프라인 렌더링</li>
+          <li><strong>전 세계 장소 실시간 검색</strong>: OpenStreetMap Nominatim 지오코딩 엔진 연동 주소 검색</li>
+          <li><strong>다중 핀 꽂기 인터페이스</strong>: 지도 위 원하는 지점들에 마커를 클릭하여 꽂고 라벨 지정</li>
+          <li><strong>OSRM 최적 경로 탐색</strong>: 출발지 ➔ 경유지 ➔ 도착지 간 턴바이턴 최적 주행 경로 시각화</li>
+          <li><strong>거리/소요시간 텔레메트리</strong>: 경로 총 이동 거리(km) 및 예상 소요 시간 자동 계산</li>
+          <li><strong>현장 사진 & 메모 첨부</strong>: 각 핀 팝업에 현장 실사 사진과 점검 메모를 인라인 첨부</li>
+          <li><strong>마크다운 무손실 직렬화</strong>: <code>:::map[provider="osm" zoom=14 routing="osrm"]:::</code> 좌표 저장</li>
+          <li><strong>미리보기 상시 인터랙티브</strong>: 마크다운 읽기 모드에서도 줌/팬 및 핀 팝업 상시 조작 가능</li>
+          <li><strong>GPX / GeoJSON 지원</strong>: GPS 트랙 로그 파일 드래그 앤 드롭 인앱 렌더링</li>
+          <li><strong>사이버 다크 테마 캔버스</strong>: 고대비 하이테크 다크 맵 타일 기본 탑재</li>
+          <li><strong>물류/출장 보고서 최적화</strong>: 배송 경로 계획서, 현장 실사 보고서 작성 생산성 10배 향상</li>
         </ul>
       </div>
 
-      <!-- 11. 파이썬 WASM & 4대 언어 컴파일러 -->
+      <!-- 11. 파이썬 WASM 샌드박스 & 4대 언어 런타임 -->
       <div class="matrix-card" data-cat="dev">
         <div class="matrix-card-header">
           <div class="matrix-icon-box" style="background: linear-gradient(135deg, #f59e0b, #b45309);">
@@ -297,85 +397,125 @@
             Pyodide WASM
           </div>
         </div>
-        <div class="matrix-slash-tag"><code>/jupyter</code>, <code>/code</code> 명령어 지원</div>
-        <h3 class="matrix-title">파이썬 WASM 샌드박스 & 4대 언어 라이브 런타임</h3>
-        <p class="matrix-desc">
-          설치 없이 브라우저 메모리 안에서 Pyodide 파이썬 런타임(NumPy, Pandas, Matplotlib)을 구동하고, JS, HTML, WASM SQL을 실시간 컴파일합니다.
-        </p>
+        <div class="matrix-slash-tag"><code>/jupyter</code> 또는 <code>/code</code> 지원</div>
+        <h3 class="matrix-title">11. 파이썬 WASM 샌드박스 & 4대 언어 라이브 런타임</h3>
+        
+        <div class="matrix-why-box">
+          <div class="matrix-why-title"><i class="fas fa-bolt"></i> 왜 압도적인 기술적 해자인가?</div>
+          주피터 노트북 서버를 따로 띄우지 않아도 됩니다. 브라우저 안에서 Pyodide WASM 파이썬 엔진이 직접 구동되어 NumPy, Pandas 데이터 가공과 Matplotlib 차트 시각화를 즉시 실행하고 문서에 삽입합니다.
+        </div>
+
         <ul class="matrix-specs">
-          <li><strong>격리된 WASM 샌드박스</strong>: 보안 위험 없이 안전하게 인앱 데이터 분석 코드 실행</li>
-          <li><strong>Matplotlib 실시간 렌더링</strong>: 파이썬 코드가 생성한 차트 이미지를 문서 내 즉시 임베딩</li>
-          <li><strong>SQLite WASM 지원</strong>: 브라우저 내부에서 관계형 데이터베이스 SQL 쿼리 및 테이블 조회</li>
+          <li><strong>Pyodide WASM 파이썬 커널</strong>: 백엔드 서버 없이 브라우저 내에서 순수 WebAssembly로 파이썬 3 실행</li>
+          <li><strong>과학 연산 라이브러리 내장</strong>: NumPy, Pandas, Matplotlib, SciPy, SymPy 완벽 로딩 및 구동</li>
+          <li><strong>인라인 차트 즉시 렌더링</strong>: 파이썬 실행 결과 Matplotlib 고해상도 차트가 문서 내 즉각 출력</li>
+          <li><strong>4대 언어 런타임 지원</strong>: JavaScript, Python, Live HTML/CSS, SQLite WASM 전수 지원</li>
+          <li><strong>SQLite WASM 인앱 쿼리</strong>: 브라우저 내 가상 DB 테이블 생성 및 SQL SELECT 쿼리 결과 표 렌더링</li>
+          <li><strong>HTML/CSS 라이브 샌드박스</strong>: 웹 컴포넌트 실시간 인터랙티브 프리뷰 샌드박스 탑재</li>
+          <li><strong>웹 워커 스레드 격리</strong>: 무거운 연산 중에도 에디터 타이핑이 멈추지 않는 샌드박스 격리</li>
+          <li><strong>표준 입출력 콘솔</strong>: stdout, stderr 및 런타임 에러 트레이스백 인라인 표시</li>
+          <li><strong>코드 블록 직렬화</strong>: 표준 마크다운 펜스드 코드 블록(<code>```python</code>)과 100% 호환</li>
+          <li><strong>데이터 분석 보고서 최적화</strong>: 기술 블로그, 퀀트 투자 분석, 논문 데이터 검증 완결</li>
         </ul>
       </div>
 
-      <!-- 12. Mermaid 지능형 문법 자동 보정기 -->
+      <!-- 12. Mermaid 다이어그램 문법 자동 보정기 -->
       <div class="matrix-card" data-cat="dev">
         <div class="matrix-card-header">
-          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);">
-            <i class="fas fa-code-branch"></i>
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #ec4899, #be185d);">
+            <i class="fas fa-project-diagram"></i>
           </div>
-          <div class="matrix-badge" style="background: rgba(14,165,233,0.15); color: #38bdf8; border-color: rgba(14,165,233,0.3);">
-            Auto-Correction
+          <div class="matrix-badge" style="background: rgba(236,72,153,0.15); color: #f472b6; border-color: rgba(236,72,153,0.3);">
+            Auto-Sanitizer
           </div>
         </div>
-        <div class="matrix-slash-tag"><code>/mermaid</code> 명령어 지원</div>
-        <h3 class="matrix-title">Mermaid 지능형 다이어그램 문법 자동 보정기</h3>
-        <p class="matrix-desc">
-          사용자가 다이어그램 작성 중 흔히 범하는 콜론 오류(<code>A --> B: 라벨</code>)나 줄바꿈 누락을 파서가 실시간으로 감지하여 표준 문법으로 자동 치환합니다.
-        </p>
+        <div class="matrix-slash-tag"><code>/mermaid</code> 슬래시 커맨드 지원</div>
+        <h3 class="matrix-title">12. Mermaid 다이어그램 지능형 문법 자동 보정기</h3>
+        
+        <div class="matrix-why-box">
+          <div class="matrix-why-title"><i class="fas fa-bolt"></i> 왜 압도적인 기술적 해자인가?</div>
+          Mermaid 다이어그램을 작성할 때 세미콜론이나 콜론 문법 하나만 잘못 써도 시뻘건 오류 화면이 뜨며 렌더링이 깨지는 스트레스를 완전히 없앴습니다. 지능형 파서(sanitizeMermaidCode)가 문법 오류를 스스로 감지하여 표준 규격으로 실시간 복구합니다.
+        </div>
+
         <ul class="matrix-specs">
-          <li><strong>오류 발생률 0% 지향</strong>: 잘못된 다이어그램 구문 작성 시 붉은 에러 대신 자동 복구</li>
-          <li><strong>모든 차트 타입 지원</strong>: Flowchart, Sequence, Class, State, Gantt, ER 다이어그램</li>
-          <li><strong>실시간 다크/라이트 테마 적응</strong>: 시스템 테마 변경 시 다이어그램 선과 글자 색상 자동 동기화</li>
+          <li><strong>실시간 문법 자동 보정 엔진</strong>: <code>sanitizeMermaidCode</code>가 콜론/줄바꿈 문법 오류를 감지하여 자동 치환</li>
+          <li><strong>오류 없는 Flowchart</strong>: 흔히 틀리는 <code>A --> B: 라벨</code>을 표준 <code>A -->|라벨| B</code>로 1초 만에 자동 복구</li>
+          <li><strong>에러 발생률 0% 지향</strong>: 불완전한 괄호 매칭 및 특수문자 자동 이스케이프 처리</li>
+          <li><strong>6대 다이어그램 전수 지원</strong>: Flowchart, Sequence, Class, State, ER Diagram, Gantt Chart</li>
+          <li><strong>고대비 벡터 그래픽</strong>: 다크 모드 및 라이트 모드 고해상도 SVG 벡터 다이어그램 렌더링</li>
+          <li><strong>1-클릭 다운로드</strong>: 다이어그램을 고해상도 SVG/PNG 파일로 1초 만에 로컬 저장</li>
+          <li><strong>인터랙티브 줌 & 팬 모달</strong>: 대규모 복잡한 시스템 구조도 마우스 휠로 자유롭게 확대/탐색</li>
+          <li><strong>디바운스 렌더링</strong>: 타이핑 중 렌더링 렉을 방지하는 스마트 렌더링 스케줄러</li>
+          <li><strong>마크다운 직렬화</strong>: <code>```mermaid\ngraph TD;\nA-->|Safe|B;\n```</code> 표준 문법 저장</li>
+          <li><strong>개발 문서화 생산성 혁신</strong>: 소프트웨어 아키텍처, DB 설계서 작성 시 오류 스트레스 제로</li>
         </ul>
       </div>
 
-      <!-- 13. 신경망 실시간 번역 & 4대 문체 다듬기 -->
+      <!-- 13. 신경망 실시간 번역 & 4대 맞춤형 문체 다듬기 -->
       <div class="matrix-card" data-cat="ai">
         <div class="matrix-card-header">
           <div class="matrix-icon-box" style="background: linear-gradient(135deg, #ec4899, #be185d);">
-            <i class="fas fa-language"></i>
+            <i class="fas fa-highlighter"></i>
           </div>
           <div class="matrix-badge" style="background: rgba(236,72,153,0.15); color: #f472b6; border-color: rgba(236,72,153,0.3);">
             Neural Polisher
           </div>
         </div>
-        <div class="matrix-slash-tag">인라인 AI Diff 뷰어 지원</div>
-        <h3 class="matrix-title">신경망 실시간 번역 & 4대 맞춤형 문체 다듬기</h3>
-        <p class="matrix-desc">
-          작성된 문장을 학술적, 비즈니스, 친근한, 기술자 4대 톤으로 즉시 변환하고, 삭제/추가된 단어를 직관적인 인라인 Git Diff(빨강/초록)로 대조합니다.
-        </p>
+        <div class="matrix-slash-tag">단축키 <code>Ctrl+Shift+T</code> 지원</div>
+        <h3 class="matrix-title">13. 신경망 실시간 번역 & 4대 맞춤형 문체 다듬기</h3>
+        
+        <div class="matrix-why-box">
+          <div class="matrix-why-title"><i class="fas fa-bolt"></i> 왜 압도적인 기술적 해자인가?</div>
+          외국어 논문이나 글로벌 비즈니스 이메일을 작성할 때 외부 번역기에 텍스트를 복사-붙여넣기할 필요가 없습니다. 온디바이스 신경망이 6개 국어를 즉시 번역하고, 학술/비즈니스/캐주얼/기술 4대 맞춤형 문체로 문장을 다듬어 실시간 Git Diff로 대조해 줍니다.
+        </div>
+
         <ul class="matrix-specs">
-          <li><strong>6개 국어 로컬 번역</strong>: 외부 번역 API 호출 없이 WebGPU 상에서 직접 번역</li>
-          <li><strong>톤 스위처</strong>: 학술 논문용 정갈한 문체부터 제안서용 전문 비즈니스 톤까지 1초 변환</li>
-          <li><strong>안전한 융합 (Accept/Reject)</strong>: 변경 제안을 확인 후 원클릭으로 본문에 병합</li>
+          <li><strong>온디바이스 신경망 번역</strong>: 한국어 ⇄ 영/일/중/스페인/프랑스/독일어 100% 로컬 WebGPU 번역</li>
+          <li><strong>4대 특화 문체 변환</strong>: 학술/논문체, 비즈니스 격식체, 친근한 캐주얼체, 개발자/기술 문서체</li>
+          <li><strong>실시간 AI Diff 뷰어</strong>: 수정 전(<code>&lt;del&gt;</code>)과 수정 후(<code>&lt;ins&gt;</code>)를 시각적으로 명확히 대조</li>
+          <li><strong>1-클릭 본문 치환</strong>: 추천 문장을 클릭 한 번으로 에디터 원본 위치에 즉시 덮어쓰기 적용</li>
+          <li><strong>문맥 맞춤법 교정</strong>: 오탈자, 띄어쓰기, 어색한 번역투 문장을 매끄러운 전문 표현으로 교정</li>
+          <li><strong>외부 유출 0%</strong>: 번역 데이터의 외부 전송이 전혀 없어 기업 기밀/계약서 100% 보안 보호</li>
+          <li><strong>컨텍스트 메뉴 지원</strong>: 드래그한 문장 블록만 마우스 우클릭으로 즉시 번역/다듬기 실행</li>
+          <li><strong>마크다운 서식 보존</strong>: 굵게, 링크, 코드 블록 등 마크다운 태그를 깨뜨리지 않는 스마트 파싱</li>
+          <li><strong>단축키 빠른 호출</strong>: <code>Ctrl+Shift+T</code> 단축키로 1초 만에 문체 변환 패널 활성화</li>
+          <li><strong>글로벌 제안서 최적화</strong>: 해외 바이어 제안서, 영문 연구 논문 작성 시 표현력 극대화</li>
         </ul>
       </div>
 
-      <!-- 14. 자율 AI 에이전트 패널 & 도구 호출 -->
+      <!-- 14. 차세대 자율 AI 에이전트 & 로컬 RAG 패널 -->
       <div class="matrix-card" data-cat="ai">
         <div class="matrix-card-header">
           <div class="matrix-icon-box" style="background: linear-gradient(135deg, #6366f1, #4338ca);">
             <i class="fas fa-robot"></i>
           </div>
           <div class="matrix-badge" style="background: rgba(99,102,241,0.15); color: #818cf8; border-color: rgba(99,102,241,0.3);">
-            Qwen2.5 & RAG
+            Autonomous Agent
           </div>
         </div>
-        <div class="matrix-slash-tag"><code>Cmd / Ctrl + L</code> 단축키 지원</div>
-        <h3 class="matrix-title">자율 AI 에이전트 패널 & 로컬 RAG 도구 호출</h3>
-        <p class="matrix-desc">
-          사내 문서를 로컬 벡터 DB에 임베딩하여 문맥을 이해하고, 사용자의 요청에 따라 에디터 내장 도구(표 작성, 코드 실행, 파일 저장)를 스스로 호출합니다.
-        </p>
+        <div class="matrix-slash-tag">단축키 <code>Cmd/Ctrl + L</code> 지원</div>
+        <h3 class="matrix-title">14. 차세대 자율 AI 에이전트 & 로컬 RAG 패널</h3>
+        
+        <div class="matrix-why-box">
+          <div class="matrix-why-title"><i class="fas fa-bolt"></i> 왜 압도적인 기술적 해자인가?</div>
+          단순한 챗봇이 아닙니다. 내 그래픽카드에서 구동되는 로컬 Qwen2.5 언어 모델과 벡터 스토어가 내 문서를 완벽히 이해하고, 에디터 도구들을 스스로 호출(Tool Calling)하여 비교표를 작성하고 코드를 직접 실행합니다.
+        </div>
+
         <ul class="matrix-specs">
-          <li><strong>Autonomous Tool Calling</strong>: 마크다운 표 생성, 코드 블록 삽입 등 에디터 명령 자율 실행</li>
-          <li><strong>온디바이스 RAG 검색</strong>: 사용자 전체 워크스페이스 문서를 100% 로컬 벡터로 초고속 시맨틱 검색</li>
-          <li><strong>스트리밍 생성</strong>: 지연 없는 초당 35+ 토큰 실시간 타이핑 렌더링</li>
+          <li><strong>Qwen2.5 WebGPU 가속</strong>: 온디바이스 가속 추론 엔진으로 초당 35+ 토큰 실시간 스트리밍</li>
+          <li><strong>로컬 벡터 스토어 RAG</strong>: 브라우저 IndexedDB 벡터 DB 기반 내 문서 지식 검색(RAG) 지원</li>
+          <li><strong>자율 도구 호출 (Tool Calling)</strong>: 표 생성, 파이썬 코드 실행, 문체 변환 툴을 스스로 판단하여 호출</li>
+          <li><strong>토큰 과금 $0</strong>: API 키나 유료 구독 없이 무제한으로 사용하는 100% 온디바이스 인텔리전스</li>
+          <li><strong>자동 컨텍스트 주입</strong>: 에디터에서 선택한 텍스트 단락을 에이전트가 자동 인식하여 정밀 답변</li>
+          <li><strong>완전 망분리 환경 지원</strong>: 비행기, 군부대, 폐쇄망 등 인터넷이 단절된 곳에서도 100% 정상 작동</li>
+          <li><strong>멀티턴 대화 메모리</strong>: 이전 대화 맥락을 기억하고 연속적인 문서 수정 지시 수행</li>
+          <li><strong>단축키 빠른 토글</strong>: <code>Cmd/Ctrl + L</code> 단축키로 슬라이드-인 사이드 패널 즉시 호출</li>
+          <li><strong>VRAM 자동 스케줄링</strong>: GPU 메모리 점유율을 모니터링하여 최적의 추론 속도 유지</li>
+          <li><strong>맞춤형 프롬프트 템플릿</strong>: 비즈니스 기획서, 코드 리팩토링, 논문 교정 전용 프롬프트 내장</li>
         </ul>
       </div>
 
-      <!-- 15. 1-클릭 프레젠테이션 모드 -->
+      <!-- 15. Presentation 모드 (1-클릭 슬라이드 쇼 변환) -->
       <div class="matrix-card" data-cat="office">
         <div class="matrix-card-header">
           <div class="matrix-icon-box" style="background: linear-gradient(135deg, #f43f5e, #be123c);">
@@ -385,51 +525,73 @@
             Slide Deck Engine
           </div>
         </div>
-        <div class="matrix-slash-tag"><code>F5</code> / 프레젠테이션 버튼 지원</div>
-        <h3 class="matrix-title">1-클릭 프레젠테이션 모드 & 마크다운 슬라이드</h3>
-        <p class="matrix-desc">
-          별도의 PPT 제작 과정 없이, 작성 중인 마크다운 문서의 헤딩 구조(H1, H2, 구분선)를 인식하여 1초 만에 풀스크린 발표용 슬라이드로 변환합니다.
-        </p>
+        <div class="matrix-slash-tag">단축키 <code>F5</code> 지원</div>
+        <h3 class="matrix-title">15. 1-클릭 프레젠테이션 모드 & 마크다운 슬라이드</h3>
+        
+        <div class="matrix-why-box">
+          <div class="matrix-why-title"><i class="fas fa-bolt"></i> 왜 압도적인 기술적 해자인가?</div>
+          회의 5분 전, 마크다운으로 쓴 기획서를 파워포인트로 일일이 복사하며 슬라이드를 만들 필요가 없습니다. 단축키 F5 하나로 마크다운 헤딩이 인터랙티브 풀스크린 PPT 슬라이드로 즉시 변환됩니다.
+        </div>
+
         <ul class="matrix-specs">
-          <li><strong>키보드 네비게이션</strong>: 방향키 및 스페이스바로 매끄러운 슬라이드 전환 애니메이션</li>
-          <li><strong>인터랙티브 블록 동작</strong>: 슬라이드 쇼 상태에서도 비디오 재생, 차트 인터랙션 100% 유지</li>
-          <li><strong>발표자 노트 모드</strong>: 발표 대본 및 타이머가 표시되는 듀얼 스크린 모드 지원</li>
+          <li><strong>1-클릭 풀스크린 전환</strong>: 단축키 <code>F5</code>로 마크다운 문서를 0.1초 만에 발표용 슬라이드로 변환</li>
+          <li><strong>H1/H2 자동 슬라이드 분할</strong>: 헤딩 구조 및 <code>---</code> 구분선을 감지하여 완벽한 슬라이드 레이아웃 생성</li>
+          <li><strong>라이브 인터랙티브 슬라이드</strong>: 발표 중에도 비디오 재생, 파이썬 코드 실행, 엑셀 조작 가능</li>
+          <li><strong>발표자 뷰 (Presenter View)</strong>: 발표자 전용 스피커 노트, 타이머, 다음 슬라이드 미리보기 지원</li>
+          <li><strong>네이티브 포인터 지원</strong>: 무선 프리젠터 리모컨 및 키보드 화살표 키 완벽 호환</li>
+          <li><strong>글래스모피즘 슬라이드 테마</strong>: 세련된 다크 글래스 테마로 프로페셔널한 발표 분위기 연출</li>
+          <li><strong>전환 애니메이션 효과</strong>: Smooth Fade, Slide, 3D Cube 등 감각적인 전환 효과 선택 가능</li>
+          <li><strong>PDF 슬라이드 내보내기</strong>: 발표 완료 후 발표 자료 PDF 1-클릭 즉시 출력 지원</li>
+          <li><strong>모바일 터치 제스처</strong>: 태블릿 및 스마트폰에서 스와이프 제스처로 슬라이드 넘김 지원</li>
+          <li><strong>문서-발표 일원화</strong>: 별도 PPT 제작 시간 100% 절감으로 업무 효율 극대화</li>
         </ul>
       </div>
 
-      <!-- 16. 8대 포맷 무손실 내보내기 & AES-GCM VFS -->
+      <!-- 16. 8대 포맷 네이티브 무손실 내보내기 & 암호화 VFS -->
       <div class="matrix-card" data-cat="dev">
         <div class="matrix-card-header">
-          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #0ea5e9, #0369a1);">
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #10b981, #059669);">
             <i class="fas fa-file-export"></i>
           </div>
-          <div class="matrix-badge" style="background: rgba(14,165,233,0.15); color: #38bdf8; border-color: rgba(14,165,233,0.3);">
-            Zero-Knowledge VFS
+          <div class="matrix-badge" style="background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.3);">
+            Export Hub & VFS
           </div>
         </div>
-        <div class="matrix-slash-tag">8대 포맷 및 <code>.adc</code> 암호화 지원</div>
-        <h3 class="matrix-title">8대 포맷 네이티브 무손실 내보내기 & 암호화 VFS</h3>
-        <p class="matrix-desc">
-          .docx, .pptx, .hwpx, .xlsx, .pdf, .html, .xml, .adc 포맷으로 자유롭게 내보내며, AES-GCM 256비트 암호화 IndexedDB 로컬 가상 파일 시스템을 제공합니다.
-        </p>
+        <div class="matrix-slash-tag"><code>Ctrl+E</code> Export Hub 지원</div>
+        <h3 class="matrix-title">16. 8대 포맷 네이티브 무손실 내보내기 & 암호화 VFS</h3>
+        
+        <div class="matrix-why-box">
+          <div class="matrix-why-title"><i class="fas fa-bolt"></i> 왜 압도적인 기술적 해자인가?</div>
+          공공기관(HWPX), 대기업(DOCX/PPTX/XLSX), 인쇄소(PDF), 웹(HTML/XML), 백업(암호화 ADC) 등 어떤 기관/파트너가 요구하는 규격도 외부 변환기 없이 자체 엔진으로 완벽하게 무손실 변환 및 내보내기합니다.
+        </div>
+
         <ul class="matrix-specs">
-          <li><strong>.adc 패키징 컨테이너</strong>: 모든 미디어, 주석, 버전 이력을 단일 암호화 파일로 압축 저장</li>
-          <li><strong>표준 포맷 무손실 변환</strong>: 정부/공공기관 규격(HWPX) 및 MS 오피스 표준 100% 호환</li>
-          <li><strong>Zero-Server 보안</strong>: 로컬 브라우저 샌드박스 격리로 엔터프라이즈 보안 규제 완벽 충족</li>
+          <li><strong>8대 포맷 네이티브 변환</strong>: .docx, .pptx, .hwpx, .xlsx, .pdf, .html, .xml, .adc 전수 지원</li>
+          <li><strong>한글 HWPX 공공 표준 준수</strong>: 대한민국 정부 부처 및 조달청 제출 규격 100% 무손실 출력</li>
+          <li><strong>MS Office 양방향 호환</strong>: Word, PowerPoint, Excel 파일로 서식 깨짐 없이 즉시 내보내기</li>
+          <li><strong>인쇄용 고해상도 PDF</strong>: 페이지 구분선 및 인쇄용 CSS 최적화로 깔끔한 PDF 생성</li>
+          <li><strong>독립형 HTML 패키징</strong>: CSS와 이미지가 인라인 번들링된 독립 실행형 HTML 파일 출력</li>
+          <li><strong>AES-GCM 256 암호화 VFS</strong>: 로컬 IndexedDB에 저장되는 모든 문서를 군사 등급 알고리즘으로 암호화</li>
+          <li><strong>통합 보안 아카이브 (.adc)</strong>: 문서, 미디어 에셋, 히스토리를 단일 암호화 파일로 압축 백업</li>
+          <li><strong>버전 관리 스냅샷</strong>: 작성 중 언제든 과거 특정 시점으로 1-클릭 롤백할 수 있는 스냅샷 엔진</li>
+          <li><strong>서버 변환 제로(Zero)</strong>: 100% 클라이언트 사이드 변환으로 문서 내용 유출 리스크 원천 차단</li>
+          <li><strong>대용량 일괄 임포트</strong>: 여러 문서를 드래그 앤 드롭으로 한 번에 가져오고 ZIP으로 일괄 내보내기</li>
         </ul>
       </div>
 
     </div>
 
-    <!-- 하단 Call To Action -->
-    <section style="text-align: center; margin: 60px 0 40px 0; background: linear-gradient(180deg, rgba(15,23,42,0.8) 0%, rgba(9,13,22,0.95) 100%); border: 1px solid rgba(59,130,246,0.25); border-radius: 16px; padding: 40px;">
-      <h2 style="font-size: 30px; font-weight: 900; margin-bottom: 12px;">지금 바로 16대 기능을 브라우저에서 실행해보세요.</h2>
-      <p style="color: #94a3b8; font-size: 14px; margin-bottom: 24px;">설치도, 회원가입도 필요 없습니다. 클릭 한 번으로 모든 기능이 활성화됩니다.</p>
-      <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
-        <a href="https://ameva-workstation-web-core.vercel.app/" target="_blank" class="btn-primary" style="padding: 14px 30px; font-size: 14px; font-weight: 800; background: linear-gradient(135deg, #2563eb, #0ea5e9); text-decoration: none;">
-          <i class="fas fa-play-circle"></i> 무설치 라이브 웹 앱 시작하기
+    <!-- 하단 콜투액션 배너 -->
+    <section style="background: linear-gradient(135deg, rgba(37,99,235,0.15) 0%, rgba(14,165,233,0.1) 100%); border: 1px solid rgba(56,189,248,0.3); border-radius: 24px; padding: 48px; text-align: center; margin-bottom: 60px; backdrop-filter: blur(16px);">
+      <h2 style="font-size: 32px; font-weight: 900; margin-bottom: 12px;">이 모든 16대 초격차 기술을 지금 브라우저에서 바로 경험하세요.</h2>
+      <p style="color: #94a3b8; font-size: 15px; max-width: 680px; margin: 0 auto 28px auto;">
+        별도의 프로그램 설치도, 회원가입도, 신용카드 등록도 필요 없습니다. 클릭 한 번으로 완전한 로컬 AI 워크스테이션이 열립니다.
+      </p>
+      <div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+        <a href="https://ameva-workstation-web-core.vercel.app/" target="_blank" class="btn-primary" style="padding: 14px 28px; font-size: 15px; font-weight: 800; background: linear-gradient(135deg, #2563eb, #0ea5e9); box-shadow: 0 8px 24px rgba(37,99,235,0.4);">
+          <i class="fas fa-rocket"></i> 무설치 라이브 웹 앱 시작하기
         </a>
-        <a href="demo.html" class="btn-secondary" style="padding: 14px 24px; font-size: 14px; font-weight: 700; text-decoration: none;">
+        <a href="demo.html" class="btn-secondary" style="padding: 14px 28px; font-size: 15px; font-weight: 700;">
           <i class="fas fa-terminal"></i> 4대 언어 샌드박스 체험
         </a>
       </div>
@@ -437,46 +599,52 @@
 
   </main>
 
-  <!-- ── 푸터 ── -->
-  <footer style="border-top: 1px solid rgba(255,255,255,0.08); padding: 30px 20px; text-align: center; color: #64748b; font-size: 12px;">
-    <div style="margin-bottom: 10px;">
-      <a href="index.html" style="color: #94a3b8; margin: 0 10px; text-decoration: none;">Home</a>
-      <a href="features.html" style="color: #94a3b8; margin: 0 10px; text-decoration: none;">Features</a>
-      <a href="demo.html" style="color: #94a3b8; margin: 0 10px; text-decoration: none;">Playground</a>
-      <a href="demo-collab.html" style="color: #94a3b8; margin: 0 10px; text-decoration: none;">Collaboration</a>
-      <a href="solutions-enterprise.html" style="color: #94a3b8; margin: 0 10px; text-decoration: none;">Solutions</a>
-      <a href="pricing.html" style="color: #94a3b8; margin: 0 10px; text-decoration: none;">Pricing</a>
-      <a href="contact.html" style="color: #94a3b8; margin: 0 10px; text-decoration: none;">Contact</a>
+  <!-- ── 프리미엄 푸터 ── -->
+  <footer style="border-top: 1px solid rgba(255,255,255,0.08); padding: 40px 20px; text-align: center; color: #64748b; font-size: 13px;">
+    <div style="display: flex; justify-content: center; gap: 24px; margin-bottom: 16px; flex-wrap: wrap;">
+      <a href="index.html" style="color: #94a3b8; text-decoration: none;">Home</a>
+      <a href="features.html" style="color: #94a3b8; text-decoration: none;">Features</a>
+      <a href="demo.html" style="color: #94a3b8; text-decoration: none;">Playground</a>
+      <a href="demo-collab.html" style="color: #94a3b8; text-decoration: none;">Collaboration</a>
+      <a href="solutions-enterprise.html" style="color: #94a3b8; text-decoration: none;">Solutions</a>
+      <a href="pricing.html" style="color: #94a3b8; text-decoration: none;">Pricing</a>
+      <a href="contact.html" style="color: #94a3b8; text-decoration: none;">Contact</a>
     </div>
-    <div>&copy; 2026 AMEVA Inc. • Crafted with Precision by uno-km. Released under MIT License.</div>
+    <div>© 2026 AMEVA Workstation. All rights reserved. Zero-Trust On-Device WebGPU Engineering.</div>
   </footer>
 
-  <script type="module">
-    import { initTheme } from './js/common/theme.js';
-    import { initNavigation } from './js/common/navigation.js';
+  <!-- ── 인터랙티브 필터링 스크립트 ── -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const filterBtns = document.querySelectorAll('.filter-tab-btn');
+      const cards = document.querySelectorAll('.matrix-card');
 
-    initTheme();
-    initNavigation();
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          filterBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
 
-    // 🎪 16-Core Matrix Category Filter Logic
-    const filterBtns = document.querySelectorAll('.filter-tab-btn');
-    const cards = document.querySelectorAll('.matrix-card');
-
-    filterBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        filterBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        const filter = btn.getAttribute('data-filter');
-        cards.forEach(card => {
-          if (filter === 'all' || card.getAttribute('data-cat') === filter) {
-            card.style.display = 'flex';
-            card.style.animation = 'fadeInUp 0.3s ease';
-          } else {
-            card.style.display = 'none';
-          }
+          const filter = btn.getAttribute('data-filter');
+          cards.forEach(card => {
+            if (filter === 'all' || card.getAttribute('data-cat') === filter) {
+              card.style.display = 'flex';
+            } else {
+              card.style.display = 'none';
+            }
+          });
         });
       });
+
+      // 테마 토글
+      const themeToggle = document.getElementById('theme-toggle');
+      if (themeToggle) {
+        themeToggle.addEventListener('click', () => {
+          const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-theme', newTheme);
+          localStorage.setItem('theme', newTheme);
+        });
+      }
     });
   </script>
 </body>
