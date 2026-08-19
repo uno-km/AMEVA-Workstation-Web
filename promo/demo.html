@@ -323,6 +323,12 @@ SELECT * FROM developers;</textarea>
       const originalText = targetArea.value;
 
       runAISimulation(prompt, originalText, container, (newText) => {
+        targetArea.value = newText;
+        // HTML 미리보기 갱신용 강제 트리거
+        targetArea.dispatchEvent(new Event('input'));
+      });
+    });
+
     // Theme toggle
     const themeToggle = document.getElementById('theme-toggle');
     if (themeToggle) {
