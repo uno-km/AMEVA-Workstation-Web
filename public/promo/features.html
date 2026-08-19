@@ -3,20 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Features | AMEVA Workstation</title>
+  <title>Features & 16-Core Matrix | AMEVA Workstation</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
+  <!-- ── 프리미엄 글로벌 네비게이션 바 ── -->
   <header>
     <a href="index.html" class="brand">
-      <div class="brand-icon"><i class="fas fa-cubes"></i></div>
+      <div class="brand-icon">
+        <i class="fas fa-cubes"></i>
+      </div>
       <span>AMEVA Workstation</span>
     </a>
     <nav class="nav-menu">
       <a href="index.html" class="nav-link">Home</a>
-      <a href="features.html" class="nav-link">Features</a>
+      <a href="features.html" class="nav-link active">Features</a>
       <a href="demo.html" class="nav-link">Playground</a>
       <a href="demo-collab.html" class="nav-link">Collaboration</a>
       <a href="solutions-enterprise.html" class="nav-link">Solutions</a>
@@ -24,125 +27,457 @@
       <a href="contact.html" class="nav-link">Contact</a>
     </nav>
     <div class="header-actions">
-      <button id="theme-toggle" class="btn-theme"><i class="fas fa-sun"></i></button>
-      <a href="contact.html" class="btn-primary" style="padding: 8px 16px; font-size: 11px;">Request Demo</a>
+      <button id="theme-toggle" class="btn-theme" title="테마 전환">
+        <i class="fas fa-sun"></i>
+      </button>
+      <a href="https://github.com/uno-km/AMEVA-Workstation-Web" target="_blank" class="btn-secondary" style="padding: 8px 14px; font-size: 11.5px; display: inline-flex; align-items: center; gap: 6px;">
+        <i class="fab fa-github"></i> Star
+      </a>
+      <a href="https://ameva-workstation-web-core.vercel.app/" target="_blank" class="btn-primary" style="padding: 8px 18px; font-size: 11.5px; font-weight: 700; background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%); box-shadow: 0 4px 16px rgba(37,99,235,0.4);">
+        <i class="fas fa-rocket"></i> Launch Live App
+      </a>
     </div>
   </header>
 
-  <main class="promo-container">
-    <section style="text-align: center; margin-bottom: 50px;">
-      <div class="badge-tag"><i class="fas fa-sparkles"></i> Core Capabilities</div>
-      <h2 style="font-size:36px; font-weight:800; margin-bottom:12px;">기존 협업 도구들을 완전히 대체하는 혁신적인 문서 워크스테이션</h2>
-      <p style="color:var(--text-muted); max-width:600px; margin:0 auto;">카드를 클릭하여 각 기능의 상세한 메커니즘과 비즈니스 활용 방안을 확장 확인하세요.</p>
+  <!-- ── 메인 컨테이너 ── -->
+  <main class="promo-container" style="max-width: 1240px; margin: 0 auto; padding-top: 40px;">
+    
+    <!-- 헤더 인트로 섹션 -->
+    <section style="text-align: center; margin-bottom: 40px;">
+      <div class="badge-tag" style="background: rgba(56,189,248,0.12); color: #38bdf8; border-color: rgba(56,189,248,0.35);">
+        <i class="fas fa-microchip"></i> 16-Core Flagship Architecture Matrix v0.8.19
+      </div>
+      <h1 style="font-size: 42px; font-weight: 900; letter-spacing: -1.5px; margin: 16px 0 12px 0;">
+        <span class="grad-text">기존 8개 SaaS를 단 하나의 에디터로 압도하다.</span>
+      </h1>
+      <p style="color: #94a3b8; max-width: 780px; margin: 0 auto 28px auto; font-size: 15px; line-height: 1.7;">
+        외부 서버 데이터 유출 0%의 <strong>온디바이스 WebGPU AI</strong>부터 <strong>인앱 비디오 컷편집, 오디오 무음 자동 삭제, 대용량 PDF 맵리듀스, 인터랙티브 엑셀/지오매핑</strong>까지 — 엔지니어링의 정점을 담았습니다.
+      </p>
+
+      <!-- 카테고리 필터 버튼 탭 -->
+      <div class="feature-filter-tabs">
+        <button class="filter-tab-btn active" data-filter="all"><i class="fas fa-border-all"></i> 전체 16대 기능</button>
+        <button class="filter-tab-btn" data-filter="ai"><i class="fas fa-brain"></i> 온디바이스 AI</button>
+        <button class="filter-tab-btn" data-filter="media"><i class="fas fa-photo-film"></i> 멀티미디어 스튜디오</button>
+        <button class="filter-tab-btn" data-filter="office"><i class="fas fa-table"></i> 데이터 & 오피스</button>
+        <button class="filter-tab-btn" data-filter="dev"><i class="fas fa-code"></i> 개발자 & 보안</button>
+      </div>
     </section>
 
-    <div class="features-grid">
-      <!-- 카드 1 -->
-      <div class="feature-detail-card">
-        <div class="feature-icon-wrapper"><i class="fas fa-brain"></i></div>
-        <h3>AI Copilot & Diff Acceptor</h3>
-        <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">자연어 명령 편집 및 Git 스타일 충돌 분석 UI 탑재.</p>
-        <div class="expanded-desc">
-          <p>
-            사용자가 본문을 드래그하고 "수정해줘" 라고 전송하면, AI가 수정 전/후를 분석하여 Diff 카드로 띄웁니다. 사용자는 클릭 한 번으로 변경 제안을 본문에 즉시 융합(Accept)하거나 기각(Reject)할 수 있습니다.
-          </p>
+    <!-- 16대 초격차 기능 그리드 (Apple / Linear Level Glassmorphism Grid) -->
+    <div class="features-matrix-grid">
+
+      <!-- 1. 비디오 타임라인 컷편집 스튜디오 -->
+      <div class="matrix-card" data-cat="media">
+        <div class="matrix-card-header">
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #2563eb, #38bdf8);">
+            <i class="fas fa-video"></i>
+          </div>
+          <div class="matrix-badge" style="background: rgba(56,189,248,0.15); color: #38bdf8; border-color: rgba(56,189,248,0.3);">
+            In-App Video DSP
+          </div>
         </div>
+        <div class="matrix-slash-tag"><code>/video</code> 명령어 지원</div>
+        <h3 class="matrix-title">인앱 비디오 타임라인 컷편집 스튜디오</h3>
+        <p class="matrix-desc">
+          프리미어 프로 없이 문서 내에서 시작/종료 지점을 초 단위로 정밀하게 자르고(Trim), 8방향 모서리 핸들로 비례 해상도를 실시간 리사이징합니다.
+        </p>
+        <ul class="matrix-specs">
+          <li><strong>정밀 타임코드</strong>: 0.1초 단위 슬라이더 트림 & 썸네일 실시간 스크러빙</li>
+          <li><strong>마크다운 직렬화</strong>: <code>:::video[start=2.4 end=14.8 width="100%"]:::</code> 무손실 저장</li>
+          <li><strong>성능 지표</strong>: GPU 하드웨어 가속 디코딩으로 메모리 점유율 60% 절감</li>
+        </ul>
       </div>
 
-      <!-- 카드 2 -->
-      <div class="feature-detail-card">
-        <div class="feature-icon-wrapper"><i class="fas fa-terminal"></i></div>
-        <h3>4대 언어 가상 샌드박스</h3>
-        <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">문서 내에서 JavaScript, Python, HTML, SQL 즉시 컴파일 실행.</p>
-        <div class="expanded-desc">
-          <p>
-            별도의 개발 서버 환경 구축 필요 없이 에디터 내부의 Jupyter Block을 통해 런타임 결과와 오류 로그를 즉시 수집하고 테이블 양식으로 보기 좋게 렌더링합니다.
-          </p>
+      <!-- 2. 오디오 파형 분석 & 무음존 자동 삭제 -->
+      <div class="matrix-card" data-cat="media">
+        <div class="matrix-card-header">
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #10b981, #059669);">
+            <i class="fas fa-waveform-lines"></i>
+          </div>
+          <div class="matrix-badge" style="background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.3);">
+            Web Audio DSP
+          </div>
         </div>
+        <div class="matrix-slash-tag"><code>/audio</code> 명령어 지원</div>
+        <h3 class="matrix-title">오디오 주파수 분석 & 무음존 1-클릭 일괄 삭제</h3>
+        <p class="matrix-desc">
+          Web Audio API FFT 주파수 스펙트럼으로 파형을 실시간 시각화하고, AI 침묵 감지 알고리즘으로 무음 구간을 찾아 1초 만에 압축 삭제합니다.
+        </p>
+        <ul class="matrix-specs">
+          <li><strong>실시간 FFT 파형</strong>: 40개 주파수 밴드 실시간 캔버스 이퀄라이저 시각화</li>
+          <li><strong>1-클릭 Silence Purge</strong>: 녹음본의 불필요한 침묵 구간 일괄 컷팅 (재생시간 42% 단축)</li>
+          <li><strong>무손실 재생</strong>: 음질 손실 없는 클라이언트 DSP 오디오 버퍼 조작</li>
+        </ul>
       </div>
 
-      <!-- 카드 3 -->
-      <div class="feature-detail-card">
-        <div class="feature-icon-wrapper"><i class="fas fa-users"></i></div>
-        <h3>Y.js 분산 실시간 협업</h3>
-        <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">로컬 P2P 및 퍼블릭 릴레이 클라우드 듀얼 모드 CRDT 싱크.</p>
-        <div class="expanded-desc">
-          <p>
-            외부 서버 연동 없이 동일 인트라넷 망 내에서 독자적인 웹소켓 서버를 1초 만에 띄워 동료들을 초대할 수 있으며, 공용 릴레이 서버로 전 세계 팀원들과 지연률 0%로 문서와 캐럿을 공유합니다.
-          </p>
+      <!-- 3. 이미지 AI 1초 배경 제거 & Fabric.js 캔버스 -->
+      <div class="matrix-card" data-cat="media">
+        <div class="matrix-card-header">
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+            <i class="fas fa-wand-magic-sparkles"></i>
+          </div>
+          <div class="matrix-badge" style="background: rgba(245,158,11,0.15); color: #fbbf24; border-color: rgba(245,158,11,0.3);">
+            ONNX Vision AI
+          </div>
         </div>
+        <div class="matrix-slash-tag"><code>/image</code> 명령어 지원</div>
+        <h3 class="matrix-title">이미지 AI 1초 배경 제거(누끼) & 캔버스 스튜디오</h3>
+        <p class="matrix-desc">
+          포토샵 없이 브라우저 온디바이스 비전 모델로 피사체를 정밀 분리하여 투명 배경 PNG를 만들고, Fabric.js 벡터 캔버스로 주석을 작성합니다.
+        </p>
+        <ul class="matrix-specs">
+          <li><strong>온디바이스 누끼 분리</strong>: 100% 로컬 연산으로 1.2초 만에 객체 마스크 추출</li>
+          <li><strong>개별 리사이즈 영구 저장</strong>: 사진별 크기 비율 및 캡션 마크다운 메타데이터 영구 보존</li>
+          <li><strong>Fabric.js 벡터 도구</strong>: 화살표, 하이라이트 박스, 텍스트 드로잉 지원</li>
+        </ul>
       </div>
 
-      <!-- 카드 4 -->
-      <div class="feature-detail-card">
-        <div class="feature-icon-wrapper"><i class="fas fa-play"></i></div>
-        <h3>리치 미디어 임베더</h3>
-        <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">고화질 비디오, 오디오 스트리밍 블록 완벽 지원.</p>
-        <div class="expanded-desc">
-          <p>
-            용량이 큰 오디오 파일이나 사내 시연 비디오 가이드라인을 문서 본문 내에 깔끔하게 임베딩하고 커스텀 플레이어 위젯을 통해 편리하게 청취 및 인라인 재생을 할 수 있습니다.
-          </p>
+      <!-- 4. 온디바이스 문서 인텔리전스 & 3단계 맵리듀스 -->
+      <div class="matrix-card" data-cat="ai">
+        <div class="matrix-card-header">
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #ef4444, #b91c1c);">
+            <i class="fas fa-file-pdf"></i>
+          </div>
+          <div class="matrix-badge" style="background: rgba(239,68,68,0.15); color: #f87171; border-color: rgba(239,68,68,0.3);">
+            WebGPU Map-Reduce
+          </div>
         </div>
+        <div class="matrix-slash-tag"><code>/doc</code> 명령어 지원</div>
+        <h3 class="matrix-title">대용량 PDF/DOCX 3단계 맵리듀스 지능형 요약 덱</h3>
+        <p class="matrix-desc">
+          100페이지가 넘는 대형 PDF, Word, PPTX, HWPX 문서를 16개 청크로 분할하여 로컬 GPU 병렬 연산으로 요약하고 도메인별 4대 카드 덱을 생성합니다.
+        </p>
+        <ul class="matrix-specs">
+          <li><strong>Fast-Pass 3초 요약</strong>: 1~3페이지 소형 문서는 3초 만에 핵심 요약 추출</li>
+          <li><strong>3단계 계층형 맵리듀스</strong>: 토큰화 ➔ 클러스터 맵리듀스 ➔ 인사이트 합성 덱 완성</li>
+          <li><strong>완전 다중 포맷 호환</strong>: PDF, Word(.docx), PPT(.pptx), 한글(.hwpx) 네이티브 파싱</li>
+        </ul>
       </div>
 
-      <!-- 카드 5 -->
-      <div class="feature-detail-card">
-        <div class="feature-icon-wrapper"><i class="fas fa-store"></i></div>
-        <h3>통합 플러그인 마켓플레이스</h3>
-        <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">업무 템플릿과 다양한 확장 도구 원클릭 조회 및 로드.</p>
-        <div class="expanded-desc">
-          <p>
-            앱 내부의 마켓플레이스 메뉴를 통해 다양한 서식 템플릿, 커스텀 확장 블록, 생산성 플러그인 생태계를 원클릭으로 주입하여 에디터의 기능을 필요에 따라 무한히 늘려나갈 수 있습니다.
-          </p>
+      <!-- 5. Mini-Colab WebGPU 텐서 셰이더 브릿지 -->
+      <div class="matrix-card" data-cat="ai">
+        <div class="matrix-card-header">
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">
+            <i class="fas fa-microchip"></i>
+          </div>
+          <div class="matrix-badge" style="background: rgba(139,92,246,0.15); color: #c084fc; border-color: rgba(139,92,246,0.3);">
+            WGSL GPU Kernel
+          </div>
         </div>
+        <div class="matrix-slash-tag"><code>/colab</code> 명령어 지원</div>
+        <h3 class="matrix-title">Mini-Colab & 브라우저 WebGPU 텐서 셰이더 연산기</h3>
+        <p class="matrix-desc">
+          파이썬 백엔드 서버 없이 브라우저 WGSL 셰이더 커널을 통해 행렬곱(MatMul), 딥러닝 텐서 연산 및 Qwen2.5 언어 모델을 초당 35+ 토큰으로 추론합니다.
+        </p>
+        <ul class="matrix-specs">
+          <li><strong>Zero-Copy Buffer Mapping</strong>: CPU-GPU 간 데이터 전송 병목 없는 직접 메모리 매핑</li>
+          <li><strong>4비트 양자화 모델</strong>: Qwen2.5 0.5B / 1.5B / 7B 로컬 구동 최적화</li>
+          <li><strong>서버비 $0</strong>: 모든 AI 추론을 클라이언트 디바이스 하드웨어가 100% 전담</li>
+        </ul>
       </div>
 
-      <!-- 카드 6 -->
-      <div class="feature-detail-card">
-        <div class="feature-icon-wrapper"><i class="fas fa-puzzle-piece"></i></div>
-        <h3>HWP(아래한글) & 원노트 기능 확장</h3>
-        <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">한글(HWP) 및 원노트 스타일 생산성 모듈 완벽 지원.</p>
-        <div class="expanded-desc">
-          <p>
-            국내 문서 환경에 꼭 맞는 아래한글(HWP) 스타일 서식 뷰와 원노트(OneNote) 같은 강력하고 유연한 페이지 구조 확장 모듈을 클릭 한 번으로 설치 및 이식할 수 있어 한 차원 높은 편의성을 선사합니다.
-          </p>
+      <!-- 6. 2D/3D 지식 관계망 시각화 (Knowledge Graph) -->
+      <div class="matrix-card" data-cat="ai">
+        <div class="matrix-card-header">
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #06b6d4, #0891b2);">
+            <i class="fas fa-network-wired"></i>
+          </div>
+          <div class="matrix-badge" style="background: rgba(6,182,212,0.15); color: #22d3ee; border-color: rgba(6,182,212,0.3);">
+            60fps Web Worker
+          </div>
         </div>
+        <div class="matrix-slash-tag"><code>/graph</code> 명령어 지원</div>
+        <h3 class="matrix-title">2D/3D 지식 관계망 시각화 뷰어 (Knowledge Graph)</h3>
+        <p class="matrix-desc">
+          수천 개의 마크다운 문서 간의 상호 참조 태그, 링크, 의미론적 임베딩 거리를 백그라운드 웹 워커 기반 60fps 포스-지향 그래프로 인터랙티브 렌더링합니다.
+        </p>
+        <ul class="matrix-specs">
+          <li><strong>멀티스레드 물리 연산</strong>: UI 멈춤 현상 없는 웹 워커 백그라운드 레이아웃 계산</li>
+          <li><strong>의미론적 클러스터링</strong>: 벡터 유사도 기반 노드 자동 그룹화 및 필터링</li>
+          <li><strong>1-클릭 노드 점프</strong>: 그래프 노드 클릭 시 해당 문서 블록으로 즉시 앵커 이동</li>
+        </ul>
       </div>
 
-      <!-- 카드 7 -->
-      <div class="feature-detail-card">
-        <div class="feature-icon-wrapper"><i class="fas fa-layer-group"></i></div>
-        <h3>하이브리드 다중 문서 모드</h3>
-        <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">덮어쓰기, 이어서 열기, 탭별 열기를 조율하는 스마트 멀티뷰.</p>
-        <div class="expanded-desc">
-          <p>
-            작업의 성격에 따라 파일을 별도의 탭으로 나누어 보거나(Tab Mode), 하나의 에디터 아래에 연속으로 이어 붙여(Append Mode) 하나의 긴 문서처럼 스크롤하며 편집할 수 있습니다. 각 문서의 경계는 사이드바에 앵커 링크로 표출되어 클릭 한 번으로 이동할 수 있습니다.
-          </p>
+      <!-- 7. FortuneSheet 엑셀 스프레드시트 -->
+      <div class="matrix-card" data-cat="office">
+        <div class="matrix-card-header">
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #10b981, #047857);">
+            <i class="fas fa-file-excel"></i>
+          </div>
+          <div class="matrix-badge" style="background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.3);">
+            MS Excel Interop
+          </div>
         </div>
+        <div class="matrix-slash-tag"><code>/excel</code> 명령어 지원</div>
+        <h3 class="matrix-title">FortuneSheet 완전 호환 인앱 엑셀 스프레드시트</h3>
+        <p class="matrix-desc">
+          정적인 마크다운 표의 한계를 넘어, MS Excel .xlsx 파일을 양방향 무손실로 임포트/익스포트하고 400여 개 수식 연산(SUM, VLOOKUP)을 지원합니다.
+        </p>
+        <ul class="matrix-specs">
+          <li><strong>양방향 무손실 변환</strong>: 셀 서식, 다중 탭, 수식 구조를 100% 보존하며 .xlsx 내보내기</li>
+          <li><strong>실시간 셀 연산</strong>: 통계, 재무, 논리 함수 실시간 계산 및 마크다운 자동 동기화</li>
+          <li><strong>대규모 데이터 처리</strong>: 10만 행 이상의 대용량 테이블도 렉 없이 매끄럽게 렌더링</li>
+        </ul>
       </div>
 
-      <!-- 카드 8 -->
-      <div class="feature-detail-card">
-        <div class="feature-icon-wrapper"><i class="fas fa-plug"></i></div>
-        <h3>지능형 AI MCP 도구 확장</h3>
-        <p style="font-size:13px; color:var(--text-muted); margin-top:8px;">사용자 정의 MCP 서버를 플러그인하여 AI 에이전트 자동화 실행.</p>
-        <div class="expanded-desc">
-          <p>
-            HTTP 및 stdio 기반의 임의의 MCP 서버를 마우스 클릭 몇 번으로 실시간 연동할 수 있습니다. 이를 통해 로컬/원격 AI 에이전트가 로컬 파일 제어, 외부 API 호출, 데이터베이스 직접 쿼리 등의 실질적인 액션을 직접 실행하게 만들어 문서 작성 및 개발 생산성을 비약적으로 극대화합니다.
-          </p>
+      <!-- 8. Excalidraw 통합 화이트보드 -->
+      <div class="matrix-card" data-cat="office">
+        <div class="matrix-card-header">
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #ec4899, #be185d);">
+            <i class="fas fa-draw-polygon"></i>
+          </div>
+          <div class="matrix-badge" style="background: rgba(236,72,153,0.15); color: #f472b6; border-color: rgba(236,72,153,0.3);">
+            Vector Whiteboard
+          </div>
         </div>
+        <div class="matrix-slash-tag"><code>/drawing</code> 명령어 지원</div>
+        <h3 class="matrix-title">Excalidraw 완전 내장 화이트보드 캔버스</h3>
+        <p class="matrix-desc">
+          시스템 아키텍처 다이어그램, 소프트웨어 와이어프레임, 자유형 손그림 스케치를 문서 본문 내에서 자유자재로 작성하고 벡터 그래픽으로 영구 보관합니다.
+        </p>
+        <ul class="matrix-specs">
+          <li><strong>풍부한 다이어그램 라이브러리</strong>: 클라우드 아키텍처, UI 컴포넌트 프리셋 제공</li>
+          <li><strong>무손실 SVG/PNG 추출</strong>: 캔버스 작업물을 원클릭으로 고화질 이미지 추출</li>
+          <li><strong>실시간 공동 스케치</strong>: Y.js CRDT 연동을 통한 팀원 간 실시간 동시 드로잉</li>
+        </ul>
       </div>
+
+      <!-- 9. 인라인 인터랙티브 칸반 보드 -->
+      <div class="matrix-card" data-cat="office">
+        <div class="matrix-card-header">
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">
+            <i class="fas fa-table-columns"></i>
+          </div>
+          <div class="matrix-badge" style="background: rgba(59,130,246,0.15); color: #60a5fa; border-color: rgba(59,130,246,0.3);">
+            Interactive Kanban
+          </div>
+        </div>
+        <div class="matrix-slash-tag"><code>/kanban</code> 명령어 지원</div>
+        <h3 class="matrix-title">인라인 인터랙티브 칸반(Kanban) 보드</h3>
+        <p class="matrix-desc">
+          마크다운 문서 본문 내에서 드래그 앤 드롭으로 태스크 카드를 옮기고(To Do, In Progress, Done), 마감일과 담당자를 지정하는 스마트 프로젝트 보드입니다.
+        </p>
+        <ul class="matrix-specs">
+          <li><strong>드래그 앤 드롭 인터랙션</strong>: 부드러운 물리 애니메이션과 실시간 컬럼 이동</li>
+          <li><strong>마크다운 직렬화</strong>: 칸반 카드 상태를 순수 마크다운 AST로 자동 상호 변환</li>
+          <li><strong>태스크 필터링 & 라벨링</strong>: 중요도별 색상 태그 및 담당자 배지 실시간 표시</li>
+        </ul>
+      </div>
+
+      <!-- 10. 지능형 지오매핑 & 최적 경로 탐색 -->
+      <div class="matrix-card" data-cat="office">
+        <div class="matrix-card-header">
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #10b981, #047857);">
+            <i class="fas fa-map-location-dot"></i>
+          </div>
+          <div class="matrix-badge" style="background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.3);">
+            OSM & OSRM Engine
+          </div>
+        </div>
+        <div class="matrix-slash-tag"><code>/map</code> 명령어 지원</div>
+        <h3 class="matrix-title">지능형 지오매핑 & OSRM 최적 경로 탐색 시스템</h3>
+        <p class="matrix-desc">
+          OpenStreetMap 기반 실시간 장소 검색, 지도 위 클릭으로 다중 핀 꽂기, 출발지-도착지 OSRM 최적 경로 탐색 및 위경도 마크다운 직렬화를 지원합니다.
+        </p>
+        <ul class="matrix-specs">
+          <li><strong>인터랙티브 핀 꽂기</strong>: 클릭 즉시 지리 좌표와 커스텀 장소 라벨 생성</li>
+          <li><strong>OSRM 턴바이턴 경로 생성</strong>: 실시간 주행 경로 폴리라인 및 이동 거리 계산</li>
+          <li><strong>오프라인 지도 캐싱</strong>: 네트워크 불안정 시에도 로컬에 저장된 타일 맵 오프라인 렌더링</li>
+        </ul>
+      </div>
+
+      <!-- 11. 파이썬 WASM & 4대 언어 컴파일러 -->
+      <div class="matrix-card" data-cat="dev">
+        <div class="matrix-card-header">
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #f59e0b, #b45309);">
+            <i class="fab fa-python"></i>
+          </div>
+          <div class="matrix-badge" style="background: rgba(245,158,11,0.15); color: #fbbf24; border-color: rgba(245,158,11,0.3);">
+            Pyodide WASM
+          </div>
+        </div>
+        <div class="matrix-slash-tag"><code>/jupyter</code>, <code>/code</code> 명령어 지원</div>
+        <h3 class="matrix-title">파이썬 WASM 샌드박스 & 4대 언어 라이브 런타임</h3>
+        <p class="matrix-desc">
+          설치 없이 브라우저 메모리 안에서 Pyodide 파이썬 런타임(NumPy, Pandas, Matplotlib)을 구동하고, JS, HTML, WASM SQL을 실시간 컴파일합니다.
+        </p>
+        <ul class="matrix-specs">
+          <li><strong>격리된 WASM 샌드박스</strong>: 보안 위험 없이 안전하게 인앱 데이터 분석 코드 실행</li>
+          <li><strong>Matplotlib 실시간 렌더링</strong>: 파이썬 코드가 생성한 차트 이미지를 문서 내 즉시 임베딩</li>
+          <li><strong>SQLite WASM 지원</strong>: 브라우저 내부에서 관계형 데이터베이스 SQL 쿼리 및 테이블 조회</li>
+        </ul>
+      </div>
+
+      <!-- 12. Mermaid 지능형 문법 자동 보정기 -->
+      <div class="matrix-card" data-cat="dev">
+        <div class="matrix-card-header">
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);">
+            <i class="fas fa-code-branch"></i>
+          </div>
+          <div class="matrix-badge" style="background: rgba(14,165,233,0.15); color: #38bdf8; border-color: rgba(14,165,233,0.3);">
+            Auto-Correction
+          </div>
+        </div>
+        <div class="matrix-slash-tag"><code>/mermaid</code> 명령어 지원</div>
+        <h3 class="matrix-title">Mermaid 지능형 다이어그램 문법 자동 보정기</h3>
+        <p class="matrix-desc">
+          사용자가 다이어그램 작성 중 흔히 범하는 콜론 오류(<code>A --> B: 라벨</code>)나 줄바꿈 누락을 파서가 실시간으로 감지하여 표준 문법으로 자동 치환합니다.
+        </p>
+        <ul class="matrix-specs">
+          <li><strong>오류 발생률 0% 지향</strong>: 잘못된 다이어그램 구문 작성 시 붉은 에러 대신 자동 복구</li>
+          <li><strong>모든 차트 타입 지원</strong>: Flowchart, Sequence, Class, State, Gantt, ER 다이어그램</li>
+          <li><strong>실시간 다크/라이트 테마 적응</strong>: 시스템 테마 변경 시 다이어그램 선과 글자 색상 자동 동기화</li>
+        </ul>
+      </div>
+
+      <!-- 13. 신경망 실시간 번역 & 4대 문체 다듬기 -->
+      <div class="matrix-card" data-cat="ai">
+        <div class="matrix-card-header">
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #ec4899, #be185d);">
+            <i class="fas fa-language"></i>
+          </div>
+          <div class="matrix-badge" style="background: rgba(236,72,153,0.15); color: #f472b6; border-color: rgba(236,72,153,0.3);">
+            Neural Polisher
+          </div>
+        </div>
+        <div class="matrix-slash-tag">인라인 AI Diff 뷰어 지원</div>
+        <h3 class="matrix-title">신경망 실시간 번역 & 4대 맞춤형 문체 다듬기</h3>
+        <p class="matrix-desc">
+          작성된 문장을 학술적, 비즈니스, 친근한, 기술자 4대 톤으로 즉시 변환하고, 삭제/추가된 단어를 직관적인 인라인 Git Diff(빨강/초록)로 대조합니다.
+        </p>
+        <ul class="matrix-specs">
+          <li><strong>6개 국어 로컬 번역</strong>: 외부 번역 API 호출 없이 WebGPU 상에서 직접 번역</li>
+          <li><strong>톤 스위처</strong>: 학술 논문용 정갈한 문체부터 제안서용 전문 비즈니스 톤까지 1초 변환</li>
+          <li><strong>안전한 융합 (Accept/Reject)</strong>: 변경 제안을 확인 후 원클릭으로 본문에 병합</li>
+        </ul>
+      </div>
+
+      <!-- 14. 자율 AI 에이전트 패널 & 도구 호출 -->
+      <div class="matrix-card" data-cat="ai">
+        <div class="matrix-card-header">
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #6366f1, #4338ca);">
+            <i class="fas fa-robot"></i>
+          </div>
+          <div class="matrix-badge" style="background: rgba(99,102,241,0.15); color: #818cf8; border-color: rgba(99,102,241,0.3);">
+            Qwen2.5 & RAG
+          </div>
+        </div>
+        <div class="matrix-slash-tag"><code>Cmd / Ctrl + L</code> 단축키 지원</div>
+        <h3 class="matrix-title">자율 AI 에이전트 패널 & 로컬 RAG 도구 호출</h3>
+        <p class="matrix-desc">
+          사내 문서를 로컬 벡터 DB에 임베딩하여 문맥을 이해하고, 사용자의 요청에 따라 에디터 내장 도구(표 작성, 코드 실행, 파일 저장)를 스스로 호출합니다.
+        </p>
+        <ul class="matrix-specs">
+          <li><strong>Autonomous Tool Calling</strong>: 마크다운 표 생성, 코드 블록 삽입 등 에디터 명령 자율 실행</li>
+          <li><strong>온디바이스 RAG 검색</strong>: 사용자 전체 워크스페이스 문서를 100% 로컬 벡터로 초고속 시맨틱 검색</li>
+          <li><strong>스트리밍 생성</strong>: 지연 없는 초당 35+ 토큰 실시간 타이핑 렌더링</li>
+        </ul>
+      </div>
+
+      <!-- 15. 1-클릭 프레젠테이션 모드 -->
+      <div class="matrix-card" data-cat="office">
+        <div class="matrix-card-header">
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #f43f5e, #be123c);">
+            <i class="fas fa-tv"></i>
+          </div>
+          <div class="matrix-badge" style="background: rgba(244,63,94,0.15); color: #fb7185; border-color: rgba(244,63,94,0.3);">
+            Slide Deck Engine
+          </div>
+        </div>
+        <div class="matrix-slash-tag"><code>F5</code> / 프레젠테이션 버튼 지원</div>
+        <h3 class="matrix-title">1-클릭 프레젠테이션 모드 & 마크다운 슬라이드</h3>
+        <p class="matrix-desc">
+          별도의 PPT 제작 과정 없이, 작성 중인 마크다운 문서의 헤딩 구조(H1, H2, 구분선)를 인식하여 1초 만에 풀스크린 발표용 슬라이드로 변환합니다.
+        </p>
+        <ul class="matrix-specs">
+          <li><strong>키보드 네비게이션</strong>: 방향키 및 스페이스바로 매끄러운 슬라이드 전환 애니메이션</li>
+          <li><strong>인터랙티브 블록 동작</strong>: 슬라이드 쇼 상태에서도 비디오 재생, 차트 인터랙션 100% 유지</li>
+          <li><strong>발표자 노트 모드</strong>: 발표 대본 및 타이머가 표시되는 듀얼 스크린 모드 지원</li>
+        </ul>
+      </div>
+
+      <!-- 16. 8대 포맷 무손실 내보내기 & AES-GCM VFS -->
+      <div class="matrix-card" data-cat="dev">
+        <div class="matrix-card-header">
+          <div class="matrix-icon-box" style="background: linear-gradient(135deg, #0ea5e9, #0369a1);">
+            <i class="fas fa-file-export"></i>
+          </div>
+          <div class="matrix-badge" style="background: rgba(14,165,233,0.15); color: #38bdf8; border-color: rgba(14,165,233,0.3);">
+            Zero-Knowledge VFS
+          </div>
+        </div>
+        <div class="matrix-slash-tag">8대 포맷 및 <code>.adc</code> 암호화 지원</div>
+        <h3 class="matrix-title">8대 포맷 네이티브 무손실 내보내기 & 암호화 VFS</h3>
+        <p class="matrix-desc">
+          .docx, .pptx, .hwpx, .xlsx, .pdf, .html, .xml, .adc 포맷으로 자유롭게 내보내며, AES-GCM 256비트 암호화 IndexedDB 로컬 가상 파일 시스템을 제공합니다.
+        </p>
+        <ul class="matrix-specs">
+          <li><strong>.adc 패키징 컨테이너</strong>: 모든 미디어, 주석, 버전 이력을 단일 암호화 파일로 압축 저장</li>
+          <li><strong>표준 포맷 무손실 변환</strong>: 정부/공공기관 규격(HWPX) 및 MS 오피스 표준 100% 호환</li>
+          <li><strong>Zero-Server 보안</strong>: 로컬 브라우저 샌드박스 격리로 엔터프라이즈 보안 규제 완벽 충족</li>
+        </ul>
+      </div>
+
     </div>
+
+    <!-- 하단 Call To Action -->
+    <section style="text-align: center; margin: 60px 0 40px 0; background: linear-gradient(180deg, rgba(15,23,42,0.8) 0%, rgba(9,13,22,0.95) 100%); border: 1px solid rgba(59,130,246,0.25); border-radius: 16px; padding: 40px;">
+      <h2 style="font-size: 30px; font-weight: 900; margin-bottom: 12px;">지금 바로 16대 기능을 브라우저에서 실행해보세요.</h2>
+      <p style="color: #94a3b8; font-size: 14px; margin-bottom: 24px;">설치도, 회원가입도 필요 없습니다. 클릭 한 번으로 모든 기능이 활성화됩니다.</p>
+      <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">
+        <a href="https://ameva-workstation-web-core.vercel.app/" target="_blank" class="btn-primary" style="padding: 14px 30px; font-size: 14px; font-weight: 800; background: linear-gradient(135deg, #2563eb, #0ea5e9); text-decoration: none;">
+          <i class="fas fa-play-circle"></i> 무설치 라이브 웹 앱 시작하기
+        </a>
+        <a href="demo.html" class="btn-secondary" style="padding: 14px 24px; font-size: 14px; font-weight: 700; text-decoration: none;">
+          <i class="fas fa-terminal"></i> 4대 언어 샌드박스 체험
+        </a>
+      </div>
+    </section>
+
   </main>
+
+  <!-- ── 푸터 ── -->
+  <footer style="border-top: 1px solid rgba(255,255,255,0.08); padding: 30px 20px; text-align: center; color: #64748b; font-size: 12px;">
+    <div style="margin-bottom: 10px;">
+      <a href="index.html" style="color: #94a3b8; margin: 0 10px; text-decoration: none;">Home</a>
+      <a href="features.html" style="color: #94a3b8; margin: 0 10px; text-decoration: none;">Features</a>
+      <a href="demo.html" style="color: #94a3b8; margin: 0 10px; text-decoration: none;">Playground</a>
+      <a href="demo-collab.html" style="color: #94a3b8; margin: 0 10px; text-decoration: none;">Collaboration</a>
+      <a href="solutions-enterprise.html" style="color: #94a3b8; margin: 0 10px; text-decoration: none;">Solutions</a>
+      <a href="pricing.html" style="color: #94a3b8; margin: 0 10px; text-decoration: none;">Pricing</a>
+      <a href="contact.html" style="color: #94a3b8; margin: 0 10px; text-decoration: none;">Contact</a>
+    </div>
+    <div>&copy; 2026 AMEVA Inc. • Crafted with Precision by uno-km. Released under MIT License.</div>
+  </footer>
 
   <script type="module">
     import { initTheme } from './js/common/theme.js';
     import { initNavigation } from './js/common/navigation.js';
-    import { initFeatures } from './js/pages/features.js';
 
     initTheme();
     initNavigation();
-    initFeatures();
+
+    // 🎪 16-Core Matrix Category Filter Logic
+    const filterBtns = document.querySelectorAll('.filter-tab-btn');
+    const cards = document.querySelectorAll('.matrix-card');
+
+    filterBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const filter = btn.getAttribute('data-filter');
+        cards.forEach(card => {
+          if (filter === 'all' || card.getAttribute('data-cat') === filter) {
+            card.style.display = 'flex';
+            card.style.animation = 'fadeInUp 0.3s ease';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
   </script>
 </body>
 </html>
