@@ -1189,38 +1189,71 @@ input:checked + .slider:before {
   100% { top: 100%; opacity: 1; }
 }
 
-/* 🎬 인앱 미디어 & AI 시뮬레이터 카드 스타일 (12-Column Responsive Bento Grid) */
-.sim-bento-grid {
+/* 🎬 인앱 미디어 & AI 시뮬레이터 카드 스타일 (Monumental 2-Column Balanced Master Grid) */
+.sim-monumental-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 20px;
-  margin: 36px 0 60px 0;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 28px;
+  margin: 40px 0 80px 0;
 }
 
-.sim-card {
+.sim-hero-card {
   grid-column: span 2;
-  background: var(--bg-card);
-  border: 1px solid var(--border-muted);
-  border-radius: 16px;
-  padding: 20px;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.45) 0%, rgba(15, 23, 42, 0.85) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 20px;
+  padding: 32px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 20px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  backdrop-filter: blur(16px);
 }
 
-.sim-card-half {
-  grid-column: span 3 !important;
+.sim-hero-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent, #38bdf8, transparent);
 }
 
-@media (max-width: 960px) {
-  .sim-bento-grid {
+.sim-master-card {
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.8) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 20px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: 0 14px 40px rgba(0,0,0,0.4);
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(16px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sim-master-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(56, 189, 248, 0.5);
+  box-shadow: 0 24px 50px rgba(56, 189, 248, 0.18);
+}
+
+.sim-master-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+}
+
+@media (max-width: 900px) {
+  .sim-monumental-grid {
     grid-template-columns: 1fr;
   }
-  .sim-card, .sim-card-half {
+  .sim-hero-card, .sim-master-card {
     grid-column: span 1 !important;
   }
 }

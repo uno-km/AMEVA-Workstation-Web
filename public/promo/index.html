@@ -93,150 +93,232 @@
         </div>
       </div>
 
-      <!-- 🎮 7대 초격차 기능 실시간 인터랙티브 체험관 (완벽 균형 Bento Grid Layout) -->
-      <div style="text-align: center; margin-top: 60px; margin-bottom: 24px;">
+      <!-- 🎮 7대 초격차 기능 실시간 인터랙티브 체험관 (웅장한 Monumental 2-Column Master Grid) -->
+      <div style="text-align: center; margin-top: 70px; margin-bottom: 28px;">
         <div class="badge-tag" style="background: rgba(16,185,129,0.15); color: #34d399; border-color: rgba(16,185,129,0.4);">
-          <i class="fas fa-gamepad"></i> Real-time Interactive Simulators
+          <i class="fas fa-gamepad"></i> Real-time Monumental Simulators
         </div>
-        <h2 style="font-size: 34px; font-weight: 900; margin-top: 10px;">실제 앱 기능 그대로! 실시간 라이브 체험관</h2>
-        <p style="color: #94a3b8; font-size: 14px;">클릭하여 비디오 트리밍, 오디오 무음 삭제, 이미지 AI 배경 분리, PDF 맵리듀스를 10~20초 연속으로 체험하세요.</p>
+        <h2 style="font-size: 38px; font-weight: 900; margin-top: 12px; letter-spacing: -1px;">
+          실제 앱 기능 그대로! <span class="grad-text">실시간 전사급 라이브 체험관</span>
+        </h2>
+        <p style="color: #94a3b8; font-size: 15px; max-width: 780px; margin: 8px auto 0;">
+          버튼을 누르고 직접 조작해 보세요. 15~20초 동안 살아 움직이는 비디오 타임라인, 오디오 주파수 압축, ONNX 비전 AI, PDF 3단계 맵리듀스가 눈앞에서 펼쳐집니다.
+        </p>
       </div>
 
-      <div class="sim-bento-grid">
+      <div class="sim-monumental-grid">
 
-        <!-- 1. 비디오 타임라인 트리머 (Row 1 / Col 1) -->
-        <div class="sim-card">
+        <!-- 1. 비디오 타임라인 트리머 (Hero Master Card - 2개 컬럼 전체 점유) -->
+        <div class="sim-hero-card">
           <div class="sim-card-header">
-            <div class="sim-card-title">
-              <i class="fas fa-video" style="color:#60a5fa;"></i> 인앱 비디오 타임라인 트리머
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <div class="matrix-icon-box" style="background: linear-gradient(135deg, #2563eb, #38bdf8); width: 44px; height: 44px;">
+                <i class="fas fa-video"></i>
+              </div>
+              <div>
+                <div style="font-size: 18px; font-weight: 800; color: #f8fafc;">인앱 비디오 4K 타임라인 컷편집 스튜디오</div>
+                <div style="font-size: 12px; color: #94a3b8; font-family: monospace;" id="video-scene-label">Scene 1: WebGPU Shader Tensor Core Initialized</div>
+              </div>
             </div>
-            <span class="sim-badge">In-Canvas Trimmer</span>
+            <span class="sim-badge" style="background: rgba(56,189,248,0.15); color: #38bdf8; border-color: rgba(56,189,248,0.3); font-size: 12px; padding: 5px 12px;">
+              In-Canvas Video DSP (/video)
+            </span>
           </div>
-          <div id="video-sim-preview" style="background: #030712; border-radius: 8px; height: 160px; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; border: 1px solid rgba(255,255,255,0.08); overflow: hidden;">
-            <i class="fas fa-film" style="font-size: 36px; color: #38bdf8; opacity: 0.8; margin-bottom: 8px;"></i>
-            <div style="font-size: 11px; color: #cbd5e1; font-family: monospace;">[Video Scrubbing 1080p @ 60fps]</div>
-            <div style="display: flex; gap: 14px; margin-top: 6px; font-size: 11px; font-family: monospace;">
-              <span style="color:#34d399;">시작: <strong id="video-sim-start">00:02.4s</strong></span>
-              <span style="color:#38bdf8;">재생: <strong id="video-sim-current">00:02.4s</strong></span>
-              <span style="color:#f87171;">종료: <strong id="video-sim-end">00:14.8s</strong></span>
+
+          <!-- Video Monitor & Timeline Workspace -->
+          <div id="video-sim-preview" style="background: #030712; border-radius: 12px; height: 240px; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; box-shadow: inset 0 0 40px rgba(0,0,0,0.8);">
+            <div style="position: absolute; top: 12px; left: 16px; display: flex; gap: 8px; align-items: center;">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444; animation: cursor-blink 1s infinite;"></span>
+              <span style="font-size: 11px; font-weight: 700; color: #ef4444; font-family: monospace;">LIVE REC 1080p @ 60fps</span>
             </div>
-            <!-- Animated Scrubber Bar -->
-            <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: rgba(255,255,255,0.1);">
-              <div id="video-sim-playhead" style="position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #38bdf8; box-shadow: 0 0 8px #38bdf8;"></div>
+            <i class="fas fa-film" style="font-size: 52px; color: #38bdf8; opacity: 0.85; margin-bottom: 12px;"></i>
+            <div style="font-size: 13px; color: #e2e8f0; font-weight: 700; font-family: monospace;">[GPU Hardware Accelerated Video Scrubbing Engine]</div>
+            
+            <div style="display: flex; gap: 20px; margin-top: 10px; font-size: 12px; font-family: monospace; background: rgba(0,0,0,0.6); padding: 6px 16px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08);">
+              <span style="color:#34d399;">TRIM START: <strong id="video-sim-start">00:02.40s</strong></span>
+              <span style="color:#38bdf8; font-weight: 800;">PLAYHEAD: <strong id="video-sim-current">00:02.40s</strong></span>
+              <span style="color:#f87171;">TRIM END: <strong id="video-sim-end">00:14.80s</strong></span>
+            </div>
+
+            <!-- Scrubber Playhead -->
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; height: 5px; background: rgba(255,255,255,0.1);">
+              <div id="video-sim-playhead" style="position: absolute; top: 0; left: 0; width: 6px; height: 100%; background: #38bdf8; box-shadow: 0 0 12px #38bdf8;"></div>
             </div>
           </div>
-          <div style="display: flex; gap: 6px;">
-            <button onclick="adjustVideoTrim(-0.5, 0)" class="tone-pill-btn" style="flex:1;"><i class="fas fa-step-backward"></i> 시작 -0.5s</button>
-            <button onclick="adjustVideoTrim(0.5, 0)" class="tone-pill-btn" style="flex:1;"><i class="fas fa-step-forward"></i> 시작 +0.5s</button>
-            <button onclick="adjustVideoTrim(0, -0.5)" class="tone-pill-btn" style="flex:1;"><i class="fas fa-step-backward"></i> 종료 -0.5s</button>
-            <button onclick="adjustVideoTrim(0, 0.5)" class="tone-pill-btn" style="flex:1;"><i class="fas fa-step-forward"></i> 종료 +0.5s</button>
+
+          <!-- Live Multi-Track Mini Waveform -->
+          <div style="background: rgba(0,0,0,0.4); border-radius: 8px; padding: 6px 10px; border: 1px solid rgba(255,255,255,0.06);">
+            <canvas id="video-waveform-scrubber" style="width: 100%; height: 36px; display: block;"></canvas>
           </div>
-          <div style="background: #070a0f; border: 1px solid var(--border-muted); border-radius: 6px; padding: 8px 10px; font-family: monospace; font-size: 11px; color: #38bdf8; overflow-x: auto;" id="video-sim-md">
-            :::video[src="project_demo.mp4" start=2.4 end=14.8 width="100%"]:::
+
+          <!-- Video Control Buttons -->
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; gap: 8px;">
+              <button id="video-play-btn" onclick="toggleVideoPlayback()" class="btn-primary" style="padding: 8px 16px; font-size: 12px; font-weight: 700; background: #2563eb; border: none; cursor: pointer;">
+                <i class="fas fa-pause"></i> 일시정지
+              </button>
+              <button onclick="adjustVideoTrim(-0.5, 0)" class="tone-pill-btn"><i class="fas fa-step-backward"></i> 시작 -0.5s</button>
+              <button onclick="adjustVideoTrim(0.5, 0)" class="tone-pill-btn"><i class="fas fa-step-forward"></i> 시작 +0.5s</button>
+              <button onclick="adjustVideoTrim(0, -0.5)" class="tone-pill-btn"><i class="fas fa-step-backward"></i> 종료 -0.5s</button>
+              <button onclick="adjustVideoTrim(0, 0.5)" class="tone-pill-btn"><i class="fas fa-step-forward"></i> 종료 +0.5s</button>
+            </div>
+            <div style="font-size: 11.5px; color: #94a3b8; font-family: monospace;">8방향 비례 리사이징 & 메타데이터 자동 동기화</div>
+          </div>
+
+          <!-- Markdown Output Box -->
+          <div style="background: #030712; border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; padding: 10px 14px; font-family: monospace; font-size: 12px; color: #38bdf8; overflow-x: auto;" id="video-sim-md">
+            :::video[src="project_demo.mp4" start=2.40 end=14.80 width="100%" filter="gpu-hq" res="1080p"]:::
           </div>
         </div>
 
-        <!-- 2. 오디오 무음 자동 삭제 (Row 1 / Col 2) -->
-        <div class="sim-card">
+        <!-- 2. 오디오 주파수 DSP & 무음존 자동 삭제 (Row 2 / Col 1) -->
+        <div class="sim-master-card">
           <div class="sim-card-header">
-            <div class="sim-card-title">
-              <i class="fas fa-waveform-lines" style="color:#34d399;"></i> 오디오 무음존 1-클릭 일괄 삭제
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="matrix-icon-box" style="background: linear-gradient(135deg, #10b981, #059669); width: 40px; height: 40px;">
+                <i class="fas fa-waveform-lines"></i>
+              </div>
+              <div>
+                <div style="font-size: 16px; font-weight: 800; color: #f8fafc;">오디오 무음존 1-클릭 일괄 삭제</div>
+                <div style="font-size: 11.5px; color: #34d399; font-weight: 700;">Web Audio API FFT Analyzer</div>
+              </div>
             </div>
-            <span class="sim-badge" style="color:#34d399; background:rgba(16,185,129,0.15); border-color:rgba(16,185,129,0.3);">Web Audio DSP</span>
+            <span class="sim-badge" style="color:#34d399; background:rgba(16,185,129,0.15); border-color:rgba(16,185,129,0.3);">
+              DSP Engine (/audio)
+            </span>
           </div>
-          <div style="background: #030712; border-radius: 8px; padding: 12px; border: 1px solid rgba(255,255,255,0.08);">
-            <canvas id="audio-waveform-canvas" style="width: 100%; height: 80px;"></canvas>
-            <div id="audio-purge-status" style="font-size: 11px; margin-top: 6px; text-align: center;">
-              <span style="color:#f87171; font-weight:600;"><i class="fas fa-wave-pulse fa-beat"></i> 무음 8구간 감지됨 [Mute: 3.2s]</span>
+
+          <div style="background: #030712; border-radius: 12px; padding: 16px; border: 1px solid rgba(255,255,255,0.08);">
+            <canvas id="audio-waveform-canvas" style="width: 100%; height: 120px;"></canvas>
+            <div id="audio-purge-status" style="font-size: 12px; margin-top: 10px; text-align: center; font-family: monospace;">
+              <span style="color:#f87171; font-weight:600;"><i class="fas fa-wave-pulse fa-beat"></i> 무음 8구간 [Mute: 3.2s, -48dB] 감지됨 — 1-클릭 일괄 삭제 가능</span>
             </div>
           </div>
-          <button id="audio-purge-btn" onclick="triggerAudioPurge()" class="btn-primary" style="padding: 10px; font-size: 12px; font-weight:700; background:linear-gradient(135deg, #10b981, #059669); border:none; cursor:pointer;">
+
+          <button id="audio-purge-btn" onclick="triggerAudioPurge()" class="btn-primary" style="padding: 12px; font-size: 13px; font-weight: 800; background: linear-gradient(135deg, #10b981, #059669); border: none; cursor: pointer; box-shadow: 0 4px 16px rgba(16,185,129,0.3);">
             <i class="fas fa-bolt"></i> 1-클릭 무음 일괄 삭제 (Silence Purge)
           </button>
         </div>
 
-        <!-- 3. 이미지 AI 1초 배경 제거 (Row 1 / Col 3) -->
-        <div class="sim-card">
+        <!-- 3. 이미지 AI 1초 배경 제거 & Fabric.js (Row 2 / Col 2) -->
+        <div class="sim-master-card">
           <div class="sim-card-header">
-            <div class="sim-card-title">
-              <i class="fas fa-wand-magic-sparkles" style="color:#f59e0b;"></i> 이미지 AI 1초 배경 제거
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="matrix-icon-box" style="background: linear-gradient(135deg, #f59e0b, #d97706); width: 40px; height: 40px;">
+                <i class="fas fa-wand-magic-sparkles"></i>
+              </div>
+              <div>
+                <div style="font-size: 16px; font-weight: 800; color: #f8fafc;">이미지 AI 1초 배경 제거(누끼)</div>
+                <div style="font-size: 11.5px; color: #fbbf24; font-weight: 700;">ONNX Client Vision Neural Core</div>
+              </div>
             </div>
-            <span class="sim-badge" style="color:#f59e0b; background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.3);">ONNX Vision</span>
+            <span class="sim-badge" style="color:#fbbf24; background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.3);">
+              Vision Studio (/image)
+            </span>
           </div>
-          <div id="image-sim-wrapper" style="background: #1e293b; border-radius: 8px; height: 160px; display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
-            <div id="image-scan-line" style="display:none; position: absolute; left: 0; right: 0; height: 3px; background: #38bdf8; box-shadow: 0 0 14px #38bdf8; z-index: 10;"></div>
+
+          <div id="image-sim-wrapper" style="background: #1e293b; border-radius: 12px; height: 160px; display: flex; justify-content: center; align-items: center; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.08);">
+            <div id="image-scan-line" style="display:none; position: absolute; left: 0; right: 0; height: 4px; background: #38bdf8; box-shadow: 0 0 18px #38bdf8; z-index: 10;"></div>
             <div id="image-sim-preview" style="text-align: center; transition: transform 0.3s ease;">
-              <i class="fas fa-cube" style="font-size: 50px; color: #f59e0b;"></i>
-              <div style="font-size: 11px; color: #e2e8f0; font-weight: bold; margin-top: 6px;">3D Workstation Object</div>
+              <i class="fas fa-cube" style="font-size: 64px; color: #f59e0b;"></i>
+              <div style="font-size: 12px; color: #e2e8f0; font-weight: bold; margin-top: 8px;">3D Workstation Object</div>
             </div>
           </div>
-          <button id="image-bg-btn" onclick="triggerBgRemoval()" class="btn-primary" style="padding: 10px; font-size: 12px; font-weight:700; background:linear-gradient(135deg, #f59e0b, #d97706); border:none; cursor:pointer;">
+
+          <button id="image-bg-btn" onclick="triggerBgRemoval()" class="btn-primary" style="padding: 12px; font-size: 13px; font-weight: 800; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; cursor: pointer; box-shadow: 0 4px 16px rgba(245,158,11,0.3);">
             <i class="fas fa-magic"></i> AI 1초 배경 제거 (Remove BG)
           </button>
         </div>
 
-        <!-- 4. PDF 3단계 맵리듀스 요약 (Row 2 / Col 1-2) -->
-        <div class="sim-card sim-card-half">
+        <!-- 4. 대용량 PDF 3단계 맵리듀스 지능형 지식 덱 (Row 3 / Col 1) -->
+        <div class="sim-master-card">
           <div class="sim-card-header">
-            <div class="sim-card-title">
-              <i class="fas fa-file-pdf" style="color:#ef4444;"></i> 대용량 PDF 3단계 맵리듀스 지능형 요약 덱
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="matrix-icon-box" style="background: linear-gradient(135deg, #ef4444, #b91c1c); width: 40px; height: 40px;">
+                <i class="fas fa-file-pdf"></i>
+              </div>
+              <div>
+                <div style="font-size: 16px; font-weight: 800; color: #f8fafc;">대용량 PDF 3단계 맵리듀스 지능형 요약</div>
+                <div style="font-size: 11.5px; color: #f87171; font-weight: 700;">100% On-Device WebGPU Parallel Cluster</div>
+              </div>
             </div>
-            <span class="sim-badge" style="color:#38bdf8;">100% On-Device WebGPU</span>
+            <span class="sim-badge" style="color:#38bdf8;">Map-Reduce (/doc)</span>
           </div>
-          <div style="background: #030712; border-radius: 8px; padding: 16px; border: 1px solid rgba(255,255,255,0.08);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <span style="font-size: 12px; color: #cbd5e1; font-weight: 700;">
+
+          <div style="background: #030712; border-radius: 12px; padding: 18px; border: 1px solid rgba(255,255,255,0.08); display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 12.5px; color: #cbd5e1; font-weight: 700;">
                 <i class="fas fa-book-open" style="color:#ef4444;"></i> sample_enterprise_ir_report.pdf (128 Pages)
               </span>
-              <button id="doc-mapreduce-btn" onclick="runDocMapReduceSim()" class="btn-primary" style="padding: 6px 14px; font-size: 11.5px; font-weight: 700; background: #2563eb; border:none; cursor:pointer;">
+              <button id="doc-mapreduce-btn" onclick="runDocMapReduceSim()" class="btn-primary" style="padding: 8px 16px; font-size: 12px; font-weight: 700; background: #2563eb; border: none; cursor: pointer;">
                 <i class="fas fa-play"></i> 3단계 맵리듀스 실행
               </button>
             </div>
-            <div style="background: rgba(255,255,255,0.05); height: 6px; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
+            <div style="background: rgba(255,255,255,0.06); height: 6px; border-radius: 3px; overflow: hidden;">
               <div id="doc-progress-fill" style="width: 0%; height: 100%; background: linear-gradient(90deg, #2563eb, #38bdf8, #10b981); transition: width 0.4s ease;"></div>
             </div>
-            <div id="doc-status-text" style="font-size: 11.5px; color: #94a3b8;">
+            <div id="doc-status-text" style="font-size: 12px; color: #94a3b8; font-family: monospace;">
               대기 중: 버튼을 눌러 128페이지 PDF를 WebGPU로 분석하세요.
             </div>
             <div id="doc-deck-container" class="doc-deck-grid" style="display: none;"></div>
           </div>
         </div>
 
-        <!-- 5. 로컬 AI 자율 에이전트 & 도구 호출 (Row 2 / Col 3) -->
-        <div class="sim-card sim-card-half">
+        <!-- 5. 로컬 WebGPU AI 자율 에이전트 & 도구 호출 (Row 3 / Col 2) -->
+        <div class="sim-master-card">
           <div class="sim-card-header">
-            <div class="sim-card-title">
-              <i class="fas fa-robot" style="color:#818cf8;"></i> 로컬 AI 자율 에이전트 (Tool Calling)
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="matrix-icon-box" style="background: linear-gradient(135deg, #6366f1, #4338ca); width: 40px; height: 40px;">
+                <i class="fas fa-robot"></i>
+              </div>
+              <div>
+                <div style="font-size: 16px; font-weight: 800; color: #f8fafc;">로컬 AI 자율 에이전트 (Tool Calling)</div>
+                <div style="font-size: 11.5px; color: #818cf8; font-weight: 700;">Qwen2.5 35 tok/s Local Inference</div>
+              </div>
             </div>
-            <span class="sim-badge" style="color:#818cf8; background:rgba(129,140,248,0.15); border-color:rgba(129,140,248,0.3);">Qwen2.5 WebGPU</span>
+            <span class="sim-badge" style="color:#818cf8; background:rgba(129,140,248,0.15); border-color:rgba(129,140,248,0.3);">
+              Autonomous Agent
+            </span>
           </div>
+
           <div style="display: flex; gap: 6px; flex-wrap: wrap;">
             <button onclick="sendAgentPrompt('table')" class="tone-pill-btn"><i class="fas fa-table"></i> 비교표 작성</button>
             <button onclick="sendAgentPrompt('python')" class="tone-pill-btn"><i class="fab fa-python"></i> 파이썬 실행</button>
             <button onclick="sendAgentPrompt('diff')" class="tone-pill-btn"><i class="fas fa-pen-nib"></i> 문체 다듬기</button>
           </div>
-          <div id="agent-chat-history" style="background: #030712; border-radius: 8px; padding: 12px; height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; border: 1px solid rgba(255,255,255,0.08);">
+
+          <div id="agent-chat-history" style="background: #030712; border-radius: 12px; padding: 14px; height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; border: 1px solid rgba(255,255,255,0.08);">
             <div class="chat-bubble bot-bubble">
               안녕하세요! 저는 귀하의 그래픽카드(WebGPU)에서 구동되는 로컬 AI 에이전트입니다. 상단 프리셋을 눌러보세요.
             </div>
           </div>
         </div>
 
-        <!-- 6. 4대 문체 다듬기 & AI Diff (Row 3 / Col 1) -->
-        <div class="sim-card sim-card-half">
+        <!-- 6. 4대 문체 다듬기 & AI Diff 대조기 (Row 4 / Col 1) -->
+        <div class="sim-master-card">
           <div class="sim-card-header">
-            <div class="sim-card-title">
-              <i class="fas fa-highlighter" style="color:#ec4899;"></i> 4대 문체 다듬기 & AI Diff 대조
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="matrix-icon-box" style="background: linear-gradient(135deg, #ec4899, #be185d); width: 40px; height: 40px;">
+                <i class="fas fa-highlighter"></i>
+              </div>
+              <div>
+                <div style="font-size: 16px; font-weight: 800; color: #f8fafc;">4대 문체 다듬기 & AI Diff 대조기</div>
+                <div style="font-size: 11.5px; color: #f472b6; font-weight: 700;">Neural Style Polisher</div>
+              </div>
             </div>
-            <span class="sim-badge" style="color:#ec4899; background:rgba(236,72,153,0.15); border-color:rgba(236,72,153,0.3);">Neural Polisher</span>
+            <span class="sim-badge" style="color:#ec4899; background:rgba(236,72,153,0.15); border-color:rgba(236,72,153,0.3);">
+              Diff Engine
+            </span>
           </div>
+
           <div style="display: flex; gap: 6px;">
             <button onclick="switchPolishingTone('academic')" class="tone-pill-btn active" data-tone="academic">학술적 (Academic)</button>
             <button onclick="switchPolishingTone('business')" class="tone-pill-btn" data-tone="business">비즈니스 (Business)</button>
             <button onclick="switchPolishingTone('casual')" class="tone-pill-btn" data-tone="casual">친근한 (Casual)</button>
           </div>
+
           <div id="tone-diff-output">
-            <div style="font-size:11.5px; color:var(--text-muted); margin-bottom:6px;">인라인 실시간 Diff 대조 뷰어:</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">인라인 실시간 Diff 대조 뷰어:</div>
             <div class="diff-box">
               <div class="diff-del"><i class="fas fa-minus-circle"></i> <del>우리 앱은 진짜 빠르고 보안이 쩔어서 해킹도 안 당하고 서버비도 안 듭니다.</del></div>
               <div class="diff-ins" style="margin-top:6px;"><i class="fas fa-plus-circle"></i> <ins>본 시스템은 WebGPU 기반의 완전 격리 샌드박스를 통해 제로-트러스트 보안 표준을 충족하며, 분산 클라이언트 연산으로 서버 인프라 유지비를 제로화합니다.</ins></div>
@@ -244,27 +326,34 @@
           </div>
         </div>
 
-        <!-- 7. 인터랙티브 지오매핑 (Row 3 / Col 2) -->
-        <div class="sim-card sim-card-half">
+        <!-- 7. 인터랙티브 지오매핑 & GPS 텔레메트리 (Row 4 / Col 2) -->
+        <div class="sim-master-card">
           <div class="sim-card-header">
-            <div class="sim-card-title">
-              <i class="fas fa-map-location-dot" style="color:#34d399;"></i> 인터랙티브 지오매핑 & GPS 경로 탐색
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div class="matrix-icon-box" style="background: linear-gradient(135deg, #10b981, #047857); width: 40px; height: 40px;">
+                <i class="fas fa-map-location-dot"></i>
+              </div>
+              <div>
+                <div style="font-size: 16px; font-weight: 800; color: #f8fafc;">인터랙티브 지오매핑 & GPS 텔레메트리</div>
+                <div style="font-size: 11.5px; color: #34d399; font-weight: 700;">OpenStreetMap & OSRM Engine</div>
+              </div>
             </div>
             <div style="display: flex; gap: 8px;">
               <button onclick="resetMapPins()" class="tone-pill-btn"><i class="fas fa-rotate-left"></i> 핀 초기화</button>
-              <span class="sim-badge" style="color:#34d399;">OpenStreetMap & OSRM</span>
+              <span class="sim-badge" style="color:#34d399;">Geo (/map)</span>
             </div>
           </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <div style="position: relative;">
-              <canvas id="map-interactive-canvas" onclick="addMapPinClick(event)" style="width: 100%; height: 160px; border-radius: 8px; cursor: crosshair; border: 1px solid rgba(255,255,255,0.1);"></canvas>
-              <div style="position: absolute; bottom: 6px; left: 8px; font-size: 10px; color: #94a3b8; background: rgba(0,0,0,0.65); padding: 2px 6px; border-radius: 4px;">
+              <canvas id="map-interactive-canvas" onclick="addMapPinClick(event)" style="width: 100%; height: 170px; border-radius: 10px; cursor: crosshair; border: 1px solid rgba(255,255,255,0.1);"></canvas>
+              <div style="position: absolute; bottom: 8px; left: 10px; font-size: 10.5px; color: #94a3b8; background: rgba(0,0,0,0.7); padding: 3px 8px; border-radius: 4px;">
                 💡 지도를 클릭하면 새 경유지가 추가됩니다.
               </div>
             </div>
             <div style="display: flex; flex-direction: column;">
-              <div style="font-size: 11.5px; color: #cbd5e1; font-weight: 700; margin-bottom: 4px;">생성 마크다운:</div>
-              <pre id="map-md-output" style="background: #030712; border: 1px solid var(--border-muted); border-radius: 6px; padding: 10px; font-family: monospace; font-size: 10.5px; color: #34d399; overflow-x: auto; margin: 0; flex: 1;"></pre>
+              <div style="font-size: 12px; color: #cbd5e1; font-weight: 700; margin-bottom: 4px;">실시간 직렬화 마크다운:</div>
+              <pre id="map-md-output" style="background: #030712; border: 1px solid var(--border-muted); border-radius: 8px; padding: 10px; font-family: monospace; font-size: 11px; color: #34d399; overflow-x: auto; margin: 0; flex: 1;"></pre>
             </div>
           </div>
         </div>
