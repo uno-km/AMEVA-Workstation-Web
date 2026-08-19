@@ -434,34 +434,33 @@
                     });
 
                   }, 1200);
-
                 }, 1800);
-
               }, 1200);
-
             });
           }, 1500);
+        }, 1200);
+      });
+    }
 
-      // Theme toggle
-      const themeToggle = document.getElementById('theme-toggle');
-      if (themeToggle) {
-        const updateIcon = (theme) => {
-          const icon = themeToggle.querySelector('i');
-          if (icon) icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
-        };
-        const cur = document.documentElement.getAttribute('data-theme') || 'dark';
-        updateIcon(cur);
+    // Theme toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle) {
+      const updateIcon = (theme) => {
+        const icon = themeToggle.querySelector('i');
+        if (icon) icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+      };
+      const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+      updateIcon(cur);
 
-        themeToggle.addEventListener('click', () => {
-          const current = document.documentElement.getAttribute('data-theme') || 'dark';
-          const next = current === 'dark' ? 'light' : 'dark';
-          document.documentElement.setAttribute('data-theme', next);
-          localStorage.setItem('promo-theme', next);
-          localStorage.setItem('theme', next);
-          localStorage.setItem('ameva_theme', next);
-          updateIcon(next);
-        });
-      }
+      themeToggle.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme') || 'dark';
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('promo-theme', next);
+        localStorage.setItem('theme', next);
+        localStorage.setItem('ameva_theme', next);
+        updateIcon(next);
+      });
     }
   </script>
 </body>
