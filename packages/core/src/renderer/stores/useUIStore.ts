@@ -58,6 +58,18 @@ export interface UIState {
   toggleAbout: () => void
 
   /*
+   * [DOCUMENTATION & IR HUB MODAL STATES]
+   * - isDocHubOpen: 공식 문서 및 IR 자료 센터 모달 노출 여부.
+   * - docHubInitialTab: 오픈 시 활성화될 탭 ('readme' | 'ir' | 'psst' | 'arch').
+   * - setIsDocHubOpen: 문서 허브 모달 지정 액션.
+   * - toggleDocHub: 문서 허브 모달 토글 액션.
+   */
+  isDocHubOpen: boolean
+  docHubInitialTab?: string
+  setIsDocHubOpen: (val: boolean, tab?: string) => void
+  toggleDocHub: () => void
+
+  /*
    * [USER GUIDE MODAL STATES]
    * - isGuideOpen: 웰컴 튜토리얼 안내창 노출 여부.
    * - setIsGuideOpen: 안내창 지정 액션.
@@ -248,6 +260,11 @@ export const useUIStore = create<UIState>((set, get) => ({
   isAboutOpen: false,
   setIsAboutOpen: (val) => set({ isAboutOpen: val }),
   toggleAbout: () => set((state) => ({ isAboutOpen: !state.isAboutOpen })),
+
+  isDocHubOpen: false,
+  docHubInitialTab: 'readme',
+  setIsDocHubOpen: (val, tab) => set({ isDocHubOpen: val, docHubInitialTab: tab || 'readme' }),
+  toggleDocHub: () => set((state) => ({ isDocHubOpen: !state.isDocHubOpen })),
 
   isGuideOpen: false,
   setIsGuideOpen: (val) => set({ isGuideOpen: val }),

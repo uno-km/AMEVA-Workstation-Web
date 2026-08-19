@@ -95,7 +95,7 @@ export function MenuBar({}: MenuBarProps = {}) {
     showSidebar, setShowSidebar,
     showAIPanel, toggleAIPanel,
     showFindReplace, toggleFindReplace,
-    setIsSettingsOpen, setIsAboutOpen, setIsGuideOpen,
+    setIsSettingsOpen, setIsAboutOpen, setIsDocHubOpen, setIsGuideOpen,
     setShowMarketplaceModal, setShowPricingModal,
     dynamicMenus
   } = useUIStore()
@@ -620,9 +620,17 @@ export function MenuBar({}: MenuBarProps = {}) {
               <div style={dropdownStyle}>
                 <button 
                   style={itemStyle} 
-                  onClick={() => triggerAction(() => window.open('/promo/index.html', '_blank'))}
+                  onClick={() => triggerAction(() => setIsDocHubOpen(true, 'readme'))}
                 >
                   <span style={{ color: '#38bdf8', fontWeight: 700 }}>
+                    {renderLabel('📖 공식 문서 & IR 자료 센터 (Docs & IR Hub)...', 'd')}
+                  </span>
+                </button>
+                <button 
+                  style={itemStyle} 
+                  onClick={() => triggerAction(() => window.open('/promo/index.html', '_blank'))}
+                >
+                  <span style={{ color: '#60a5fa', fontWeight: 600 }}>
                     {renderLabel('🌐 공식 소개 웹사이트 (Showcase Landing)...', 'w')}
                   </span>
                 </button>
@@ -630,35 +638,41 @@ export function MenuBar({}: MenuBarProps = {}) {
                   style={itemStyle} 
                   onClick={() => triggerAction(onOpenGithub)}
                 >
-                  <span style={{ color: '#f59e0b', fontWeight: 700 }}>
+                  <span style={{ color: '#f59e0b', fontWeight: 600 }}>
                     {renderLabel('⭐ GitHub 오픈소스 저장소 (Star/Fork)...', 'h')}
                   </span>
                 </button>
                 <div style={{ height: '1px', backgroundColor: 'var(--border-muted)', margin: '4px 0' }} />
                 <button 
                   style={itemStyle} 
-                  onClick={() => triggerAction(() => window.open('https://github.com/uno-km/AMEVA-Workstation-Web/blob/main/docs/IR_PITCH_DECK.md', '_blank'))}
+                  onClick={() => triggerAction(() => setIsDocHubOpen(true, 'ir'))}
                 >
                   <span style={{ color: '#34d399', fontWeight: 600 }}>
-                    {renderLabel('📑 투자자용 12-Slide Pitch Deck...', 'd')}
+                    {renderLabel('📑 투자자용 12-Slide Pitch Deck 열람...', 'i')}
                   </span>
                 </button>
                 <button 
                   style={itemStyle} 
-                  onClick={() => triggerAction(() => window.open('https://github.com/uno-km/AMEVA-Workstation-Web/blob/main/docs/GOV_STARTUP_BUSINESS_PLAN_PSST.md', '_blank'))}
+                  onClick={() => triggerAction(() => setIsDocHubOpen(true, 'psst'))}
                 >
-                  {renderLabel('🏛️ 표준 PSST 사업계획서...', 'b')}
+                  {renderLabel('🏛️ 표준 PSST 사업계획서 열람...', 'b')}
+                </button>
+                <button 
+                  style={itemStyle} 
+                  onClick={() => triggerAction(() => setIsDocHubOpen(true, 'arch'))}
+                >
+                  {renderLabel('📐 시스템 아키텍처 설계 명세...', 's')}
                 </button>
                 <div style={{ height: '1px', backgroundColor: 'var(--border-muted)', margin: '4px 0' }} />
                 <button style={itemStyle} onClick={() => triggerAction(onOpenAbout)}>
-                  {renderLabel('아메바 생태계 소개...', 'a')}
+                  {renderLabel('아메바 생태계 소개 (About)...', 'a')}
                 </button>
                 <button style={itemStyle} onClick={() => triggerAction(onOpenGuide)}>
-                  {renderLabel('마크다운 작성 가이드', 'g')}
+                  {renderLabel('마크다운 작성 가이드 (Guide)...', 'g')}
                 </button>
                 <button style={itemStyle} onClick={() => triggerAction(onOpenPricing)}>
                   <span style={{ color: 'var(--primary)', fontWeight: 700 }}>
-                    {renderLabel('💰 Pricing Plans...', 'p')}
+                    {renderLabel('💰 Pricing Plans (요금제)...', 'p')}
                   </span>
                 </button>
                 <button style={itemStyle} onClick={() => triggerAction(onOpenGithub)}>

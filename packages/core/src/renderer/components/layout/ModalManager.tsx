@@ -41,6 +41,8 @@ import { DiffModal } from '../DiffModal'
 import { SettingsModal } from '../SettingsModal'
 // [내부 프로젝트 의존성 모듈 임포트: ../AboutModal]
 import { AboutModal } from '../AboutModal'
+// [내부 프로젝트 의존성 모듈 임포트: ../DocHubModal]
+import { DocHubModal } from '../DocHubModal'
 // [내부 프로젝트 의존성 모듈 임포트: ../MarkdownGuideModal]
 import { MarkdownGuideModal } from '../MarkdownGuideModal'
 // [내부 프로젝트 의존성 모듈 임포트: ../MarketplaceModal]
@@ -116,6 +118,8 @@ export function ModalManager({}: ModalManagerProps = {}) {
     setShowModelHub: s.setShowModelHub,
     isAboutOpen: s.isAboutOpen,
     setIsAboutOpen: s.setIsAboutOpen,
+    isDocHubOpen: s.isDocHubOpen,
+    setIsDocHubOpen: s.setIsDocHubOpen,
     isGuideOpen: s.isGuideOpen,
     setIsGuideOpen: s.setIsGuideOpen,
     showMarketplaceModal: s.showMarketplaceModal,
@@ -197,6 +201,10 @@ export function ModalManager({}: ModalManagerProps = {}) {
         isOpen={isAboutOpen}
         onClose={() => setIsAboutOpen(false)}
         onOpenGithub={handleOpenGithub}
+      />
+      <DocHubModal
+        isOpen={isDocHubOpen}
+        onClose={() => setIsDocHubOpen(false)}
       />
       <MarkdownGuideModal
         isOpen={isGuideOpen}
