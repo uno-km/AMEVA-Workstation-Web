@@ -1171,3 +1171,199 @@ input:checked + .slider:before {
     opacity: 1;
   }
 }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes laserSweep {
+  0% { top: 0%; opacity: 1; }
+  50% { opacity: 0.8; }
+  100% { top: 100%; opacity: 1; }
+}
+
+/* 🎬 인앱 미디어 & AI 시뮬레이터 카드 스타일 */
+.sim-interactive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 24px;
+  margin: 40px 0;
+}
+
+.sim-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-muted);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.sim-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
+
+.sim-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sim-card-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sim-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(56,189,248,0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56,189,248,0.3);
+}
+
+/* 🖼️ 배경 제거 투명 바둑판 */
+.bg-transparent-checkered {
+  background-image: linear-gradient(45deg, #1e293b 25%, transparent 25%), 
+                    linear-gradient(-45deg, #1e293b 25%, transparent 25%), 
+                    linear-gradient(45deg, transparent 75%, #1e293b 75%), 
+                    linear-gradient(-45deg, transparent 75%, #1e293b 75%) !important;
+  background-size: 16px 16px !important;
+  background-position: 0 0, 0 8px, 8px -8px, -8px 0px !important;
+}
+
+/* 📑 맵리듀스 덱 카드 */
+.doc-deck-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.deck-card {
+  background: #0b111e;
+  border: 1px solid var(--border-muted);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.deck-card h4 {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 6px 0 4px 0;
+  color: var(--text-main);
+}
+
+.deck-card p {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.deck-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+/* 💬 AI Agent Chat Bubbles */
+.chat-bubble {
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  max-width: 90%;
+  animation: fadeInUp 0.25s ease;
+}
+
+.user-bubble {
+  background: rgba(56,189,248,0.15);
+  border: 1px solid rgba(56,189,248,0.3);
+  color: #e0f2fe;
+  align-self: flex-end;
+  border-bottom-right-radius: 2px;
+}
+
+.bot-bubble {
+  background: #0f172a;
+  border: 1px solid var(--border-muted);
+  color: #cbd5e1;
+  align-self: flex-start;
+  border-bottom-left-radius: 2px;
+  white-space: pre-wrap;
+}
+
+.agent-tool-calling {
+  font-size: 11px;
+  color: #f59e0b;
+  background: rgba(245,158,11,0.1);
+  border: 1px dashed rgba(245,158,11,0.3);
+  padding: 6px 10px;
+  border-radius: 6px;
+  align-self: flex-start;
+}
+
+/* 🌐 문체 다듬기 Diff */
+.diff-box {
+  background: #070a0f;
+  border: 1px solid var(--border-muted);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+
+.diff-del {
+  color: #f87171;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.diff-ins {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.tone-pill-btn {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-muted);
+  color: var(--text-muted);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tone-pill-btn.active {
+  background: var(--primary-glow);
+  color: #38bdf8;
+  border-color: var(--secondary);
+}
+
