@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Features & 16-Core Flagship Matrix | AMEVA Workstation</title>
+  <script>
+    (function() {
+      var t = localStorage.getItem('promo-theme') || localStorage.getItem('theme') || localStorage.getItem('ameva_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -638,11 +644,21 @@
       // 테마 토글
       const themeToggle = document.getElementById('theme-toggle');
       if (themeToggle) {
+        const updateIcon = (theme) => {
+          const icon = themeToggle.querySelector('i');
+          if (icon) icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        };
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+        updateIcon(currentTheme);
+
         themeToggle.addEventListener('click', () => {
-          const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
-          const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-          document.documentElement.setAttribute('data-theme', newTheme);
-          localStorage.setItem('theme', newTheme);
+          const current = document.documentElement.getAttribute('data-theme') || 'dark';
+          const next = current === 'dark' ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-theme', next);
+          localStorage.setItem('promo-theme', next);
+          localStorage.setItem('theme', next);
+          localStorage.setItem('ameva_theme', next);
+          updateIcon(next);
         });
       }
     });

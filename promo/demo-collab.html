@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Live Collaboration Demo | AMEVA Workstation</title>
+  <script>
+    (function() {
+      var t = localStorage.getItem('promo-theme') || localStorage.getItem('theme') || localStorage.getItem('ameva_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
@@ -436,8 +442,26 @@
             });
           }, 1500);
 
-        }, 1200);
-      });
+      // Theme toggle
+      const themeToggle = document.getElementById('theme-toggle');
+      if (themeToggle) {
+        const updateIcon = (theme) => {
+          const icon = themeToggle.querySelector('i');
+          if (icon) icon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+        };
+        const cur = document.documentElement.getAttribute('data-theme') || 'dark';
+        updateIcon(cur);
+
+        themeToggle.addEventListener('click', () => {
+          const current = document.documentElement.getAttribute('data-theme') || 'dark';
+          const next = current === 'dark' ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-theme', next);
+          localStorage.setItem('promo-theme', next);
+          localStorage.setItem('theme', next);
+          localStorage.setItem('ameva_theme', next);
+          updateIcon(next);
+        });
+      }
     }
   </script>
 </body>

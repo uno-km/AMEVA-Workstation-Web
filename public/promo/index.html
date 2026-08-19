@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AMEVA Workstation | Enterprise AI Productivity Space</title>
+  <script>
+    (function() {
+      var t = localStorage.getItem('promo-theme') || localStorage.getItem('theme') || localStorage.getItem('ameva_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -265,7 +271,7 @@
         </div>
 
         <!-- 5. 로컬 WebGPU AI 자율 에이전트 & 도구 호출 (Row 3 / Col 2) -->
-        <div class="sim-master-card">
+        <div class="sim-master-card" style="min-height: 460px;">
           <div class="sim-card-header">
             <div style="display: flex; align-items: center; gap: 10px;">
               <div class="matrix-icon-box" style="background: linear-gradient(135deg, #6366f1, #4338ca); width: 40px; height: 40px;">
@@ -287,30 +293,31 @@
             <button onclick="sendAgentPrompt('diff')" class="tone-pill-btn"><i class="fas fa-pen-nib"></i> 문체 다듬기</button>
           </div>
 
-          <div id="agent-chat-history" style="background: #030712; border-radius: 12px; padding: 14px; height: 180px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; border: 1px solid rgba(255,255,255,0.08);">
+          <div id="agent-chat-history" style="background: #030712; border-radius: 12px; padding: 16px; height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; border: 1px solid rgba(255,255,255,0.1);">
             <div class="chat-bubble bot-bubble">
-              안녕하세요! 저는 귀하의 그래픽카드(WebGPU)에서 구동되는 로컬 AI 에이전트입니다. 상단 프리셋을 눌러보세요.
+              안녕하세요! 저는 귀하의 그래픽카드(WebGPU)에서 구동되는 로컬 AI 에이전트입니다. 상단 프리셋을 눌러 실시간 자율 도구 호출을 확인해보세요.
             </div>
           </div>
         </div>
 
-        <!-- 6. 4대 문체 다듬기 & AI Diff 대조기 (Row 4 / Col 1) -->
-        <div class="sim-master-card">
+        <!-- 6. 4대 문체 다듬기 & 지능형 슬래시(/) 자동완성 (Row 4 / Col 1) -->
+        <div class="sim-master-card" style="min-height: 460px;">
           <div class="sim-card-header">
             <div style="display: flex; align-items: center; gap: 10px;">
               <div class="matrix-icon-box" style="background: linear-gradient(135deg, #ec4899, #be185d); width: 40px; height: 40px;">
-                <i class="fas fa-highlighter"></i>
+                <i class="fas fa-wand-magic-sparkles"></i>
               </div>
               <div>
-                <div style="font-size: 16px; font-weight: 800; color: #f8fafc;">4대 문체 다듬기 & AI Diff 대조기</div>
-                <div style="font-size: 11.5px; color: #f472b6; font-weight: 700;">Neural Style Polisher</div>
+                <div style="font-size: 16px; font-weight: 800; color: #f8fafc;">4대 문체 다듬기 & 지능형 슬래시(/) 자동완성</div>
+                <div style="font-size: 11.5px; color: #f472b6; font-weight: 700;">Neural Polisher & Slash Autocomplete</div>
               </div>
             </div>
             <span class="sim-badge" style="color:#ec4899; background:rgba(236,72,153,0.15); border-color:rgba(236,72,153,0.3);">
-              Diff Engine
+              Smart Editor
             </span>
           </div>
 
+          <!-- 문체 변환 탭 -->
           <div style="display: flex; gap: 6px;">
             <button onclick="switchPolishingTone('academic')" class="tone-pill-btn active" data-tone="academic">학술적 (Academic)</button>
             <button onclick="switchPolishingTone('business')" class="tone-pill-btn" data-tone="business">비즈니스 (Business)</button>
@@ -321,13 +328,30 @@
             <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;">인라인 실시간 Diff 대조 뷰어:</div>
             <div class="diff-box">
               <div class="diff-del"><i class="fas fa-minus-circle"></i> <del>우리 앱은 진짜 빠르고 보안이 쩔어서 해킹도 안 당하고 서버비도 안 듭니다.</del></div>
-              <div class="diff-ins" style="margin-top:6px;"><i class="fas fa-plus-circle"></i> <ins>본 시스템은 WebGPU 기반의 완전 격리 샌드박스를 통해 제로-트러스트 보안 표준을 충족하며, 분산 클라이언트 연산으로 서버 인프라 유지비를 제로화합니다.</ins></div>
+              <div class="diff-ins" style="margin-top:8px;"><i class="fas fa-plus-circle"></i> <ins>본 시스템은 WebGPU 기반의 완전 격리 샌드박스를 통해 제로-트러스트 보안 표준을 충족하며, 분산 클라이언트 연산으로 서버 인프라 유지비를 제로화합니다.</ins></div>
+            </div>
+          </div>
+
+          <!-- 슬래시 자동완성 프리뷰 -->
+          <div style="background: #030712; border: 1px solid rgba(236,72,153,0.25); border-radius: 10px; padding: 12px; margin-top: 6px;">
+            <div style="font-size: 11.5px; color: #f472b6; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+              <i class="fas fa-terminal"></i> 지능형 슬래시(/) 자동완성 테스트:
+            </div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
+              <button onclick="selectSlashCommand('/video')" class="tone-pill-btn" style="font-size: 11px; padding: 4px 8px;">/video</button>
+              <button onclick="selectSlashCommand('/audio')" class="tone-pill-btn" style="font-size: 11px; padding: 4px 8px;">/audio</button>
+              <button onclick="selectSlashCommand('/doc')" class="tone-pill-btn" style="font-size: 11px; padding: 4px 8px;">/doc</button>
+              <button onclick="selectSlashCommand('/excel')" class="tone-pill-btn" style="font-size: 11px; padding: 4px 8px;">/excel</button>
+              <button onclick="selectSlashCommand('/map')" class="tone-pill-btn" style="font-size: 11px; padding: 4px 8px;">/map</button>
+            </div>
+            <div id="slash-preview-output" style="font-family: monospace; font-size: 11px; color: #94a3b8;">
+              상단 슬래시 커맨드를 클릭하면 해당 특화 블록이 1초 만에 자동 생성됩니다.
             </div>
           </div>
         </div>
 
         <!-- 7. 인터랙티브 지오매핑 & GPS 텔레메트리 (Row 4 / Col 2) -->
-        <div class="sim-master-card">
+        <div class="sim-master-card" style="min-height: 460px;">
           <div class="sim-card-header">
             <div style="display: flex; align-items: center; gap: 10px;">
               <div class="matrix-icon-box" style="background: linear-gradient(135deg, #10b981, #047857); width: 40px; height: 40px;">
@@ -344,16 +368,16 @@
             </div>
           </div>
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
             <div style="position: relative;">
-              <canvas id="map-interactive-canvas" onclick="addMapPinClick(event)" style="width: 100%; height: 170px; border-radius: 10px; cursor: crosshair; border: 1px solid rgba(255,255,255,0.1);"></canvas>
-              <div style="position: absolute; bottom: 8px; left: 10px; font-size: 10.5px; color: #94a3b8; background: rgba(0,0,0,0.7); padding: 3px 8px; border-radius: 4px;">
+              <canvas id="map-interactive-canvas" onclick="addMapPinClick(event)" style="width: 100%; height: 250px; border-radius: 10px; cursor: crosshair; border: 1px solid rgba(255,255,255,0.1);"></canvas>
+              <div style="position: absolute; bottom: 8px; left: 10px; font-size: 10.5px; color: #94a3b8; background: rgba(0,0,0,0.75); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);">
                 💡 지도를 클릭하면 새 경유지가 추가됩니다.
               </div>
             </div>
             <div style="display: flex; flex-direction: column;">
-              <div style="font-size: 12px; color: #cbd5e1; font-weight: 700; margin-bottom: 4px;">실시간 직렬화 마크다운:</div>
-              <pre id="map-md-output" style="background: #030712; border: 1px solid var(--border-muted); border-radius: 8px; padding: 10px; font-family: monospace; font-size: 11px; color: #34d399; overflow-x: auto; margin: 0; flex: 1;"></pre>
+              <div style="font-size: 12px; color: #cbd5e1; font-weight: 700; margin-bottom: 6px;">실시간 직렬화 마크다운:</div>
+              <pre id="map-md-output" style="background: #030712; border: 1px solid var(--border-muted); border-radius: 10px; padding: 12px; font-family: monospace; font-size: 11px; color: #34d399; overflow-x: auto; margin: 0; flex: 1; min-height: 220px; line-height: 1.6;"></pre>
             </div>
           </div>
         </div>
