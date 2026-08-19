@@ -241,6 +241,7 @@ header {
 .grad-text {
   background: linear-gradient(135deg, var(--primary) 20%, var(--secondary) 60%, var(--accent) 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
@@ -1086,10 +1087,9 @@ input:checked + .slider:before {
     -webkit-overflow-scrolling: touch;
   }
   
-    /* 5. 기타 섹션 컨테이너 여백 축소 */
-    .promo-container {
-      padding: 86px 16px 40px !important; /* 상단 헤더 높이만큼 여백 최적화 */
-    }
+  /* 5. 기타 섹션 컨테이너 여백 축소 */
+  .promo-container {
+    padding: 86px 16px 40px !important; /* 상단 헤더 높이만큼 여백 최적화 */
   }
 }
 

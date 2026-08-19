@@ -1424,9 +1424,8 @@ export function PptxMiniViewer({ sourceUrl, fileBase64, height }: { sourceUrl: s
           const pptx = pptxPreview.init(wrapper, {
             width: 800,
             height: 450,
-            slideInterval: 0,
             showSlideNumber: true
-          })
+          } as any)
           await pptx.preview(arrayBuffer)
           setLoading(false)
           setTimeout(parseSlides, 500)
