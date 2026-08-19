@@ -9,10 +9,11 @@
  * - 탭 전환, 원문 복사(Copy Markdown), 공식 GitHub 및 Vercel 쇼케이스 랜딩 페이지 바로가기 연동을 지원한다.
  */
 
-import { useState } from 'react'
-import { FileText, Presentation, Landmark, Layers, Copy, Check, ExternalLink, Globe } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { FileText, Presentation, Landmark, Layers, Copy, Check, ExternalLink, Globe, Eye, Code } from 'lucide-react'
 import { StrictModal } from './ui/modals/StrictModal'
 import { useUIStore } from '../stores/useUIStore'
+import { marked } from 'marked'
 
 interface DocHubModalProps {
   isOpen: boolean
@@ -220,10 +221,19 @@ export function DocHubModal({ isOpen, onClose }: DocHubModalProps) {
   const initialTab = useUIStore((state) => (state.docHubInitialTab as TabType) || 'readme')
   const [activeTab, setActiveTab] = useState<TabType>(initialTab)
   const [copied, setCopied] = useState(false)
+  const [viewMode, setViewMode] = useState<'preview' | 'raw'>('preview')
 
   if (!isOpen) return null
 
   const currentDoc = DOCS_DATABASE[activeTab]
+
+  const parsedHtml = useMemo(() => {
+    try {
+      return marked.parse(currentDoc.content, { breaks: true, gfm: true }) as string
+    } catch {
+      return `<pre>${currentDoc.content}</pre>`
+    }
+  }, [currentDoc.content])
 
   const handleCopy = async () => {
     try {
@@ -285,7 +295,49 @@ export function DocHubModal({ isOpen, onClose }: DocHubModalProps) {
             })}
           </div>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            {/* 뷰 모드 토글 (렌더링 vs 원본) */}
+            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', padding: '2px', border: '1px solid var(--border-muted)' }}>
+              <button
+                onClick={() => setViewMode('preview')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '4px 10px',
+                  borderRadius: '4px',
+                  fontSize: '11.5px',
+                  fontWeight: 600,
+                  border: 'none',
+                  background: viewMode === 'preview' ? '#2563eb' : 'transparent',
+                  color: viewMode === 'preview' ? '#fff' : 'var(--text-muted)',
+                  cursor: 'pointer'
+                }}
+              >
+                <Eye size={12} />
+                <span>렌더링</span>
+              </button>
+              <button
+                onClick={() => setViewMode('raw')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  padding: '4px 10px',
+                  borderRadius: '4px',
+                  fontSize: '11.5px',
+                  fontWeight: 600,
+                  border: 'none',
+                  background: viewMode === 'raw' ? '#2563eb' : 'transparent',
+                  color: viewMode === 'raw' ? '#fff' : 'var(--text-muted)',
+                  cursor: 'pointer'
+                }}
+              >
+                <Code size={12} />
+                <span>마크다운 소스</span>
+              </button>
+            </div>
+
             <button
               onClick={handleCopy}
               style={{
@@ -303,7 +355,7 @@ export function DocHubModal({ isOpen, onClose }: DocHubModalProps) {
               }}
             >
               {copied ? <Check size={13} /> : <Copy size={13} />}
-              {copied ? '복사 완료!' : '마크다운 복사'}
+              <span>{copied ? '복사 완료!' : '마크다운 복사'}</span>
             </button>
             <a
               href={currentDoc.githubUrl}
@@ -358,7 +410,7 @@ export function DocHubModal({ isOpen, onClose }: DocHubModalProps) {
           justifyContent: 'space-between',
           alignItems: 'center',
           backgroundColor: 'rgba(255,255,255,0.02)',
-          padding: '12px 16px',
+          padding: '10px 16px',
           borderRadius: '8px',
           border: '1px solid var(--border-muted)'
         }}>
@@ -383,24 +435,60 @@ export function DocHubModal({ isOpen, onClose }: DocHubModalProps) {
           </span>
         </div>
 
-        {/* 문서 본문 스크롤 영역 */}
+        {/* 문서 본문 스크롤 영역 (마크다운 렌더링 vs 원본 뷰) */}
         <div style={{
           flex: 1,
           overflowY: 'auto',
           backgroundColor: '#070a0f',
           border: '1px solid var(--border-muted)',
           borderRadius: '8px',
-          padding: '20px',
-          fontFamily: 'JetBrains Mono, Menlo, monospace',
-          fontSize: '12.5px',
-          lineHeight: '1.7',
-          color: '#cbd5e1',
-          whiteSpace: 'pre-wrap',
-          wordBreak: 'break-word',
-          maxHeight: '52vh'
+          padding: '24px',
+          maxHeight: '56vh'
         }}>
-          {currentDoc.content}
+          {viewMode === 'preview' ? (
+            <div 
+              className="dochub-markdown-body"
+              dangerouslySetInnerHTML={{ __html: parsedHtml }}
+              style={{
+                color: '#e2e8f0',
+                fontSize: '13.5px',
+                lineHeight: '1.75'
+              }}
+            />
+          ) : (
+            <pre style={{
+              fontFamily: 'JetBrains Mono, Menlo, monospace',
+              fontSize: '12px',
+              lineHeight: '1.7',
+              color: '#94a3b8',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              margin: 0
+            }}>
+              {currentDoc.content}
+            </pre>
+          )}
         </div>
+
+        <style>{`
+          .dochub-markdown-body h1 { font-size: 20px; font-weight: 800; color: #38bdf8; margin: 24px 0 12px 0; border-bottom: 1px solid rgba(56,189,248,0.25); padding-bottom: 8px; }
+          .dochub-markdown-body h2 { font-size: 16px; font-weight: 700; color: #60a5fa; margin: 20px 0 10px 0; border-left: 3px solid #3b82f6; padding-left: 10px; }
+          .dochub-markdown-body h3 { font-size: 14px; font-weight: 700; color: #34d399; margin: 16px 0 8px 0; }
+          .dochub-markdown-body h4 { font-size: 13px; font-weight: 700; color: #fbbf24; margin: 12px 0 6px 0; }
+          .dochub-markdown-body p { margin-bottom: 12px; }
+          .dochub-markdown-body ul, .dochub-markdown-body ol { margin-left: 22px; margin-bottom: 12px; }
+          .dochub-markdown-body li { margin-bottom: 5px; }
+          .dochub-markdown-body table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 12px; }
+          .dochub-markdown-body th, .dochub-markdown-body td { border: 1px solid rgba(255,255,255,0.12); padding: 8px 12px; text-align: left; }
+          .dochub-markdown-body th { background: rgba(56,189,248,0.12); color: #38bdf8; font-weight: 700; }
+          .dochub-markdown-body tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+          .dochub-markdown-body code { background: rgba(255,255,255,0.08); padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 11.5px; color: #f59e0b; }
+          .dochub-markdown-body pre { margin: 14px 0; }
+          .dochub-markdown-body pre code { display: block; padding: 12px; background: #030712; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); overflow-x: auto; color: #cbd5e1; }
+          .dochub-markdown-body hr { border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 24px 0; }
+          .dochub-markdown-body blockquote { border-left: 4px solid #38bdf8; color: #94a3b8; margin: 14px 0; background: rgba(56,189,248,0.05); padding: 10px 14px; border-radius: 0 6px 6px 0; }
+          .dochub-markdown-body strong { color: #f8fafc; font-weight: 700; }
+        `}</style>
 
       </div>
     </StrictModal>
