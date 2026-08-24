@@ -822,7 +822,7 @@ export function MarkdownEditor({
             editor={editor}
           />
         ) : editorMode === 'edit' ? (
-          <BlockNoteView editor={editor} theme={theme === 'white' ? 'light' : 'dark'} editable slashMenu={false} sideMenu={false}>
+          <BlockNoteView editor={editor} theme={theme === 'dark' ? 'dark' : 'light'} editable slashMenu={false} sideMenu={false}>
             {/* SafeCustomSideMenu: BlockColorsItem 제거로 Mantine 7.x 호환 :: 메뉴 사용
               * floatingUIOptions: placement 'left'로 블록 세로 중앙에 버튼 정렬
               * (기본 'left-start'는 블록 상단 기준이라 큰 제목 블록에서 버튼이 위에 뜸) */}
@@ -941,7 +941,7 @@ export function MarkdownEditor({
             />
           </BlockNoteView>
         ) : editorMode === 'preview' ? (
-          <BlockNoteView editor={editor} theme={theme === 'white' ? 'light' : 'dark'} editable={false}>
+          <BlockNoteView editor={editor} theme={theme === 'dark' ? 'dark' : 'light'} editable={false}>
             <></>
           </BlockNoteView>
         ) : (
@@ -961,7 +961,7 @@ export function MarkdownEditor({
               style={{
                 width: '100%',
                 flex: 1,
-                background: 'rgba(5, 5, 10, 0.4)',
+                background: 'var(--bg-card)',
                 border: '1px solid var(--border-muted)',
                 borderRadius: '8px',
                 color: 'var(--text-main)',

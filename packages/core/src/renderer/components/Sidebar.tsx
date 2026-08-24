@@ -50,30 +50,12 @@ import { useAppContext } from '../contexts/AppContext'
 import { useWorkspaceStore } from '../stores/useWorkspaceStore'
 // [내부 프로젝트 의존성 모듈 임포트: ../stores/useUIStore]
 import { useUIStore } from '../stores/useUIStore'
+import { useTranslation } from '../i18n/useTranslation'
 
-/**
- * TabId 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 type TabId = 'files' | 'history' | 'chat'
 
-const TABS: { id: TabId; icon: React.FC<any>; label: string }[] = [
-  { id: 'files',   icon: FileText,      label: '파일' },
-  { id: 'history', icon: History,       label: '히스토리' },
-  { id: 'chat',    icon: MessageCircle, label: '채팅' },
-]
-
-  /*
-   * [FUNCTION CONTRACT]
-   * - 함수 명: `Sidebar`
-   * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
-   * - 예시: `Sidebar(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
-   */
-/**
- * Sidebar 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 export function Sidebar() {
+  const { t } = useTranslation()
   const {
     editorMode, setEditorMode, handleOpenFile, handleSaveFile, handleExport,
     snapshots, createSnapshot, deleteSnapshot, handleSelectSnapshotForDiff,
@@ -86,6 +68,12 @@ export function Sidebar() {
   } = useWorkspaceStore()
 
   const { isChatFloating, setIsChatFloating, setShowSidebar } = useUIStore()
+
+  const tabsConfig: { id: TabId; icon: React.FC<any>; label: string }[] = [
+    { id: 'files',   icon: FileText,      label: t.sidebar.tabFiles },
+    { id: 'history', icon: History,       label: t.sidebar.tabHistory },
+    { id: 'chat',    icon: MessageCircle, label: t.sidebar.tabChat },
+  ]
 
       /*
        * [RUN-TIME STATE / INVARIANT]
@@ -212,7 +200,7 @@ export function Sidebar() {
 
       {/* 탭 네비게이션 */}
       <div style={{ display: 'flex', borderBottom: '1px solid var(--border-muted)', flexShrink: 0 }}>
-        {TABS.map(tab => (
+        {tabsConfig.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}

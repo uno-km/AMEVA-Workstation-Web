@@ -27,21 +27,23 @@ import { WebGPUBanner } from './ai-panel/WebGPUBanner';
 import { EngineSettingsModal } from './ai-panel/EngineSettingsModal';
 
 import { OllamaWizardService } from '../services/llm/OllamaWizardService';
-
-const QUICK_ACTIONS = [
-  { id: 'summarize', icon: FileText, label: '3줄 요약', prompt: '현재 문서의 핵심 내용을 3가지 항목으로 명확하게 요약해줘.' },
-  { id: 'improve', icon: Wand2, label: '문장 개선', prompt: '문서의 문맥을 분석하여 더 자연스럽고 전문적인 비즈니스 톤으로 개선해줘.' },
-  { id: 'rag-search', icon: BookOpen, label: 'RAG 질의', prompt: '현재 문서 전체에서 가장 중요한 결론 및 아키텍처 포인트를 찾아 설명해줘.' },
-  { id: 'table', icon: Table, label: '표 정리', prompt: '문서의 주요 데이터를 일목요연한 마크다운 테이블 형태로 정리해줘.' }
-];
+import { useTranslation } from '../i18n/useTranslation';
 
 export function AIPanel() {
+  const { t } = useTranslation();
   const {
     messages,
     isStreaming,
     clearMessages,
     updateInsertSuggestionStatus
   } = useAIAgentStore();
+
+  const quickActions = [
+    { id: 'summarize', icon: FileText, label: t.aiPanel.quickActions.summarize, prompt: t.aiPanel.quickActions.summarizePrompt },
+    { id: 'improve', icon: Wand2, label: t.aiPanel.quickActions.improve, prompt: t.aiPanel.quickActions.improvePrompt },
+    { id: 'rag-search', icon: BookOpen, label: t.aiPanel.quickActions.ragSearch, prompt: t.aiPanel.quickActions.ragSearchPrompt },
+    { id: 'table', icon: Table, label: t.aiPanel.quickActions.table, prompt: t.aiPanel.quickActions.tablePrompt }
+  ];
 
   const taggedBlocks = useWorkspaceStore(s => s.taggedBlocks);
   const clearTaggedBlocks = useWorkspaceStore(s => s.clearTaggedBlocks);
@@ -286,9 +288,9 @@ export function AIPanel() {
             data-testid="ai-engine-settings-btn"
             onClick={() => setShowSettings(!showSettings)}
             style={{
-              background: showSettings ? 'rgba(255,255,255,0.15)' : 'transparent',
+              background: showSettings ? 'var(--bg-glass-active)' : 'transparent',
               border: 'none',
-              color: '#94a3b8',
+              color: 'var(--text-muted)',
               cursor: 'pointer',
               padding: '6px',
               borderRadius: '4px'
@@ -298,13 +300,13 @@ export function AIPanel() {
             <Settings size={14} />
           </button>
 
-          <div style={{ display: 'flex', background: 'rgba(255,255,255,0.06)', borderRadius: '6px', padding: '2px' }}>
+          <div style={{ display: 'flex', background: 'var(--bg-glass-active)', borderRadius: '6px', padding: '2px' }}>
             <button
               data-testid="ai-tab-chat"
               onClick={() => setActiveTab('chat')}
               style={{
-                background: activeTab === 'chat' ? 'var(--primary, #2563eb)' : 'transparent',
-                color: '#fff',
+                background: activeTab === 'chat' ? 'var(--primary)' : 'transparent',
+                color: activeTab === 'chat' ? 'var(--text-on-primary)' : 'var(--text-muted)',
                 border: 'none',
                 padding: '4px 8px',
                 borderRadius: '4px',
@@ -319,8 +321,8 @@ export function AIPanel() {
               data-testid="ai-tab-outline"
               onClick={() => setActiveTab('outline')}
               style={{
-                background: activeTab === 'outline' ? 'var(--primary, #2563eb)' : 'transparent',
-                color: '#fff',
+                background: activeTab === 'outline' ? 'var(--primary)' : 'transparent',
+                color: activeTab === 'outline' ? 'var(--text-on-primary)' : 'var(--text-muted)',
                 border: 'none',
                 padding: '4px 8px',
                 borderRadius: '4px',
@@ -337,7 +339,7 @@ export function AIPanel() {
             <button
               data-testid="ai-clear-messages-btn"
               onClick={clearMessages}
-              style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '6px', borderRadius: '4px' }}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '6px', borderRadius: '4px' }}
               title="대화 지우기"
             >
               <Trash2 size={14} />
@@ -564,18 +566,8 @@ export function AIPanel() {
                 <Sparkles size={24} color="#60a5fa" />
               </div>
 
-              <div>
-                <div style={{ fontSize: '14px', fontWeight: 700, color: '#f1f5f9', marginBottom: '4px' }}>
-                  무엇을 도와드릴까요?
-                </div>
-                <div style={{ fontSize: '11px', color: '#94a3b8', lineHeight: '1.5' }}>
-                  현재 에디터 문서 내용을 RAG 및 GraphRAG로 탐색하고<br />
-                  직접 수정하거나 새로운 단락을 삽입해 드립니다.
-                </div>
-              </div>
-
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', width: '100%', maxWidth: '320px' }}>
-                {QUICK_ACTIONS.map((action) => {
+                {quickActions.map((action) => {
                   const Icon = action.icon;
                   return (
                     <button
@@ -583,8 +575,8 @@ export function AIPanel() {
                       data-testid={`ai-quick-action-${action.id}`}
                       onClick={() => handleSend(action.prompt)}
                       style={{
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid rgba(255,255,255,0.08)',
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border-muted)',
                         borderRadius: '8px',
                         padding: '10px 12px',
                         display: 'flex',
@@ -595,8 +587,8 @@ export function AIPanel() {
                         textAlign: 'left'
                       }}
                     >
-                      <Icon size={14} color="#3b82f6" />
-                      <span style={{ fontSize: '11px', fontWeight: 600, color: '#e2e8f0' }}>{action.label}</span>
+                      <Icon size={14} color="var(--primary)" />
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-main)' }}>{action.label}</span>
                     </button>
                   );
                 })}
@@ -607,9 +599,8 @@ export function AIPanel() {
               <ChatBubble
                 key={msg.id}
                 message={msg}
-                onCitationClick={handleCitationClick}
-                onApplySuggestion={handleApplySuggestion}
-                onRejectSuggestion={handleRejectSuggestion}
+                onAcceptDiff={handleAcceptDiff}
+                onRejectDiff={handleRejectDiff}
               />
             ))
           )}
@@ -620,11 +611,11 @@ export function AIPanel() {
       {/* 5. Input Bar */}
       <div style={{
         padding: '12px',
-        borderTop: '1px solid var(--border-muted, rgba(255,255,255,0.08))',
-        background: 'rgba(0,0,0,0.2)',
+        borderTop: '1px solid var(--border-muted)',
+        background: 'var(--bg-main)',
         display: 'flex',
         flexDirection: 'column',
-        gap: '6px'
+        gap: '8px'
       }}>
         {taggedBlocks.length > 0 && (
           <div
@@ -634,8 +625,8 @@ export function AIPanel() {
               alignItems: 'center',
               gap: '6px',
               fontSize: '10px',
-              color: '#60a5fa',
-              background: 'rgba(37, 99, 235, 0.1)',
+              color: 'var(--primary)',
+              background: 'var(--bg-glass-active)',
               padding: '4px 8px',
               borderRadius: '4px'
             }}
@@ -644,7 +635,7 @@ export function AIPanel() {
             <button
               data-testid="ai-clear-tagged-blocks-btn"
               onClick={clearTaggedBlocks}
-              style={{ background: 'transparent', border: 'none', color: '#94a3b8', cursor: 'pointer', marginLeft: 'auto' }}
+              style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', marginLeft: 'auto' }}
             >
               ✕
             </button>
@@ -655,8 +646,8 @@ export function AIPanel() {
           display: 'flex',
           alignItems: 'flex-end',
           gap: '8px',
-          background: 'rgba(255, 255, 255, 0.05)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-muted)',
           borderRadius: '8px',
           padding: '6px 8px'
         }}>
@@ -665,14 +656,14 @@ export function AIPanel() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={isStreaming ? 'AI가 답변을 생성 중입니다...' : '문서 관련 질문 또는 수정 요청을 입력하세요...'}
+            placeholder={isStreaming ? t.common.loading : t.aiPanel.placeholder}
             disabled={isStreaming}
             rows={1}
             style={{
               flex: 1,
               background: 'transparent',
               border: 'none',
-              color: '#fff',
+              color: 'var(--text-main)',
               fontSize: '12px',
               resize: 'none',
               outline: 'none',
@@ -699,7 +690,7 @@ export function AIPanel() {
                 justifyContent: 'center',
                 flexShrink: 0
               }}
-              title="생성 중단"
+              title={t.aiPanel.stop}
             >
               <Square size={12} fill="#fff" />
             </button>
@@ -721,7 +712,7 @@ export function AIPanel() {
                 justifyContent: 'center',
                 flexShrink: 0
               }}
-              title="메시지 전송"
+              title={t.aiPanel.send}
             >
               <Send size={12} />
             </button>

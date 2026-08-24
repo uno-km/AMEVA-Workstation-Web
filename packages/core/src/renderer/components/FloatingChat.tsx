@@ -506,10 +506,10 @@ export function FloatingChat({}: FloatingChatProps = {}) {
         width: `${size.width}px`,
         height: `${size.height}px`,
         borderRadius: '12px',
-        background: 'rgba(10, 11, 18, 0.9)',
+        background: 'var(--bg-main)',
         backdropFilter: 'blur(20px)',
-        border: '1px solid rgba(59, 130, 246, 0.3)',
-        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(59, 130, 246, 0.15)',
+        border: '1px solid var(--border-muted)',
+        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.3)',
         display: 'flex',
         flexDirection: 'column',
         zIndex: 9990,
@@ -522,8 +522,8 @@ export function FloatingChat({}: FloatingChatProps = {}) {
         onMouseDown={handleDragMouseDown}
         style={{
           padding: '8px 12px',
-          background: 'linear-gradient(90deg, rgba(59, 130, 246, 0.15), transparent)',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          background: 'var(--bg-glass-active)',
+          borderBottom: '1px solid var(--border-muted)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -533,8 +533,8 @@ export function FloatingChat({}: FloatingChatProps = {}) {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#2563eb', display: 'inline-block' }} />
-          <span style={{ fontSize: '11px', fontWeight: 700, color: '#e5e7eb', letterSpacing: '0.5px' }}>
+          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--primary)', display: 'inline-block' }} />
+          <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-main)', letterSpacing: '0.5px' }}>
             CHAT (FLOATING)
           </span>
           {hasUnread && (
@@ -553,10 +553,10 @@ export function FloatingChat({}: FloatingChatProps = {}) {
             title="최소화 (버블 모드)"
             style={{
               background: 'transparent', border: 'none', cursor: 'pointer',
-              color: '#9ca3af', display: 'flex', padding: '4px', borderRadius: '4px',
+              color: 'var(--text-muted)', display: 'flex', padding: '4px', borderRadius: '4px',
               transition: 'background 0.2s'
             }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-glass-active)'}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
           >
             <Minimize2 size={12} />
@@ -567,10 +567,10 @@ export function FloatingChat({}: FloatingChatProps = {}) {
             title="사이드바에 도킹 고정"
             style={{
               background: 'transparent', border: 'none', cursor: 'pointer',
-              color: '#9ca3af', display: 'flex', padding: '4px', borderRadius: '4px',
+              color: 'var(--text-muted)', display: 'flex', padding: '4px', borderRadius: '4px',
               transition: 'background 0.2s'
             }}
-            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-glass-active)'}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
           >
             <Pin size={12} style={{ transform: 'rotate(45deg)' }} />

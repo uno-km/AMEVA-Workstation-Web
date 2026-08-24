@@ -61,6 +61,7 @@ import { SettingsTabCustomizations } from './settings/SettingsTabCustomizations'
 import { useSettingsDraft } from '../hooks/app/useSettingsDraft'
 // [내부 프로젝트 의존성 모듈 임포트: ./overlay/SettingsTransitionOverlay]
 import { SettingsTransitionOverlay } from './overlay/SettingsTransitionOverlay'
+import { useTranslation } from '../i18n/useTranslation'
 
 /**
  * HotkeyConfig 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
@@ -87,7 +88,7 @@ export interface AppSettings {
   showPeersDrag: boolean
   showCodeConsole: boolean
   autoSnapshot: boolean
-  theme: 'dark' | 'gray' | 'white' | 'hacker' | 'nature' | 'win98'
+  theme: 'dark' | 'white' | 'win98'
   wordWrap: boolean
   showMinimap: boolean
   autoLoadAI?: boolean
@@ -162,6 +163,7 @@ export function SettingsModal({
   onUpdateUser,
 }: SettingsModalProps) {
   void { Move, ShieldAlert };
+  const { t } = useTranslation();
 
   // 0. 설정 Draft 및 전환 상태
   const { draftSettings, updateDraft, resetDraft, isDirty: isAppDirty } = useSettingsDraft(settings, isOpen)
@@ -171,26 +173,9 @@ export function SettingsModal({
   const [activeTab, setActiveTab] = useState<TabType>(initialTab || 'General')
 
   useEffect(() => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `isOpen`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (isOpen)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
     if (isOpen) {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `initialTab`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (initialTab)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
       if (initialTab) {
         setActiveTab(initialTab)
-      } else {
-        // If it was closed and opened again without initialTab, maybe keep the last active tab or reset to General.
-        // We'll just set it to initialTab if provided.
       }
     }
   }, [isOpen, initialTab])
@@ -200,13 +185,6 @@ export function SettingsModal({
   const [tempColor, setTempColor] = useState(userColor)
 
   useEffect(() => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `isOpen`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (isOpen)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
     if (isOpen) {
       setTempName(username)
       setTempColor(userColor)
@@ -262,14 +240,10 @@ export function SettingsModal({
     }
   }, [isOpen, draftSettings.theme, settings.theme])
 
-
   const themes: { id: AppSettings['theme']; label: string; previewColor: string }[] = [
-    { id: 'dark', label: 'Dark (Antigravity)', previewColor: '#0a0a0f' },
-    { id: 'gray', label: 'Carbon Gray', previewColor: '#1e1e2e' },
-    { id: 'white', label: 'Light White', previewColor: '#f3f4f6' },
-    { id: 'hacker', label: 'Hacker Green', previewColor: '#000000' },
-    { id: 'nature', label: 'Fairytale Nature', previewColor: '#f0fdf4' },
-    { id: 'win98', label: 'Retro Windows 98', previewColor: '#c0c0c0' },
+    { id: 'dark', label: t.settingsModal.appearance.darkTheme, previewColor: '#0a0a0f' },
+    { id: 'white', label: t.settingsModal.appearance.whiteTheme, previewColor: '#f3f4f6' },
+    { id: 'win98', label: t.settingsModal.appearance.retroTheme, previewColor: '#c0c0c0' },
   ]
 
       /*
@@ -331,7 +305,7 @@ export function SettingsModal({
     <FreeModal
       isOpen={isOpen}
       onClose={handleCancel}
-      title="AMEVA Workstation Settings"
+      title={t.settingsModal.title}
       icon={<Settings size={18} />}
       initialWidth={970}
       initialHeight={680}
@@ -352,37 +326,21 @@ export function SettingsModal({
           flexShrink: 0,
         }}>
           {[
-            { id: 'General', label: 'General', icon: Sliders },
-            { id: 'AIEngine', label: 'AI Engine', icon: Cpu },
-            { id: 'Account', label: 'Account', icon: User },
-            { id: 'Permissions', label: 'Permissions', icon: Shield },
-            { id: 'Credentials', label: 'Credentials', icon: Key },
-            { id: 'Appearance', label: 'Appearance', icon: Monitor },
-            { id: 'Models', label: 'Models', icon: Bot },
-            { id: 'Customizations', label: 'Customizations', icon: ToyBrick },
-            { id: 'Hotkeys', label: 'Hotkeys', icon: Keyboard },
-            { id: 'MCP', label: 'MCP Manager', icon: ToyBrick }
-          ].map(t => {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `Icon`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const Icon = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-            const Icon = t.icon
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `isSelected`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const isSelected = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-            const isSelected = activeTab === t.id
+            { id: 'General', label: t.settingsModal.tabs.general, icon: Sliders },
+            { id: 'Appearance', label: t.settingsModal.tabs.appearance, icon: Monitor },
+            { id: 'Account', label: t.settingsModal.tabs.account, icon: User },
+            { id: 'Permissions', label: t.settingsModal.tabs.permissions, icon: Shield },
+            { id: 'Credentials', label: t.settingsModal.tabs.credentials, icon: Key },
+            { id: 'Customizations', label: t.settingsModal.tabs.customizations, icon: ToyBrick },
+            { id: 'Hotkeys', label: t.settingsModal.tabs.hotkeys, icon: Keyboard },
+            { id: 'MCP', label: t.settingsModal.tabs.mcp, icon: ToyBrick }
+          ].map(tabItem => {
+            const Icon = tabItem.icon
+            const isSelected = activeTab === tabItem.id
             return (
               <button
-                key={t.id}
-                onClick={() => setActiveTab(t.id as TabType)}
+                key={tabItem.id}
+                onClick={() => setActiveTab(tabItem.id as TabType)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '8px',
                   padding: '8px 12px', borderRadius: '6px', border: 'none',
@@ -394,7 +352,7 @@ export function SettingsModal({
                 }}
               >
                 <Icon size={14} />
-                <span>{t.label}</span>
+                <span>{tabItem.label}</span>
               </button>
             )
           })}
@@ -407,6 +365,14 @@ export function SettingsModal({
             activeTab={activeTab}
             settings={draftSettings}
             onUpdateSettings={updateDraft}
+          />
+
+          {/* Appearance Tab */}
+          <SettingsTabAppearance
+            activeTab={activeTab}
+            settings={draftSettings}
+            handleThemeChange={(theme) => updateDraft({ theme })}
+            themes={themes}
           />
 
           {/* Account Tab */}
@@ -429,14 +395,6 @@ export function SettingsModal({
           {/* Credentials Tab */}
           <SettingsTabCredentials isOpen={isOpen} activeTab={activeTab} />
 
-          {/* Appearance Tab */}
-          <SettingsTabAppearance
-            activeTab={activeTab}
-            settings={draftSettings}
-            handleThemeChange={(theme) => updateDraft({ theme })}
-            themes={themes}
-          />
-
           {/* Customizations Tab */}
           <SettingsTabCustomizations
             activeTab={activeTab}
@@ -450,7 +408,6 @@ export function SettingsModal({
           {activeTab === 'MCP' && (
             <SettingsTabMCP isOpen={isOpen} />
           )}
-
 
         </div>
       </div>
@@ -473,7 +430,7 @@ export function SettingsModal({
           onClick={handleCancel}
           disabled={isApplying}
         >
-          취소
+          {t.settingsModal.cancel}
         </button>
         <button
           className="btn btn-primary"
@@ -481,7 +438,7 @@ export function SettingsModal({
           onClick={handleSaveAndApply}
           disabled={isApplying}
         >
-          {isAnyDirty ? '적용 및 저장' : '닫기'}
+          {isAnyDirty ? t.settingsModal.applyAndSave : t.common.close}
         </button>
       </div>
       {/* 🚀 Transition Overlay */}

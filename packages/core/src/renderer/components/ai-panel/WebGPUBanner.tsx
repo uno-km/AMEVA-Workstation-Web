@@ -43,7 +43,7 @@ export const WebGPUBanner: React.FC<WebGPUBannerProps> = ({
           : isModelLoading
           ? 'rgba(59, 130, 246, 0.12)'
           : 'rgba(59, 130, 246, 0.12)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+        borderBottom: '1px solid var(--border-muted)',
         display: 'flex',
         flexDirection: 'column',
         gap: '4px',
@@ -52,10 +52,10 @@ export const WebGPUBanner: React.FC<WebGPUBannerProps> = ({
     >
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px' }}>
-          <Cpu size={13} color={isLLMReady ? '#34d399' : '#38bdf8'} />
+          <Cpu size={13} color={isLLMReady ? '#34d399' : 'var(--primary)'} />
           <span
             data-testid="webgpu-status-text"
-            style={{ fontWeight: 600, color: isLLMReady ? '#34d399' : '#e2e8f0' }}
+            style={{ fontWeight: 600, color: isLLMReady ? '#34d399' : 'var(--text-main)' }}
           >
             {isLLMReady
               ? `⚡ GPU 가속 준비 완료 (${shortModelLabel})`

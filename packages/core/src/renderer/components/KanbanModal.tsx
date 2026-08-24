@@ -372,9 +372,9 @@ export const KanbanModal: React.FC<KanbanModalProps> = ({ card, currentColId, co
                     </div>
                     <button 
                       onClick={addLabel}
+                      className="btn btn-primary"
                       style={{
-                        width: '100%', padding: '6px', background: 'var(--primary)',
-                        color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer',
+                        width: '100%', padding: '6px',
                         fontSize: '12px', fontWeight: 600
                       }}
                     >
@@ -395,25 +395,22 @@ export const KanbanModal: React.FC<KanbanModalProps> = ({ card, currentColId, co
         }}>
           <button 
             onClick={onClose}
+            className="btn btn-secondary"
             style={{
               padding: '8px 16px', borderRadius: '6px', border: '1px solid var(--border-muted)',
               background: 'transparent', color: 'var(--text-muted)',
               cursor: 'pointer', fontSize: '14px', fontWeight: 500
             }}
-            onMouseOver={e => e.currentTarget.style.backgroundColor = 'var(--bg-glass-active)'}
-            onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             Cancel
           </button>
           <button 
             onClick={handleSave}
+            className="btn btn-primary"
             style={{
-              padding: '8px 16px', borderRadius: '6px', border: 'none',
-              background: 'var(--primary)', color: '#ffffff',
-              cursor: 'pointer', fontSize: '14px', fontWeight: 500
+              padding: '8px 16px', borderRadius: '6px',
+              fontSize: '14px', fontWeight: 500
             }}
-            onMouseOver={e => e.currentTarget.style.opacity = '0.9'}
-            onMouseOut={e => e.currentTarget.style.opacity = '1'}
           >
             Save Changes
           </button>

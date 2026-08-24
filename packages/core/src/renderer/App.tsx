@@ -160,9 +160,11 @@ const randomUsername = `User_${Math.random().toString(36).substring(2, 7).toUppe
  * 외부 상태 및 도메인 전용 훅들을 하나의 단일 리액트 컴포넌트 컨텍스트 내에서 조립 및 구동한다.
  */
 import { useBackgroundInit } from './stores/useBackgroundInit'
+import { useGoogleDriveSync } from './hooks/useGoogleDriveSync'
 
 export default function App() {
   useBackgroundInit()
+  useGoogleDriveSync()
   
   /* 
    * [ADR - React Local State vs Zustand Store]

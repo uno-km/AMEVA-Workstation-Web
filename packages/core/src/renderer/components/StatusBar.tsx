@@ -88,25 +88,12 @@ import { useWorkspaceStore } from '../stores/useWorkspaceStore'
 import { useProcessStore } from '../stores/useProcessStore'
 // [내부 프로젝트 의존성 모듈 임포트: ../stores/useDocumentProfilerStore]
 import { useDocumentProfilerStore } from '../stores/useDocumentProfilerStore'
+import { useTranslation } from '../i18n/useTranslation'
 
-/**
- * StatusBarProps 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 export interface StatusBarProps {}
 
-/**
- * @component StatusBar
- * @description 작업 어플리케이션 하단에 고정되어 실시간 리소스 통계 및 시스템 진단 상태를 표기하는 컴포넌트.
- */
 export function StatusBar({}: StatusBarProps = {}) {
-  /*
-   * [HOOK CONFIG CONNECTIONS]
-   * - peers: Yjs 동시 편집 접속 유저 목록.
-   * - serverRunning: 중계 서버 가동 유무.
-   * - handleUpdateSettings: 설정 정보 부분 저장.
-   * - isProPlan: 멤버십 요금제 프로 가입 여부.
-   */
+  const { t } = useTranslation()
   const { settings, handleUpdateSettings, mcpServers } = useAppContext()
   const setIsSettingsOpen = useUIStore(s => s.setIsSettingsOpen)
   
@@ -255,7 +242,7 @@ export function StatusBar({}: StatusBarProps = {}) {
         />
         <div style={{ width: '1px', height: '12px', backgroundColor: 'var(--border-muted)' }} />
         <span>
-          줄 수: <strong>{lineCount}</strong>줄 | 공백 포함: <strong>{charCount}</strong>자 | 단어: <strong>{wordCount}</strong>개
+          {t.statusBar.lines}: <strong>{lineCount}</strong> | {t.statusBar.chars}: <strong>{charCount}</strong> | {t.statusBar.words}: <strong>{wordCount}</strong>
         </span>
       </div>
 
@@ -334,7 +321,7 @@ export function StatusBar({}: StatusBarProps = {}) {
             fontWeight: !wordWrap ? 600 : 400,
             transition: 'var(--transition-fast)',
           }}
-          title="줄바꿈을 끄고 본문을 한 줄로 길게 보이며 가로 스크롤을 활성화합니다."
+          title={t.settingsModal.general.wordWrapDesc}
         >
           <input
             type="checkbox"
@@ -343,7 +330,7 @@ export function StatusBar({}: StatusBarProps = {}) {
             style={{ cursor: 'pointer', accentColor: 'var(--secondary)' }}
           />
           <WrapText size={12} />
-          <span>줄바꿈 비활성화 (가로 스크롤)</span>
+          <span>{t.settingsModal.general.wordWrap}</span>
         </label>
 
         <div style={{ width: '1px', height: '12px', backgroundColor: 'var(--border-muted)' }} />
@@ -352,7 +339,7 @@ export function StatusBar({}: StatusBarProps = {}) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <ZoomIn size={12} />
           <span>
-            문서: <strong>{zoomPercent}%</strong>
+            {t.statusBar.zoom}: <strong>{zoomPercent}%</strong>
             {browserZoom !== 1.0 && (
               <span style={{ color: 'var(--secondary)', marginLeft: '6px' }}>
                 UI: <strong>{Math.round(browserZoom * 100)}%</strong>
@@ -381,7 +368,7 @@ export function StatusBar({}: StatusBarProps = {}) {
           title="환경 설정"
         >
           <Settings size={12} style={{ color: 'var(--primary)' }} />
-          <span>설정</span>
+          <span>{t.common.settings}</span>
         </button>
 
         <div style={{ width: '1px', height: '12px', backgroundColor: 'var(--border-muted)' }} />

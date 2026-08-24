@@ -1,0 +1,50 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Deep Cosmic Space Fill Gradient for Inner Emblem Region -->
+    <radialGradient id="space-fill" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#162244" />
+      <stop offset="70%" stop-color="#0B132B" />
+      <stop offset="100%" stop-color="#060A17" />
+    </radialGradient>
+
+    <!-- Crisp Aqua Cyan & Ocean Sky Blue Gradient -->
+    <linearGradient id="aqua-sky-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00F5D4" />
+      <stop offset="40%" stop-color="#00E5FF" />
+      <stop offset="70%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#3A86FF" />
+    </linearGradient>
+  </defs>
+
+  <!-- PURE CLEAN MINIMALIST VECTOR (NO SHADOWS, NO TEXT, NO JOINT CIRCLE DOTS) -->
+  <g>
+    <!-- 1. INNER DEEP SPACE EMBLEM SILHOUETTE -->
+    <path d="M 256 36 
+             C 395 36, 470 112, 465 240 
+             C 460 368, 385 448, 256 442 
+             C 127 436, 47 355, 52 235 
+             C 57 115, 117 36, 256 36 Z" 
+          fill="url(#space-fill)" />
+
+    <!-- 2. STREAMLINED OUTER CYAN ARC RING -->
+    <path d="M 256 36 
+             C 395 36, 470 112, 465 240 
+             C 460 368, 385 448, 256 442 
+             C 175 436, 105 395, 72 335" 
+          fill="none" 
+          stroke="url(#aqua-sky-grad)" 
+          stroke-width="36" 
+          stroke-linecap="round" />
+
+    <!-- 3. BOLD MINIMALIST AMEVA 'A' SKELETON -->
+    <!-- Left Leg -->
+    <line x1="256" y1="92" x2="160" y2="350" stroke="url(#aqua-sky-grad)" stroke-width="34" stroke-linecap="round" />
+    <!-- Right Leg -->
+    <line x1="256" y1="92" x2="352" y2="350" stroke="url(#aqua-sky-grad)" stroke-width="34" stroke-linecap="round" />
+    <!-- Crossbar -->
+    <line x1="192" y1="245" x2="320" y2="245" stroke="url(#aqua-sky-grad)" stroke-width="28" stroke-linecap="round" />
+    
+    <!-- 4. ORGANIC INNER PSEUDOPOD STEM -->
+    <line x1="192" y1="245" x2="260" y2="340" stroke="#00F5D4" stroke-width="22" stroke-linecap="round" />
+  </g>
+</svg>

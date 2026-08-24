@@ -41,27 +41,15 @@ import { Check, Award, Sparkles, Shield, Key, Network } from 'lucide-react'
 import { StrictModal } from './ui/modals/StrictModal'
 // [내부 프로젝트 의존성 모듈 임포트: ../services/ipc/electronApiAdapter]
 import * as ipc from '../services/ipc/electronApiAdapter'
+import { useTranslation } from '../i18n/useTranslation'
 
-/**
- * PricingModalProps 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 interface PricingModalProps {
   isOpen: boolean
   onClose: () => void
 }
 
-  /*
-   * [FUNCTION CONTRACT]
-   * - 함수 명: `PricingModal`
-   * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
-   * - 예시: `PricingModal(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
-   */
-/**
- * PricingModal 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 export function PricingModal({ isOpen, onClose }: PricingModalProps) {
+  const { t } = useTranslation()
   const [isPro, setIsPro] = useState(false)
   const [isFreeLocked, setIsFreeLocked] = useState(false)
 
@@ -198,7 +186,7 @@ export function PricingModal({ isOpen, onClose }: PricingModalProps) {
     <StrictModal
       isOpen={isOpen}
       onClose={onClose}
-      title="AMEVA Workstation Subscription Plans & Capability Matrix"
+      title={t.pricingModal.title}
       icon={<Award size={18} />}
       width={840}
     >
@@ -367,8 +355,8 @@ export function PricingModal({ isOpen, onClose }: PricingModalProps) {
           <div
             style={{
               flex: 1,
-              background: 'rgba(255, 255, 255, 0.01)',
-              border: '1px solid rgba(255, 255, 255, 0.04)',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-muted)',
               borderRadius: '12px',
               padding: '18px',
               display: 'flex',
@@ -377,35 +365,35 @@ export function PricingModal({ isOpen, onClose }: PricingModalProps) {
             }}
           >
             <div>
-              <div style={{ fontSize: '11px', fontWeight: 700, color: '#06b6d4' }}>ENTERPRISE</div>
+              <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--secondary)' }}>ENTERPRISE</div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '2px', margin: '6px 0 12px' }}>
                 <span style={{ fontSize: '20px', fontWeight: 900 }}>Custom</span>
                 <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>/ contact</span>
               </div>
 
               {/* 장점 요약 */}
-              <div style={{ background: 'rgba(6,182,212,0.06)', borderRadius: '6px', padding: '6px 10px', marginBottom: '12px', fontSize: '9px', color: 'var(--text-main)' }}>
+              <div style={{ background: 'var(--bg-glass-active)', borderRadius: '6px', padding: '6px 10px', marginBottom: '12px', fontSize: '9px', color: 'var(--text-main)' }}>
                 <strong>Advantage:</strong> Iron-clad secure environments, hardware tokens & audio communications.
               </div>
 
-              <div style={{ height: '1px', background: 'rgba(6,182,212,0.2)', marginBottom: '12px' }} />
+              <div style={{ height: '1px', background: 'var(--border-muted)', marginBottom: '12px' }} />
 
               {/* 기능 상세 */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <div>
-                  <div style={{ fontSize: '8.5px', color: '#06b6d4', fontWeight: 800, textTransform: 'uppercase', marginBottom: '3px' }}>Permissions</div>
+                  <div style={{ fontSize: '8.5px', color: 'var(--secondary)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '3px' }}>Permissions</div>
                   <div style={{ fontSize: '9px', color: 'var(--text-main)' }}>• <strong>OS Keychain API</strong> hardware token guard<br />• Complete isolation from guest collab channels</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '8.5px', color: '#06b6d4', fontWeight: 800, textTransform: 'uppercase', marginBottom: '3px' }}>Limits & Usage</div>
+                  <div style={{ fontSize: '8.5px', color: 'var(--secondary)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '3px' }}>Limits & Usage</div>
                   <div style={{ fontSize: '9px', color: 'var(--text-main)' }}>• Dedicated Collaboration Node<br />• Zero-trust security policy</div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '8.5px', color: '#06b6d4', fontWeight: 800, textTransform: 'uppercase', marginBottom: '3px' }}>Core Capabilities</div>
+                  <div style={{ fontSize: '8.5px', color: 'var(--secondary)', fontWeight: 800, textTransform: 'uppercase', marginBottom: '3px' }}>Core Capabilities</div>
                   <div style={{ fontSize: '9px', color: 'var(--text-main)', display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={10} style={{ color: '#06b6d4' }} /> <strong>Hardware Security Token API</strong></span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={10} style={{ color: '#06b6d4' }} /> Virtual SQLite backup snapshot auto-sync</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={10} style={{ color: '#06b6d4' }} /> Single Sign-On (SSO) & LDAP directory</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={10} style={{ color: 'var(--secondary)' }} /> <strong>Hardware Security Token API</strong></span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={10} style={{ color: 'var(--secondary)' }} /> Virtual SQLite backup snapshot auto-sync</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Check size={10} style={{ color: 'var(--secondary)' }} /> Single Sign-On (SSO) & LDAP directory</span>
                   </div>
                 </div>
               </div>
@@ -415,10 +403,10 @@ export function PricingModal({ isOpen, onClose }: PricingModalProps) {
               style={{
                 width: '100%',
                 padding: '6px',
-                background: 'rgba(6, 182, 212, 0.08)',
-                border: '1px solid rgba(6, 182, 212, 0.25)',
+                background: 'var(--bg-glass-active)',
+                border: '1px solid var(--border-muted)',
                 borderRadius: '6px',
-                color: '#22d3ee',
+                color: 'var(--secondary)',
                 fontSize: '9.5px',
                 fontWeight: 700,
                 cursor: 'pointer',
@@ -433,8 +421,8 @@ export function PricingModal({ isOpen, onClose }: PricingModalProps) {
         {/* 푸터 알림 */}
         <div style={{
           padding: '12px 24px',
-          borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-          background: 'rgba(0, 0, 0, 0.15)',
+          borderTop: '1px solid var(--border-muted)',
+          background: 'var(--bg-glass-active)',
           fontSize: '9px',
           color: 'var(--text-muted)',
           display: 'flex',

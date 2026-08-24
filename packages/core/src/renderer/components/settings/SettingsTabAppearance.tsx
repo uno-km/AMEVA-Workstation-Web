@@ -35,11 +35,8 @@
 
 // [내부 프로젝트 의존성 모듈 임포트: ../SettingsModal]
 import type { AppSettings } from '../SettingsModal'
+import { useTranslation } from '../../i18n/useTranslation'
 
-/**
- * SettingsTabAppearanceProps 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 export interface SettingsTabAppearanceProps {
   activeTab: string
   settings: AppSettings
@@ -47,57 +44,44 @@ export interface SettingsTabAppearanceProps {
   themes: { id: AppSettings['theme']; label: string; previewColor: string }[]
 }
 
-  /*
-   * [FUNCTION CONTRACT]
-   * - 함수 명: `SettingsTabAppearance`
-   * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
-   * - 예시: `SettingsTabAppearance(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
-   */
-/**
- * SettingsTabAppearance 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 export function SettingsTabAppearance({
   activeTab,
   settings,
   handleThemeChange,
   themes,
 }: SettingsTabAppearanceProps) {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `activeTab !== 'Appearance'`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (activeTab !== 'Appearance')` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
+  const { t } = useTranslation()
+
   if (activeTab !== 'Appearance') return null
 
   return (
     <>
-      <h3 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 6px' }}>Appearance</h3>
+      <h3 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 6px' }}>
+        {t.settingsModal.appearance.title}
+      </h3>
       <div>
         <span style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>
-          시스템 테마 스위처
+          {t.settingsModal.appearance.themeSwitcher}
         </span>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-          {themes.map((t) => (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+          {themes.map((tItem) => (
             <button
-              key={t.id}
-              onClick={() => handleThemeChange(t.id)}
+              key={tItem.id}
+              onClick={() => handleThemeChange(tItem.id)}
               style={{
                 display: 'flex', alignItems: 'center', gap: '8px',
                 padding: '10px 12px', borderRadius: '6px',
-                border: settings.theme === t.id ? '1px solid var(--primary)' : '1px solid var(--border-muted)',
-                background: settings.theme === t.id ? 'var(--bg-glass-active)' : 'rgba(255,255,255,0.01)',
-                color: settings.theme === t.id ? 'var(--primary)' : 'var(--text-main)',
+                border: settings.theme === tItem.id ? '1px solid var(--primary)' : '1px solid var(--border-muted)',
+                background: settings.theme === tItem.id ? 'var(--bg-glass-active)' : 'var(--bg-card)',
+                color: settings.theme === tItem.id ? 'var(--primary)' : 'var(--text-main)',
                 fontSize: '11.5px', fontWeight: 600, cursor: 'pointer', textAlign: 'left',
               }}
             >
               <div style={{
                 width: '10px', height: '10px', borderRadius: '50%',
-                backgroundColor: t.previewColor, border: '1px solid var(--text-dark)',
+                backgroundColor: tItem.previewColor, border: '1px solid var(--text-dark)', flexShrink: 0,
               }} />
-              {t.label}
+              {tItem.label}
             </button>
           ))}
         </div>

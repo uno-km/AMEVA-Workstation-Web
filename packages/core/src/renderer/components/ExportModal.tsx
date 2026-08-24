@@ -46,6 +46,7 @@
 import { useEffect, useRef } from 'react'
 // [외부 패키지 및 라이브러리 임포트: lucide-react]
 import { X, Minus, FileOutput, CheckCircle, XCircle, Loader } from 'lucide-react'
+import { useTranslation } from '../i18n/useTranslation'
 
 // [내부 프로젝트 의존성 모듈 임포트: ../../shared/types]
 import type { ExportPhase, ExportProgress } from '../../shared/types'
@@ -94,13 +95,7 @@ const FORMAT_LABELS: Record<string, string> = {
 
 /** 실제 운영 시 document.querySelector('#status-bar') 등으로 portal 위치 지정 가능 */
 export function ExportModal({ progress, minimized, onMinimize, onClose, onOpenFile }: ExportModalProps) {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `barRef`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const barRef = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
+  const { t } = useTranslation()
   const barRef = useRef<HTMLDivElement>(null)
 
   // 프로세스바 width 애니메이션
@@ -199,10 +194,10 @@ export function ExportModal({ progress, minimized, onMinimize, onClose, onOpenFi
 
         <span style={{ fontSize: '11px', color: 'var(--text-main)', fontWeight: 600, whiteSpace: 'nowrap' }}>
           {progress.phase === 'running'
-            ? `${label} 변환 중… ${progress.percent}%`
+            ? `${label} ${t.exportModal.processing} ${progress.percent}%`
             : progress.phase === 'success'
-            ? `${label} 완료`
-            : `${label} 실패`}
+            ? `${label} ${t.exportModal.completed}`
+            : `${label} ${t.exportModal.failed}`}
         </span>
 
         <button
@@ -256,11 +251,11 @@ export function ExportModal({ progress, minimized, onMinimize, onClose, onOpenFi
             </div>
             <div>
               <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)' }}>
-                {label} 내보내기
+                {label} {t.exportModal.title}
               </div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                {progress.phase === 'running' ? '파일 변환 중...' :
-                 progress.phase === 'success' ? '저장 완료' : '저장 실패'}
+                {progress.phase === 'running' ? t.exportModal.processing :
+                 progress.phase === 'success' ? t.exportModal.completed : t.exportModal.failed}
               </div>
             </div>
           </div>
@@ -369,7 +364,7 @@ export function ExportModal({ progress, minimized, onMinimize, onClose, onOpenFi
                 alignSelf: 'flex-start',
               }}
             >
-              파일 열기
+              {t.exportModal.openExported}
             </button>
           </div>
         )}
@@ -385,7 +380,7 @@ export function ExportModal({ progress, minimized, onMinimize, onClose, onOpenFi
             color: 'var(--danger)',
             lineHeight: '1.5',
           }}>
-            <strong>오류:</strong> {progress.error}
+            <strong>{t.common.error}:</strong> {progress.error}
           </div>
         )}
 
@@ -406,7 +401,7 @@ export function ExportModal({ progress, minimized, onMinimize, onClose, onOpenFi
               transition: 'all 0.15s',
             }}
           >
-            닫기
+            {t.common.close}
           </button>
         )}
 

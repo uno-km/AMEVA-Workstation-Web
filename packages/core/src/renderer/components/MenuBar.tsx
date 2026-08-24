@@ -36,7 +36,8 @@
 // [외부 패키지 및 라이브러리 임포트: react]
 import React, { useState, useEffect, useRef } from 'react'
 // [외부 패키지 및 라이브러리 임포트: lucide-react]
-import { Check, LayoutGrid, PanelLeft, PanelBottom, PanelRight, Search, Settings, ChevronDown, RefreshCw, LogOut } from 'lucide-react'
+import { Check, LayoutGrid, PanelLeft, PanelBottom, PanelRight, Search, Settings, ChevronDown, RefreshCw, LogOut, Languages } from 'lucide-react'
+import { useTranslation } from '../i18n/useTranslation'
 
 // [내부 프로젝트 의존성 모듈 임포트: ../hooks/app/useMenuBarShortcuts]
 import { useMenuBarShortcuts } from '../hooks/app/useMenuBarShortcuts'
@@ -100,6 +101,7 @@ export function MenuBar({}: MenuBarProps = {}) {
     dynamicMenus
   } = useUIStore()
 
+  const { t, language, toggleLanguage, isKorean } = useTranslation()
   const filePath = useWorkspaceStore((state) => state.filePath)
   const isSplitView = useWorkspaceStore((state) => state.isSplitView)
   const toggleSplitView = useWorkspaceStore((state) => state.toggleSplitView)
@@ -462,38 +464,38 @@ export function MenuBar({}: MenuBarProps = {}) {
               }}
               onClick={() => handleMenuClick('file')}
             >
-              {renderLabel('File', 'f')}
+              {renderLabel(t.menu.file, 'f')}
             </button>
             {activeMenu === 'file' && (
               <div style={dropdownStyle}>
                 <button style={itemStyle} onClick={() => triggerAction(onNewWindow)}>
-                  {renderLabel('새 창 열기', 'n')}
+                  {renderLabel(t.menu.fileNewWindow, 'n')}
                   <span style={shortcutStyle}>{formatHotkey(hkeys.newFile)}</span>
                 </button>
                 <div style={{ height: '1px', backgroundColor: 'var(--border-muted)', margin: '4px 0' }} />
                 <button style={itemStyle} onClick={() => triggerAction(onOpenFile)}>
-                  {renderLabel('열기...', 'o')}
+                  {renderLabel(t.menu.fileOpen, 'o')}
                   <span style={shortcutStyle}>{formatHotkey(hkeys.open)}</span>
                 </button>
                 <button style={itemStyle} onClick={() => triggerAction(onSaveFile)}>
-                  {renderLabel('저장', 's')}
+                  {renderLabel(t.menu.fileSave, 's')}
                   <span style={shortcutStyle}>{formatHotkey(hkeys.save)}</span>
                 </button>
                 <button style={itemStyle} onClick={() => triggerAction(onSaveAs)}>
-                  {renderLabel('다른 이름으로 저장...', 'a')}
+                  {renderLabel(t.menu.fileSaveAs, 'a')}
                 </button>
                 <div style={{ height: '1px', backgroundColor: 'var(--border-muted)', margin: '4px 0' }} />
                 <button style={itemStyle} onClick={() => triggerAction(onPrint)}>
-                  {renderLabel('인쇄 (PDF 변환)', 'p')}
+                  {renderLabel(t.menu.filePrintPdf, 'p')}
                   <span style={shortcutStyle}>{formatHotkey(hkeys.pdfExport)}</span>
                 </button>
                 <div style={{ height: '1px', backgroundColor: 'var(--border-muted)', margin: '4px 0' }} />
                 <button style={itemStyle} onClick={() => { triggerAction(); setIsSecurityModalOpen(true); }}>
-                  {renderLabel('보안 (비밀번호 설정)...', 'c')}
+                  {renderLabel(t.menu.fileSecurity, 'c')}
                 </button>
                 <div style={{ height: '1px', backgroundColor: 'var(--border-muted)', margin: '4px 0' }} />
                 <button style={{ ...itemStyle, color: 'var(--danger)' }} onClick={() => triggerAction(onCloseApp)}>
-                  {renderLabel('종료', 'x')}
+                  {renderLabel(t.menu.fileQuit, 'x')}
                   <span style={shortcutStyle}>Alt+F4</span>
                 </button>
               </div>
@@ -509,7 +511,7 @@ export function MenuBar({}: MenuBarProps = {}) {
               }}
               onClick={() => handleMenuClick('view')}
             >
-              {renderLabel('View', 'v')}
+              {renderLabel(t.menu.view, 'v')}
             </button>
             {activeMenu === 'view' && (
               <div style={dropdownStyle}>
@@ -517,32 +519,32 @@ export function MenuBar({}: MenuBarProps = {}) {
                   style={itemStyle}
                   onClick={() => triggerAction(() => setEditorMode(editorMode === 'preview' ? 'edit' : 'preview'))}
                 >
-                  {renderLabel(editorMode === 'preview' ? '편집 모드로 전환' : '뷰어 모드로 전환', 'e')}
+                  {renderLabel(t.menu.viewToggleMode, 'e')}
                 </button>
                 <div style={{ height: '1px', backgroundColor: 'var(--border-muted)', margin: '4px 0' }} />
                 <button style={itemStyle} onClick={() => triggerAction(toggleSplitView)}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {isSplitView ? <Check size={12} style={{ color: 'var(--primary)' }} /> : <span style={{ width: '12px' }} />}
-                    {renderLabel('병렬 보기 (Split View)', 's')}
+                    {renderLabel(t.menu.viewSplitView, 's')}
                   </span>
                 </button>
                 <div style={{ height: '1px', backgroundColor: 'var(--border-muted)', margin: '4px 0' }} />
                 <button style={itemStyle} onClick={() => triggerAction(() => setShowStatusBar(!showStatusBar))}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {showStatusBar ? <Check size={12} style={{ color: 'var(--primary)' }} /> : <span style={{ width: '12px' }} />}
-                    {renderLabel('상태바 표시', 't')}
+                    {renderLabel(t.menu.viewShowStatusBar, 't')}
                   </span>
                 </button>
                 <button style={itemStyle} onClick={() => triggerAction(() => setShowSidebar(!showSidebar))}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {showSidebar ? <Check size={12} style={{ color: 'var(--primary)' }} /> : <span style={{ width: '12px' }} />}
-                    {renderLabel('사이드바 표시', 'b')}
+                    {renderLabel(t.menu.viewShowSidebar, 'b')}
                   </span>
                 </button>
                 <button style={itemStyle} onClick={() => triggerAction(() => setShowConsole(!showConsole))}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {showConsole ? <Check size={12} style={{ color: 'var(--primary)' }} /> : <span style={{ width: '12px' }} />}
-                    {renderLabel('코드 콘솔 표시', 'c')}
+                    {renderLabel(t.menu.viewShowConsole, 'c')}
                   </span>
                 </button>
               </div>
@@ -558,25 +560,25 @@ export function MenuBar({}: MenuBarProps = {}) {
               }}
               onClick={() => handleMenuClick('window')}
             >
-              {renderLabel('Window', 'w')}
+              {renderLabel(t.menu.window, 'w')}
             </button>
             {activeMenu === 'window' && (
               <div style={dropdownStyle}>
                 <button style={itemStyle} onClick={() => triggerAction(onZoomIn)}>
-                  {renderLabel('확대', 'i')}
+                  {renderLabel(t.menu.windowZoomIn, 'i')}
                   <span style={shortcutStyle}>{formatHotkey(hkeys.zoomIn)}</span>
                 </button>
                 <button style={itemStyle} onClick={() => triggerAction(onZoomOut)}>
-                  {renderLabel('축소', 'o')}
+                  {renderLabel(t.menu.windowZoomOut, 'o')}
                   <span style={shortcutStyle}>{formatHotkey(hkeys.zoomOut)}</span>
                 </button>
                 <button style={itemStyle} onClick={() => triggerAction(onZoomReset)}>
-                  {renderLabel('원래 크기로', 'r')}
+                  {renderLabel(t.menu.windowZoomReset, 'r')}
                   <span style={shortcutStyle}>{formatHotkey(hkeys.zoomReset)}</span>
                 </button>
                 <div style={{ height: '1px', backgroundColor: 'var(--border-muted)', margin: '4px 0' }} />
                 <button style={itemStyle} onClick={() => triggerAction(onToggleFullscreen)}>
-                  {renderLabel('전체 화면 토글', 'f')}
+                  {renderLabel(t.menu.windowFullscreen, 'f')}
                   <span style={shortcutStyle}>F11</span>
                 </button>
               </div>
@@ -589,7 +591,7 @@ export function MenuBar({}: MenuBarProps = {}) {
               style={menuStyle}
               onClick={() => triggerAction(onOpenSettings)}
             >
-              {renderLabel('Settings', 's')}
+              {renderLabel(t.menu.settings, 's')}
             </button>
           </div>
 
@@ -600,7 +602,7 @@ export function MenuBar({}: MenuBarProps = {}) {
                 style={menuStyle}
                 onClick={() => triggerAction(onOpenMarketplace)}
               >
-                {renderLabel('Marketplace', 'm')}
+                {renderLabel(t.menu.marketplace, 'm')}
               </button>
             </div>
           )}
@@ -614,7 +616,7 @@ export function MenuBar({}: MenuBarProps = {}) {
               }}
               onClick={() => handleMenuClick('help')}
             >
-              {renderLabel('Help', 'h')}
+              {renderLabel(t.menu.help, 'h')}
             </button>
             {activeMenu === 'help' && (
               <div style={dropdownStyle}>
@@ -623,7 +625,7 @@ export function MenuBar({}: MenuBarProps = {}) {
                   onClick={() => triggerAction(() => setIsDocHubOpen(true, 'readme'))}
                 >
                   <span style={{ color: '#38bdf8', fontWeight: 700 }}>
-                    {renderLabel('📖 공식 문서 & IR 자료 센터 (Docs & IR Hub)...', 'd')}
+                    {renderLabel(t.menu.helpDocHub, 'd')}
                   </span>
                 </button>
                 <button 
@@ -631,7 +633,7 @@ export function MenuBar({}: MenuBarProps = {}) {
                   onClick={() => triggerAction(() => window.open('/promo/index.html', '_blank'))}
                 >
                   <span style={{ color: '#60a5fa', fontWeight: 600 }}>
-                    {renderLabel('🌐 공식 소개 웹사이트 (Showcase Landing)...', 'w')}
+                    {renderLabel(t.menu.helpShowcase, 'w')}
                   </span>
                 </button>
                 <button 
@@ -639,7 +641,7 @@ export function MenuBar({}: MenuBarProps = {}) {
                   onClick={() => triggerAction(onOpenGithub)}
                 >
                   <span style={{ color: '#f59e0b', fontWeight: 600 }}>
-                    {renderLabel('⭐ GitHub 오픈소스 저장소 (Star/Fork)...', 'h')}
+                    {renderLabel(t.menu.helpGithub, 'h')}
                   </span>
                 </button>
                 <div style={{ height: '1px', backgroundColor: 'var(--border-muted)', margin: '4px 0' }} />
@@ -648,35 +650,35 @@ export function MenuBar({}: MenuBarProps = {}) {
                   onClick={() => triggerAction(() => setIsDocHubOpen(true, 'ir'))}
                 >
                   <span style={{ color: '#34d399', fontWeight: 600 }}>
-                    {renderLabel('📑 투자자용 12-Slide Pitch Deck 열람...', 'i')}
+                    {renderLabel(t.menu.helpPitchDeck, 'i')}
                   </span>
                 </button>
                 <button 
                   style={itemStyle} 
                   onClick={() => triggerAction(() => setIsDocHubOpen(true, 'psst'))}
                 >
-                  {renderLabel('🏛️ 표준 PSST 사업계획서 열람...', 'b')}
+                  {renderLabel(t.menu.helpPsst, 'b')}
                 </button>
                 <button 
                   style={itemStyle} 
                   onClick={() => triggerAction(() => setIsDocHubOpen(true, 'arch'))}
                 >
-                  {renderLabel('📐 시스템 아키텍처 설계 명세...', 's')}
+                  {renderLabel(t.menu.helpArch, 's')}
                 </button>
                 <div style={{ height: '1px', backgroundColor: 'var(--border-muted)', margin: '4px 0' }} />
                 <button style={itemStyle} onClick={() => triggerAction(onOpenAbout)}>
-                  {renderLabel('아메바 생태계 소개 (About)...', 'a')}
+                  {renderLabel(t.menu.helpAbout, 'a')}
                 </button>
                 <button style={itemStyle} onClick={() => triggerAction(onOpenGuide)}>
-                  {renderLabel('마크다운 작성 가이드 (Guide)...', 'g')}
+                  {renderLabel(t.menu.helpGuide, 'g')}
                 </button>
                 <button style={itemStyle} onClick={() => triggerAction(onOpenPricing)}>
                   <span style={{ color: 'var(--primary)', fontWeight: 700 }}>
-                    {renderLabel('💰 Pricing Plans (요금제)...', 'p')}
+                    {renderLabel(t.menu.helpPricing, 'p')}
                   </span>
                 </button>
                 <button style={itemStyle} onClick={() => triggerAction(onOpenGithub)}>
-                  {renderLabel('문의하기 (Contact Us)...', 'c')}
+                  {renderLabel(t.menu.helpContact, 'c')}
                 </button>
               </div>
             )}
@@ -699,13 +701,13 @@ export function MenuBar({}: MenuBarProps = {}) {
       {/* 2. 중앙 영역: 현재 열린 파일 경로 표기 (Antigravity 스타일 대시 구분선 적용) */}
       <div className="menu-bar-center">
         <span className="file-name">
-          {filePath ? filePath.split(/[/\\]/).pop() : '이름없는 문서.md'}
+          {filePath ? filePath.split(/[/\\]/).pop() : t.common.untitledDoc}
         </span>
         <span style={{ color: 'var(--text-dark)', opacity: 0.5, fontSize: '11px', margin: '0 4px' }}>-</span>
         <span style={{ color: 'var(--text-dark)' }}>AMEVA Workstation</span>
       </div>
 
-      {/* 3. 우측 영역: Antigravity 레이아웃 구성 + 검색 + 브라우저열기 + 설정 + 구글계정관리 */}
+      {/* 3. 우측 영역: Antigravity 레이아웃 구성 + 검색 + 언어전환 + 브라우저열기 + 설정 + 구글계정관리 */}
       <div className="menu-bar-right">
         {/* (1) 레이아웃 전환 버튼 그룹 (4개) */}
         <div className="layout-btn-group">
@@ -717,7 +719,7 @@ export function MenuBar({}: MenuBarProps = {}) {
               setShowSidebar(target)
               if (showAIPanel !== target) toggleAIPanel()
             }}
-            title="전체 레이아웃 토글"
+            title={t.toolbar.toggleLayout}
           >
             <LayoutGrid size={13} />
           </button>
@@ -726,7 +728,7 @@ export function MenuBar({}: MenuBarProps = {}) {
           <button 
             className={`layout-btn ${showSidebar ? 'active' : ''}`}
             onClick={() => setShowSidebar(!showSidebar)}
-            title="사이드바 토글"
+            title={t.toolbar.toggleSidebar}
           >
             <PanelLeft size={13} />
           </button>
@@ -735,7 +737,7 @@ export function MenuBar({}: MenuBarProps = {}) {
           <button 
             className={`layout-btn ${showConsole ? 'active' : ''}`}
             onClick={() => setShowConsole(!showConsole)}
-            title="하단 콘솔 토글"
+            title={t.toolbar.toggleConsole}
           >
             <PanelBottom size={13} />
           </button>
@@ -744,7 +746,7 @@ export function MenuBar({}: MenuBarProps = {}) {
           <button 
             className={`layout-btn ${showAIPanel ? 'active' : ''}`}
             onClick={toggleAIPanel}
-            title="AI 패널 토글"
+            title={t.toolbar.toggleAIPanel}
           >
             <PanelRight size={13} />
           </button>
@@ -754,16 +756,35 @@ export function MenuBar({}: MenuBarProps = {}) {
         <button 
           className={`layout-btn ${showFindReplace ? 'active' : ''}`}
           onClick={toggleFindReplace}
-          title="텍스트 찾기/바꾸기 (검색)"
+          title={t.toolbar.findReplace}
         >
           <Search size={13} />
         </button>
 
-        {/* 세로 구분선 생략 (Antigravity 스타일 통일) */}
+        {/* (3) 언어 빠른 전환 버튼 (KOR / ENG) */}
+        <button
+          className="layout-btn"
+          onClick={toggleLanguage}
+          title={t.toolbar.switchLangTooltip}
+          style={{
+            fontSize: '10.5px',
+            fontWeight: 700,
+            padding: '2px 6px',
+            gap: '3px',
+            color: 'var(--primary)',
+            border: '1px solid var(--border-muted)',
+            borderRadius: '4px',
+            width: 'auto',
+            height: '24px',
+          }}
+        >
+          <Languages size={12} />
+          <span>{t.toolbar.switchLang}</span>
+        </button>
 
         {/* 유틸리티 액션 그룹 (크롬 브라우저, 설정, 구글 계정 아바타) */}
         <div className="toolbar-utility-group" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '2px' }}>
-          {/* (3) AMEVA Browser 앱 기동 단추 (로컬 AMEVA-Egde-Brower 실행) */}
+          {/* (4) AMEVA Browser 앱 기동 단추 */}
           <button 
             className="layout-btn"
             onClick={async () => {
@@ -775,7 +796,7 @@ export function MenuBar({}: MenuBarProps = {}) {
                 console.error('[MenuBar] AMEVA-Egde-Brower 앱 기동 실패:', err)
               }
             }}
-            title="AMEVA Browser 앱 실행"
+            title={t.toolbar.launchBrowser}
             style={{ width: '26px', height: '26px' }}
           >
             <svg viewBox="0 0 24 24" style={{ width: '13px', height: '13px', fill: 'none', stroke: '#38bdf8', strokeWidth: 2.5, strokeLinecap: 'round', strokeLinejoin: 'round' }}>
@@ -784,21 +805,21 @@ export function MenuBar({}: MenuBarProps = {}) {
             </svg>
           </button>
 
-          {/* (4) 설정 톱니바퀴 단추 */}
+          {/* (5) 설정 톱니바퀴 단추 */}
           <button 
             className="layout-btn"
             onClick={() => setIsSettingsOpen(true)}
-            title="환경 설정"
+            title={t.toolbar.openSettings}
             style={{ width: '26px', height: '26px' }}
           >
             <Settings size={13} style={{ color: 'var(--text-muted)' }} />
           </button>
 
-          {/* (5) 구글 계정 로그인 관리 아바타 (주황색 G 또는 이미지 + 아래화살표 v) */}
+          {/* (6) 구글 계정 로그인 관리 아바타 */}
           <div 
             className="google-profile-btn"
             onClick={() => setGooglePopoverOpen(!googlePopoverOpen)}
-            title="Google 계정 관리"
+            title={t.toolbar.googleAccount}
             style={{ padding: '2px', gap: '3px' }}
           >
             {googleProfile?.picture ? (

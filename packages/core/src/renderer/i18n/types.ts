@@ -1,0 +1,287 @@
+/**
+ * @file types.ts
+ * @system AMEVA OS Desktop Workstation - i18n
+ * @location packages/core/src/renderer/i18n/types.ts
+ * @role Translation schema and locale typing
+ */
+
+export type SupportedLanguage = 'ko' | 'en';
+
+export interface TranslationSchema {
+  common: {
+    ok: string;
+    cancel: string;
+    close: string;
+    save: string;
+    delete: string;
+    copy: string;
+    paste: string;
+    search: string;
+    refresh: string;
+    back: string;
+    next: string;
+    done: string;
+    loading: string;
+    success: string;
+    error: string;
+    language: string;
+    languageName: string;
+    untitledDoc: string;
+  };
+  menu: {
+    file: string;
+    fileNewWindow: string;
+    fileOpen: string;
+    fileSave: string;
+    fileSaveAs: string;
+    filePrintPdf: string;
+    fileSecurity: string;
+    fileQuit: string;
+    view: string;
+    viewToggleMode: string;
+    viewSplitView: string;
+    viewShowStatusBar: string;
+    viewShowSidebar: string;
+    viewShowConsole: string;
+    window: string;
+    windowZoomIn: string;
+    windowZoomOut: string;
+    windowZoomReset: string;
+    windowFullscreen: string;
+    settings: string;
+    marketplace: string;
+    help: string;
+    helpDocHub: string;
+    helpShowcase: string;
+    helpGithub: string;
+    helpPitchDeck: string;
+    helpPsst: string;
+    helpArch: string;
+    helpAbout: string;
+    helpGuide: string;
+    helpPricing: string;
+    helpContact: string;
+  };
+  toolbar: {
+    toggleLayout: string;
+    toggleSidebar: string;
+    toggleConsole: string;
+    toggleAIPanel: string;
+    findReplace: string;
+    launchBrowser: string;
+    openSettings: string;
+    googleAccount: string;
+    switchLang: string;
+    switchLangTooltip: string;
+  };
+  aboutModal: {
+    title: string;
+    subtitle: string;
+    version: string;
+    contactGithub: string;
+    close: string;
+    descP1: string;
+    descP2: string;
+    descP3: string;
+    openSpecTitle: string;
+    openSpecDesc: string;
+    desktopAppTitle: string;
+    desktopAppDesc: string;
+    desktopAppBtn: string;
+    creatorRole: string;
+    creatorQuote: string;
+  };
+  markdownGuideModal: {
+    title: string;
+    shortcutsTitle: string;
+    syntaxTitle: string;
+    colSyntax: string;
+    colTyping: string;
+    colResult: string;
+    shortcutAutoComp: string;
+    shortcutAutoCompAccept: string;
+    shortcutSave: string;
+    shortcutZoomWheel: string;
+    shortcutZoomScale: string;
+    shortcutZoomReset: string;
+    heading: string;
+    headingDesc: string;
+    bold: string;
+    boldDesc: string;
+    italic: string;
+    italicDesc: string;
+    codeBlock: string;
+    codeBlockDesc: string;
+    table: string;
+    tableDesc: string;
+    close: string;
+  };
+  pricingModal: {
+    title: string;
+    subtitle: string;
+    freeTitle: string;
+    freeDesc: string;
+    proTitle: string;
+    proDesc: string;
+    entTitle: string;
+    entDesc: string;
+    currentPlan: string;
+    upgradeBtn: string;
+    contactSales: string;
+    featuresIncluded: string;
+    close: string;
+  };
+  exportModal: {
+    title: string;
+    processing: string;
+    completed: string;
+    failed: string;
+    openExported: string;
+    close: string;
+  };
+  settingsModal: {
+    title: string;
+    applyAndSave: string;
+    cancel: string;
+    tabs: {
+      general: string;
+      appearance: string;
+      account: string;
+      permissions: string;
+      customizations: string;
+      hotkeys: string;
+      mcp: string;
+      credentials: string;
+    };
+    general: {
+      title: string;
+      autoLoadAI: string;
+      autoLoadAIDesc: string;
+      showPeersPointer: string;
+      showPeersPointerDesc: string;
+      showPeersDrag: string;
+      showPeersDragDesc: string;
+      showCodeConsole: string;
+      showCodeConsoleDesc: string;
+      wordWrap: string;
+      wordWrapDesc: string;
+      showMinimap: string;
+      showMinimapDesc: string;
+      languageSetting: string;
+      languageSettingDesc: string;
+      tierSetting: string;
+      tierSettingDesc: string;
+    };
+    appearance: {
+      title: string;
+      themeSwitcher: string;
+      darkTheme: string;
+      whiteTheme: string;
+      retroTheme: string;
+    };
+  };
+  sidebar: {
+    tabFiles: string;
+    tabHistory: string;
+    tabChat: string;
+    newDocument: string;
+    openFile: string;
+    dragDropHint: string;
+    snapshots: string;
+    createSnapshot: string;
+    chatPlaceholder: string;
+    sendChat: string;
+    clearChat: string;
+  };
+  statusBar: {
+    words: string;
+    lines: string;
+    chars: string;
+    zoom: string;
+    saved: string;
+    saving: string;
+    modified: string;
+    localAiReady: string;
+    localAiLoading: string;
+    mcpConnected: string;
+    peersOnline: string;
+  };
+  aiPanel: {
+    title: string;
+    quickActions: {
+      summarize: string;
+      summarizePrompt: string;
+      improve: string;
+      improvePrompt: string;
+      ragSearch: string;
+      ragSearchPrompt: string;
+      table: string;
+      tablePrompt: string;
+    };
+    placeholder: string;
+    send: string;
+    stop: string;
+    clear: string;
+    engineWebGPU: string;
+    engineAPI: string;
+    downloadingModel: string;
+    modelReady: string;
+  };
+  editor: {
+    welcome: {
+      title: string;
+      desc: string;
+      startExperience: string;
+      startNew: string;
+      openDoc: string;
+    };
+    slashMenu: {
+      jsTitle: string;
+      jsSub: string;
+      pyTitle: string;
+      pySub: string;
+      sqlTitle: string;
+      sqlSub: string;
+      htmlTitle: string;
+      htmlSub: string;
+      mermaidTitle: string;
+      mermaidSub: string;
+      jsonTitle: string;
+      jsonSub: string;
+      bashTitle: string;
+      bashSub: string;
+      plainTitle: string;
+      plainSub: string;
+      drawTitle: string;
+      drawSub: string;
+      mapTitle: string;
+      mapSub: string;
+      kanbanTitle: string;
+      kanbanSub: string;
+      excelTitle: string;
+      excelSub: string;
+      pdfTitle: string;
+      pdfSub: string;
+      pptxTitle: string;
+      pptxSub: string;
+      docxTitle: string;
+      docxSub: string;
+      docTitle: string;
+      docSub: string;
+    };
+    contextMenu: {
+      clipboard: string;
+      copy: string;
+      paste: string;
+      blockManage: string;
+      blockCopy: string;
+      focusHere: string;
+      blockDelete: string;
+      aiAssistant: string;
+      activateAI: string;
+      tonePolish: string;
+      summary: string;
+      translate: string;
+    };
+  };
+}

@@ -409,7 +409,7 @@ export function DocHubModal({ isOpen, onClose }: DocHubModalProps) {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          backgroundColor: 'rgba(255,255,255,0.02)',
+          backgroundColor: 'var(--bg-card)',
           padding: '10px 16px',
           borderRadius: '8px',
           border: '1px solid var(--border-muted)'

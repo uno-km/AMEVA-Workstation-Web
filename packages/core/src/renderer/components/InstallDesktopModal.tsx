@@ -160,12 +160,12 @@ export function InstallDesktopModal({ isOpen, onClose }: InstallDesktopModalProp
         </div>
 
         {/* 타이틀 */}
-        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 12px 0', color: '#fff', letterSpacing: '-0.025em' }}>
+        <h2 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 12px 0', color: 'var(--text-main)', letterSpacing: '-0.025em' }}>
           AMEVA 데스크톱 클라이언트 권장
         </h2>
 
         {/* 안내 내용 */}
-        <p style={{ fontSize: '13px', lineHeight: 1.6, color: '#9ca3af', margin: '0 0 24px 0' }}>
+        <p style={{ fontSize: '13px', lineHeight: 1.6, color: 'var(--text-muted)', margin: '0 0 24px 0' }}>
           현재 일반 브라우저 환경에서 실행 중입니다.<br />
           로컬 파일 직접 편집, 드래그앤드롭 미디어 추출, WASM 백엔드 RAG 쉘 및 오프라인 AI 추론 서버의 모든 네이티브 커널 성능을 완전하게 경험하려면 전용 데스크톱 앱 설치가 필요합니다.
         </p>
@@ -174,27 +174,28 @@ export function InstallDesktopModal({ isOpen, onClose }: InstallDesktopModalProp
         <div
           style={{
             width: '100%',
-            backgroundColor: 'rgba(0,0,0,0.2)',
+            backgroundColor: 'var(--bg-glass-active)',
             borderRadius: '16px',
             padding: '16px',
             marginBottom: '28px',
-            border: '1px solid rgba(255,255,255,0.03)',
+            border: '1px solid var(--border-muted)',
             display: 'flex',
             flexDirection: 'column',
             gap: '12px',
-            textAlign: 'left'
+            textAlign: 'left',
+            color: 'var(--text-main)'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px' }}>
-            <Terminal size={14} color="#38bdf8" />
+            <Terminal size={14} color="var(--primary)" />
             <span>딥리즈닝(Deep Reasoning)을 통한 로컬 LLM 아키텍처 무료 사용</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px' }}>
-            <Shield size={14} color="#38bdf8" />
+            <Shield size={14} color="var(--primary)" />
             <span>협업 비즈니스를 위한 광대한 마켓플레이스 환경 제공</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px' }}>
-            <ArrowRight size={14} color="#38bdf8" />
+            <ArrowRight size={14} color="var(--primary)" />
             <span>향상된 네이티브 AI 툴 및 오프라인 미디어 자동 컴파일 지원</span>
           </div>
         </div>
@@ -209,7 +210,7 @@ export function InstallDesktopModal({ isOpen, onClose }: InstallDesktopModalProp
               padding: '14px',
               borderRadius: '12px',
               border: 'none',
-              background: 'linear-gradient(90deg, #2563eb 0%, #2563eb 100%)',
+              background: 'linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%)',
               color: '#fff',
               fontSize: '13.5px',
               fontWeight: 700,
@@ -218,14 +219,10 @@ export function InstallDesktopModal({ isOpen, onClose }: InstallDesktopModalProp
               alignItems: 'center',
               justifyContent: 'center',
               gap: '8px',
-              boxShadow: '0 4px 12px rgba(37, 99, 235, 0.25)',
-              transition: 'transform 0.2s, opacity 0.2s'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
           >
-            {downloading ? '다운로드 생성 중...' : '설치 페이지로 이동 및 깃허브 확인'}
-            <ArrowRight size={16} />
+            <Download size={16} />
+            <span>{downloading ? '다운로드 생성 중...' : '공식 데스크톱 클라이언트 다운로드'}</span>
           </button>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
@@ -234,7 +231,7 @@ export function InstallDesktopModal({ isOpen, onClose }: InstallDesktopModalProp
               style={{
                 background: 'none',
                 border: 'none',
-                color: '#9ca3af',
+                color: 'var(--text-muted)',
                 fontSize: '11px',
                 cursor: 'pointer',
                 textDecoration: 'underline'
@@ -256,6 +253,22 @@ export function InstallDesktopModal({ isOpen, onClose }: InstallDesktopModalProp
               }}
             >
               다시 보지 않기
+            </button>
+
+            <button
+              onClick={() => window.open('https://github.com/uno-km/AMEVA-Workstation', '_blank')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--primary)',
+                fontSize: '11px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              GitHub 릴리즈 보기 <ArrowRight size={10} />
             </button>
           </div>
         </div>

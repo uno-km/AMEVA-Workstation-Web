@@ -58,28 +58,29 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
       right: '8px',
       maxHeight: 'calc(100vh - 120px)',
       overflowY: 'auto',
-      background: '#1e1e24',
-      border: '1px solid rgba(59, 130, 246, 0.4)',
+      background: 'var(--bg-main)',
+      border: '1px solid var(--border-muted)',
       borderRadius: '8px',
       padding: '12px',
       zIndex: 100,
-      boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-      fontSize: '11px'
+      boxShadow: '0 8px 24px rgba(0,0,0,0.25)',
+      fontSize: '11px',
+      color: 'var(--text-main)',
     }}>
       <div style={{ fontWeight: 700, marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span>🔧 AI 엔진 & 프롬프트 설정 (Engine Config)</span>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}>
+        <span style={{ color: 'var(--text-main)' }}>🔧 AI 엔진 & 프롬프트 설정 (Engine Config)</span>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
           <X size={12} />
         </button>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div>
-          <label style={{ color: '#94a3b8', display: 'block', marginBottom: '2px' }}>실행 엔진 선택:</label>
+          <label style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>실행 엔진 선택:</label>
           <select
             value={engineMode}
             onChange={(e) => setEngineMode(e.target.value as any)}
-            style={{ width: '100%', background: '#0f172a', color: '#fff', border: '1px solid #334155', borderRadius: '4px', padding: '4px' }}
+            style={{ width: '100%', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-muted)', borderRadius: '4px', padding: '4px' }}
           >
             <option value="webgpu">⚡ WebGPU 온디바이스 (In-Browser WebLLM)</option>
             <option value="api">🌐 HTTP API (Ollama / Cloud / DeepInfra / Local)</option>
@@ -88,11 +89,11 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
 
         {engineMode === 'webgpu' && (
           <div>
-            <label style={{ color: '#94a3b8', display: 'block', marginBottom: '2px' }}>WebGPU 모델 선택:</label>
+            <label style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>WebGPU 모델 선택:</label>
             <select
               value={webgpuModel}
               onChange={(e) => setWebgpuModel(e.target.value)}
-              style={{ width: '100%', background: '#0f172a', color: '#fff', border: '1px solid #334155', borderRadius: '4px', padding: '4px' }}
+              style={{ width: '100%', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-muted)', borderRadius: '4px', padding: '4px' }}
             >
               {SUPPORTED_WEBGPU_MODELS.map(m => (
                 <option key={m.id} value={m.id}>
@@ -100,7 +101,7 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
                 </option>
               ))}
             </select>
-            <div style={{ color: '#64748b', fontSize: '10px', marginTop: '3px' }}>
+            <div style={{ color: 'var(--text-muted)', fontSize: '10px', marginTop: '3px' }}>
               💡 GPU 멈춤/오류 시 1.5B 또는 0.5B 초경량 모델을 권장합니다.
             </div>
           </div>
@@ -109,49 +110,49 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
         {engineMode === 'api' && (
           <>
             <div>
-              <label style={{ color: '#94a3b8', display: 'block', marginBottom: '2px' }}>API 엔드포인트 URL:</label>
+              <label style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>API 엔드포인트 URL:</label>
               <input
                 type="text"
                 value={apiEndpoint}
                 onChange={(e) => setApiEndpoint(e.target.value)}
                 placeholder="http://localhost:11434/v1/chat/completions"
-                style={{ width: '100%', background: '#0f172a', color: '#fff', border: '1px solid #334155', borderRadius: '4px', padding: '4px', boxSizing: 'border-box' }}
+                style={{ width: '100%', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-muted)', borderRadius: '4px', padding: '4px', boxSizing: 'border-box' }}
               />
             </div>
             <div>
-              <label style={{ color: '#94a3b8', display: 'block', marginBottom: '2px' }}>모델 이름 (Model Name):</label>
+              <label style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>모델 이름 (Model Name):</label>
               <input
                 type="text"
                 value={apiModel}
                 onChange={(e) => setApiModel(e.target.value)}
                 placeholder="qwen2.5:3b"
-                style={{ width: '100%', background: '#0f172a', color: '#fff', border: '1px solid #334155', borderRadius: '4px', padding: '4px', boxSizing: 'border-box' }}
+                style={{ width: '100%', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-muted)', borderRadius: '4px', padding: '4px', boxSizing: 'border-box' }}
               />
             </div>
             <div>
-              <label style={{ color: '#94a3b8', display: 'block', marginBottom: '2px' }}>API Key (Ollama는 비워두세요):</label>
+              <label style={{ color: 'var(--text-muted)', display: 'block', marginBottom: '2px' }}>API Key (Ollama는 비워두세요):</label>
               <input
                 type="password"
                 value={apiKey}
                 onChange={(e) => setApiKey(e.target.value)}
                 placeholder="sk-..."
-                style={{ width: '100%', background: '#0f172a', color: '#fff', border: '1px solid #334155', borderRadius: '4px', padding: '4px', boxSizing: 'border-box' }}
+                style={{ width: '100%', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border-muted)', borderRadius: '4px', padding: '4px', boxSizing: 'border-box' }}
               />
             </div>
 
             {/* Ollama One-Click Setup Wizard Box */}
             <div style={{
-              background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(59, 130, 246, 0.1) 100%)',
-              border: '1px dashed rgba(56, 189, 248, 0.5)',
+              background: 'var(--bg-glass-active)',
+              border: '1px dashed var(--primary)',
               borderRadius: '6px',
               padding: '8px',
               marginTop: '4px'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                <span style={{ fontWeight: 700, color: '#38bdf8' }}>🚀 Ollama 원클릭 자동 세팅</span>
-                <span style={{ fontSize: '9px', color: '#94a3b8' }}>설치·CORS·Qwen3B</span>
+                <span style={{ fontWeight: 700, color: 'var(--primary)' }}>🚀 Ollama 원클릭 자동 세팅</span>
+                <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>설치·CORS·Qwen3B</span>
               </div>
-              <div style={{ fontSize: '10px', color: '#cbd5e1', marginBottom: '6px' }}>
+              <div style={{ fontSize: '10px', color: 'var(--text-main)', marginBottom: '6px' }}>
                 컴퓨터에 Ollama가 없으신가요? 버튼을 누르면 설치부터 Qwen 모델 실행까지 원클릭으로 준비됩니다.
               </div>
               <button
@@ -173,7 +174,7 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
                 }}
                 style={{
                   width: '100%',
-                  background: 'linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%)',
+                  background: 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)',
                   color: '#fff',
                   border: 'none',
                   borderRadius: '4px',
@@ -190,7 +191,7 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
                 📥 원클릭 자동 설치 & 실행 스크립트 받기
               </button>
               {wizardMsg && (
-                <div style={{ fontSize: '9px', color: '#38bdf8', marginTop: '4px', textAlign: 'center' }}>
+                <div style={{ fontSize: '9px', color: 'var(--primary)', marginTop: '4px', textAlign: 'center' }}>
                   {wizardMsg}
                 </div>
               )}
@@ -199,9 +200,9 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
         )}
 
         {/* System Prompt & Persona Customization Section */}
-        <div style={{ marginTop: '4px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ marginTop: '4px', paddingTop: '8px', borderTop: '1px solid var(--border-muted)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-            <span style={{ fontWeight: 700, color: '#38bdf8', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ fontWeight: 700, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
               <Sparkles size={11} /> 시스템 프롬프트 & 페르소나
             </span>
             <button
@@ -215,7 +216,7 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: '#94a3b8',
+                color: 'var(--text-muted)',
                 cursor: 'pointer',
                 fontSize: '10px',
                 display: 'flex',
@@ -242,10 +243,10 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
                   setTimeout(() => setPromptSavedAlert(false), 1500);
                 }}
                 style={{
-                  background: customPersona.trim() === p.persona.trim() ? 'rgba(59, 130, 246, 0.25)' : 'rgba(255, 255, 255, 0.05)',
-                  border: customPersona.trim() === p.persona.trim() ? '1px solid #38bdf8' : '1px solid rgba(255, 255, 255, 0.1)',
+                  background: customPersona.trim() === p.persona.trim() ? 'var(--bg-glass-active)' : 'var(--bg-card)',
+                  border: customPersona.trim() === p.persona.trim() ? '1px solid var(--primary)' : '1px solid var(--border-muted)',
                   borderRadius: '4px',
-                  color: customPersona.trim() === p.persona.trim() ? '#93c5fd' : '#94a3b8',
+                  color: customPersona.trim() === p.persona.trim() ? 'var(--primary)' : 'var(--text-muted)',
                   padding: '2px 6px',
                   fontSize: '9.5px',
                   fontWeight: 600,
@@ -273,9 +274,9 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
             rows={3}
             style={{
               width: '100%',
-              background: '#0f172a',
-              color: '#f8fafc',
-              border: '1px solid #334155',
+              background: 'var(--bg-card)',
+              color: 'var(--text-main)',
+              border: '1px solid var(--border-muted)',
               borderRadius: '4px',
               padding: '6px 8px',
               fontSize: '10.5px',
@@ -286,19 +287,19 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
             }}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
-            <span style={{ fontSize: '9px', color: '#64748b' }}>
+            <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>
               💡 CoT 및 서식 안전 가드레일은 시스템에 의해 자동 유지됩니다.
             </span>
             {promptSavedAlert && (
-              <span style={{ fontSize: '9px', color: '#34d399', fontWeight: 600 }}>
+              <span style={{ fontSize: '9px', color: 'var(--success, #34d399)', fontWeight: 600 }}>
                 ✓ 자동 저장됨
               </span>
             )}
           </div>
         </div>
 
-        <div style={{ marginTop: '4px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#e2e8f0', cursor: 'pointer', fontSize: '11px' }}>
+        <div style={{ marginTop: '4px', paddingTop: '8px', borderTop: '1px solid var(--border-muted)' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-main)', cursor: 'pointer', fontSize: '11px' }}>
             <input
               type="checkbox"
               defaultChecked={typeof localStorage !== 'undefined' && localStorage.getItem('ameva_auto_load_llm') === 'true'}
@@ -315,7 +316,7 @@ export const EngineSettingsModal: React.FC<EngineSettingsModalProps> = ({
               }}
               style={{ cursor: 'pointer' }}
             />
-            <span style={{ color: '#38bdf8', fontWeight: 600 }}>브라우저 시작 시 AI 모델 자동 로딩</span>
+            <span style={{ color: 'var(--primary)', fontWeight: 600 }}>브라우저 시작 시 AI 모델 자동 로딩</span>
           </label>
         </div>
       </div>

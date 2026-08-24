@@ -91,12 +91,12 @@ export function FindReplaceBar({
         width: '320px',
         padding: '12px',
         borderRadius: '12px',
-        background: 'rgba(10, 10, 15, 0.75)',
+        background: 'var(--bg-main)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        border: '1px solid rgba(59, 130, 246, 0.3)',
-        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.4), 0 0 15px rgba(59, 130, 246, 0.1)',
-        color: '#fff',
+        border: '1px solid var(--border-muted)',
+        boxShadow: '0 12px 40px rgba(0, 0, 0, 0.3)',
+        color: 'var(--text-main)',
         display: 'flex',
         flexDirection: 'column',
         gap: '8px',
@@ -119,32 +119,35 @@ export function FindReplaceBar({
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <button
             onClick={() => setShowReplace(!showReplace)}
+            title={showReplace ? '바꾸기 숨기기' : '바꾸기 표시'}
             style={{
-              background: showReplace ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
+              background: 'transparent',
               border: 'none',
-              borderRadius: '4px',
-              padding: '2px 4px',
-              color: showReplace ? '#93c5fd' : 'var(--text-muted)',
-              fontSize: '9.5px',
-              fontWeight: 700,
+              color: showReplace ? 'var(--primary)' : 'var(--text-muted)',
               cursor: 'pointer',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              borderRadius: '4px',
             }}
           >
-            {showReplace ? '찾기 모드' : '바꾸기 모드'}
+            <Replace size={13} />
           </button>
           <button
             onClick={onClose}
+            title="닫기 (ESC)"
             style={{
               background: 'transparent',
               border: 'none',
               color: 'var(--text-muted)',
               cursor: 'pointer',
+              padding: '4px',
               display: 'flex',
-              padding: '2px',
+              alignItems: 'center',
               borderRadius: '4px',
             }}
           >
-            <X size={14} />
+            <X size={13} />
           </button>
         </div>
       </div>
@@ -161,11 +164,11 @@ export function FindReplaceBar({
           placeholder="찾을 텍스트 입력..."
           style={{
             flex: 1,
-            background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-muted)',
             borderRadius: '6px',
             padding: '6px 6px 6px 26px',
-            color: '#fff',
+            color: 'var(--text-main)',
             fontSize: '11px',
             outline: 'none',
             fontFamily: 'inherit',
@@ -189,11 +192,11 @@ export function FindReplaceBar({
             placeholder="바꿀 텍스트 입력..."
             style={{
               flex: 1,
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-muted)',
               borderRadius: '6px',
               padding: '6px 8px',
-              color: '#fff',
+              color: 'var(--text-main)',
               fontSize: '11px',
               outline: 'none',
               fontFamily: 'inherit',

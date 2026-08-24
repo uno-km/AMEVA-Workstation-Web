@@ -195,11 +195,11 @@ export const ChatMarkdownTable: React.FC<ChatMarkdownTableProps> = ({ markdown, 
       style={{
         marginTop: '8px',
         marginBottom: '8px',
-        background: '#090d16',
-        border: '1px solid rgba(59, 130, 246, 0.3)',
+        background: 'var(--bg-main)',
+        border: '1px solid var(--border-muted)',
         borderRadius: '8px',
         overflow: 'hidden',
-        boxShadow: '0 4px 14px rgba(0, 0, 0, 0.45)',
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
         width: '100%'
       }}
     >
@@ -209,18 +209,18 @@ export const ChatMarkdownTable: React.FC<ChatMarkdownTableProps> = ({ markdown, 
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '6px 10px',
-          background: 'rgba(30, 41, 59, 0.95)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+          background: 'var(--bg-glass-active)',
+          borderBottom: '1px solid var(--border-muted)'
         }}
       >
-        <span style={{ fontSize: '11px', fontWeight: 600, color: '#38bdf8' }}>📊 표 (Table)</span>
+        <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--primary)' }}>📊 표 (Table)</span>
         {onInsert && (
           <button
             onClick={onInsert}
             style={{
-              background: 'rgba(59, 130, 246, 0.15)',
-              border: '1px solid rgba(59, 130, 246, 0.35)',
-              color: '#60a5fa',
+              background: 'var(--bg-glass)',
+              border: '1px solid var(--border-muted)',
+              color: 'var(--primary)',
               fontSize: '10px',
               fontWeight: 600,
               padding: '2px 8px',
@@ -237,11 +237,11 @@ export const ChatMarkdownTable: React.FC<ChatMarkdownTableProps> = ({ markdown, 
         )}
       </div>
       <div style={{ overflowX: 'auto', padding: '6px' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', color: '#e2e8f0' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', color: 'var(--text-main)' }}>
           <thead>
-            <tr style={{ background: 'rgba(255, 255, 255, 0.06)', borderBottom: '1px solid rgba(255, 255, 255, 0.15)' }}>
+            <tr style={{ background: 'var(--bg-glass-active)', borderBottom: '1px solid var(--border-muted)' }}>
               {headerCells.map((h, i) => (
-                <th key={i} style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 600, color: '#93c5fd' }}>
+                <th key={i} style={{ padding: '6px 10px', textAlign: 'left', fontWeight: 600, color: 'var(--primary)' }}>
                   {h}
                 </th>
               ))}
@@ -249,7 +249,7 @@ export const ChatMarkdownTable: React.FC<ChatMarkdownTableProps> = ({ markdown, 
           </thead>
           <tbody>
             {dataRows.map((row, rIdx) => (
-              <tr key={rIdx} style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.05)', background: rIdx % 2 === 1 ? 'rgba(255, 255, 255, 0.02)' : 'transparent' }}>
+              <tr key={rIdx} style={{ borderBottom: '1px solid var(--border-muted)', background: rIdx % 2 === 1 ? 'var(--bg-glass-active)' : 'transparent' }}>
                 {row.map((cell, cIdx) => (
                   <td key={cIdx} style={{ padding: '6px 10px' }}>
                     {cell}
@@ -570,16 +570,16 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
           padding: '10px 14px',
           borderRadius: isUser ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
           background: isUser
-            ? 'linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)'
+            ? 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%)'
             : isGpuError
             ? 'rgba(239, 68, 68, 0.08)'
-            : 'rgba(255, 255, 255, 0.05)',
-          border: isUser ? 'none' : isGpuError ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid rgba(255, 255, 255, 0.08)',
-          color: '#f8fafc',
+            : 'var(--bg-card)',
+          border: isUser ? 'none' : isGpuError ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid var(--border-muted)',
+          color: isUser ? '#ffffff' : 'var(--text-main)',
           fontSize: '12px',
           lineHeight: '1.6',
           wordBreak: 'break-word',
-          boxShadow: isUser ? '0 2px 8px rgba(37, 99, 235, 0.3)' : 'none',
+          boxShadow: isUser ? '0 2px 8px var(--primary-glow)' : 'none',
           userSelect: 'text',
           cursor: 'text'
         }}

@@ -34,6 +34,7 @@ import { useCallback, useEffect, useRef } from 'react'
  */
 import * as ipc from '../../services/ipc/electronApiAdapter'
 import { getPlatformAdapter } from '../../../shared/adapters/platformAdapter'
+import { googleDriveService } from '../../services/googleDriveService'
 
 /* 
  * [UTILITIES & CONSTANTS]
@@ -897,6 +898,24 @@ export function useAppFileOperations(
        * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
        * - 예시: `if (ipc.isElectronEnv())` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
        */
+    // 3) Google Drive 연동 파일인 경우 클라우드로 직접 원본 패치 저장
+    if (filePath && filePath.startsWith('gdrive://')) {
+      const parts = filePath.replace('gdrive://', '').split('/')
+      const fileId = parts[0]
+      try {
+        await googleDriveService.saveFileContent(fileId, contentToSave)
+        setOriginalContent(rawMarkdown)
+        setLastSavedTime(new Date())
+        createSnapshot(`Google Drive 저장본 (${new Date().toLocaleTimeString()})`, contentToSave)
+        alert('Google Drive에 변경사항이 성공적으로 저장되었습니다!')
+        return
+      } catch (err: any) {
+        console.error('[GoogleDriveSave] Cloud save failed:', err)
+        alert(`Google Drive 클라우드 저장 실패: ${err.message}`)
+        return
+      }
+    }
+
     if (ipc.isElectronEnv()) {
       let savedPath = filePath
       

@@ -422,36 +422,22 @@ export function RightTabStrip({}: RightTabStripProps = {}) {
             title={t.id === 'ai' ? t.label + ' (' + formatHotkey(hkeys.toggleAI) + ')' : t.label}
             style={{
               width: '28px', height: '32px', borderRadius: '6px 0 0 6px',
-              background: isActive ? 'rgba(236, 72, 153, 0.08)' : 'transparent',
-              border: isActive ? '1px solid #ec4899' : '1px solid transparent',
+              background: isActive ? 'var(--bg-glass-active)' : 'transparent',
+              border: isActive ? '1px solid var(--primary)' : '1px solid transparent',
               borderRight: isActive ? 'none' : '1px solid transparent',
-              color: isActive ? '#f472b6' : 'var(--text-muted)',
+              color: isActive ? 'var(--primary)' : 'var(--text-muted)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               cursor: 'pointer', position: 'relative', transition: 'var(--transition-fast)',
               outline: 'none', marginLeft: isActive ? '12px' : '0',
-              boxShadow: isActive ? '0 0 14px rgba(236, 72, 153, 0.25)' : 'none',
+              boxShadow: isActive ? '0 0 14px var(--primary-glow)' : 'none',
             }}
             onMouseEnter={(e) => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `!isActive`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (!isActive)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
               if (!isActive) {
                 e.currentTarget.style.color = 'var(--text-main)';
                 e.currentTarget.style.background = 'var(--bg-glass-active)';
               }
             }}
             onMouseLeave={(e) => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `!isActive`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (!isActive)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
               if (!isActive) {
                 e.currentTarget.style.color = 'var(--text-muted)';
                 e.currentTarget.style.background = 'transparent';
@@ -465,12 +451,12 @@ export function RightTabStrip({}: RightTabStripProps = {}) {
                 top: '6px',
                 bottom: '6px',
                 width: '3px',
-                background: 'linear-gradient(to bottom, #a855f7, #ec4899)',
+                background: 'var(--primary)',
                 borderRadius: '2px',
-                boxShadow: '0 0 8px #ec4899, 0 0 4px #a855f7',
+                boxShadow: '0 0 8px var(--primary-glow)',
               }} />
             )}
-            <Icon size={isActive ? 18 : 16} strokeWidth={isActive ? 2.5 : 1.8} style={{ transition: 'all 0.2s ease', filter: isActive ? 'drop-shadow(0 0 4px rgba(236, 72, 153, 0.6))' : 'none' }} />
+            <Icon size={isActive ? 18 : 16} strokeWidth={isActive ? 2.5 : 1.8} style={{ transition: 'all 0.2s ease' }} />
             {t.badge && (
               <span style={{
                 position: 'absolute', top: '2px', right: '2px',

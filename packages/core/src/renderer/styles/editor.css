@@ -58,18 +58,20 @@
   overflow-x: auto;
 }
 
-/* BlockNote 에디터 제목(Heading) 스타일 강제 커스텀 (제목 느낌 극대화) */
+/* BlockNote 에디터 제목(Heading) 스타일 강제 커스텀 */
 .bn-editor h1 {
   font-size: 2.2rem !important;
   font-weight: 850 !important;
   color: var(--text-main) !important;
   margin-top: 24px !important;
   margin-bottom: 12px !important;
-  text-shadow: 0 0 10px var(--primary-glow);
   letter-spacing: -0.03em;
 }
 
-/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+[data-theme='dark'] .bn-editor h1 {
+  text-shadow: 0 0 10px var(--primary-glow);
+}
+
 .bn-editor h2 {
   font-size: 1.8rem !important;
   font-weight: 800 !important;
@@ -79,7 +81,6 @@
   letter-spacing: -0.02em;
 }
 
-/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
 .bn-editor h3 {
   font-size: 1.4rem !important;
   font-weight: 750 !important;
@@ -96,7 +97,6 @@
   line-height: 1.7;
 }
 
-/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
 .markdown-preview-body h1 {
   font-size: 2.3rem;
   font-weight: 850;
@@ -105,8 +105,11 @@
   margin-top: 28px;
   margin-bottom: 16px;
   color: var(--text-main);
-  text-shadow: 0 0 12px var(--primary-glow);
   letter-spacing: -0.03em;
+}
+
+[data-theme='dark'] .markdown-preview-body h1 {
+  text-shadow: 0 0 12px var(--primary-glow);
 }
 
 /* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
@@ -602,28 +605,76 @@
 }
 
 
+/* ── 테마별 에디터 텍스트 색상 및 배경 오버라이드 ── */
+[data-theme='white'] .bn-editor,
+[data-theme='white'] .bn-block-content,
+[data-theme='white'] .bn-inline-content,
+[data-theme='white'] .ProseMirror,
+[data-theme='light'] .bn-editor,
+[data-theme='light'] .bn-block-content,
+[data-theme='light'] .bn-inline-content,
+[data-theme='light'] .ProseMirror {
+  color: #0f172a !important;
+}
+
+[data-theme='white'] .markdown-preview-body,
+[data-theme='light'] .markdown-preview-body {
+  color: #0f172a !important;
+}
+
+[data-theme='win98'] .bn-editor,
+[data-theme='win98'] .bn-block-content,
+[data-theme='win98'] .bn-inline-content,
+[data-theme='win98'] .ProseMirror,
+[data-theme='retro'] .bn-editor,
+[data-theme='retro'] .bn-block-content,
+[data-theme='retro'] .bn-inline-content,
+[data-theme='retro'] .ProseMirror {
+  color: #000000 !important;
+  font-family: 'Pretendard', 'Gulim', 'Dotum', sans-serif !important;
+}
+
+[data-theme='win98'] .markdown-preview-body,
+[data-theme='retro'] .markdown-preview-body {
+  color: #000000 !important;
+  font-family: 'Pretendard', 'Gulim', 'Dotum', sans-serif !important;
+}
+
+/* 레트로 모드 에디터 용지 윈도우 스타일 (순백색 종이 + 음각 3D 테두리) */
+[data-theme='win98'] .editor-zoom-wrapper,
+[data-theme='retro'] .editor-zoom-wrapper {
+  background-color: #c0c0c0 !important;
+  padding: 8px !important;
+}
+
+[data-theme='win98'] .bn-container,
+[data-theme='retro'] .bn-container {
+  background-color: #ffffff !important;
+  border: 2px solid !important;
+  border-color: #808080 #ffffff #ffffff #808080 !important;
+  box-shadow: none !important;
+}
+
 /* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
-[data-theme='win98'] .win98-font {
+[data-theme='win98'] .win98-font,
+[data-theme='retro'] .win98-font {
   font-family: 'Gulim', '굴림', 'MS Sans Serif', sans-serif !important;
   font-size: 12px !important;
   line-height: 1.2 !important;
   letter-spacing: 0 !important;
 }
-/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
+
 .terminal-focused {
   outline: none;
 }
-/* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
-[data-theme='win98'] .terminal-focused {
+
+[data-theme='win98'] .terminal-focused,
+[data-theme='retro'] .terminal-focused {
   outline: 1px dotted #000000;
   outline-offset: -2px;
 }
 
-/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */
-/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */
-
 /* ── [FEAT-GHOST] Ghost Text 자동완성 Decoration 스타일 ─────────────────── */
-/* ProseMirror Decoration.widget으로 커서 뒤에 삽입되는 가상 텍스트 */
 .ghost-text-suggestion {
   color: #6b7280;
   pointer-events: none;
@@ -631,7 +682,6 @@
   font-style: italic;
   opacity: 0.65;
   user-select: none;
-  /* 부드러운 등장 애니메이션 */
   animation: ghost-fade-in 0.15s ease-in;
 }
 
@@ -640,7 +690,6 @@
   to   { opacity: 0.65; }
 }
 
-/* 다크 테마에서 Ghost Text 색상 보정 */
 [data-mantine-color-scheme='dark'] .ghost-text-suggestion {
   color: #9ca3af;
 }

@@ -41,6 +41,7 @@ export function useAppSettingsManager(activeRightTab: string, setActiveRightTab:
 
   useEffect(() => {
     document.body.setAttribute('data-theme', settings.theme)
+    document.documentElement.setAttribute('data-theme', settings.theme)
   }, [settings.theme])
 
   const handleUpdateSettings = (newSettings: Partial<AppSettings>) => {

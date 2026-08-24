@@ -216,13 +216,13 @@ export function DocumentProfileModal({ fileId, profile, pdf, onClose }: Props) {
               </div>
             </div>
 
-            <div style={{ background: 'rgba(255,255,255,0.04)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '6px', fontWeight: 500 }}>기본 메타데이터</div>
-              <div style={{ fontSize: '14px', color: '#f3f4f6', fontWeight: 500 }}>
+            <div style={{ background: 'var(--bg-card)', padding: '16px', borderRadius: '8px', border: '1px solid var(--border-muted)' }}>
+              <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px', fontWeight: 500 }}>기본 메타데이터</div>
+              <div style={{ fontSize: '14px', color: 'var(--text-main)', fontWeight: 500 }}>
                 {source.fileName} ({source.pageCount} Pages)
               </div>
-              <div style={{ marginTop: '14px', fontSize: '12px', color: '#9ca3af', marginBottom: '6px', fontWeight: 500 }}>분석 근거 (Evidence)</div>
-              <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '12px', color: '#fbbf24', display: 'flex', flexDirection: 'column', gap: '6px', lineHeight: '1.4' }}>
+              <div style={{ marginTop: '14px', fontSize: '12px', color: 'var(--text-muted)', marginBottom: '6px', fontWeight: 500 }}>분석 근거 (Evidence)</div>
+              <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '12px', color: '#f59e0b', display: 'flex', flexDirection: 'column', gap: '6px', lineHeight: '1.4' }}>
                 {classProfile.evidence?.map((ev, i) => <li key={i}>{ev}</li>)}
               </ul>
             </div>
@@ -230,8 +230,8 @@ export function DocumentProfileModal({ fileId, profile, pdf, onClose }: Props) {
 
           {/* 피드백 UI (토글) */}
           {showFeedback && (
-            <div style={{ background: 'rgba(96, 165, 250, 0.05)', padding: '16px', borderRadius: '8px', border: '1px dashed rgba(96, 165, 250, 0.3)' }}>
-              <h5 style={{ margin: '0 0 10px 0', color: '#60a5fa', fontSize: '13px' }}>문서 분류 교정하기</h5>
+            <div style={{ background: 'var(--bg-glass-active)', padding: '16px', borderRadius: '8px', border: '1px dashed var(--primary)' }}>
+              <h5 style={{ margin: '0 0 10px 0', color: 'var(--primary)', fontSize: '13px' }}>문서 분류 교정하기</h5>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '12px' }}>
                 이 피드백은 로컬에 저장되며, 반복 시 새로운 자동 분류 룰을 생성하여 다음 분석 정확도를 높이는 데 사용됩니다.
               </div>
@@ -265,10 +265,10 @@ export function DocumentProfileModal({ fileId, profile, pdf, onClose }: Props) {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                   {keywords.slice(0, 10).map((kw, i) => (
                     <label key={i} style={{ 
-                      display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#e5e7eb',
-                      background: selectedKeywords.includes(kw.term) ? 'rgba(59, 130, 246, 0.3)' : 'rgba(255,255,255,0.05)',
+                      display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: 'var(--text-main)',
+                      background: selectedKeywords.includes(kw.term) ? 'var(--bg-glass-active)' : 'var(--bg-card)',
                       padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', border: '1px solid',
-                      borderColor: selectedKeywords.includes(kw.term) ? 'rgba(59, 130, 246, 0.5)' : 'transparent'
+                      borderColor: selectedKeywords.includes(kw.term) ? 'var(--primary)' : 'var(--border-muted)'
                     }}>
                       <input type="checkbox" checked={selectedKeywords.includes(kw.term)} onChange={() => toggleKeyword(kw.term)} style={{ margin: 0 }} />
                       {kw.term}
@@ -289,7 +289,8 @@ export function DocumentProfileModal({ fileId, profile, pdf, onClose }: Props) {
               <button 
                 onClick={handleSaveFeedback}
                 disabled={feedbackStatus === 'saving'}
-                style={{ padding: '6px 16px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', opacity: feedbackStatus === 'saving' ? 0.6 : 1 }}>
+                className="btn btn-primary"
+                style={{ padding: '6px 16px', cursor: 'pointer', fontSize: '12px', opacity: feedbackStatus === 'saving' ? 0.6 : 1 }}>
                 {feedbackStatus === 'saving' ? '저장 중...' : '피드백 저장'}
               </button>
             </div>
@@ -297,16 +298,16 @@ export function DocumentProfileModal({ fileId, profile, pdf, onClose }: Props) {
 
           {/* 2. 주요 키워드 */}
           <div style={{ marginTop: '4px' }}>
-            <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#f9fafb', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Tags size={16} style={{ color: '#f59e0b' }} /> 핵심 키워드
             </h4>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {keywords.slice(0, 10).map((kw, i) => (
                 <div key={i} style={{ 
                   padding: '6px 10px', background: 'rgba(245, 158, 11, 0.15)', border: '1px solid rgba(245, 158, 11, 0.4)',
-                  borderRadius: '6px', fontSize: '13px', color: '#fcd34d', fontWeight: 500, display: 'flex', alignItems: 'center'
+                  borderRadius: '6px', fontSize: '13px', color: 'var(--text-main)', fontWeight: 500, display: 'flex', alignItems: 'center'
                 }}>
-                  {kw.term} <span style={{ opacity: 0.7, fontSize: '11px', marginLeft: '6px', background: 'rgba(0,0,0,0.2)', padding: '2px 4px', borderRadius: '4px' }}>{kw.count}회</span>
+                  {kw.term} <span style={{ opacity: 0.7, fontSize: '11px', marginLeft: '6px', background: 'var(--bg-card)', padding: '2px 4px', borderRadius: '4px' }}>{kw.count}회</span>
                 </div>
               ))}
             </div>
@@ -314,19 +315,19 @@ export function DocumentProfileModal({ fileId, profile, pdf, onClose }: Props) {
 
           {/* 3. 추출된 엔티티 */}
           <div>
-            <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#f9fafb', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <TrendingUp size={16} style={{ color: '#10b981' }} /> 식별된 개체 (Entities)
             </h4>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-              <div style={{ background: 'rgba(255,255,255,0.06)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '8px', fontWeight: 500 }}>금액 / 가치</div>
-                <div style={{ fontSize: '13px', color: '#34d399', display: 'flex', flexDirection: 'column', gap: '6px', fontWeight: 500 }}>
+              <div style={{ background: 'var(--bg-card)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-muted)' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: 500 }}>금액 / 가치</div>
+                <div style={{ fontSize: '13px', color: '#10b981', display: 'flex', flexDirection: 'column', gap: '6px', fontWeight: 500 }}>
                   {entities.money.length > 0 ? entities.money.slice(0, 5).map((m, i) => <div key={i}>{m}</div>) : '- 없음 -'}
                 </div>
               </div>
-              <div style={{ background: 'rgba(255,255,255,0.06)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ fontSize: '12px', color: '#9ca3af', marginBottom: '8px', fontWeight: 500 }}>조직명</div>
-                <div style={{ fontSize: '13px', color: '#38bdf8', display: 'flex', flexDirection: 'column', gap: '6px', fontWeight: 500 }}>
+              <div style={{ background: 'var(--bg-card)', padding: '12px', borderRadius: '8px', border: '1px solid var(--border-muted)' }}>
+                <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: 500 }}>조직명</div>
+                <div style={{ fontSize: '13px', color: 'var(--primary)', display: 'flex', flexDirection: 'column', gap: '6px', fontWeight: 500 }}>
                   {entities.organizations.length > 0 ? entities.organizations.slice(0, 5).map((m, i) => <div key={i}>{m}</div>) : '- 없음 -'}
                 </div>
               </div>
@@ -335,19 +336,19 @@ export function DocumentProfileModal({ fileId, profile, pdf, onClose }: Props) {
 
           {/* 4. 중요 페이지 분석 */}
           <div>
-            <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: '#f9fafb', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <AlertTriangle size={16} style={{ color: '#ec4899' }} /> 중요 페이지 추정
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {importantPages.map((ip, i) => (
                 <div key={i} style={{ 
                   display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 10px',
-                  background: 'rgba(255,255,255,0.06)', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.05)'
+                  background: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-muted)'
                 }}>
                   <div style={{ width: '24px', height: '24px', borderRadius: '4px', background: '#ec4899', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '12px', fontWeight: 'bold', boxShadow: '0 2px 8px rgba(236,72,153,0.3)' }}>
                     {ip.page}
                   </div>
-                  <div style={{ flex: 1, fontSize: '12px', color: '#f3f4f6', lineHeight: '1.4' }}>
+                  <div style={{ flex: 1, fontSize: '12px', color: 'var(--text-main)', lineHeight: '1.4' }}>
                     {ip.reasons.join(', ')}
                   </div>
                 </div>

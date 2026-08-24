@@ -116,12 +116,12 @@ export function SidebarTabChat({}: SidebarTabChatProps = {}) {
             onChange={(e) => setJoinId(e.target.value)}
             style={{ 
               flex: 1, 
-              background: 'var(--bg-lighter)', 
+              background: 'var(--bg-card)', 
               border: '1px solid var(--border-muted)', 
               borderRadius: '6px', 
               padding: '6px 10px', 
               fontSize: '12px', 
-              color: 'var(--text-normal)' 
+              color: 'var(--text-main)' 
             }}
           />
           <button className="btn btn-primary" onClick={handleJoinUUID} style={{ padding: '6px 10px' }} title="방 접속">

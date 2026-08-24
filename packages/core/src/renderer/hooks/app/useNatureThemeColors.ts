@@ -57,66 +57,12 @@ const NATURE_PALETTES = [
    * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
    * - 예시: `useNatureThemeColors(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
    */
-/**
- * useNatureThemeColors 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 export function useNatureThemeColors(theme: string) {
   useEffect(() => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `theme !== 'nature'`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (theme !== 'nature')` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-    if (theme !== 'nature') {
-      // Clean up inline styles when leaving nature theme
-      document.body.style.removeProperty('--primary');
-      document.body.style.removeProperty('--primary-glow');
-      document.body.style.removeProperty('--bg-glass-active');
-      return;
-    }
-
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `handleClick`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const handleClick = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-    const handleClick = () => {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `randomPalette`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const randomPalette = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-      const randomPalette = NATURE_PALETTES[Math.floor(Math.random() * NATURE_PALETTES.length)];
-      
-      // Inject random colors into the body variables so they override the nature theme defaults
-      document.body.style.setProperty('--primary', randomPalette.primary);
-      document.body.style.setProperty('--primary-glow', randomPalette.glow);
-      document.body.style.setProperty('--bg-glass-active', randomPalette.bgActive);
-      
-      // Add a subtle transition effect so colors smoothly morph
-      document.body.style.transition = 'background-color 0.5s ease, --primary 0.5s ease';
-    };
-
-    // Add global click listener
-    window.addEventListener('click', handleClick);
-
-    // Initial random color
-    handleClick();
-
-    return () => {
-      window.removeEventListener('click', handleClick);
-      document.body.style.removeProperty('--primary');
-      document.body.style.removeProperty('--primary-glow');
-      document.body.style.removeProperty('--bg-glass-active');
-      document.body.style.transition = '';
-    };
+    document.body.style.removeProperty('--primary');
+    document.body.style.removeProperty('--primary-glow');
+    document.body.style.removeProperty('--bg-glass-active');
+    document.body.style.transition = '';
   }, [theme]);
 }
 

@@ -210,4 +210,24 @@ export * from './adapters/exportAdapter'
 export * from './adapters/sandboxAdapter'
 export * from './adapters/collabAdapter'
 export * from './adapters/sttAdapter'
+export * from '../googleDriveService'
+
+import { googleDriveService } from '../googleDriveService'
+
+// Web Browser 모드 지원을 위한 Google Auth / Drive API 자동 폴리필 바인딩
+if (typeof window !== 'undefined') {
+  if (!window.electronAPI) {
+    (window as any).electronAPI = {}
+  }
+  if (!window.electronAPI.googleAuthLogin) {
+    window.electronAPI.googleAuthLogin = (connectDrive: boolean) => googleDriveService.login(connectDrive)
+  }
+  if (!window.electronAPI.googleAuthLogout) {
+    window.electronAPI.googleAuthLogout = () => googleDriveService.logout()
+  }
+  if (!window.electronAPI.googleAuthGetStatus) {
+    window.electronAPI.googleAuthGetStatus = () => googleDriveService.getStatus()
+  }
+}
+
 
