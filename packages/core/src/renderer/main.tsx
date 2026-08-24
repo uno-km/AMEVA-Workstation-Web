@@ -111,7 +111,7 @@ const SplashScreen = () => {
 
 
 // 런타임 환경에 따른 플랫폼 어댑터 동적 등록
-if (window.electronAPI) {
+if (typeof window !== 'undefined' && window.electronAPI && typeof (window.electronAPI as any).appReady === 'function') {
   registerPlatformAdapter(desktopAdapter)
 } else {
   registerPlatformAdapter(mobileAdapter)

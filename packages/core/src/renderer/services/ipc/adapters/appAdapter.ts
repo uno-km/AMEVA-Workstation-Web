@@ -56,7 +56,7 @@ export interface MessageBoxOptions {
  * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
 export function isElectronEnv(): boolean {
-  return typeof window !== 'undefined' && !!window.electronAPI
+  return typeof window !== 'undefined' && Boolean(window.electronAPI && typeof (window.electronAPI as any).appReady === 'function')
 }
 
   /*
