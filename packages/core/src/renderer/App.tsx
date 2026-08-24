@@ -181,7 +181,23 @@ export default function App() {
   const [userColor, setUserColor] = useState(randomColor)
   const [editor, setEditor] = useState<AppEditor | null>(null)
   const [splitEditor, setSplitEditor] = useState<AppEditor | null>(null)
-  const [editorMode, setEditorMode] = useState<EditorMode>('welcome')
+  const [editorMode, setEditorMode] = useState<EditorMode>(() => {
+    if (typeof window !== 'undefined') {
+      const search = window.location.search || ''
+      const hash = window.location.hash || ''
+      if (
+        search.includes('state=') ||
+        search.includes('fileId=') ||
+        search.includes('driveFileId=') ||
+        search.includes('openDriveFile=') ||
+        hash.includes('state=') ||
+        hash.includes('fileId=')
+      ) {
+        return 'edit'
+      }
+    }
+    return 'welcome'
+  })
   const [serverPort, setServerPort] = useState(1234)
   const [serverHost, setServerHost] = useState('localhost')
   const [useLocalServer, setUseLocalServer] = useState(true)

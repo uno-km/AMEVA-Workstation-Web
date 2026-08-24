@@ -158,9 +158,21 @@ export function useAppEditorInit({
 
     if (isInitialLoad.current && (!isActive || !provider)) {
       isInitialLoad.current = false
-      const currentLang = useI18nStore.getState().language
-      const welcomeMD = currentLang === 'en' ? WELCOME_MARKDOWN_EN : WELCOME_MARKDOWN_KO
-      setCurrentContent(welcomeMD)
+      const isGoogleDriveOpen = typeof window !== 'undefined' && (
+        window.location.search.includes('state=') ||
+        window.location.search.includes('fileId=') ||
+        window.location.search.includes('driveFileId=') ||
+        window.location.search.includes('openDriveFile=') ||
+        window.location.hash.includes('state=') ||
+        window.location.hash.includes('fileId=')
+      )
+
+      if (!isGoogleDriveOpen) {
+        const currentLang = useI18nStore.getState().language
+        const welcomeMD = currentLang === 'en' ? WELCOME_MARKDOWN_EN : WELCOME_MARKDOWN_KO
+        setCurrentContent(welcomeMD)
+      }
+
       if (ipc.isElectronEnv()) {
         ipc.appReady()
       }
