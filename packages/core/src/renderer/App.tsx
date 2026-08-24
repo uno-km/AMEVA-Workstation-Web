@@ -164,7 +164,6 @@ import { useGoogleDriveSync } from './hooks/useGoogleDriveSync'
 
 export default function App() {
   useBackgroundInit()
-  useGoogleDriveSync()
   
   /* 
    * [ADR - React Local State vs Zustand Store]
@@ -277,6 +276,13 @@ export default function App() {
     loadMarkdownIntoEditor, appendMarkdownIntoEditor, openFileInTab,
     handleStartNewDocument, handleOpenFile, handleSaveFile, handleSaveAsFile
   } = useAppFileOperations(editor, setEditorMode, createSnapshot)
+
+  /** Google Drive Deep-link 및 실시간 클라우드 파일 동기화 훅 */
+  useGoogleDriveSync({
+    editor,
+    setEditorMode,
+    loadMarkdownIntoEditor,
+  })
 
   /** AI 편집 영역 패치 바인딩 */
   const { handleScrollToBlock } = useAppAISuggestions(editor)

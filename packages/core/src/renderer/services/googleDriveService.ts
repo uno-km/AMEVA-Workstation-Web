@@ -1,4 +1,4 @@
-﻿/**
+/**
  * @file googleDriveService.ts
  * @system AMEVA Workstation - Web & Cloud Integration
  * @location src/renderer/services/googleDriveService.ts
@@ -241,10 +241,21 @@ class GoogleDriveService {
   public parseUrlState(): DriveStatePayload | null {
     if (typeof window === 'undefined') return null
     try {
-      const urlParams = new URLSearchParams(window.location.search)
-      const stateRaw = urlParams.get('state')
+      // 1) search 쿼리스트링 및 hash 파라미터 모두 검사
+      const searchParams = new URLSearchParams(window.location.search)
+      let hashQuery = ''
+      if (window.location.hash && window.location.hash.includes('?')) {
+        hashQuery = window.location.hash.split('?')[1]
+      }
+      const hashParams = new URLSearchParams(hashQuery)
+
+      const stateRaw = searchParams.get('state') || hashParams.get('state')
       if (stateRaw) {
-        const parsed = JSON.parse(stateRaw)
+        let decoded = stateRaw
+        try {
+          decoded = decodeURIComponent(stateRaw)
+        } catch {}
+        const parsed = JSON.parse(decoded)
         if (parsed && Array.isArray(parsed.ids) && parsed.ids.length > 0) {
           return {
             fileIds: parsed.ids,
@@ -254,8 +265,17 @@ class GoogleDriveService {
         }
       }
 
-      // 폴백 쿼리 파라미터 체크: ?fileId=... or ?driveId=...
-      const directFileId = urlParams.get('fileId') || urlParams.get('driveId') || urlParams.get('id')
+      // 2) 단일 fileId 쿼리 파라미터 체크: ?fileId=... or ?driveFileId=... or ?id=...
+      const directFileId =
+        searchParams.get('fileId') ||
+        searchParams.get('driveFileId') ||
+        searchParams.get('openDriveFile') ||
+        searchParams.get('driveId') ||
+        searchParams.get('id') ||
+        hashParams.get('fileId') ||
+        hashParams.get('driveFileId') ||
+        hashParams.get('id')
+
       if (directFileId) {
         return {
           fileIds: [directFileId],
@@ -284,21 +304,58 @@ class GoogleDriveService {
   }
 
   /**
-   * Google Drive 파일 내용 다운로드 (Raw text)
+   * Google Drive 파일 내용 다운로드 (텍스트, 바이너리 또는 Google 문서 Export)
    */
-  public async readFileContent(fileId: string, accessToken?: string): Promise<{ content: string; metadata: GoogleDriveFileMetadata }> {
+  public async readFileContent(fileId: string, accessToken?: string): Promise<{ content: string; metadata: GoogleDriveFileMetadata; isBinary: boolean }> {
     const token = accessToken || (await this.getValidAccessToken())
     const metadata = await this.getFileMetadata(fileId, token)
+    const ext = (metadata.name.split('.').pop() || '').toLowerCase()
+    const mime = (metadata.mimeType || '').toLowerCase()
 
-    const res = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`, {
+    // 1) Google Workspace 문서 (Docs, Sheets, Slides)인 경우 Export 엔드포인트 사용
+    if (mime.includes('application/vnd.google-apps.document')) {
+      // Google Docs -> 마크다운 호환 텍스트/HTML로 Export
+      const exportRes = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}/export?mimeType=text/plain`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (exportRes.ok) {
+        const text = await exportRes.text()
+        return { content: text, metadata: { ...metadata, name: `${metadata.name}.md` }, isBinary: false }
+      }
+    }
+
+    // 2) 바이너리 파일 판별 (PDF, DOCX, XLSX, PPTX, HWPX, ADC, 이미지 등)
+    const binaryExtensions = ['pdf', 'docx', 'xlsx', 'pptx', 'hwpx', 'adc', 'zip', 'png', 'jpg', 'jpeg', 'webp', 'gif']
+    const isBinary =
+      binaryExtensions.includes(ext) ||
+      mime.includes('pdf') ||
+      mime.includes('officedocument') ||
+      mime.includes('hwp') ||
+      mime.startsWith('image/') ||
+      mime.includes('octet-stream')
+
+    const downloadRes = await fetch(`https://www.googleapis.com/drive/v3/files/${encodeURIComponent(fileId)}?alt=media`, {
       headers: { Authorization: `Bearer ${token}` }
     })
-    if (!res.ok) {
-      const errBody = await res.text()
-      throw new Error(`Google Drive 파일 다운로드 실패 (${res.status}): ${errBody}`)
+    if (!downloadRes.ok) {
+      const errBody = await downloadRes.text()
+      throw new Error(`Google Drive 파일 다운로드 실패 (${downloadRes.status}): ${errBody}`)
     }
-    const content = await res.text()
-    return { content, metadata }
+
+    if (isBinary) {
+      const buffer = await downloadRes.arrayBuffer()
+      const bytes = new Uint8Array(buffer)
+      let binaryStr = ''
+      const len = bytes.byteLength
+      for (let i = 0; i < len; i++) {
+        binaryStr += String.fromCharCode(bytes[i])
+      }
+      const base64 = btoa(binaryStr)
+      return { content: base64, metadata, isBinary: true }
+    } else {
+      const text = await downloadRes.text()
+      return { content: text, metadata, isBinary: false }
+    }
   }
 
   /**
