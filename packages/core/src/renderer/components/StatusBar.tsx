@@ -254,7 +254,7 @@ export function StatusBar({}: StatusBarProps = {}) {
             fontWeight: 600, fontSize: '10.5px', height: '20px',
             animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
           }}>
-            <span>🧠 문서 DNA 분석 중 ({queue.length}건 남음)</span>
+            <span>🧠 {t.statusBar.dnaAnalyzing} ({queue.length})</span>
           </div>
         )}
 
@@ -363,7 +363,7 @@ export function StatusBar({}: StatusBarProps = {}) {
             borderRadius: '4px',
             transition: 'var(--transition-fast)',
           }}
-          title="환경 설정"
+          title={t.statusBar.settingsTooltip}
         >
           <Settings size={12} style={{ color: 'var(--primary)' }} />
           <span>{t.common.settings}</span>
@@ -374,7 +374,7 @@ export function StatusBar({}: StatusBarProps = {}) {
         {/* 앱 배포 버전 */}
         <span 
           style={{ fontSize: '10.5px', color: 'var(--text-muted)', cursor: 'default', fontWeight: 500 }} 
-          title="현재 AMEVA Workstation 버전"
+          title={t.statusBar.versionTooltip}
         >
           {import.meta.env.VITE_APP_VERSION || 'v1.0.0-dev'}
         </span>

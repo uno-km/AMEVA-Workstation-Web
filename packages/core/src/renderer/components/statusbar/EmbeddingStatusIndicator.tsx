@@ -1,14 +1,10 @@
-/**
- * 파일명: EmbeddingStatusIndicator.tsx
- * 역할: RAG 임베딩 상태를 표시하는 상태바 아이콘 컴포넌트
- */
-
 import React from 'react';
 import type { CSSProperties } from 'react';
 import { useEmbeddingEngine } from '../../features/rag-embedding';
 import { Sparkles } from 'lucide-react';
 import { UnobtrusiveToastBubble } from '../ui/UnobtrusiveToastBubble';
 import { useConditionToast } from '../../hooks/useUnobtrusiveToast';
+import { useTranslation } from '../../i18n/useTranslation';
 
 interface EmbeddingStatusIndicatorProps {
   activeTooltip: string | null;
@@ -27,32 +23,33 @@ export const EmbeddingStatusIndicator: React.FC<EmbeddingStatusIndicatorProps> =
   editorContent,
   onActivate
 }) => {
+  const { t } = useTranslation();
   const { status, progress, initEngine, embedDocument, modelLoaded, chunks } = useEmbeddingEngine();
 
   // 추상화된 공통 비간섭 미니 말풍선 훅 연동
   const isNowReady = modelLoaded || status === 'ready';
   const { isVisible: isEmbeddingToastVisible } = useConditionToast(
     isNowReady,
-    '임베딩 로딩 완료!',
+    t.statusBar.embeddingToast,
     { variant: 'cyan', icon: <Sparkles size={11} color="#38bdf8" />, durationMs: 2000 }
   );
 
   let dotColor = '#f44336'; 
-  let statusText = '임베딩 미실시';
-  let tooltipText = '클릭하여 임베딩을 시작합니다.';
+  let statusText = t.statusBar.embeddingIdle;
+  let tooltipText = 'Click to initialize embedding engine.';
 
   if (status === 'loading-model' || status === 'embedding') {
     dotColor = '#ffeb3b';
-    statusText = status === 'loading-model' ? `모델 로딩 중... ${progress}%` : `임베딩 중... ${progress}%`;
-    tooltipText = status === 'loading-model' ? '임베딩 모델을 로딩하고 있습니다.' : '텍스트를 벡터로 변환하는 중입니다.';
+    statusText = status === 'loading-model' ? `${t.statusBar.embeddingLoadingModel} ${progress}%` : `${t.statusBar.embeddingInProgress} ${progress}%`;
+    tooltipText = status === 'loading-model' ? 'Loading embedding model into WebGPU...' : 'Vectorizing document text into embedding store...';
   } else if (status === 'ready') {
     dotColor = '#4caf50';
-    statusText = 'AI RAG 준비됨';
-    const lastUpdate = chunks.length > 0 ? new Date(chunks[chunks.length - 1].timestamp).toLocaleTimeString() : '없음';
-    tooltipText = `임베딩된 청크 수: ${chunks.length}\n마지막 업데이트: ${lastUpdate}`;
+    statusText = t.statusBar.embeddingReady;
+    const lastUpdate = chunks.length > 0 ? new Date(chunks[chunks.length - 1].timestamp).toLocaleTimeString() : '-';
+    tooltipText = `Embedded chunks: ${chunks.length}\nLast updated: ${lastUpdate}`;
   } else if (status === 'error') {
-    statusText = '임베딩 오류';
-    tooltipText = '임베딩 처리 중 오류가 발생했습니다.';
+    statusText = t.statusBar.embeddingError;
+    tooltipText = 'An error occurred during embedding processing.';
   }
 
   const handleClick = () => {

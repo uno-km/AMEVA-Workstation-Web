@@ -33,15 +33,10 @@
  * - MUST NOT: TypeScript any 형식을 우회 수단으로 함부로 선언하지 말 것.
  */
 
-// [외부 패키지 및 라이브러리 임포트: react]
 import React from 'react'
-// [외부 패키지 및 라이브러리 임포트: lucide-react]
 import { Terminal, AlertCircle, CheckCircle, Loader } from 'lucide-react'
+import { useTranslation } from '../i18n/useTranslation'
 
-/**
- * CodeConsoleProps 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 interface CodeConsoleProps {
   outputs: string[]
   isRunning: boolean
@@ -49,17 +44,9 @@ interface CodeConsoleProps {
   onClose: () => void
 }
 
-  /*
-   * [FUNCTION CONTRACT]
-   * - 함수 명: `CodeConsole`
-   * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
-   * - 예시: `CodeConsole(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
-   */
-/**
- * CodeConsole 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 export function CodeConsole({ outputs, isRunning, success, onClose }: CodeConsoleProps) {
+  const { t } = useTranslation()
+
   return (
     <div
       className="glow-primary"
@@ -89,20 +76,20 @@ export function CodeConsole({ outputs, isRunning, success, onClose }: CodeConsol
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--term-icon-color)' }}>
           <Terminal size={14} />
-          <span>콘솔 출력 결과</span>
+          <span>{t.codeConsole.title}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           {isRunning ? (
             <span style={{ color: 'var(--secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Loader size={12} className="animate-spin" /> 실행 중...
+              <Loader size={12} className="animate-spin" /> Running...
             </span>
           ) : success === true ? (
             <span style={{ color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <CheckCircle size={12} /> 성공
+              <CheckCircle size={12} /> Success
             </span>
           ) : success === false ? (
             <span style={{ color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <AlertCircle size={12} /> 오류 발생
+              <AlertCircle size={12} /> Error
             </span>
           ) : null}
           <button
@@ -115,7 +102,7 @@ export function CodeConsole({ outputs, isRunning, success, onClose }: CodeConsol
               fontSize: '11px',
             }}
           >
-            닫기
+            {t.common.close}
           </button>
         </div>
       </div>
@@ -133,7 +120,7 @@ export function CodeConsole({ outputs, isRunning, success, onClose }: CodeConsol
         }}
       >
         {outputs.length === 0 ? (
-          <span style={{ color: 'var(--text-dark)' }}>출력 결과가 없습니다. 코드를 실행해 보십시오.</span>
+          <span style={{ color: 'var(--text-dark)' }}>{t.codeConsole.empty}</span>
         ) : (
           outputs.map((line, idx) => {
       /*

@@ -39,6 +39,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { Send, MessageCircle, Wifi, WifiOff, Trash2 } from 'lucide-react'
 // [내부 프로젝트 의존성 모듈 임포트: ../hooks/useChat]
 import type { ChatMessage } from '../hooks/useChat'
+import { useTranslation } from '../i18n/useTranslation'
 
 /**
  * ChatPanelProps 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
@@ -71,6 +72,7 @@ export function ChatPanel({
   userColor,
   serverRunning,
 }: ChatPanelProps) {
+  const { t } = useTranslation()
   const [input, setInput] = useState('')
       /*
        * [RUN-TIME STATE / INVARIANT]
@@ -170,7 +172,7 @@ export function ChatPanel({
             color: serverRunning ? 'var(--success)' : 'var(--danger)',
           }}>
             {serverRunning ? <Wifi size={8} /> : <WifiOff size={8} />}
-            {serverRunning ? '연결됨' : '오프라인'}
+            {serverRunning ? (t.sidePanel?.online || 'Online') : (t.sidePanel?.offline || 'Offline')}
           </div>
         </div>
         {messages.length > 0 && (
@@ -180,7 +182,7 @@ export function ChatPanel({
               background: 'transparent', border: 'none', cursor: 'pointer',
               color: 'var(--text-muted)', display: 'flex', alignItems: 'center', padding: '2px',
             }}
-            title="채팅 지우기"
+            title={t.sidePanel?.clearChat || 'Clear Chat'}
           >
             <Trash2 size={11} />
           </button>
@@ -206,8 +208,8 @@ export function ChatPanel({
             <MessageCircle size={24} style={{ opacity: 0.3 }} />
             <span>
               {serverRunning
-                ? '아직 메시지가 없습니다.\n첫 메시지를 보내보세요!'
-                : '협업 서버를 실행하면\n채팅이 활성화됩니다.'
+                ? 'No messages yet.\nSend your first message!'
+                : 'Start collaboration server\nto enable team chat.'
               }
             </span>
           </div>
@@ -327,7 +329,7 @@ export function ChatPanel({
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={serverRunning ? '메시지 입력...' : '서버 오프라인'}
+          placeholder={serverRunning ? (t.sidePanel?.chatPlaceholder || 'Send a message...') : 'Server Offline'}
           disabled={!serverRunning}
           style={{
             flex: 1,

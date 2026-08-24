@@ -22,6 +22,7 @@ import { Bot, Play, Square, Cpu, Clock, Activity, Sparkles, Info } from 'lucide-
 import { useWebLLM, SUPPORTED_WEBGPU_MODELS, DEFAULT_WEBGPU_MODEL } from '../useWebLLM'
 import { UnobtrusiveToastBubble } from '../ui/UnobtrusiveToastBubble'
 import { useConditionToast } from '../../hooks/useUnobtrusiveToast'
+import { useTranslation } from '../../i18n/useTranslation'
 
 /**
  * AIStatusIndicatorProps 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
@@ -44,6 +45,7 @@ export function AIStatusIndicator({
   handleMouseLeave, 
   tooltipStyle 
 }: AIStatusIndicatorProps) {
+  const { t } = useTranslation()
   const { isMainReady, isGhostReady, isMainLoading, isGhostLoading, mainProgressText, ghostProgressText, mainProgress, ghostProgress, initModel, activeModelId } = useWebLLM()
   const [showDashboard, setShowDashboard] = useState(false)
   const [selectedModel, setSelectedModel] = useState(() => {
@@ -171,16 +173,16 @@ export function AIStatusIndicator({
               <div style={{ padding: '4px', borderRadius: '6px', background: isReady ? 'rgba(16,185,129,0.15)' : `${dynamicColor}22` }}>
                 <Bot size={16} color={dynamicColor} />
               </div>
-              <strong style={{ fontSize: '13px', letterSpacing: '-0.3px' }}>AMEVA AI 대시보드</strong>
+              <strong style={{ fontSize: '13px', letterSpacing: '-0.3px' }}>{t.aiDashboard.title}</strong>
             </div>
             <span style={{ fontSize: '11px', fontWeight: 600, color: dynamicColor, transition: 'color 0.3s ease' }}>
-              {isReady ? '온라인 (가동 중)' : (isLoading ? `로딩 중 (${pMain}%)...` : '오프라인')}
+              {isReady ? t.aiDashboard.online : (isLoading ? `${t.aiDashboard.loading} (${pMain}%)...` : t.aiDashboard.offline)}
             </span>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-muted)' }}>로컬 AI 엔진</span>
+              <span style={{ color: 'var(--text-muted)' }}>{t.aiDashboard.localEngine}</span>
               {!isReady && !isLoading ? (
                 <select 
                   value={selectedModel}
@@ -213,16 +215,16 @@ export function AIStatusIndicator({
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }} title="AI 엔진이 활성화된 후 경과된 시간입니다. (현재는 UI 시연용 더미 데이터입니다)">
-                <Clock size={12}/>세션 유지 시간
+              <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }} title={t.aiDashboard.sessionTimeTooltip}>
+                <Clock size={12}/>{t.aiDashboard.sessionTime}
                 <Info size={12} style={{ cursor: 'help', opacity: 0.7 }} />
               </span>
               <span style={{ fontWeight: 600, color: '#e2e8f0' }}>{isReady ? sessionTime : '-'}</span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
-              <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }} title="초당 토큰 생성 속도(Tokens per second)입니다. (현재는 UI 시연용 더미 데이터입니다)">
-                <Activity size={12}/>평균 처리량
+              <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }} title={t.aiDashboard.avgTokensTooltip}>
+                <Activity size={12}/>{t.aiDashboard.avgTokens}
                 <Info size={12} style={{ cursor: 'help', opacity: 0.7 }} />
               </span>
               <span style={{ fontWeight: 600, color: '#e2e8f0' }}>{isReady ? avgTokens : '-'}</span>
@@ -232,7 +234,7 @@ export function AIStatusIndicator({
           {isLoading && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: dynamicColor, fontWeight: 600, transition: 'color 0.3s ease' }}>
-                <span>⚡ GPU VRAM 모델 로딩 중...</span>
+                <span>{t.aiDashboard.vramLoading}</span>
                 <span>{pMain}%</span>
               </div>
               
@@ -248,13 +250,13 @@ export function AIStatusIndicator({
                 }} />
               </div>
               <div style={{ fontSize: '9.5px', color: '#94a3b8', textAlign: 'left', wordBreak: 'break-all', marginTop: '2px' }}>
-                {mainProgressText || '가중치 다운로드 및 GPU 파이프라인 초기화 중...'}
+                {mainProgressText || t.aiDashboard.initPipeline}
               </div>
 
               {isGhostLoading && (
                 <div style={{ marginTop: '6px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#06b6d4', opacity: 0.9 }}>
-                    <span>Ghost 보조 모델</span>
+                    <span>{t.aiDashboard.ghostModel}</span>
                     <span>{pGhost}%</span>
                   </div>
                   <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
@@ -280,7 +282,7 @@ export function AIStatusIndicator({
                 onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
               >
-                <Sparkles size={16} /> AI 활성화하기
+                <Sparkles size={16} /> {t.aiDashboard.activateAiBtn}
               </button>
             ) : isLoading ? (
               <button 
@@ -301,14 +303,14 @@ export function AIStatusIndicator({
                   transition: 'all 0.3s ease'
                 }}
               >
-                <Clock size={16} /> 모델 로딩 대기 중 ({pMain}%)...
+                <Clock size={16} /> {t.aiDashboard.waitingModelBtn} ({pMain}%)...
               </button>
             ) : (
               <button 
                 disabled
                 style={{ width: '100%', padding: '10px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.4)', color: '#34d399', borderRadius: '8px', cursor: 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: 700, boxShadow: '0 0 16px rgba(16, 185, 129, 0.2)' }}
               >
-                <Cpu size={16} /> AI 가동 중 (온라인)
+                <Cpu size={16} /> {t.aiDashboard.runningAiBtn}
               </button>
             )}
           </div>
