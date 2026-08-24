@@ -289,6 +289,13 @@ export interface TranslationSchema {
     replace: string;
     replaceAll: string;
   };
+  pwa: {
+    offlineReady: string;
+    newRelease: string;
+    newReleaseDesc: string;
+    updateBtn: string;
+    dismissBtn: string;
+  };
   aiPanel: {
     title: string;
     quickActions: {

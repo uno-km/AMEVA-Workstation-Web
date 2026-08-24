@@ -289,6 +289,13 @@ export const ko: TranslationSchema = {
     replace: '바꾸기',
     replaceAll: '모두 바꾸기',
   },
+  pwa: {
+    offlineReady: '앱이 오프라인 사용 준비가 완료되었습니다.',
+    newRelease: '새 버전(New Release)이 출시되었습니다!',
+    newReleaseDesc: '최신 기능과 버그 수정이 포함되어 있습니다. 적용하시겠습니까?',
+    updateBtn: '적용 및 새로고침',
+    dismissBtn: '닫기',
+  },
   aiPanel: {
     title: 'AMEVA Local AI Assistant',
     quickActions: {

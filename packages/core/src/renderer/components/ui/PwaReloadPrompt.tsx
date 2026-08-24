@@ -1,8 +1,10 @@
 import React from 'react'
 // @ts-ignore: vite-plugin-pwa virtual module
 import { useRegisterSW } from 'virtual:pwa-register/react'
+import { useTranslation } from '../../i18n/useTranslation'
 
 export function PwaReloadPrompt() {
+  const { t } = useTranslation()
   const {
     offlineReady: [offlineReady, setOfflineReady],
     needRefresh: [needRefresh, setNeedRefresh],
@@ -52,19 +54,19 @@ export function PwaReloadPrompt() {
         {offlineReady ? (
           <>
             <span>✅</span>
-            <span>앱이 오프라인 사용 준비가 완료되었습니다.</span>
+            <span>{t.pwa.offlineReady}</span>
           </>
         ) : (
           <>
             <span style={{ fontSize: '16px' }}>🚀</span>
-            <span>새 버전(New Release)이 출시되었습니다!</span>
+            <span>{t.pwa.newRelease}</span>
           </>
         )}
       </div>
       
       {!offlineReady && (
         <div style={{ fontSize: '12px', color: 'var(--text-muted, #9ca3af)' }}>
-          최신 기능과 버그 수정이 포함되어 있습니다. 적용하시겠습니까?
+          {t.pwa.newReleaseDesc}
         </div>
       )}
 
@@ -86,7 +88,7 @@ export function PwaReloadPrompt() {
             onMouseEnter={(e) => e.currentTarget.style.background = '#2563eb'}
             onMouseLeave={(e) => e.currentTarget.style.background = 'var(--primary, #3b82f6)'}
           >
-            적용 및 새로고침
+            {t.pwa.updateBtn}
           </button>
         )}
         <button
@@ -104,7 +106,7 @@ export function PwaReloadPrompt() {
           onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)'}
           onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
         >
-          닫기
+          {t.pwa.dismissBtn}
         </button>
       </div>
     </div>

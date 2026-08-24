@@ -289,6 +289,13 @@ export const en: TranslationSchema = {
     replace: 'Replace',
     replaceAll: 'Replace All',
   },
+  pwa: {
+    offlineReady: 'App is ready for offline use.',
+    newRelease: 'A new release is available!',
+    newReleaseDesc: 'Includes latest features and performance fixes. Update now?',
+    updateBtn: 'Reload & Update',
+    dismissBtn: 'Dismiss',
+  },
   aiPanel: {
     title: 'AMEVA Local AI Assistant',
     quickActions: {
