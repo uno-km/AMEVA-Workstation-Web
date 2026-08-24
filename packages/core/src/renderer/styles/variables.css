@@ -123,6 +123,12 @@
   --text-on-primary: #ffffff;
   --text-on-active: #0f172a;
 
+  --bg-panel: #ffffff;
+  --bg-surface: #ffffff;
+  --bg-hover: #f1f5f9;
+  --border-main: #e2e8f0;
+  --text-normal: #0f172a;
+
   --sb-w: 6px;
   --sb-track: #f1f5f9;
   --sb-thumb: #cbd5e1;
@@ -161,6 +167,12 @@
   --font-sans: 'Pretendard', 'Gulim', 'Dotum', -apple-system, sans-serif;
   --font-mono: 'D2Coding', 'Fixedsys', Consolas, monospace;
   
+  --bg-panel: #c0c0c0;
+  --bg-surface: #c0c0c0;
+  --bg-hover: #000080;
+  --border-main: #808080;
+  --text-normal: #000000;
+
   /* Win98 전용 레트로 스크롤바 오버라이딩 */
   --sb-w: 16px;
   --sb-track: #dfdfdf;

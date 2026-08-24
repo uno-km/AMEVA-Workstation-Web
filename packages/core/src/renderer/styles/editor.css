@@ -606,38 +606,53 @@
 
 
 /* ── 테마별 에디터 텍스트 색상 및 배경 오버라이드 ── */
+[data-theme='white'] .editor-zoom-wrapper,
+[data-theme='light'] .editor-zoom-wrapper {
+  background-color: #f8fafc !important;
+}
+
+[data-theme='white'] .bn-container,
 [data-theme='white'] .bn-editor,
+[data-theme='white'] .welcome-guide-preview,
+[data-theme='light'] .bn-container,
+[data-theme='light'] .bn-editor,
+[data-theme='light'] .welcome-guide-preview {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+}
+
 [data-theme='white'] .bn-block-content,
 [data-theme='white'] .bn-inline-content,
 [data-theme='white'] .ProseMirror,
-[data-theme='light'] .bn-editor,
+[data-theme='white'] p,
+[data-theme='white'] h1,
+[data-theme='white'] h2,
+[data-theme='white'] h3,
+[data-theme='white'] h4,
+[data-theme='white'] h5,
+[data-theme='white'] h6,
+[data-theme='white'] li,
+[data-theme='white'] span,
 [data-theme='light'] .bn-block-content,
 [data-theme='light'] .bn-inline-content,
-[data-theme='light'] .ProseMirror {
+[data-theme='light'] .ProseMirror,
+[data-theme='light'] p,
+[data-theme='light'] h1,
+[data-theme='light'] h2,
+[data-theme='light'] h3,
+[data-theme='light'] h4,
+[data-theme='light'] h5,
+[data-theme='light'] h6,
+[data-theme='light'] li,
+[data-theme='light'] span {
   color: #0f172a !important;
 }
 
 [data-theme='white'] .markdown-preview-body,
 [data-theme='light'] .markdown-preview-body {
   color: #0f172a !important;
-}
-
-[data-theme='win98'] .bn-editor,
-[data-theme='win98'] .bn-block-content,
-[data-theme='win98'] .bn-inline-content,
-[data-theme='win98'] .ProseMirror,
-[data-theme='retro'] .bn-editor,
-[data-theme='retro'] .bn-block-content,
-[data-theme='retro'] .bn-inline-content,
-[data-theme='retro'] .ProseMirror {
-  color: #000000 !important;
-  font-family: 'Pretendard', 'Gulim', 'Dotum', sans-serif !important;
-}
-
-[data-theme='win98'] .markdown-preview-body,
-[data-theme='retro'] .markdown-preview-body {
-  color: #000000 !important;
-  font-family: 'Pretendard', 'Gulim', 'Dotum', sans-serif !important;
+  background-color: transparent !important;
 }
 
 /* 레트로 모드 에디터 용지 윈도우 스타일 (순백색 종이 + 음각 3D 테두리) */
@@ -648,11 +663,51 @@
 }
 
 [data-theme='win98'] .bn-container,
-[data-theme='retro'] .bn-container {
+[data-theme='win98'] .bn-editor,
+[data-theme='win98'] .welcome-guide-preview,
+[data-theme='retro'] .bn-container,
+[data-theme='retro'] .bn-editor,
+[data-theme='retro'] .welcome-guide-preview {
   background-color: #ffffff !important;
+  color: #000000 !important;
   border: 2px solid !important;
   border-color: #808080 #ffffff #ffffff #808080 !important;
   box-shadow: none !important;
+}
+
+[data-theme='win98'] .bn-block-content,
+[data-theme='win98'] .bn-inline-content,
+[data-theme='win98'] .ProseMirror,
+[data-theme='win98'] p,
+[data-theme='win98'] h1,
+[data-theme='win98'] h2,
+[data-theme='win98'] h3,
+[data-theme='win98'] h4,
+[data-theme='win98'] h5,
+[data-theme='win98'] h6,
+[data-theme='win98'] li,
+[data-theme='win98'] span,
+[data-theme='retro'] .bn-block-content,
+[data-theme='retro'] .bn-inline-content,
+[data-theme='retro'] .ProseMirror,
+[data-theme='retro'] p,
+[data-theme='retro'] h1,
+[data-theme='retro'] h2,
+[data-theme='retro'] h3,
+[data-theme='retro'] h4,
+[data-theme='retro'] h5,
+[data-theme='retro'] h6,
+[data-theme='retro'] li,
+[data-theme='retro'] span {
+  color: #000000 !important;
+  font-family: 'Pretendard', 'Gulim', 'Dotum', sans-serif !important;
+}
+
+[data-theme='win98'] .markdown-preview-body,
+[data-theme='retro'] .markdown-preview-body {
+  color: #000000 !important;
+  background-color: transparent !important;
+  font-family: 'Pretendard', 'Gulim', 'Dotum', sans-serif !important;
 }
 
 /* [CSS SELECTOR RULE] - 렌더러 DOM 매핑 레이아웃 스타일 룰 정의 */
