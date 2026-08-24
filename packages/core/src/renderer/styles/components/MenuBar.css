@@ -12,12 +12,29 @@
   min-height: 38px;
   padding: 0 12px;
   background-color: var(--bg-deep);
+  color: var(--text-main);
   border-bottom: 1px solid var(--border-muted);
   user-select: none;
   /* 윈도우 창 전체 드래그 허용 */
   -webkit-app-region: drag;
   z-index: 999;
   position: relative;
+}
+
+/* White Theme MenuBar */
+[data-theme='white'] .menu-bar-container,
+[data-theme='light'] .menu-bar-container {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+/* Retro (Win98) Theme MenuBar */
+[data-theme='win98'] .menu-bar-container,
+[data-theme='retro'] .menu-bar-container {
+  background-color: #c0c0c0 !important;
+  color: #000000 !important;
+  border-bottom: 2px solid #808080 !important;
 }
 
 /* 좌측 로고 및 풀다운 메뉴 영역 */

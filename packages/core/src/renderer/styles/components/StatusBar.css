@@ -17,5 +17,22 @@
   user-select: none;
 }
 
-/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */
-/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */
+/* White Theme StatusBar */
+[data-theme='white'] .status-bar-container,
+[data-theme='white'] footer.glass-panel,
+[data-theme='light'] .status-bar-container,
+[data-theme='light'] footer.glass-panel {
+  background-color: #f8fafc !important;
+  color: #475569 !important;
+  border-top: 1px solid #e2e8f0 !important;
+}
+
+/* Retro Theme StatusBar */
+[data-theme='win98'] .status-bar-container,
+[data-theme='win98'] footer.glass-panel,
+[data-theme='retro'] .status-bar-container,
+[data-theme='retro'] footer.glass-panel {
+  background-color: #c0c0c0 !important;
+  color: #000000 !important;
+  border-top: 2px solid #ffffff !important;
+}

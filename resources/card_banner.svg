@@ -1,0 +1,83 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 560" width="880" height="560">
+  <defs>
+    <!-- Dark Cosmic Cyber Gradient Background -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#040814" />
+      <stop offset="50%" stop-color="#0B132B" />
+      <stop offset="100%" stop-color="#070C1E" />
+    </linearGradient>
+
+    <!-- Vibrant Cyan-to-Sky Blue Gradient -->
+    <linearGradient id="cyan-blue-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00F5D4" />
+      <stop offset="40%" stop-color="#00E5FF" />
+      <stop offset="70%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#3A86FF" />
+    </linearGradient>
+
+    <!-- Ambient Glow Gradient -->
+    <radialGradient id="glow-ambient" cx="28%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#00F5D4" stop-opacity="0.25" />
+      <stop offset="50%" stop-color="#3A86FF" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#0B132B" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Emblem Inner Fill -->
+    <radialGradient id="emblem-fill" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#162244" />
+      <stop offset="70%" stop-color="#0B132B" />
+      <stop offset="100%" stop-color="#060A17" />
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="880" height="560" fill="url(#bg-grad)" />
+
+  <!-- Ambient Light Sphere behind Emblem -->
+  <circle cx="250" cy="280" r="280" fill="url(#glow-ambient)" />
+
+  <!-- Subtle Cyber Tech Grid lines -->
+  <g opacity="0.07" stroke="#00E5FF" stroke-width="1.5">
+    <line x1="0" y1="140" x2="880" y2="140" />
+    <line x1="0" y1="280" x2="880" y2="280" />
+    <line x1="0" y1="420" x2="880" y2="420" />
+    <line x1="220" y1="0" x2="220" y2="560" />
+    <line x1="440" y1="0" x2="440" y2="560" />
+    <line x1="660" y1="0" x2="660" y2="560" />
+  </g>
+
+  <!-- Left: AMEVA Simple Emblem (Centered at X=240, Y=280, Scale 0.72) -->
+  <g transform="translate(70, 96) scale(0.72)">
+    <!-- Inner Space Body -->
+    <path d="M 256 36 C 395 36, 470 112, 465 240 C 460 368, 385 448, 256 442 C 127 436, 47 355, 52 235 C 57 115, 117 36, 256 36 Z" fill="url(#emblem-fill)" />
+    <!-- Outer Cyan Ring Sweep -->
+    <path d="M 256 36 C 395 36, 470 112, 465 240 C 460 368, 385 448, 256 442 C 175 436, 105 395, 72 335" fill="none" stroke="url(#cyan-blue-grad)" stroke-width="36" stroke-linecap="round" />
+    <!-- Bold 'A' Framework -->
+    <line x1="256" y1="92" x2="160" y2="350" stroke="url(#cyan-blue-grad)" stroke-width="34" stroke-linecap="round" />
+    <line x1="256" y1="92" x2="352" y2="350" stroke="url(#cyan-blue-grad)" stroke-width="34" stroke-linecap="round" />
+    <line x1="192" y1="245" x2="320" y2="245" stroke="url(#cyan-blue-grad)" stroke-width="28" stroke-linecap="round" />
+    <!-- Pseudopod Stem -->
+    <line x1="192" y1="245" x2="260" y2="340" stroke="#00F5D4" stroke-width="22" stroke-linecap="round" />
+  </g>
+
+  <!-- Right: Premium High-Tech Branding Typography -->
+  <g transform="translate(460, 200)">
+    <!-- Brand Title -->
+    <text x="0" y="55" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Montserrat', Roboto, sans-serif" font-size="82" font-weight="900" letter-spacing="4" fill="#FFFFFF">
+      AMEVA
+    </text>
+    
+    <!-- Subtitle with Glowing Gradient Accent -->
+    <text x="4" y="115" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Montserrat', Roboto, sans-serif" font-size="34" font-weight="800" letter-spacing="8" fill="#00F5D4">
+      WORKSTATION
+    </text>
+
+    <!-- Tagline Capsule Pill -->
+    <g transform="translate(2, 145)">
+      <rect width="360" height="42" rx="21" fill="#111B33" stroke="#00E5FF" stroke-width="1.5" stroke-opacity="0.6" />
+      <text x="180" y="27" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="700" letter-spacing="2" fill="#94A3B8" text-anchor="middle">
+        AI MEDIA &amp; CLOUD DRIVE
+      </text>
+    </g>
+  </g>
+</svg>

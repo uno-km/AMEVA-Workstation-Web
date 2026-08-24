@@ -36,7 +36,7 @@
 // [외부 패키지 및 라이브러리 임포트: react]
 import React, { useState, useEffect, useRef } from 'react'
 // [외부 패키지 및 라이브러리 임포트: lucide-react]
-import { Check, LayoutGrid, PanelLeft, PanelBottom, PanelRight, Search, Settings, ChevronDown, RefreshCw, LogOut, Languages } from 'lucide-react'
+import { Check, LayoutGrid, PanelLeft, PanelBottom, PanelRight, Search, Settings, ChevronDown, RefreshCw, LogOut, Languages, Sun, Moon, Monitor } from 'lucide-react'
 import { useTranslation } from '../i18n/useTranslation'
 
 // [내부 프로젝트 의존성 모듈 임포트: ../hooks/app/useMenuBarShortcuts]
@@ -780,6 +780,46 @@ export function MenuBar({}: MenuBarProps = {}) {
         >
           <Languages size={12} />
           <span>{t.toolbar.switchLang}</span>
+        </button>
+
+        {/* (3.5) 테마 빠른 전환 버튼 (Dark / White / Retro) */}
+        <button
+          className="layout-btn"
+          onClick={() => {
+            const currentTheme = settings?.theme || 'dark'
+            const themeCycle: ('dark' | 'white' | 'win98')[] = ['dark', 'white', 'win98']
+            const currentIndex = themeCycle.indexOf(currentTheme as any)
+            const nextTheme = themeCycle[(currentIndex + 1) % themeCycle.length]
+            handleUpdateSettings({ theme: nextTheme })
+            document.documentElement.setAttribute('data-theme', nextTheme)
+            document.body.setAttribute('data-theme', nextTheme)
+            try {
+              localStorage.setItem('theme', nextTheme)
+            } catch {}
+          }}
+          title="테마 전환 (Dark / White / Retro)"
+          style={{
+            fontSize: '10.5px',
+            fontWeight: 700,
+            padding: '2px 6px',
+            gap: '4px',
+            color: 'var(--text-main)',
+            border: '1px solid var(--border-muted)',
+            borderRadius: '4px',
+            width: 'auto',
+            height: '24px',
+          }}
+        >
+          {(settings?.theme === 'white') ? (
+            <Sun size={12} style={{ color: '#f59e0b' }} />
+          ) : (settings?.theme === 'win98') ? (
+            <Monitor size={12} style={{ color: '#10b981' }} />
+          ) : (
+            <Moon size={12} style={{ color: '#60a5fa' }} />
+          )}
+          <span>
+            {settings?.theme === 'white' ? 'White' : settings?.theme === 'win98' ? 'Retro' : 'Dark'}
+          </span>
         </button>
 
         {/* 유틸리티 액션 그룹 (크롬 브라우저, 설정, 구글 계정 아바타) */}

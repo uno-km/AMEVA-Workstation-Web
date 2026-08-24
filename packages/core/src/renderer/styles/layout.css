@@ -168,5 +168,39 @@ body.is-resizing webview {
 }
 */
 
-/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */
-/* [VERIFICATION-TOKEN] AMEVA-OS-283-STYLE-VERIFIED-2026 */
+/* ── 테마별 레이아웃 배경 및 텍스트 오버라이드 ── */
+[data-theme='white'] .main-layout-row,
+[data-theme='light'] .main-layout-row {
+  background-color: #ffffff !important;
+}
+
+[data-theme='white'] aside.glass-panel,
+[data-theme='light'] aside.glass-panel {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+  border-right: 1px solid #e2e8f0 !important;
+}
+
+[data-theme='white'] .glass-panel,
+[data-theme='light'] .glass-panel {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+[data-theme='win98'] .main-layout-row,
+[data-theme='retro'] .main-layout-row {
+  background-color: #008080 !important;
+}
+
+[data-theme='win98'] aside.glass-panel,
+[data-theme='retro'] aside.glass-panel {
+  background-color: #c0c0c0 !important;
+  color: #000000 !important;
+  border-right: 2px solid #808080 !important;
+}
+
+[data-theme='win98'] .glass-panel,
+[data-theme='retro'] .glass-panel {
+  background-color: #c0c0c0 !important;
+  color: #000000 !important;
+}

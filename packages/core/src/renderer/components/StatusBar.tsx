@@ -215,17 +215,15 @@ export function StatusBar({}: StatusBarProps = {}) {
 
   return (
     <div
-      className="glass-panel"
+      className="status-bar-container glass-panel"
       style={{
         height: '24px',
         width: '100%',
-        borderTop: '1px solid var(--border-muted)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 12px', fontSize: '11px',
-        backgroundColor: 'var(--bg-main)',
-        color: 'var(--text-main)',
+        padding: '0 12px',
+        fontSize: '11px',
         zIndex: 101,
         userSelect: 'none',
       }}
