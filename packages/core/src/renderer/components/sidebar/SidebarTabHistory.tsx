@@ -42,6 +42,7 @@ import type { DocumentSnapshot } from '../../../shared/types'
 
 // [내부 프로젝트 의존성 모듈 임포트: ../../contexts/AppContext]
 import { useAppContext } from '../../contexts/AppContext'
+import { useTranslation } from '../../i18n/useTranslation'
 
 /**
  * SidebarTabHistoryProps 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
@@ -51,41 +52,15 @@ export interface SidebarTabHistoryProps {
   sectionLabel: (text: string) => React.ReactNode
 }
 
-  /*
-   * [FUNCTION CONTRACT]
-   * - 함수 명: `SidebarTabHistory`
-   * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
-   * - 예시: `SidebarTabHistory(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
-   */
 /**
  * SidebarTabHistory 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
  * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
 export function SidebarTabHistory({ sectionLabel }: SidebarTabHistoryProps) {
+  const { t, language } = useTranslation()
   const { snapshots, createSnapshot, deleteSnapshot, handleSelectSnapshotForDiff } = useAppContext()
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `onCreateSnapshot`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const onCreateSnapshot = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const onCreateSnapshot = createSnapshot
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `onDeleteSnapshot`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const onDeleteSnapshot = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const onDeleteSnapshot = deleteSnapshot
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `onSelectSnapshotForDiff`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const onSelectSnapshotForDiff = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const onSelectSnapshotForDiff = handleSelectSnapshotForDiff
   const [snapTitle, setSnapTitle] = useState('')
 
@@ -94,21 +69,14 @@ export function SidebarTabHistory({ sectionLabel }: SidebarTabHistoryProps) {
       data-focus-region="sidebar-history"
       style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, position: 'relative' }}
     >
-      {sectionLabel('스냅샷 저장')}
+      {sectionLabel(t.sidebar.saveSnapshot)}
       <div style={{ display: 'flex', gap: '6px' }}>
         <input
           type="text"
-          placeholder="버전 제목 입력..."
+          placeholder={t.sidebar.snapPlaceholder}
           value={snapTitle}
           onChange={e => setSnapTitle(e.target.value)}
           onKeyDown={e => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `e.key === 'Enter' && snapTitle.trim()`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (e.key === 'Enter' && snapTitle.trim())` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
             if (e.key === 'Enter' && snapTitle.trim()) {
               onCreateSnapshot(snapTitle)
               setSnapTitle('')
@@ -124,13 +92,6 @@ export function SidebarTabHistory({ sectionLabel }: SidebarTabHistoryProps) {
           className="btn btn-glass"
           style={{ padding: '6px 10px', flexShrink: 0 }}
           onClick={() => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `snapTitle.trim()`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (snapTitle.trim())` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
             if (snapTitle.trim()) {
               onCreateSnapshot(snapTitle)
               setSnapTitle('')
@@ -141,12 +102,12 @@ export function SidebarTabHistory({ sectionLabel }: SidebarTabHistoryProps) {
         </button>
       </div>
 
-      {sectionLabel(`타임라인 (${snapshots.length}개)`)}
+      {sectionLabel(`${t.sidebar.timeline} (${snapshots.length})`)}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {snapshots.length === 0 ? (
           <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'center', padding: '20px 0', opacity: 0.6 }}>
-            저장된 스냅샷이 없습니다.<br />
-            <span style={{ fontSize: '10px' }}>3분마다 자동 저장됩니다.</span>
+            {t.sidebar.noSnapshots}<br />
+            <span style={{ fontSize: '10px' }}>{t.sidebar.autoSaveNotice}</span>
           </div>
         ) : (
           snapshots.map((snap) => (
@@ -166,21 +127,21 @@ export function SidebarTabHistory({ sectionLabel }: SidebarTabHistoryProps) {
                   <button
                     onClick={() => onSelectSnapshotForDiff(snap)}
                     style={{ background: 'transparent', border: 'none', color: 'var(--secondary)', cursor: 'pointer', padding: '2px' }}
-                    title="비교 및 롤백"
+                    title={t.sidebar.compareRollback}
                   >
                     <RefreshCw size={11} />
                   </button>
                   <button
                     onClick={() => onDeleteSnapshot(snap.id)}
                     style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: '2px' }}
-                    title="삭제"
+                    title={t.sidebar.delete}
                   >
                     <Trash2 size={11} />
                   </button>
                 </div>
               </div>
               <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
-                {new Date(snap.timestamp).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                {new Date(snap.timestamp).toLocaleString(language === 'en' ? 'en-US' : 'ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
               </span>
             </div>
           ))

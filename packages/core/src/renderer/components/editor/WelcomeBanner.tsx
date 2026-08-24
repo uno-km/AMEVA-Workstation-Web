@@ -14,6 +14,7 @@ import React from 'react'
 import { Code2 } from 'lucide-react'
 import { MarkdownPreview } from '../MarkdownPreview'
 import { type AmevaEditor } from '../../editor/amevaBlockSchema'
+import { useTranslation } from '../../i18n/useTranslation'
 
 export interface WelcomeBannerProps {
   onStartWelcomeEdit?: () => void
@@ -33,6 +34,8 @@ export function WelcomeBanner({
   currentContent,
   editor,
 }: WelcomeBannerProps) {
+  const { t } = useTranslation()
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       {/* 눈부신 웰컴 오로라 그래디언트 배너 */}
@@ -50,10 +53,10 @@ export function WelcomeBanner({
       }}>
         <div style={{ zIndex: 2 }}>
           <h1 style={{ fontSize: '20px', fontWeight: 800, margin: '0 0 6px 0', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <img src={`${import.meta.env.BASE_URL}favicon.png`} alt="AMEVA Logo" style={{ width: '24px', height: '24px', objectFit: 'contain' }} /> AMEVA Workstation Guide Book
+            <img src={`${import.meta.env.BASE_URL}favicon.png`} alt="AMEVA Logo" style={{ width: '24px', height: '24px', objectFit: 'contain' }} /> {t.editor.welcome.title}
           </h1>
           <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0, lineHeight: 1.6 }}>
-            처음이라면 가이드 문서로 시작해 보세요. 실제 예제를 클릭하며 주요 기능을 3분 안에 빠르게 익힐 수 있습니다!
+            {t.editor.welcome.desc}
           </p>
         </div>
 
@@ -79,7 +82,7 @@ export function WelcomeBanner({
             }}
             onClick={onStartWelcomeEdit}
           >
-            🚀 기능 체험 시작하기
+            {t.editor.welcome.startExperience}
           </button>
           
           <button
@@ -100,7 +103,7 @@ export function WelcomeBanner({
             }}
             onClick={onStartNewDocument}
           >
-            ➕ 새 문서 작성하기
+            {t.editor.welcome.startNew}
           </button>
 
           <button
@@ -121,7 +124,7 @@ export function WelcomeBanner({
             }}
             onClick={onOpenFile}
           >
-            📁 기존 파일 열기 (PDF, MD, Word, Excel, PPT 등)
+            {t.editor.welcome.openDoc}
           </button>
         </div>
       </div>

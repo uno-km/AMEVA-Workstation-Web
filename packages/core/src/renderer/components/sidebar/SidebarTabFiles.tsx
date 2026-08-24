@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ============================================================================
  * @file SidebarTabFiles.tsx
  * @description SidebarTabFiles.tsx 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
@@ -62,6 +62,7 @@ const EXPORT_FORMATS: { format: ExportFormat; label: string; color?: string }[] 
 import { useAppContext } from '../../contexts/AppContext'
 // [내부 프로젝트 의존성 모듈 임포트: ../../stores/useWorkspaceStore]
 import { useWorkspaceStore } from '../../stores/useWorkspaceStore'
+import { useTranslation } from '../../i18n/useTranslation'
 
 /**
  * SidebarTabFilesProps 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
@@ -71,17 +72,12 @@ export interface SidebarTabFilesProps {
   sectionLabel: (text: string) => React.ReactNode
 }
 
-  /*
-   * [FUNCTION CONTRACT]
-   * - 함수 명: `SidebarTabFiles`
-   * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
-   * - 예시: `SidebarTabFiles(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
-   */
 /**
  * SidebarTabFiles 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
  * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
 export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
+  const { t } = useTranslation()
   const { 
     handleOpenFile, handleSaveFile, handleExport,
     editorMode, handleSwitchMode, settings
@@ -224,38 +220,38 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
     >
       {/* 편집/뷰어 모드 */}
       <div>
-        {sectionLabel('에디터 모드')}
+        {sectionLabel(t.sidebar.editorMode)}
         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
           <button
             className={`btn btn-glass ${editorMode === 'edit' ? 'active' : ''}`}
             style={{ flex: '1 1 0', fontSize: '11px', padding: '7px 6px', minWidth: '70px', justifyContent: 'center', whiteSpace: 'nowrap' }}
             onClick={() => handleSwitchMode('edit')}
-            title={`에디터 모드 전환 (${formatHotkey(hkeys.toggleMode)})`}
+            title={`${t.sidebar.editorMode} (${formatHotkey(hkeys.toggleMode)})`}
           >
-            <Terminal size={12} /> 편집
+            <Terminal size={12} /> {t.sidebar.modeEdit}
           </button>
           <button
             className={`btn btn-glass ${editorMode === 'preview' ? 'active' : ''}`}
             style={{ flex: '1 1 0', fontSize: '11px', padding: '7px 6px', minWidth: '70px', justifyContent: 'center', whiteSpace: 'nowrap' }}
             onClick={() => handleSwitchMode('preview')}
-            title={`미리보기 모드 전환 (${formatHotkey(hkeys.toggleMode)})`}
+            title={`${t.sidebar.modePreview} (${formatHotkey(hkeys.toggleMode)})`}
           >
-            <Eye size={12} /> 미리보기
+            <Eye size={12} /> {t.sidebar.modePreview}
           </button>
           <button
             className={`btn btn-glass ${editorMode === 'raw' ? 'active' : ''}`}
             style={{ flex: '1 1 0', fontSize: '11px', padding: '7px 6px', minWidth: '70px', justifyContent: 'center', whiteSpace: 'nowrap' }}
             onClick={() => handleSwitchMode('raw')}
-            title={`원문(Markdown) 보기`}
+            title={t.sidebar.modeRaw}
           >
-            <FileText size={12} /> 원문보기
+            <FileText size={12} /> {t.sidebar.modeRaw}
           </button>
         </div>
         {FEATURE_FLAGS.ENABLE_SMARTDOCS && (
           <div style={{ marginTop: '12px', padding: '8px 12px', background: 'var(--bg-card)', borderRadius: '6px', border: '1px solid var(--border-muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '12px', fontWeight: 'bold' }}>SmartDocs (공문서) 폼</span>
-              <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>자동 레이아웃 및 여백 적용</span>
+              <span style={{ fontSize: '12px', fontWeight: 'bold' }}>{t.sidebar.smartDocsTitle}</span>
+              <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{t.sidebar.smartDocsDesc}</span>
             </div>
             <label 
               style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}
@@ -286,15 +282,15 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
 
       {/* 파일 관리 */}
       <div>
-        {sectionLabel('파일 관리')}
+        {sectionLabel(t.sidebar.fileManagement)}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <button
             className="btn btn-glass"
             style={{ justifyContent: 'flex-start', fontSize: '13px' }}
             onClick={onOpenFile}
-            title={`문서 파일 열기 (${formatHotkey(hkeys.open)})`}
+            title={`${t.sidebar.openFile} (${formatHotkey(hkeys.open)})`}
           >
-            <FileText size={14} /> 파일 열기...
+            <FileText size={14} /> {t.sidebar.openFile}
           </button>
           <button
             className="btn btn-primary"
@@ -317,16 +313,16 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
               e.currentTarget.style.boxShadow = '0 2px 10px rgba(59, 130, 246, 0.3)'
             }}
             onClick={onSaveFile}
-            title={`문서 파일 저장 (${formatHotkey(hkeys.save)})`}
+            title={`${t.sidebar.saveFile} (${formatHotkey(hkeys.save)})`}
           >
-            <Save size={14} /> 저장 ({formatHotkey(hkeys.save)})
+            <Save size={14} /> {t.sidebar.saveFile} ({formatHotkey(hkeys.save)})
           </button>
         </div>
       </div>
 
       {/* 파일 열기 모드 */}
       <div>
-        {sectionLabel('파일 열기 모드')}
+        {sectionLabel(t.sidebar.fileOpenMode)}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px' }}>
             <input
@@ -336,7 +332,7 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
               onChange={() => setFileOpenMode('replace')}
               style={{ cursor: 'pointer', accentColor: 'var(--primary)' }}
             />
-            <span style={{ color: fileOpenMode === 'replace' ? 'var(--text-main)' : 'var(--text-muted)' }}>덮어쓰기 (기본)</span>
+            <span style={{ color: fileOpenMode === 'replace' ? 'var(--text-main)' : 'var(--text-muted)' }}>{t.sidebar.modeReplace}</span>
           </label>
           <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px' }}>
             <input
@@ -346,7 +342,7 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
               onChange={() => setFileOpenMode('append')}
               style={{ cursor: 'pointer', accentColor: 'var(--primary)' }}
             />
-            <span style={{ color: fileOpenMode === 'append' ? 'var(--text-main)' : 'var(--text-muted)' }}>이어서 열기 (본문 추가)</span>
+            <span style={{ color: fileOpenMode === 'append' ? 'var(--text-main)' : 'var(--text-muted)' }}>{t.sidebar.modeAppend}</span>
           </label>
           <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '12px' }}>
             <input
@@ -356,14 +352,14 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
               onChange={() => setFileOpenMode('tab')}
               style={{ cursor: 'pointer', accentColor: 'var(--primary)' }}
             />
-            <span style={{ color: fileOpenMode === 'tab' ? 'var(--text-main)' : 'var(--text-muted)' }}>탭별 열기 (다중 탭)</span>
+            <span style={{ color: fileOpenMode === 'tab' ? 'var(--text-main)' : 'var(--text-muted)' }}>{t.sidebar.modeTab}</span>
           </label>
         </div>
       </div>
 
       {/* 열린 파일 목록 */}
       <div>
-        {sectionLabel('열린 파일 목록')}
+        {sectionLabel(t.sidebar.openedFiles)}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '180px', overflowY: 'auto', paddingRight: '4px' }}>
           {fileOpenMode === 'replace' && (
             <div
@@ -376,7 +372,7 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
               }}
             >
               <FileText size={12} style={{ color: 'var(--primary)' }} />
-              <span>{filePath ? filePath.split(/[\\/]/).pop() : '무제 문서.md'}</span>
+              <span>{filePath ? filePath.split(/[\\/]/).pop() : t.sidebar.untitledDoc}</span>
             </div>
           )}
 
@@ -418,19 +414,12 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
                 }}
               >
                 <FileText size={12} style={{ color: 'var(--primary)' }} />
-                <span>{filePath ? filePath.split(/[\\/]/).pop() : '무제 문서.md'}</span>
+                <span>{filePath ? filePath.split(/[\\/]/).pop() : t.sidebar.untitledDoc}</span>
               </div>
             )
           )}
 
           {fileOpenMode === 'tab' && tabs.map((tab, idx) => {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `isActive`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const isActive = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
             const isActive = activeTabId === tab.id
             return (
               <div
@@ -454,7 +443,7 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
                   }}
                 >
                   <span style={{ fontWeight: 'bold' }}>T{idx + 1}</span>
-                  <span>{tab.filePath ? tab.filePath.split(/[\\/]/).pop() : '무제 문서'}</span>
+                  <span>{tab.filePath ? tab.filePath.split(/[\\/]/).pop() : t.sidebar.untitledDoc}</span>
                 </button>
                 <button
                   onClick={() => onCloseTab(tab.id)}
@@ -483,7 +472,7 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
 
       {/* 내보내기 */}
       <div>
-        {sectionLabel('내보내기')}
+        {sectionLabel(t.sidebar.export)}
         <button
           onClick={() => setExportOpen(!exportOpen)}
           style={{
@@ -497,7 +486,7 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
           }}
         >
           <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Download size={13} /> 포맷 변환...
+            <Download size={13} /> {t.sidebar.formatConvert}
           </span>
           {exportOpen ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
         </button>
@@ -518,7 +507,7 @@ export function SidebarTabFiles({ sectionLabel }: SidebarTabFilesProps) {
                 {label}
                 {format === 'adc' && (
                   <div style={{ marginTop: '4px', fontSize: '11px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
-                    이 파일로 저장하면 깨짐없이 모두 저장가능하고 언제든 다시 완벽하게 열기가능합니다.
+                    {t.sidebar.adcNotice}
                   </div>
                 )}
               </button>
