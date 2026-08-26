@@ -6,7 +6,9 @@
   ],
   "scripts": {
     "dev": "npm run dev -w @ameva/core",
-    "build": "npm run build -w @ameva/core"
+    "dev:server": "npm run dev -w @ameva/server",
+    "build": "npm run build -w @ameva/core",
+    "build:server": "npm run build -w @ameva/server"
   },
   "dependencies": {
     "pptx-preview": "^1.0.7",
