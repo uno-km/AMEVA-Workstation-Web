@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "pptx-preview": "^1.0.7",
-    "react-is": "^19.2.8"
+    "react-is": "^19.2.8",
+    "cminhouse-api-gateway-nodejs": "^999.0.0"
   }
 }
