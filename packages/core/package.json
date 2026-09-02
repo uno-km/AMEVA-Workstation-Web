@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite --port 8888",
     "build": "tsc && vite build",
-    "test": "npx tsx test/runAllTests.ts && npx tsx test/e2e/deterministic-ui.test.ts && npx tsx test/e2e/all-buttons-full-suite.test.ts",
-    "test:unit": "npx tsx test/runAllTests.ts",
+    "test": "npx tsx test/runAllTests.ts && npx tsx test/test_java_runtime.ts && npx tsx test/e2e/deterministic-ui.test.ts && npx tsx test/e2e/all-buttons-full-suite.test.ts",
+    "test:unit": "npx tsx test/runAllTests.ts && npx tsx test/test_java_runtime.ts",
+    "test:java": "npx tsx test/test_java_runtime.ts",
     "test:e2e": "npx tsx test/e2e/deterministic-ui.test.ts",
     "test:full": "npx tsx test/e2e/all-buttons-full-suite.test.ts"
   },

@@ -43,7 +43,7 @@ export function JupyterCodeEditorHeader({
   previewMode?: 'preview' | 'code' | 'split'
   onTogglePreviewMode?: (mode: 'preview' | 'code' | 'split') => void
 }) {
-  const { isRunning, runJSCode, runPythonCode, runSQLCode } = useCodeRuntime()
+  const { isRunning, runJSCode, runPythonCode, runSQLCode, runJavaCode } = useCodeRuntime()
   const meta = getLangMeta(language)
   const [copied, setCopied] = useState(false)
 
@@ -58,6 +58,8 @@ export function JupyterCodeEditorHeader({
         ? await runPythonCode(code)
         : (language === 'sql')
         ? await runSQLCode(code)
+        : (language === 'java')
+        ? await runJavaCode(code)
         : await runJSCode(code)
       onRunSuccess(result.success, (result.output || '').split('\n'), result.tableData)
     } catch (err: any) {

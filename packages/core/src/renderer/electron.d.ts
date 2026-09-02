@@ -53,6 +53,7 @@ export interface IElectronAPI {
   printToPDF: (htmlContent: string) => Promise<string | null>
   fetchUrlMetadata?: (url: string) => Promise<any>
   runPythonCode?: (code: string) => Promise<{ success: boolean; result?: string; error?: string }>
+  runJavaCode?: (code: string) => Promise<{ success: boolean; result?: string; output?: string; error?: string }>
   // [HIGH-001] showMessageBox Electron 네이티브 다이얼로그
   showMessageBox: (options: {
     type?: 'none' | 'info' | 'error' | 'question' | 'warning'

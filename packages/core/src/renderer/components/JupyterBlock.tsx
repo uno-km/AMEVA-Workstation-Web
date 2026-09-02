@@ -72,7 +72,7 @@ const JupyterBlockSpec = createReactBlockSpec(
         const rawHeight = block.props.height ? parseInt(block.props.height, 10) : 280
         const initialHeight = isNaN(rawHeight) || rawHeight < 120 ? 280 : rawHeight
 
-        const { runJSCode, runPythonCode, runSQLCode } = useCodeRuntime()
+        const { runJSCode, runPythonCode, runSQLCode, runJavaCode } = useCodeRuntime()
         const { generateCoderStream, isCoderReady, initCoderModel } = useWebLLM()
         const [isInputCollapsed, setIsInputCollapsed] = useState(false)
         const textareaRef = useRef<HTMLTextAreaElement | null>(null)
@@ -362,6 +362,8 @@ const JupyterBlockSpec = createReactBlockSpec(
               ? await runPythonCode(localCode)
               : (language === 'sql')
               ? await runSQLCode(localCode)
+              : (language === 'java')
+              ? await runJavaCode(localCode)
               : await runJSCode(localCode)
             updateRunState({
               hasRun: true,

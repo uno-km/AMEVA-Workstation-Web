@@ -41,6 +41,8 @@ import { useJSRuntime } from './code-runtime/useJSRuntime'
 import { usePythonRuntime } from './code-runtime/usePythonRuntime'
 // [내부 프로젝트 의존성 모듈 임포트: ./code-runtime/useSQLRuntime]
 import { useSQLRuntime } from './code-runtime/useSQLRuntime'
+// [내부 프로젝트 의존성 모듈 임포트: ./code-runtime/useJavaRuntime]
+import { useJavaRuntime } from './code-runtime/useJavaRuntime'
 
 export { cleanupCodeRuntime }
 
@@ -58,12 +60,14 @@ export function useCodeRuntime() {
   const { isJSRunning, runJSCode } = useJSRuntime()
   const { isPythonRunning, runPythonCode } = usePythonRuntime()
   const { isSQLRunning, runSQLCode } = useSQLRuntime()
+  const { isJavaRunning, runJavaCode } = useJavaRuntime()
 
   return {
-    isRunning: isJSRunning || isPythonRunning || isSQLRunning,
+    isRunning: isJSRunning || isPythonRunning || isSQLRunning || isJavaRunning,
     runJSCode,
     runPythonCode,
     runSQLCode,
+    runJavaCode,
   }
 }
 

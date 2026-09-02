@@ -137,3 +137,7 @@ tmp/
 temp/
 .cache/
 .turbo/
+
+state.json
+*.tmp
+

@@ -107,7 +107,7 @@ export function JupyterCodeViewer({
     resolvedCode = lines.slice(1).join('\n')
   }
 
-  const { isRunning, runJSCode, runPythonCode, runSQLCode } = useCodeRuntime()
+  const { isRunning, runJSCode, runPythonCode, runSQLCode, runJavaCode } = useCodeRuntime()
       /*
        * [RUN-TIME STATE / INVARIANT]
        * - 변수 명: `meta`
@@ -175,6 +175,8 @@ export function JupyterCodeViewer({
         ? await runPythonCode(resolvedCode)
         : (resolvedLanguage === 'sql')
         ? await runSQLCode(resolvedCode)
+        : (resolvedLanguage === 'java')
+        ? await runJavaCode(resolvedCode)
         : await runJSCode(resolvedCode)
       setSuccess(result.success)
       /*

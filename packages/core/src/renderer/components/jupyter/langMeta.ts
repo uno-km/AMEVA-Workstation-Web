@@ -70,7 +70,7 @@ export const LANG_META: Record<string, LangMeta> = {
   sh:         { color: '#94a3b8', label: 'Shell',      runnable: false, previewable: false, isHtml: false, isMermaid: false },
   c:          { color: '#10b981', label: 'C',          runnable: false, previewable: false, isHtml: false, isMermaid: false },
   cpp:        { color: '#10b981', label: 'C++',        runnable: false, previewable: false, isHtml: false, isMermaid: false },
-  java:       { color: '#f43f5e', label: 'Java',       runnable: false, previewable: false, isHtml: false, isMermaid: false },
+  java:       { color: '#f43f5e', label: 'Java',       runnable: true,  previewable: false, isHtml: false, isMermaid: false },
   text:       { color: '#6b7280', label: 'Text',       runnable: false, previewable: false, isHtml: false, isMermaid: false },
   plaintext:  { color: '#6b7280', label: 'Text',       runnable: false, previewable: false, isHtml: false, isMermaid: false },
 }
