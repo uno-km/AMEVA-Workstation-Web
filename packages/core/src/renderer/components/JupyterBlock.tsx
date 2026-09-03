@@ -59,7 +59,7 @@ const JupyterBlockSpec = createReactBlockSpec(
       language: { default: 'javascript' },
       code: { default: '' },
       runState: { default: '{"hasRun":false,"success":null,"outputLines":[]}' },
-      height: { default: '280' },
+      height: { default: '570' },
       width: { default: '100%' }
     },
     content: 'none'
@@ -69,18 +69,18 @@ const JupyterBlockSpec = createReactBlockSpec(
       try {
         const code = block.props.code || ''
         const language = block.props.language || 'javascript'
-        const rawHeight = block.props.height ? parseInt(block.props.height, 10) : 280
-        const initialHeight = isNaN(rawHeight) || rawHeight < 120 ? 280 : rawHeight
+        const rawHeight = block.props.height ? parseInt(block.props.height, 10) : 570
+        const initialHeight = isNaN(rawHeight) || rawHeight < 120 ? 570 : rawHeight
 
-        const { runJSCode, runPythonCode, runSQLCode, runJavaCode } = useCodeRuntime()
+        const { executeCode } = useCodeRuntime()
         const { generateCoderStream, isCoderReady, initCoderModel } = useWebLLM()
         const [isInputCollapsed, setIsInputCollapsed] = useState(false)
         const textareaRef = useRef<HTMLTextAreaElement | null>(null)
         const [cursorPos, setCursorPos] = useState(0)
         const mirrorRef = useRef<HTMLDivElement | null>(null)
 
-        // 로컬 입력 버퍼 캐시 (랙 방지)
-        const [localCode, setLocalCode] = useState(code)
+        // 로컬 입력 버퍼 캐시 (빈 코드인 경우 해당 언어의 대표 스타터 템플릿 자동 주입)
+        const [localCode, setLocalCode] = useState(code || '')
 
         // 인라인 AI 상태 관리 (SCRUM-172)
         const [isAIOpen, setIsAIOpen] = useState(false)
@@ -358,13 +358,7 @@ const JupyterBlockSpec = createReactBlockSpec(
               })
               return
             }
-            const result = (language === 'python' || language === 'py')
-              ? await runPythonCode(localCode)
-              : (language === 'sql')
-              ? await runSQLCode(localCode)
-              : (language === 'java')
-              ? await runJavaCode(localCode)
-              : await runJSCode(localCode)
+            const result = await executeCode(language, localCode)
             updateRunState({
               hasRun: true,
               success: result.success,
@@ -419,7 +413,7 @@ const JupyterBlockSpec = createReactBlockSpec(
               language: { default: 'javascript' },
               code: { default: '' },
               runState: { default: '{"hasRun":false,"success":null,"outputLines":[]}' },
-              height: { default: '280' },
+              height: { default: '570' },
               width: { default: '100%' }
             }}
           >
@@ -1163,7 +1157,7 @@ const JupyterBlockSpec = createReactBlockSpec(
         <pre 
           data-content-type="jupyter" 
           data-language={block.props.language} 
-          data-height={block.props.height || '280'}
+          data-height={block.props.height || '570'}
         >
           <code>{block.props.code}</code>
         </pre>

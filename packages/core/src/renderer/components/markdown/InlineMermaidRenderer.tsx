@@ -18,35 +18,112 @@ export function sanitizeMermaidCode(raw: string): string {
   // 1. ```mermaid 마크다운 펜스 제거
   text = text.replace(/^```(?:mermaid)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim()
 
-  // 2. 한국어/영문 end 키워드 줄바꿈 분리
-  text = text.replace(/^(\s*)end([가-힣a-zA-Z]+)/gm, '$1end\n$1$2')
+  // 2. 다이어그램 타입 검사 (Flowchart/Graph 외의 다이어그램은 콜론 문법을 고유하게 사용하므로 교정 제외)
+  const isNonFlowchart = /^\s*(sequenceDiagram|classDiagram|erDiagram|stateDiagram(?:-v2)?|journey|gantt|pie|gitGraph|mindmap|quadrantChart|requirementDiagram|c4(?:Context|Container|Component|Dynamic|Deployment)|zenuml|sankey-beta|timeline|packet-beta|kanban|block-beta)\b/im.test(text)
 
-  // 3. flowchart / graph에서 콜론(:) 문법 자동 교정
-  const isSequence = /^\s*sequenceDiagram/im.test(text)
-  if (!isSequence) {
-    // 3-1. 세미콜론 뒤 줄바꿈 누락 분리 (C[End];A --> B -> C[End];\nA --> B)
-    text = text.replace(/;([^\n\r\s])/g, ';\n$1')
-
-    // 3-2. A --> B: 라벨 -> A -->|라벨| B
-    text = text.replace(/([a-zA-Z0-9_\-\[\]\(\)\"\s]+?)\s*-->\s*([a-zA-Z0-9_\-\[\]\(\)\"\s]+?)\s*:\s*([^;\n]+)/g, (_match, from, to, label) => {
-      const cleanLabel = label.trim().replace(/^\/\/\s*/, '')
-      return `${from.trim()} -->|${cleanLabel}| ${to.trim()}`
-    })
-
-    // 3-3. A -> B: 라벨 -> A -->|라벨| B
-    text = text.replace(/([a-zA-Z0-9_\-\[\]\(\)\"\s]+?)\s*->\s*([a-zA-Z0-9_\-\[\]\(\)\"\s]+?)\s*:\s*([^;\n]+)/g, (_match, from, to, label) => {
-      const cleanLabel = label.trim().replace(/^\/\/\s*/, '')
-      return `${from.trim()} -->|${cleanLabel}| ${to.trim()}`
-    })
-
-    // 3-4. A -> B -> A --> B
-    text = text.replace(/([a-zA-Z0-9_\]\)\"]+)\s*->\s*([a-zA-Z0-9_\[\(\"]+)/g, '$1 --> $2')
-
-    // 3-5. 라인 끝에 남은 슬래시 주석(//)이나 찌꺼기 정돈
-    text = text.replace(/\/\/\s*$/gm, '')
+  if (isNonFlowchart) {
+    // 비-Flowchart 다이어그램: 마크다운 펜스 제거 및 기본 정돈만 수행
+    return text
   }
 
-  return text
+  // 3. 한국어/영문 end 키워드 줄바꿈 분리
+  text = text.replace(/^(\s*)end([가-힣a-zA-Z]+)/gm, '$1end\n$1$2')
+
+  // 4. Flowchart 라인별 정밀 스캐너 및 콜론(:) 라벨 안전 교정
+  const lines = text.split(/\r?\n/)
+  const processedLines = lines.map(line => {
+    const trimmed = line.trim()
+    if (!trimmed) return line
+
+    // 주석, 지시어, 서브그래프, 스타일/클래스 정의는 보존
+    if (
+      trimmed.startsWith('%%') ||
+      /^(subgraph|end|classDef|class|style|linkStyle|click|direction)\b/i.test(trimmed)
+    ) {
+      return line
+    }
+
+    // 최상위 레벨(따옴표 및 괄호 밖)의 토큰 분석
+    let inDoubleQuote = false
+    let inSingleQuote = false
+    let bracketDepth = 0 // [], (), {}
+    let topLevelColonIdx = -1
+
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i]
+      const prev = i > 0 ? line[i - 1] : ''
+
+      if (ch === '"' && prev !== '\\') {
+        if (!inSingleQuote) inDoubleQuote = !inDoubleQuote
+      } else if (ch === "'" && prev !== '\\') {
+        if (!inDoubleQuote) inSingleQuote = !inSingleQuote
+      } else if (!inDoubleQuote && !inSingleQuote) {
+        if (ch === '[' || ch === '(' || ch === '{') {
+          bracketDepth++
+        } else if (ch === ']' || ch === ')' || ch === '}') {
+          bracketDepth = Math.max(0, bracketDepth - 1)
+        } else if (ch === ':' && bracketDepth === 0) {
+          // 최상위 레벨 콜론 발견
+          if (topLevelColonIdx === -1) {
+            topLevelColonIdx = i
+          }
+        }
+      }
+    }
+
+    let targetLine = line
+    // 최상위 레벨 콜론이 있고, 그 콜론이 라벨 분리자인 경우
+    if (topLevelColonIdx !== -1) {
+      const beforeColon = line.substring(0, topLevelColonIdx)
+      const afterColon = line.substring(topLevelColonIdx + 1)
+
+      // beforeColon에 연결선이 있고, 이미 |라벨| 형식이 아닌 경우에만 교정
+      const arrowMatch = beforeColon.match(/(.*?)(\s*-->|\s*->|\s*==>|\s*-\.->)\s*([^\s].*)$/)
+      if (arrowMatch && !beforeColon.includes('|')) {
+        const [, fromPart, arrow, toPart] = arrowMatch
+        const label = afterColon.trim().replace(/^\/\/\s*/, '')
+        const normalizedArrow = arrow.trim() === '->' ? '-->' : arrow.trim()
+        targetLine = `${fromPart} ${normalizedArrow}|${label}| ${toPart}`
+      }
+    }
+
+    // 최상위 레벨 단독 -> 를 --> 로 표준화 (따옴표/괄호 밖)
+    let res = ''
+    inDoubleQuote = false
+    inSingleQuote = false
+    bracketDepth = 0
+    for (let i = 0; i < targetLine.length; i++) {
+      const ch = targetLine[i]
+      const prev = i > 0 ? targetLine[i - 1] : ''
+
+      if (ch === '"' && prev !== '\\') {
+        if (!inSingleQuote) inDoubleQuote = !inDoubleQuote
+        res += ch
+      } else if (ch === "'" && prev !== '\\') {
+        if (!inDoubleQuote) inSingleQuote = !inSingleQuote
+        res += ch
+      } else if (!inDoubleQuote && !inSingleQuote) {
+        if (ch === '[' || ch === '(' || ch === '{') {
+          bracketDepth++
+          res += ch
+        } else if (ch === ']' || ch === ')' || ch === '}') {
+          bracketDepth = Math.max(0, bracketDepth - 1)
+          res += ch
+        } else if (bracketDepth === 0 && targetLine.substring(i, i + 2) === '->' && targetLine[i - 1] !== '-' && targetLine[i + 2] !== '>') {
+          res += '-->'
+          i++ // skip '>'
+        } else {
+          res += ch
+        }
+      } else {
+        res += ch
+      }
+    }
+
+    return res
+  })
+
+  return processedLines.join('\n')
 }
 
 export function InlineMermaidRenderer({ code }: { code: string }) {
@@ -138,7 +215,7 @@ export function InlineMermaidRenderer({ code }: { code: string }) {
           <strong style={{ color: '#f87171', fontSize: '12.5px' }}>[Mermaid 문법 오류 감지]</strong>
         </div>
         <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: '#cbd5e1' }}>
-          Flowchart에서는 연결선에 콜론(<code>:</code>) 대신 <code>A --&gt;|라벨| B</code> 문법을 사용해야 합니다.
+          다이어그램 문법을 확인해 주세요. Flowchart 연결선 라벨은 <code>A --&gt;|라벨| B</code> 형식을 권장합니다.
         </p>
         <pre style={{ margin: '0', overflowX: 'auto', fontSize: '11px', opacity: 0.9, background: 'rgba(0,0,0,0.3)', padding: '6px', borderRadius: '4px' }}>{error}</pre>
       </div>

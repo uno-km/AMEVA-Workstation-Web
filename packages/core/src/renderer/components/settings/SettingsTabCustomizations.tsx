@@ -36,6 +36,7 @@
 
 // [내부 프로젝트 의존성 모듈 임포트: ../SettingsModal]
 import type { AppSettings } from '../SettingsModal'
+import { useTranslation } from '../../i18n/useTranslation'
 
 /**
  * SettingsTabCustomizationsProps 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
@@ -57,6 +58,7 @@ export interface SettingsTabCustomizationsProps {
  * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
 export function SettingsTabCustomizations({
+
   activeTab,
   settings,
 }: SettingsTabCustomizationsProps) {
@@ -67,6 +69,7 @@ export function SettingsTabCustomizations({
        * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
        * - 예시: `if (activeTab !== 'Customizations')` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
        */
+  const { isKorean } = useTranslation()
   if (activeTab !== 'Customizations') return null
 
   return (
@@ -74,13 +77,13 @@ export function SettingsTabCustomizations({
       <h3 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 6px' }}>Customizations & Extensions</h3>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <span style={{ fontSize: '10px', color: 'var(--text-muted)', lineHeight: 1.4 }}>
-          에디터의 런타임 기능 확장을 로드하거나 마켓플레이스에서 추가한 외부 플러그인을 온/오프 토글합니다.
+          {isKorean ? '에디터의 런타임 기능 확장을 로드하거나 마켓플레이스에서 추가한 외부 플러그인을 온/오프 토글합니다.' : 'Toggle editor runtime extensions and manage external plugins installed from the marketplace.'}
         </span>
         
         {[
-          { id: 'outline', name: 'Outline Document Navigator', desc: 'H1~H3 문맥 개요 네비게이션 활성화' },
-          { id: 'minimap', name: 'Minimap Visual Bar', desc: '에디터 우측 전체 문서 그래픽 미니맵 로딩' },
-          { id: 'canvas', name: 'Free Drawing Canvas', desc: '자유 드로잉 및 다이어그램 스케치 삽입 플러그인' }
+          { id: 'outline', name: 'Outline Document Navigator', desc: isKorean ? 'H1~H3 문맥 개요 네비게이션 활성화' : 'Activate H1~H3 contextual document outline navigation' },
+          { id: 'minimap', name: 'Minimap Visual Bar', desc: isKorean ? '에디터 우측 전체 문서 그래픽 미니맵 로딩' : 'Load full-document graphical visual minimap on editor right side' },
+          { id: 'canvas', name: 'Free Drawing Canvas', desc: isKorean ? '자유 드로잉 및 다이어그램 스케치 삽입 플러그인' : 'Freehand sketch and whiteboard diagram insertion plugin' }
         ].map(p => {
       /*
        * [RUN-TIME STATE / INVARIANT]

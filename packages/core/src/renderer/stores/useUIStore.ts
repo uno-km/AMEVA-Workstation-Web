@@ -109,6 +109,22 @@ export interface UIState {
   setShowPricingModal: (open: boolean) => void
   togglePricingModal: () => void
 
+  /*
+   * [LANGUAGE SELECT PALETTE & SUBMENU STATES]
+   * - isLanguageSelectOpen: 25대 프로그래밍 언어 선택 팔레트 모달 노출 여부.
+   * - languageSubmenuState: 슬래시 메뉴 옆에 뜨는 플라이아웃 서브메뉴 상태.
+   */
+  isLanguageSelectOpen: boolean
+  setIsLanguageSelectOpen: (val: boolean, onSelect?: (lang: string) => void) => void
+  languageSelectCallback: ((lang: string) => void) | null
+  languageSubmenuState: {
+    isOpen: boolean
+    anchorRect: { top: number; left: number; right: number; bottom: number } | null
+    onSelect: ((lang: string) => void) | null
+  }
+  setLanguageSubmenuState: (state: { isOpen: boolean; anchorRect?: { top: number; left: number; right: number; bottom: number } | null; onSelect?: ((lang: string) => void) | null }) => void
+  closeLanguageSubmenu: () => void
+
 
 
   isInstallPromptOpen: boolean
@@ -282,7 +298,29 @@ export const useUIStore = create<UIState>((set, get) => ({
   setShowPricingModal: (open) => set({ showPricingModal: open }),
   togglePricingModal: () => set((state) => ({ showPricingModal: !state.showPricingModal })),
 
-
+  isLanguageSelectOpen: false,
+  languageSelectCallback: null,
+  setIsLanguageSelectOpen: (val, onSelect) => set({
+    isLanguageSelectOpen: val,
+    languageSelectCallback: onSelect || null,
+  }),
+  languageSubmenuState: {
+    isOpen: false,
+    anchorRect: null,
+    onSelect: null,
+  },
+  setLanguageSubmenuState: (state) => set((prev) => ({
+    languageSubmenuState: {
+      ...prev.languageSubmenuState,
+      ...state,
+    }
+  })),
+  closeLanguageSubmenu: () => set((prev) => ({
+    languageSubmenuState: {
+      ...prev.languageSubmenuState,
+      isOpen: false,
+    }
+  })),
 
   isInstallPromptOpen: false,
   setIsInstallPromptOpen: (val) => set({ isInstallPromptOpen: val }),

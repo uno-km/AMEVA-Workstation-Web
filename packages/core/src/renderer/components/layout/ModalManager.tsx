@@ -48,6 +48,9 @@ import { MarkdownGuideModal } from '../MarkdownGuideModal'
 // [내부 프로젝트 의존성 모듈 임포트: ../MarketplaceModal]
 import { MarketplaceModal } from '../MarketplaceModal'
 
+// [내부 프로젝트 의존성 모듈 임포트: ../LanguageSelectModal]
+import { LanguageSelectModal } from '../LanguageSelectModal'
+import { LanguageFlyoutSubmenu } from '../editor/LanguageFlyoutSubmenu'
 // [내부 프로젝트 의존성 모듈 임포트: ../ExportModal]
 import { ExportModal, IDLE_PROGRESS } from '../ExportModal'
 // [내부 프로젝트 의존성 모듈 임포트: ../QuitConfirmModal]
@@ -217,6 +220,8 @@ export function ModalManager({}: ModalManagerProps = {}) {
         onInstallPlugin={handleInstallPlugin}
         onUninstallPlugin={handleUninstallPlugin}
       />
+      <LanguageSelectModal />
+      <LanguageFlyoutSubmenu />
       
       <ExportModal
         progress={exportProgress}

@@ -34,7 +34,7 @@
  */
 
 // [외부 패키지 및 라이브러리 임포트: react]
-import { useMemo } from 'react'
+import React, { useMemo } from 'react'
 // [외부 패키지 및 라이브러리 임포트: marked]
 import { marked } from 'marked'
 // [내부 프로젝트 의존성 모듈 임포트: ./JupyterCodeViewer]
@@ -345,7 +345,7 @@ export interface MarkdownPreviewProps {
   editor?: AmevaEditor | null
 }
 
-export function MarkdownPreview({ markdown, content, editor }: MarkdownPreviewProps) {
+export const MarkdownPreview = React.memo(function MarkdownPreview({ markdown, content, editor }: MarkdownPreviewProps) {
   const targetMarkdown = markdown ?? content ?? ''
   /*
    * [RUN-TIME STATE / INVARIANT]
@@ -365,7 +365,16 @@ export function MarkdownPreview({ markdown, content, editor }: MarkdownPreviewPr
   }, [targetMarkdown])
 
   return (
-    <div className="markdown-preview-body" style={{ padding: '10px 0', color: 'var(--text-main)', lineHeight: '1.7' }}>
+    <div 
+      className="markdown-preview-body" 
+      style={{ 
+        padding: '10px 0', 
+        color: 'var(--text-main)', 
+        lineHeight: '1.7',
+        userSelect: 'text',
+        WebkitUserSelect: 'text'
+      }}
+    >
       {/* 
        * [ALGORITHM BRANCH / DECISION]
        * - 조건 식: `segments.length === 0`
@@ -542,4 +551,4 @@ export function MarkdownPreview({ markdown, content, editor }: MarkdownPreviewPr
       })}
     </div>
   )
-}
+})

@@ -38,11 +38,15 @@ import React from 'react'
 // [외부 패키지 및 라이브러리 임포트: @blocknote/react]
 import { getDefaultReactSlashMenuItems } from '@blocknote/react'
 // [외부 패키지 및 라이브러리 임포트: lucide-react]
-import { Code2, Globe, Eye, Terminal, File, Layout, Pencil, FileText, FileSpreadsheet, Presentation, FileType2, Type } from 'lucide-react'
+import { Code2, Globe, Eye, Terminal, File, Layout, Pencil, FileText, FileSpreadsheet, Presentation, FileType2, Type, Layers } from 'lucide-react'
 // [내부 프로젝트 의존성 모듈 임포트: ../../config/features]
 import { FEATURE_FLAGS } from '../../config/features'
 // [내부 프로젝트 의존성 모듈 임포트: ../../editor/amevaBlockSchema]
 import { type AmevaEditor } from '../../editor/amevaBlockSchema'
+// [내부 프로젝트 의존성 모듈 임포트: ../jupyter/langMeta]
+import { getDefaultCodeForLanguage } from '../jupyter/langMeta'
+// [내부 프로젝트 의존성 모듈 임포트: ../../stores/useUIStore]
+import { useUIStore } from '../../stores/useUIStore'
 
   /*
    * [FUNCTION CONTRACT]
@@ -54,7 +58,14 @@ import { type AmevaEditor } from '../../editor/amevaBlockSchema'
  * getCustomSlashMenuItems 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
  * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
-export function getCustomSlashMenuItems(editorInstance: AmevaEditor, installedPlugins: string[] = []) {
+export function getCustomSlashMenuItems(
+  editorInstance: AmevaEditor,
+  installedPlugins: string[] = []
+) {
+  if (typeof window !== 'undefined') {
+    (window as any).__ameva_active_editor = editorInstance;
+    (window as any).__ameva_get_default_code = getDefaultCodeForLanguage;
+  }
       /*
        * [RUN-TIME STATE / INVARIANT]
        * - 변수 명: `defaultItems`
@@ -105,7 +116,7 @@ export function getCustomSlashMenuItems(editorInstance: AmevaEditor, installedPl
         type: 'jupyter',
         props: {
           language: lang,
-          code: '',
+          code: getDefaultCodeForLanguage(lang),
           runState: JSON.stringify({ hasRun: false, success: null, outputLines: [] })
         },
       } as any)
@@ -155,6 +166,38 @@ export function getCustomSlashMenuItems(editorInstance: AmevaEditor, installedPl
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const codeItems = ...` 형태로 안전 캐싱 후 가공 기동.
        */
+  const openLanguageSubmenu = (anchorRect?: { top: number; left: number; right: number; bottom: number }) => {
+    try {
+      const pos = editorInstance.getTextCursorPosition()
+      let rect = anchorRect
+      if (!rect) {
+        const slashMenuEl = document.querySelector('.bn-suggestion-menu, [role="listbox"]')
+        if (slashMenuEl) {
+          rect = slashMenuEl.getBoundingClientRect()
+        } else {
+          rect = { top: window.innerHeight / 2 - 150, left: window.innerWidth / 2 - 135, right: window.innerWidth / 2 + 135, bottom: window.innerHeight / 2 + 150 }
+        }
+      }
+      useUIStore.getState().setLanguageSubmenuState({
+        isOpen: true,
+        anchorRect: rect,
+        onSelect: (selectedLang: string) => {
+          if (!pos) return
+          editorInstance.updateBlock(pos.block.id, {
+            type: 'jupyter',
+            props: {
+              language: selectedLang,
+              code: getDefaultCodeForLanguage(selectedLang),
+              runState: JSON.stringify({ hasRun: false, success: null, outputLines: [] })
+            },
+          } as any)
+          editorInstance.setTextCursorPosition(pos.block.id, 'start')
+          editorInstance.focus()
+        }
+      })
+    } catch {}
+  }
+
   const codeItems = [
     {
       title: 'JavaScript Code Block',
@@ -163,6 +206,14 @@ export function getCustomSlashMenuItems(editorInstance: AmevaEditor, installedPl
       group: 'Code',
       icon: <Code2 size={16} color="#f59e0b" />,
       subtext: 'JavaScript 실행 가능 코드 블록 삽입 (/cj 또는 /c)',
+    },
+    {
+      title: 'TypeScript Code Block',
+      onItemClick: insertCodeBlock('typescript'),
+      aliases: ['ts', 'typescript', 'types'],
+      group: 'Code',
+      icon: <Code2 size={16} color="#60a5fa" />,
+      subtext: 'TypeScript 실행 가능 코드 블록 삽입 (/ts)',
     },
     {
       title: 'Python Code Block',
@@ -177,15 +228,55 @@ export function getCustomSlashMenuItems(editorInstance: AmevaEditor, installedPl
       onItemClick: insertCodeBlock('sql'),
       aliases: ['sql', 'sqlite', 'db', 'query', 'csql'],
       group: 'Code',
-      icon: <Code2 size={16} color="#06b6d4" />,
+      icon: <Code2 size={16} color="#e879f9" />,
       subtext: '가상 SQLite DB 실행 가능 SQL 코드 블록 삽입 (/csql)',
+    },
+    {
+      title: 'Java Code Block',
+      onItemClick: insertCodeBlock('java'),
+      aliases: ['java', 'jvm', 'cjava'],
+      group: 'Code',
+      icon: <Code2 size={16} color="#f43f5e" />,
+      subtext: 'Java 샌드박스 실행 가능 코드 블록 삽입 (/java)',
+    },
+    {
+      title: 'Rust Code Block',
+      onItemClick: insertCodeBlock('rust'),
+      aliases: ['rust', 'rs', 'cargo'],
+      group: 'Code',
+      icon: <Code2 size={16} color="#dea584" />,
+      subtext: 'Rust 샌드박스 실행 가능 코드 블록 삽입 (/rust)',
+    },
+    {
+      title: 'Go Code Block',
+      onItemClick: insertCodeBlock('go'),
+      aliases: ['go', 'golang'],
+      group: 'Code',
+      icon: <Code2 size={16} color="#00add8" />,
+      subtext: 'Go 런타임 실행 가능 코드 블록 삽입 (/go)',
+    },
+    {
+      title: 'Solidity Code Block',
+      onItemClick: insertCodeBlock('solidity'),
+      aliases: ['solidity', 'sol', 'evm', 'eth'],
+      group: 'Code',
+      icon: <Code2 size={16} color="#aa6746" />,
+      subtext: 'Solidity 스마트 컨트랙트 코드 블록 삽입 (/solidity)',
+    },
+    {
+      title: 'C / C++ Code Block',
+      onItemClick: insertCodeBlock('cpp'),
+      aliases: ['c', 'cpp', 'cplusplus'],
+      group: 'Code',
+      icon: <Code2 size={16} color="#10b981" />,
+      subtext: 'C/C++ 실행 가능 코드 블록 삽입 (/cpp)',
     },
     {
       title: 'HTML Sandbox Block',
       onItemClick: insertCodeBlock('html'),
       aliases: ['html', 'css', 'web', 'sandbox', 'ch'],
       group: 'Code',
-      icon: <Globe size={16} color="#14b8a6" />,
+      icon: <Globe size={16} color="#f97316" />,
       subtext: '실시간 프리뷰 지원 HTML/JS 샌드박스 삽입 (/ch)',
     },
     {
@@ -197,28 +288,16 @@ export function getCustomSlashMenuItems(editorInstance: AmevaEditor, installedPl
       subtext: 'Mermaid 다이어그램 블록 삽입 (/cm)',
     },
     {
-      title: 'JSON Code Block',
-      onItemClick: insertCodeBlock('json'),
-      aliases: ['json', 'data', 'object'],
+      title: 'More Code Languages ▶ (하위 25+ 언어 서브메뉴)',
+      onItemClick: () => openLanguageSubmenu(),
+      aliases: [
+        'more', 'lang', 'languages', 'other', '기타', '기타언어', '언어', '팔레트', '서브메뉴', '하위메뉴',
+        'csharp', 'cs', 'lua', 'php', 'ruby', 'rb', 'r', 'kotlin', 'kt', 'swift', 'zig',
+        'bash', 'sh', 'shell', 'json', 'xml', 'plain', 'plaintext', 'ct'
+      ],
       group: 'Code',
-      icon: <Code2 size={16} color="#10b981" />,
-      subtext: 'JSON 데이터 구조화 코드 블록 삽입',
-    },
-    {
-      title: 'Bash Code Block',
-      onItemClick: insertCodeBlock('bash'),
-      aliases: ['bash', 'sh', 'shell', 'terminal'],
-      group: 'Code',
-      icon: <Terminal size={16} color="#ec4899" />,
-      subtext: 'Bash 쉘 스크립트 코드 블록 삽입',
-    },
-    {
-      title: 'Plain Code Block',
-      onItemClick: insertCodeBlock('plaintext'),
-      aliases: ['code', 'codeblock', 'plain', 'text', 'ct'],
-      group: 'Code',
-      icon: <Code2 size={16} color="#6b7280" />,
-      subtext: '기본 텍스트 및 기타 언어용 코드 블록 삽입 (/ct)',
+      icon: <Layers size={16} color="#38bdf8" />,
+      subtext: '옆으로 열리는 25대 언어 플라이아웃 서브메뉴에서 즉시 선택',
     },
   ]
 

@@ -103,8 +103,14 @@ function getOrCreateJSWorker() {
         }
       }
 
-      codeToRun = codeToRun.replace(/\\bconst\\b(?=[^'"]*(?:['"][^'"]*['"][^'"]*)*$)/gm, 'var')
-                            .replace(/\\blet\\b(?=[^'"]*(?:['"][^'"]*['"][^'"]*)*$)/gm, 'var');
+      // TypeScript 인터페이스, 타입 별칭 및 타입 어노테이션 제거
+      codeToRun = codeToRun.replace(/\binterface\s+[a-zA-Z0-9_]+\s*(?:extends\s+[^{]+)?\{[\s\S]*?\}/g, '')
+      codeToRun = codeToRun.replace(/\btype\s+[a-zA-Z0-9_]+(?:\s*<[^>]*>)?\s*=\s*[^;]+;/g, '')
+      codeToRun = codeToRun.replace(/(\b(?:let|var|const)\s+[a-zA-Z0-9_]+)\s*:\s*[a-zA-Z0-9_<>[\]|&\s]+(?=\s*=|\s*;)/g, '$1')
+      codeToRun = codeToRun.replace(/\bas\s+[a-zA-Z0-9_<>[\]]+/g, '')
+
+      codeToRun = codeToRun.replace(/\bconst\b(?=[^'"]*(?:['"][^'"]*['"][^'"]*)*$)/gm, 'var')
+                            .replace(/\blet\b(?=[^'"]*(?:['"][^'"]*['"][^'"]*)*$)/gm, 'var');
 
       logs.length = 0;
       try {
@@ -124,30 +130,26 @@ function getOrCreateJSWorker() {
   return RuntimeState.persistentWorker
 }
 
-/**
- * useJSRuntime 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
+export function stripTypeScript(code: string): string {
+  let js = code
+  // 1. interface 블록 제거
+  js = js.replace(/\binterface\s+[a-zA-Z0-9_]+\s*(?:extends\s+[^{]+)?\{[\s\S]*?\}/g, '')
+  // 2. type 별칭 제거
+  js = js.replace(/\btype\s+[a-zA-Z0-9_]+(?:\s*<[^>]*>)?\s*=\s*[^;]+;/g, '')
+  // 3. 변수/상수 타입 어노테이션 제거: const user: User = ... -> const user = ...
+  js = js.replace(/(\b(?:const|let|var)\s+[a-zA-Z0-9_]+)\s*:\s*[a-zA-Z0-9_<>[\]|&\s]+(?=\s*=|\s*;)/g, '$1')
+  // 4. as Type 캐스팅 제거
+  js = js.replace(/\bas\s+[a-zA-Z0-9_<>[\]]+/g, '')
+  return js
+}
+
 export function useJSRuntime() {
   const [isRunning, setIsRunning] = useState(false)
 
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `runJSCode`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const runJSCode = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-  const runJSCode = (code: string): Promise<{ success: boolean; output: string; tableData?: any }> => {
+  const runJSCode = (rawCode: string): Promise<{ success: boolean; output: string; tableData?: any }> => {
     return new Promise((resolve) => {
       setIsRunning(true)
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `worker`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const worker = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
+      const code = stripTypeScript(rawCode)
       const worker = getOrCreateJSWorker()
 
       /*

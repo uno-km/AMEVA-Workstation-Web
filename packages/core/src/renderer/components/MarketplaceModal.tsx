@@ -55,8 +55,129 @@ import { useProcessStore } from '../stores/useProcessStore'
 import { safeJsonParse } from '../utils/safeJson'
 // [내부 프로젝트 의존성 모듈 임포트: ../contexts/AppContext]
 import { useAppContext } from '../contexts/AppContext'
+import { useTranslation } from '../i18n/useTranslation'
 
 export type { PluginMetadata, MarketplaceModalProps }
+
+const PLUGIN_I18N_EN: Record<string, { name?: string; description?: string }> = {
+  'calculator': {
+    name: 'Calculator',
+    description: 'Advanced multi-functional computing module for engineers and finance experts. Instantly processes complex formulas and financial calculations.'
+  },
+  'calendar': {
+    name: 'Calendar',
+    description: 'Smart schedule management and real-time calendar synchronization for complete timeline orchestration.'
+  },
+  'cloud-collab': {
+    name: 'Cloud Collab',
+    description: 'Enterprise collaboration suite combining real-time document co-editing with integrated video/audio communication.'
+  },
+  'db-explorer': {
+    name: 'DB Explorer',
+    description: 'SQL client that accelerates query authoring and database structure exploration with an intuitive visual interface.'
+  },
+  'drawing-board': {
+    name: 'Drawing Board',
+    description: 'Real-time whiteboard tool enabling freehand sketching and idea visualization on an infinite canvas.'
+  },
+  'excel-viewer': {
+    name: 'Excel Sheet',
+    description: 'FortuneSheet MS Excel lossless compatible spreadsheet editor.'
+  },
+  'kanban-board': {
+    name: 'Kanban Board',
+    description: 'Jira-style agile collaboration kanban board for workflow tracking.'
+  },
+  'osm-maps': {
+    name: 'OpenStreetMap Embed',
+    description: 'Interactive OpenStreetMap block for geographic data visualization.'
+  },
+  'voice-dictation': {
+    name: 'Voice Dictation (STT)',
+    description: 'Web Speech API powered high-speed voice typing and dictation assistant.'
+  },
+  'pomodoro': {
+    name: 'Pomodoro Timer',
+    description: 'Productivity focus timer based on the 25-minute Pomodoro technique.'
+  },
+  'mind-map': {
+    name: 'Mind Map Visualizer',
+    description: 'Interactive node-based mind mapping and concept architecture visualization tool.'
+  },
+  'rest-client': {
+    name: 'REST API Client',
+    description: 'Postman-compatible HTTP/REST API request and testing suite.'
+  },
+  'wireframe': {
+    name: 'UI Wireframe Builder',
+    description: 'Rapid UI mockup and layout prototyping sandbox.'
+  },
+  'finance': {
+    name: 'Financial Analytics',
+    description: 'Stock, crypto, and market financial chart analytics plugin.'
+  },
+  'google-drive': {
+    name: 'Google Drive Sync',
+    description: 'Direct Google Drive cloud storage synchronization and backup.'
+  },
+  'youtube': {
+    name: 'YouTube Embed Player',
+    description: 'Inline YouTube multimedia playback with timestamp note-taking.'
+  },
+  'presentation': {
+    name: 'Slide Presentation',
+    description: 'Reveal.js powered markdown slide deck presentation engine.'
+  },
+  'pdf-rag': {
+    name: 'PDF RAG Engine',
+    description: 'On-device vector search and semantic retrieval across uploaded PDF documents.'
+  },
+  'web-browser': {
+    name: 'Embedded Web Browser',
+    description: 'Sandboxed in-app web browser for research and live web page viewing.'
+  },
+  'outline': {
+    name: 'Document Outline Navigator',
+    description: 'Automatic heading tree hierarchy and real-time document outline navigator.'
+  },
+  'ai': {
+    name: 'Local AI Neural Agent',
+    description: 'On-device WebGPU neural network engine and intelligent AI assistant.'
+  },
+  'ameva-python-advanced': {
+    name: 'AMEVA Python Core',
+    description: 'High-performance Python data analysis & visualization, fully compatible with local sandboxes.'
+  },
+  'mcp-agent-orchestrator': {
+    name: 'MCP Orchestrator',
+    description: 'Multi-agent task distribution and automated workflow scheduling via Model Context Protocol.'
+  },
+  'ui-dark-nebula': {
+    name: 'Dark Nebula Theme',
+    description: 'Eye-friendly deep space theme optimized for AMOLED displays.'
+  },
+  'ai-doc-summarizer': {
+    name: 'Document Auto-Summarizer AI',
+    description: 'Automated 3-bullet summary generator for long HWP and PDF documents.'
+  },
+  'db-sql-visualizer': {
+    name: 'SQL Visualizer Tool',
+    description: 'Instantly turns complex SQL query results into elegant interactive charts and graphs.'
+  },
+  'webSearch': {
+    name: 'DuckDuckGo Web Search Engine',
+    description: 'Zero-Server privacy-first on-demand web search for factual AI grounding.'
+  },
+  'pythonConsole': {
+    name: 'Pyodide WebAssembly Python Sandbox',
+    description: 'Run Python scripts with NumPy and Pandas directly inside the browser.'
+  },
+  'requestQueue': {
+    name: 'Concurrency Semaphore Queue Engine',
+    description: 'Prevents GPU memory exhaustion and manages multi-request execution queues.'
+  }
+};
+
 
 // SAAS_ITEMS는 이제 깃허브 원격 서버에서 동적으로 가져옵니다.
 /**
@@ -139,6 +260,7 @@ export function MarketplaceModal({
 }: MarketplaceModalProps) {
   const canUsePremium = true
   const { handleUpdateSettings, settings } = useAppContext()
+  const { isKorean } = useTranslation()
 
   const [plugins, setPlugins] = useState<PluginMetadata[]>([])
   const [loading, setLoading] = useState(false)
@@ -242,6 +364,18 @@ export function MarketplaceModal({
       handleUpdateSettings({ installedPlugins: currentInstalled.filter((p: string) => p !== id) })
     }
   }
+
+  
+  const localizePlugin = (p: PluginMetadata): PluginMetadata => {
+    if (isKorean) return p;
+    const enMeta = PLUGIN_I18N_EN[p.id] || PLUGIN_I18N_EN[p.id.toLowerCase()];
+    if (!enMeta) return p;
+    return {
+      ...p,
+      name: enMeta.name || p.name,
+      description: enMeta.description || p.description,
+    };
+  };
 
   // 마켓플레이스 서버 플러그인 로드
   // [FIX] AbortController로 5초 타임아웃 적용.
@@ -502,7 +636,7 @@ export function MarketplaceModal({
       >
         {loading ? (
           <div key="loading" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '11px' }}>
-            익스텐션 목록을 가져오는 중입니다...
+            {isKorean ? '익스텐션 목록을 가져오는 중입니다...' : 'Fetching extensions marketplace...'}
           </div>
         ) : error ? (
           <div
@@ -531,14 +665,14 @@ export function MarketplaceModal({
                 color: '#f87171', fontSize: '11px', fontWeight: 600, alignSelf: 'center'
               }}
             >
-              🔄 다시 시도
+              {isKorean ? '🔄 다시 시도' : '🔄 Retry'}
             </button>
           </div>
         ) : (
           <div key="content" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {filteredPlugins.length === 0 && (
               <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '11px' }}>
-                조건에 맞는 플러그인이 없습니다.
+                {isKorean ? '조건에 맞는 플러그인이 없습니다.' : 'No plugins matching your criteria.'}
               </div>
             )}
 
@@ -550,7 +684,7 @@ export function MarketplaceModal({
                 return matchesCategory && matchesSearch
               })
 
-              return filteredSaas.map(p => (
+              return filteredSaas.map(localizePlugin).map(p => (
                 <SaaSPluginCard
                   key={p.id}
                   id={p.id}
@@ -565,7 +699,7 @@ export function MarketplaceModal({
               ))
             })()}
 
-            {filteredPlugins.map((p) => (
+            {filteredPlugins.map(localizePlugin).map((p) => (
               <PluginCard
                 key={p.id}
                 plugin={p}

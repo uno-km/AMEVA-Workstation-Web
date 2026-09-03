@@ -1,75 +1,57 @@
 /**
  * ============================================================================
  * @file runtimeState.ts
- * @description runtimeState.ts 시스템 모듈 구성요소로, 관련 UI 렌더링 및 비즈니스 로직을 담당합니다.
- * @usage 문서 에디터 및 뷰어 내부에서 동적으로 호출되거나 유틸리티 함수로 사용됩니다.
- * @example
- * // 예시 로직 (자동 생성됨)
- * import { something } from './runtimeState';
- * 
- * @created 2026-08-10 20:30:36
- * @updated 2026-08-10 20:30:36
- * @author uno-km
- * @commit docs: 전체 소스코드 한글 주석 및 사내 컨벤션 일괄 적용
+ * @description runtimeState.ts 시스템 모듈 구성요소로, 멀티 런타임 인스턴스 및 워커 생명주기를 관리합니다.
+ * @system AMEVA OS Desktop Workstation / Web
  * ============================================================================
  */
 
-/**
- * @file runtimeState.ts
- * @system AMEVA OS Desktop Workstation
- * @location src/renderer/hooks/code-runtime/runtimeState.ts
- * @role Core module helper and integration logic
- * 
- * [소비처 - CONSUMERS / USAGE CONTEXT]
- * - 소비처 A (src/renderer/App.tsx): 최상위 Facade 구조에 통합 마운트.
- * - 소비처 B (src/renderer/contexts/AppContext.tsx): 리액트 Context 훅 목록에 바인딩되어 하위 뷰에 전파.
- * 
- * [책임 범위 - RESPONSIBILITY]
- * - 본 파일은 AMEVA 시스템 내에서 도메인 목적에 부합하는 연산 및 데이터 처리 흐름을 안전하게 캡슐화한다.
- * - 외부 라이브러리 및 하위 종속성을 조율하고 결과 규격을 일관되게 제공한다.
- * 
- * [절대 깨면 안 되는 계약 - CONTRACT]
- * - MUST: 모든 예외 발생 시 에러를 침묵시키지 말고 에러 로그를 명확하게 남길 것.
- * - MUST NOT: TypeScript any 형식을 우회 수단으로 함부로 선언하지 말 것.
- */
-
-  /*
-   * [FUNCTION CONTRACT]
-   * - 함수 명: `RuntimeState`
-   * - 역할: 유입 인자를 가공하고 비즈니스 계약 조건에 맞춰 최종 객체/바이너리를 생산함.
-   * - 예시: `RuntimeState(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
-   */
 export const RuntimeState = {
   pyodideInstance: null as any,
   persistentWorker: null as Worker | null,
   sqliteDatabaseInstance: null as any,
   javaRuntimeInstance: null as any,
   javaWorker: null as Worker | null,
+  bashWorker: null as Worker | null,
+  luaWorker: null as Worker | null,
+  solidityWorker: null as Worker | null,
+  cWorker: null as Worker | null,
+  goWorker: null as Worker | null,
+  rustWorker: null as Worker | null,
+  polyglotWorker: null as Worker | null,
 }
 
 // [SEC-W-014] 외부에서 런타임 리소스를 정리할 수 있는 함수
-/**
- * cleanupCodeRuntime 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 export function cleanupCodeRuntime() {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `RuntimeState.persistentWorker`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (RuntimeState.persistentWorker)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
-  if (RuntimeState.persistentWorker) {
-    RuntimeState.persistentWorker.terminate()
-    RuntimeState.persistentWorker = null
+  const workers = [
+    RuntimeState.persistentWorker,
+    RuntimeState.javaWorker,
+    RuntimeState.bashWorker,
+    RuntimeState.luaWorker,
+    RuntimeState.solidityWorker,
+    RuntimeState.cWorker,
+    RuntimeState.goWorker,
+    RuntimeState.rustWorker,
+    RuntimeState.polyglotWorker,
+  ]
+
+  for (const w of workers) {
+    if (w) {
+      try { w.terminate() } catch {}
+    }
   }
-  if (RuntimeState.javaWorker) {
-    RuntimeState.javaWorker.terminate()
-    RuntimeState.javaWorker = null
-  }
+
+  RuntimeState.persistentWorker = null
+  RuntimeState.javaWorker = null
+  RuntimeState.bashWorker = null
+  RuntimeState.luaWorker = null
+  RuntimeState.solidityWorker = null
+  RuntimeState.cWorker = null
+  RuntimeState.goWorker = null
+  RuntimeState.rustWorker = null
+  RuntimeState.polyglotWorker = null
+
   RuntimeState.pyodideInstance = null
   RuntimeState.sqliteDatabaseInstance = null
   RuntimeState.javaRuntimeInstance = null
 }
-

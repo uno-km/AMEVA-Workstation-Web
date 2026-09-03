@@ -37,6 +37,7 @@
 import { useState, useEffect } from 'react'
 // [내부 프로젝트 의존성 모듈 임포트: ../../services/ipc/electronApiAdapter]
 import * as ipc from '../../services/ipc/electronApiAdapter'
+import { useTranslation } from '../../i18n/useTranslation'
 
 /**
  * SettingsTabCredentialsProps 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
@@ -58,6 +59,7 @@ interface SettingsTabCredentialsProps {
  * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
 export function SettingsTabCredentials({ isOpen, activeTab }: SettingsTabCredentialsProps) {
+  const { isKorean } = useTranslation()
   const [credStatus, setCredStatus] = useState<Record<string, boolean>>({
     gemini: false,
     openai: false,
@@ -246,7 +248,7 @@ export function SettingsTabCredentials({ isOpen, activeTab }: SettingsTabCredent
     <>
       <h3 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 6px' }}>API Keys & Credentials</h3>
       <p style={{ fontSize: '9.5px', color: 'var(--text-muted)', margin: '0 0 10px', lineHeight: '1.4' }}>
-        외부 AI 서비스 및 플랫폼 연동을 위한 API Key들을 데스크톱 환경의 <strong>OS 자격 증명 관리자(Keychain / safeStorage)</strong>에 안전하게 암호화하여 위임 보관합니다. 등록된 비밀키는 화면에 노출되지 않습니다.
+        {isKorean ? '외부 AI 서비스 및 플랫폼 연동을 위한 API Key들을 데스크톱 환경의 OS 자격 증명 관리자(Keychain / safeStorage)에 안전하게 암호화하여 위임 보관합니다. 등록된 비밀키는 화면에 노출되지 않습니다.' : 'API keys for external AI engines and platforms are securely encrypted in your OS Credential Manager (Keychain/safeStorage). Stored secret keys are never displayed in plaintext.'}
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -287,7 +289,7 @@ export function SettingsTabCredentials({ isOpen, activeTab }: SettingsTabCredent
                     color: '#10b981',
                     border: '1px solid rgba(16, 185, 129, 0.2)'
                   }}>
-                    ●●●●●●●● 등록됨 (OS 암호화 보관 중)
+                    {isKorean ? '●●●●●●●● 등록됨 (OS 암호화 보관 중)' : '●●●●●●●● Saved (OS Encrypted)'}
                   </span>
                 ) : (
                   <span style={{
@@ -309,7 +311,7 @@ export function SettingsTabCredentials({ isOpen, activeTab }: SettingsTabCredent
                   type="password"
                   value={newKeyInput[cred.id]}
                   onChange={e => setNewKeyInput(prev => ({ ...prev, [cred.id]: e.target.value }))}
-                  placeholder={isRegistered ? "새로운 키로 덮어쓰려면 여기에 입력하세요" : cred.placeholder}
+                  placeholder={isRegistered ? (isKorean ? "새로운 키로 덮어쓰려면 여기에 입력하세요" : "Enter new key to overwrite...") : cred.placeholder}
                   style={{
                     flex: 1,
                     background: 'rgba(0, 0, 0, 0.2)',

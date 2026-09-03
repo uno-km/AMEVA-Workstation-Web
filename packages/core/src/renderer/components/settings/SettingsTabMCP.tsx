@@ -41,6 +41,7 @@ import { ToggleLeft, ToggleRight, Plus, Trash2 } from 'lucide-react'
 import { MCPClientManager } from '../../utils/mcpClient'
 // [내부 프로젝트 의존성 모듈 임포트: ../../services/ipc/electronApiAdapter]
 import * as ipc from '../../services/ipc/electronApiAdapter'
+import { useTranslation } from '../../i18n/useTranslation'
 
 /**
  * SettingsTabMCPProps 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
@@ -61,6 +62,7 @@ interface SettingsTabMCPProps {
  * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
 export function SettingsTabMCP({ isOpen }: SettingsTabMCPProps) {
+  const { isKorean } = useTranslation()
   const [mcpServers, setMcpServers] = useState<any[]>([])
   const [newMcpName, setNewMcpName] = useState('')
   const [newMcpType, setNewMcpType] = useState<'stdio' | 'http'>('http')
@@ -260,7 +262,7 @@ export function SettingsTabMCP({ isOpen }: SettingsTabMCPProps) {
         marginBottom: '16px'
       }}>
         <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-          ⚠️ MCP(Machine Communication Protocol) 기능 제한
+          {isKorean ? '⚠️ MCP(Machine Communication Protocol) 기능 제한' : '⚠️ MCP (Machine Communication Protocol) Feature Restriction'}
         </div>
         <div style={{ fontSize: '13px', opacity: 0.9, lineHeight: 1.5 }}>
           현재 보안 및 안정성 정책에 따라 MCP 기능이 <strong>전면 비활성화(사용 제한)</strong> 처리되어 있습니다.<br/>
@@ -282,7 +284,7 @@ export function SettingsTabMCP({ isOpen }: SettingsTabMCPProps) {
           </button>
         </div>
         <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>
-          외부 Stdio 자식 프로세스 또는 HTTP API 게이트웨이 기반의 MCP 도구(Tools) 서버를 하드코딩 없이 통합 제어합니다.
+          {isKorean ? '외부 Stdio 자식 프로세스 또는 HTTP API 게이트웨이 기반의 MCP 도구(Tools) 서버를 하드코딩 없이 통합 제어합니다.' : 'Integrate and control MCP tools servers via Stdio processes or HTTP API gateways.'}
         </div>
 
       {/* 1. MCP 추가 폼 */}
@@ -296,11 +298,11 @@ export function SettingsTabMCP({ isOpen }: SettingsTabMCPProps) {
         gap: '8px',
         marginBottom: '10px'
       }}>
-        <strong style={{ fontSize: '10.5px', color: 'var(--primary)' }}>➕ 새 MCP 서버 추가</strong>
+        <strong style={{ fontSize: '10.5px', color: 'var(--primary)' }}>{isKorean ? '➕ 새 MCP 서버 추가' : '➕ Add New MCP Server'}</strong>
         <div style={{ display: 'flex', gap: '8px' }}>
           <input
             type="text"
-            placeholder="서버 이름 (예: 파일 매니저)"
+            placeholder={isKorean ? "서버 이름 (예: 파일 매니저)" : "Server name (e.g. File Manager)"}
             value={newMcpName}
             onChange={e => setNewMcpName(e.target.value)}
             style={{
@@ -326,7 +328,7 @@ export function SettingsTabMCP({ isOpen }: SettingsTabMCPProps) {
         {newMcpType === 'http' ? (
           <input
             type="text"
-            placeholder="HTTP 게이트웨이 주소 URL (예: http://127.0.0.1:11553/mcp)"
+            placeholder={isKorean ? "HTTP 게이트웨이 주소 URL (예: http://127.0.0.1:11553/mcp)" : "HTTP Gateway URL (e.g. http://127.0.0.1:11553/mcp)"}
             value={newMcpUrl}
             onChange={e => setNewMcpUrl(e.target.value)}
             style={{
@@ -339,7 +341,7 @@ export function SettingsTabMCP({ isOpen }: SettingsTabMCPProps) {
           <div style={{ display: 'flex', gap: '6px' }}>
             <input
               type="text"
-              placeholder="실행 명령어 (예: npx, python)"
+              placeholder={isKorean ? "실행 명령어 (예: npx, python)" : "Command (e.g. npx, python)"}
               value={newMcpCmd}
               onChange={e => setNewMcpCmd(e.target.value)}
               style={{
@@ -350,7 +352,7 @@ export function SettingsTabMCP({ isOpen }: SettingsTabMCPProps) {
             />
             <input
               type="text"
-              placeholder="파라미터 (예: -y @modelcontextprotocol/server-postgres)"
+              placeholder={isKorean ? "파라미터 (예: -y @modelcontextprotocol/server-postgres)" : "Arguments (e.g. -y @modelcontextprotocol/server-postgres)"}
               value={newMcpArgs}
               onChange={e => setNewMcpArgs(e.target.value)}
               style={{
@@ -370,16 +372,16 @@ export function SettingsTabMCP({ isOpen }: SettingsTabMCPProps) {
             alignItems: 'center', justifyContent: 'center', gap: '4px'
           }}
         >
-          <Plus size={12} /> 서버 추가 등록
+          <Plus size={12} /> {isKorean ? '서버 추가 등록' : 'Register MCP Server'}
         </button>
       </div>
 
       {/* 2. 등록된 서버 리스트 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', maxHeight: '140px', overflowY: 'auto', marginBottom: '10px' }}>
-        <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-muted)' }}>⚙️ 활성 서버 인스턴스</span>
+        <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-muted)' }}>{isKorean ? '⚙️ 활성 서버 인스턴스' : '⚙️ Active Server Instances'}</span>
         {mcpServers.length === 0 ? (
           <div style={{ fontSize: '10px', color: 'var(--text-muted)', textAlign: 'center', padding: '10px' }}>
-            등록된 MCP 서버가 없습니다.
+            {isKorean ? '등록된 MCP 서버가 없습니다.' : 'No registered MCP servers.'}
           </div>
         ) : (
           mcpServers.map(server => (
@@ -430,14 +432,14 @@ export function SettingsTabMCP({ isOpen }: SettingsTabMCPProps) {
 
       {/* 3. 로드된 실제 도구 아코디언 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-muted)' }}>🛠️ 실시간 제공 도구 목록 ({mcpTools.length}개)</span>
+        <span style={{ fontSize: '10.5px', fontWeight: 700, color: 'var(--text-muted)' }}>{isKorean ? `🛠️ 실시간 제공 도구 목록 (${mcpTools.length}개)` : `🛠️ Available Tools (${mcpTools.length})`}</span>
         {isLoadingTools ? (
           <div style={{ fontSize: '10px', color: 'var(--text-muted)', textAlign: 'center', padding: '10px' }}>
-            MCP 서버들로부터 도구 명세를 가져오는 중... 🔄
+            {isKorean ? 'MCP 서버들로부터 도구 명세를 가져오는 중... 🔄' : 'Fetching tool definitions from MCP servers... 🔄'}
           </div>
         ) : mcpTools.length === 0 ? (
           <div style={{ fontSize: '10px', color: 'var(--text-muted)', textAlign: 'center', padding: '10px' }}>
-            활성화된 서버가 없거나 제공하는 도구가 없습니다.
+            {isKorean ? '활성화된 서버가 없거나 제공하는 도구가 없습니다.' : 'No active servers or available tools.'}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '150px', overflowY: 'auto' }}>

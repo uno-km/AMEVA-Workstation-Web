@@ -27,7 +27,7 @@ export interface WelcomeBannerProps {
 /**
  * WelcomeBanner 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
  */
-export function WelcomeBanner({
+export const WelcomeBanner = React.memo(function WelcomeBanner({
   onStartWelcomeEdit,
   onStartNewDocument,
   onOpenFile,
@@ -37,7 +37,7 @@ export function WelcomeBanner({
   const { t } = useTranslation()
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', userSelect: 'text', WebkitUserSelect: 'text' }}>
       {/* 눈부신 웰컴 오로라 그래디언트 배너 */}
       <div style={{
         background: 'linear-gradient(135deg, rgba(37,99,235,0.18) 0%, rgba(6,182,212,0.12) 100%)',
@@ -140,10 +140,12 @@ export function WelcomeBanner({
           color: 'var(--text-main)',
           lineHeight: '1.7',
           boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+          userSelect: 'text',
+          WebkitUserSelect: 'text'
         }}
       >
         <MarkdownPreview content={currentContent} />
       </div>
     </div>
   )
-}
+})

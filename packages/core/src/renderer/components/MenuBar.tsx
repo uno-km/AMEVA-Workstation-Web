@@ -412,7 +412,8 @@ export function MenuBar({}: MenuBarProps = {}) {
     boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
     borderRadius: '6px',
     padding: '4px 0',
-    minWidth: '200px',
+    minWidth: '280px',
+    width: 'max-content',
     display: 'flex',
     flexDirection: 'column',
     zIndex: 1000,
@@ -432,6 +433,7 @@ export function MenuBar({}: MenuBarProps = {}) {
     width: '100%',
     fontFamily: 'var(--font-sans)',
     outline: 'none',
+    whiteSpace: 'nowrap',
   }
 
   const shortcutStyle: React.CSSProperties = {

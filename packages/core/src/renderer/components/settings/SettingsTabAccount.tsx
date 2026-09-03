@@ -32,6 +32,7 @@ import React, { useState, useEffect } from 'react'
 import { Globe, LogOut, RefreshCw, CheckCircle2, AlertTriangle } from 'lucide-react'
 // [내부 프로젝트 의존성 모듈 임포트: ../../contexts/AppContext]
 import { useAppContext } from '../../contexts/AppContext'
+import { useTranslation } from '../../i18n/useTranslation'
 
 /**
  * SettingsTabAccountProps 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
@@ -59,6 +60,7 @@ export function SettingsTabAccount({
   handleSaveUser,
 }: SettingsTabAccountProps) {
   const { setUsername } = useAppContext()
+  const { isKorean } = useTranslation()
   const [googleUser, setGoogleUser] = useState<any | null>(null)
   const [connectDrive, setConnectDrive] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -136,10 +138,10 @@ export function SettingsTabAccount({
   return (
     <>
       <h3 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 4px', color: 'var(--text-main)' }}>
-        구글 계정 관리 (Google Account)
+        {isKorean ? '구글 계정 관리 (Google Account)' : 'Google Account Management'}
       </h3>
       <p style={{ fontSize: '10.5px', color: 'var(--text-muted)', margin: '0 0 16px' }}>
-        AMEVA Workstation은 완벽한 보안 환경을 제공하기 위해 오직 Google 공식 OAuth 2.0 및 암호화 키체인을 통한 구글 단독 로그인만 허용합니다.
+        {isKorean ? 'AMEVA Workstation은 완벽한 보안 환경을 제공하기 위해 오직 Google 공식 OAuth 2.0 및 암호화 키체인을 통한 구글 단독 로그인만 허용합니다.' : 'AMEVA Workstation exclusively supports official Google OAuth 2.0 and OS secure keychain storage for maximum security.'}
       </p>
 
       {googleUser ? (
@@ -197,12 +199,12 @@ export function SettingsTabAccount({
               {googleUser.isDriveConnected ? (
                 <>
                   <CheckCircle2 size={14} style={{ color: '#34a853' }} />
-                  <span style={{ fontSize: '11px', color: '#34a853', fontWeight: 600 }}>구글 드라이브 연결 완료 (Active)</span>
+                  <span style={{ fontSize: '11px', color: '#34a853', fontWeight: 600 }}>{isKorean ? '구글 드라이브 연결 완료 (Active)' : 'Google Drive Connected (Active)'}</span>
                 </>
               ) : (
                 <>
                   <AlertTriangle size={14} style={{ color: '#ea4335' }} />
-                  <span style={{ fontSize: '11px', color: '#ea4335', fontWeight: 600 }}>구글 드라이브 연결 없음 (Disconnected)</span>
+                  <span style={{ fontSize: '11px', color: '#ea4335', fontWeight: 600 }}>{isKorean ? '구글 드라이브 연결 없음 (Disconnected)' : 'Google Drive Not Connected (Disconnected)'}</span>
                 </>
               )}
             </div>
@@ -218,7 +220,7 @@ export function SettingsTabAccount({
                   fontSize: '9.5px', fontWeight: 600, cursor: 'pointer'
                 }}
               >
-                드라이브 연결 추가
+                {isKorean ? '드라이브 연결 추가' : 'Connect Drive'}
               </button>
             )}
           </div>
@@ -235,7 +237,7 @@ export function SettingsTabAccount({
               }}
             >
               <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
-              동기화 확인
+              {isKorean ? '동기화 확인' : 'Verify Sync'}
             </button>
             <button
               onClick={handleGoogleLogout}
@@ -248,7 +250,7 @@ export function SettingsTabAccount({
               }}
             >
               <LogOut size={12} />
-              계정 연결 해제 (Sign Out)
+              {isKorean ? '계정 연결 해제 (Sign Out)' : 'Sign Out'}
             </button>
           </div>
         </div>
@@ -269,9 +271,9 @@ export function SettingsTabAccount({
             }}
           >
             <Globe size={32} style={{ color: '#4285f4', marginBottom: '4px' }} />
-            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-main)' }}>구글 통합 로그인으로 안전하게 협업하세요</div>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-main)' }}>{isKorean ? '구글 통합 로그인으로 안전하게 협업하세요' : 'Sign in with Google for Secure Collaboration'}</div>
             <div style={{ fontSize: '10px', color: 'var(--text-muted)', maxWidth: '280px' }}>
-              사용자 구글 프로필은 로컬 장치의 안전 스토리지 키체인으로 엄격하게 암호화되어 보호됩니다.
+              {isKorean ? '사용자 구글 프로필은 로컬 장치의 안전 스토리지 키체인으로 엄격하게 암호화되어 보호됩니다.' : 'Your Google profile is strictly encrypted and protected via local device secure keychain storage.'}
             </div>
           </div>
 
@@ -296,9 +298,9 @@ export function SettingsTabAccount({
               style={{ marginTop: '2px', cursor: 'pointer' }}
             />
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text-main)', fontWeight: 600 }}>Google Drive (구글 드라이브) 연결</span>
+              <span style={{ fontSize: '11px', color: 'var(--text-main)', fontWeight: 600 }}>{isKorean ? 'Google Drive (구글 드라이브) 연결' : 'Google Drive Cloud Storage Sync'}</span>
               <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>
-                체크 시 문서 백업 및 클라우드 동기화를 위한 드라이브 통합 권한을 승인합니다.
+                {isKorean ? '체크 시 문서 백업 및 클라우드 동기화를 위한 드라이브 통합 권한을 승인합니다.' : 'Enables document backup and seamless cloud synchronization via Google Drive.'}
               </span>
             </div>
           </div>
@@ -329,7 +331,7 @@ export function SettingsTabAccount({
             <svg style={{ width: '15px', height: '15px', fill: '#fff' }} viewBox="0 0 24 24">
               <path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114-3.555 0-6.445-2.89-6.445-6.445s2.89-6.445 6.445-6.445c1.554 0 2.97.553 4.076 1.472l3.19-3.19C19.26 1.839 15.932 1 12.24 1 5.866 1 .682 6.182.682 12.56S5.866 24.12 12.24 24.12c5.855 0 11.2-4.186 11.2-11.56 0-.742-.08-1.464-.22-2.164H12.24z"/>
             </svg>
-            Google 계정으로 계속하기
+            {isKorean ? 'Google 계정으로 계속하기' : 'Continue with Google'}
           </button>
         </div>
       )}
