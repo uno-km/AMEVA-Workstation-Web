@@ -14,6 +14,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { X, ChevronDown, ChevronUp, Replace, ReplaceAll, Search } from 'lucide-react'
 import { type AmevaEditor } from '../editor/amevaBlockSchema'
 import { useFindReplace } from '../hooks/useFindReplace'
+import { useTranslation } from '../i18n/useTranslation'
 
 interface FindReplaceBarProps {
   isOpen: boolean
@@ -33,6 +34,7 @@ export function FindReplaceBar({
   onScrollToBlock,
   initialMode = 'find'
 }: FindReplaceBarProps) {
+  const { t } = useTranslation()
   const [showReplace, setShowReplace] = useState(initialMode === 'replace')
   const findInputRef = useRef<HTMLInputElement>(null)
 
@@ -114,12 +116,12 @@ export function FindReplaceBar({
       {/* 헤더 제어 영역 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          {showReplace ? '찾기 및 바꾸기 (Find & Replace)' : '문서 검색 (Find)'}
+          {showReplace ? 'Find & Replace' : 'Find in Document'}
         </span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <button
             onClick={() => setShowReplace(!showReplace)}
-            title={showReplace ? '바꾸기 숨기기' : '바꾸기 표시'}
+            title={showReplace ? 'Hide Replace' : 'Show Replace'}
             style={{
               background: 'transparent',
               border: 'none',
@@ -135,7 +137,7 @@ export function FindReplaceBar({
           </button>
           <button
             onClick={onClose}
-            title="닫기 (ESC)"
+            title="Close (ESC)"
             style={{
               background: 'transparent',
               border: 'none',
@@ -161,7 +163,7 @@ export function FindReplaceBar({
           value={findQuery}
           onChange={e => setFindQuery(e.target.value)}
           onKeyDown={handleInputKeyDown}
-          placeholder="찾을 텍스트 입력..."
+          placeholder={t.findReplace.findPlaceholder}
           style={{
             flex: 1,
             background: 'var(--bg-card)',
@@ -176,7 +178,7 @@ export function FindReplaceBar({
         />
         {findQuery && (
           <span style={{ fontSize: '9px', color: 'var(--text-muted)', marginRight: '4px' }}>
-            {totalMatchesCount > 0 ? `${currentMatchIndex + 1}/${totalMatchesCount}` : '일치 없음'}
+            {totalMatchesCount > 0 ? `${currentMatchIndex + 1}/${totalMatchesCount}` : '0/0'}
           </span>
         )}
       </div>
@@ -189,7 +191,7 @@ export function FindReplaceBar({
             value={replaceQuery}
             onChange={e => setReplaceQuery(e.target.value)}
             onKeyDown={handleInputKeyDown}
-            placeholder="바꿀 텍스트 입력..."
+            placeholder={t.findReplace.replacePlaceholder}
             style={{
               flex: 1,
               background: 'var(--bg-card)',
@@ -215,7 +217,7 @@ export function FindReplaceBar({
             onChange={e => setMatchCase(e.target.checked)}
             style={{ cursor: 'pointer', accentColor: 'var(--primary)' }}
           />
-          <span>대소문자 구분</span>
+          <span>{t.findReplace.caseSensitive}</span>
         </label>
 
         {/* 액션 제어 버튼부 */}
@@ -224,7 +226,7 @@ export function FindReplaceBar({
           <button
             onClick={() => handleNavigate('prev')}
             disabled={totalMatchesCount === 0}
-            title="이전 매칭 찾기"
+            title="Previous match"
             style={{
               background: 'rgba(255, 255, 255, 0.06)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -241,7 +243,7 @@ export function FindReplaceBar({
           <button
             onClick={() => handleNavigate('next')}
             disabled={totalMatchesCount === 0}
-            title="다음 매칭 찾기"
+            title="Next match"
             style={{
               background: 'rgba(255, 255, 255, 0.06)',
               border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -262,7 +264,7 @@ export function FindReplaceBar({
               <button
                 onClick={handleReplace}
                 disabled={currentMatchIndex < 0}
-                title="선택된 항목 바꾸기"
+                title="Replace match"
                 style={{
                   background: 'rgba(59, 130, 246, 0.2)',
                   border: '1px solid rgba(59, 130, 246, 0.35)',
@@ -278,12 +280,12 @@ export function FindReplaceBar({
                 }}
               >
                 <Replace size={10} />
-                <span>바꾸기</span>
+                <span>{t.findReplace.replace}</span>
               </button>
               <button
                 onClick={handleReplaceAll}
                 disabled={totalMatchesCount === 0}
-                title="모든 일치 항목 바꾸기"
+                title="Replace all matches"
                 style={{
                   background: 'rgba(6, 182, 212, 0.2)',
                   border: '1px solid rgba(6, 182, 212, 0.35)',
@@ -299,7 +301,7 @@ export function FindReplaceBar({
                 }}
               >
                 <ReplaceAll size={10} />
-                <span>모두 바꾸기</span>
+                <span>{t.findReplace.replaceAll}</span>
               </button>
             </>
           )}

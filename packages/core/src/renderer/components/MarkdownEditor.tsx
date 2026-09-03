@@ -694,14 +694,23 @@ export function MarkdownEditor({
       )}
       <div
         ref={editorContainerRef}
-        onMouseMove={handleEditorMouseMove}
-        onMouseUp={handleSelection}
-        onKeyUp={handleSelection}
+        onMouseMove={editorMode === 'welcome' ? undefined : handleEditorMouseMove}
+        onMouseUp={editorMode === 'welcome' ? undefined : handleSelection}
+        onKeyUp={editorMode === 'welcome' ? undefined : handleSelection}
         onDropCapture={onDropCapture}
         onPasteCapture={onPasteCapture}
         onContextMenu={handleContextMenu}
         className={!wordWrap ? 'wrap-disabled' : ''}
-        style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: `40px 60px ${editorMode === 'raw' ? '40px' : '45vh'} 60px`, position: 'relative' }}
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          overflowY: 'auto',
+          padding: `40px 60px ${editorMode === 'raw' ? '40px' : '45vh'} 60px`,
+          position: 'relative',
+          userSelect: 'text',
+          WebkitUserSelect: 'text'
+        }}
       >
         <PeerBlockHighlightLayer peers={peers} containerRef={editorContainerRef} />
 

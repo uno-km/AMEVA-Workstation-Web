@@ -35,59 +35,70 @@
 
 // [내부 프로젝트 의존성 모듈 임포트: ../SettingsModal]
 import type { AppSettings } from '../SettingsModal'
+import { useTranslation } from '../../i18n/useTranslation'
 
-/**
- * SettingsTabPermissionsProps 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 export interface SettingsTabPermissionsProps {
   activeTab: string
   settings: AppSettings
   onUpdateSettings: (newSettings: Partial<AppSettings>) => void
 }
 
-  /*
-   * [FUNCTION CONTRACT]
-   * - 함수 명: `SettingsTabPermissions`
-   * - 역할: 인자 정보를 검수하고 비즈니스 계약 조건에 맞춰 최종 바인딩 결과물/바이너리 버퍼를 반환함.
-   * - 예시: `SettingsTabPermissions(...)` 호출 시 런타임 비동기/동기 연쇄 반응 유도.
-   */
-/**
- * SettingsTabPermissions 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
- * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
- */
 export function SettingsTabPermissions({
   activeTab,
   settings,
   onUpdateSettings,
 }: SettingsTabPermissionsProps) {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `activeTab !== 'Permissions'`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (activeTab !== 'Permissions')` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
+  const { isKorean } = useTranslation()
+
   if (activeTab !== 'Permissions') return null
+
+  const securityModes = [
+    {
+      id: 'turbo',
+      title: 'Turbo Mode',
+      desc: isKorean ? '기본 성능 중심. 빠른 실행을 우선합니다.' : 'Performance prioritized. Executes agent tools with minimal latency.'
+    },
+    {
+      id: 'restricted',
+      title: 'Restricted Sandbox',
+      desc: isKorean ? '에이전트를 안전한 샌드박스 내에서만 실행합니다.' : 'Executes agents strictly within isolated WebAssembly sandboxes.'
+    },
+    {
+      id: 'paranoiac',
+      title: 'Paranoid Maximum',
+      desc: isKorean ? '가장 강력한 보안. 자동 실행을 완전히 금지합니다.' : 'Maximum security. Completely forbids any autonomous execution.'
+    }
+  ]
+
+  const artifactPolicies = [
+    {
+      id: 'always',
+      title: 'Always Allow',
+      desc: isKorean ? '항상 검토 없이 바로 실행합니다.' : 'Automatically execute generated artifacts without prompt.'
+    },
+    {
+      id: 'ask',
+      title: 'Always Ask',
+      desc: isKorean ? '실행 시 항상 확인 창을 띄웁니다.' : 'Always display a confirmation prompt before running artifacts.'
+    },
+    {
+      id: 'never',
+      title: 'Always Block',
+      desc: isKorean ? '자동 실행을 완전히 비활성화합니다.' : 'Completely disable autonomous artifact execution.'
+    }
+  ]
 
   return (
     <>
-      <h3 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 6px' }}>Agent security mode</h3>
-      <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '0 0 16px' }}>Select one of the three options. Agent settings and permissions can be further customized below.</p>
+      <h3 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 6px' }}>
+        {isKorean ? '에이전트 보안 모드' : 'Agent security mode'}
+      </h3>
+      <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '0 0 16px' }}>
+        {isKorean ? '세 가지 모드 중 하나를 선택하십시오. 세부 권한은 아래에서 커스터마이징할 수 있습니다.' : 'Select one of the three options. Agent settings and permissions can be further customized below.'}
+      </p>
       
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '24px' }}>
-        {[
-          { id: 'turbo', title: 'Turbo Mode', desc: '기본 성능 중심. 빠른 실행을 우선합니다.' },
-          { id: 'restricted', title: 'Restricted Sandbox', desc: '에이전트를 안전한 샌드박스 내에서만 실행합니다.' },
-          { id: 'paranoiac', title: 'Paranoid Maximum', desc: '가장 강력한 보안. 자동 실행을 완전히 금지합니다.' }
-        ].map(item => {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `isActive`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const isActive = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
+        {securityModes.map(item => {
           const isActive = (settings.securityPreset || 'turbo') === item.id;
           return (
             <div
@@ -103,29 +114,22 @@ export function SettingsTabPermissions({
                 opacity: isActive ? 1 : 0.6
               }}
             >
-              <div style={{ fontSize: '13px', color: isActive ? 'var(--primary)' : 'var(--text-main)', marginBottom: '8px' }}>{item.title}</div>
+              <div style={{ fontSize: '13px', color: isActive ? 'var(--primary)' : 'var(--text-main)', marginBottom: '8px', fontWeight: 600 }}>{item.title}</div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: '1.4' }}>{item.desc}</div>
             </div>
           );
         })}
       </div>
 
-      <h3 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 6px' }}>Artifact Auto-execution</h3>
-      <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '0 0 16px' }}>아티팩트 자동 실행 허용 여부를 설정합니다.</p>
+      <h3 style={{ fontSize: '13px', fontWeight: 700, margin: '0 0 6px' }}>
+        {isKorean ? '아티팩트 자동 실행 정책' : 'Artifact Auto-execution'}
+      </h3>
+      <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '0 0 16px' }}>
+        {isKorean ? '에이전트가 생성한 아티팩트의 자동 실행 허용 여부를 설정합니다.' : 'Configure permission policies for automatic artifact and script execution.'}
+      </p>
       
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-        {[
-          { id: 'always', title: 'Always Allow', desc: '항상 검토 없이 바로 실행합니다.' },
-          { id: 'ask', title: 'Always Ask', desc: '실행 시 항상 확인 창을 띄웁니다.' },
-          { id: 'never', title: 'Always Block', desc: '자동 실행을 완전히 비활성화합니다.' }
-        ].map(item => {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `isActive`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const isActive = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
+        {artifactPolicies.map(item => {
           const isActive = (settings.artifactReviewPolicy || 'ask') === item.id;
           return (
             <div
@@ -141,7 +145,7 @@ export function SettingsTabPermissions({
                 opacity: isActive ? 1 : 0.6
               }}
             >
-              <div style={{ fontSize: '13px', color: isActive ? 'var(--primary)' : 'var(--text-main)', marginBottom: '8px' }}>{item.title}</div>
+              <div style={{ fontSize: '13px', color: isActive ? 'var(--primary)' : 'var(--text-main)', marginBottom: '8px', fontWeight: 600 }}>{item.title}</div>
               <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: '1.4' }}>{item.desc}</div>
             </div>
           );

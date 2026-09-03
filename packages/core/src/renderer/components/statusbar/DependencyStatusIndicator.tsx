@@ -1,6 +1,7 @@
 import React from 'react'
 import { useDependencyStore } from '../../stores/useDependencyStore'
 import { Layers } from 'lucide-react'
+import { useTranslation } from '../../i18n/useTranslation'
 
 export interface DependencyStatusIndicatorProps {
   activeTooltip: string | null
@@ -15,6 +16,7 @@ export function DependencyStatusIndicator({
   handleMouseLeave,
   tooltipStyle
 }: DependencyStatusIndicatorProps) {
+  const { t } = useTranslation()
   const { dependencies } = useDependencyStore()
   const depsArray = Object.values(dependencies)
 
@@ -23,17 +25,17 @@ export function DependencyStatusIndicator({
   const isLoading = depsArray.some(d => d.status === 'loading')
 
   let statusColor = 'var(--text-muted)'
-  let statusText = '의존성 대기'
+  let statusText = t.statusBar.depsIdle
   
   if (hasError) {
     statusColor = 'var(--danger)'
-    statusText = '의존성 오류'
+    statusText = t.statusBar.depsError
   } else if (isLoading) {
     statusColor = 'var(--warning)'
-    statusText = '백그라운드 로딩'
+    statusText = t.statusBar.depsLoading
   } else if (isAllReady) {
     statusColor = 'var(--success)'
-    statusText = '의존성 준비완료'
+    statusText = t.statusBar.depsReady
   }
 
   return (
@@ -53,10 +55,10 @@ export function DependencyStatusIndicator({
       {activeTooltip === 'dependency' && (
         <div style={{ ...tooltipStyle, minWidth: '250px', whiteSpace: 'nowrap' }}>
           <div style={{ fontSize: '11.5px', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '6px', marginBottom: '6px' }}>
-            시스템 백그라운드 모듈 상태
+            {t.statusBar.depsTitle}
           </div>
           {depsArray.length === 0 ? (
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>등록된 백그라운드 모듈이 없습니다.</div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{t.statusBar.depsEmpty}</div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               {depsArray.map(dep => {

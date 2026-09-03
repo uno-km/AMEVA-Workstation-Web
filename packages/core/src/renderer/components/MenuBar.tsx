@@ -412,7 +412,8 @@ export function MenuBar({}: MenuBarProps = {}) {
     boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
     borderRadius: '6px',
     padding: '4px 0',
-    minWidth: '200px',
+    minWidth: '280px',
+    width: 'max-content',
     display: 'flex',
     flexDirection: 'column',
     zIndex: 1000,
@@ -432,6 +433,7 @@ export function MenuBar({}: MenuBarProps = {}) {
     width: '100%',
     fontFamily: 'var(--font-sans)',
     outline: 'none',
+    whiteSpace: 'nowrap',
   }
 
   const shortcutStyle: React.CSSProperties = {
@@ -797,7 +799,7 @@ export function MenuBar({}: MenuBarProps = {}) {
               localStorage.setItem('theme', nextTheme)
             } catch {}
           }}
-          title="테마 전환 (Dark / White / Retro)"
+          title={t.googlePopover.themeToggleTooltip}
           style={{
             fontSize: '10.5px',
             fontWeight: 700,
@@ -901,10 +903,10 @@ export function MenuBar({}: MenuBarProps = {}) {
                 </div>
               )}
               <div className="google-popover-info">
-                <div className="google-popover-name">{googleProfile?.name || '구글 미연결'}</div>
-                <div className="google-popover-email">{googleProfile?.email || '로그인하여 서비스를 시작하세요'}</div>
+                <div className="google-popover-name">{googleProfile?.name || t.googlePopover.disconnected}</div>
+                <div className="google-popover-email">{googleProfile?.email || t.googlePopover.loginPrompt}</div>
                 <div className="google-popover-badge">
-                  {googleProfile?.isDriveConnected ? 'Drive Connected 🟢' : 'Drive Disconnected 🔴'}
+                  {googleProfile?.isDriveConnected ? t.googlePopover.driveConnected : t.googlePopover.driveDisconnected}
                 </div>
               </div>
             </div>
@@ -919,35 +921,35 @@ export function MenuBar({}: MenuBarProps = {}) {
                         if (res.success && res.user) {
                           setGoogleProfile(res.user)
                           setUsername(res.user.name)
-                          alert('Google 계정 동기화가 성공적으로 완료되었습니다!')
+                          alert('Google account synced successfully!')
                         } else {
                           setGoogleProfile(null)
                           setUsername('')
-                          alert('세션이 만료되었습니다. 다시 로그인해 주세요.')
+                          alert('Session expired. Please sign in again.')
                         }
                       }
                       setGooglePopoverOpen(false)
                     }}
                   >
                     <RefreshCw size={12} />
-                    구글 계정 동기화
+                    {t.googlePopover.syncBtn}
                   </button>
                   <button 
                     className="google-popover-btn google-popover-btn-secondary"
                     onClick={async () => {
                       if (window.electronAPI?.googleAuthLogout) {
-                        if (confirm('정말로 로그아웃하고 계정 연결을 해제하시겠습니까?')) {
+                        if (confirm('Are you sure you want to sign out and disconnect Google account?')) {
                           await window.electronAPI.googleAuthLogout()
                           setGoogleProfile(null)
                           setUsername('')
-                          alert('로그아웃이 완료되었습니다.')
+                          alert('Signed out successfully.')
                         }
                       }
                       setGooglePopoverOpen(false)
                     }}
                   >
                     <LogOut size={12} />
-                    Sign Out (로그아웃)
+                    {t.googlePopover.signOutBtn}
                   </button>
                 </>
               ) : (
@@ -957,10 +959,9 @@ export function MenuBar({}: MenuBarProps = {}) {
                   onClick={() => {
                     setIsSettingsOpen(true)
                     setGooglePopoverOpen(false)
-                    alert('설정 모달의 계정(Account) 탭에서 안전한 구글 로그인을 진행할 수 있습니다!')
                   }}
                 >
-                  구글 연동 로그인 시작하기
+                  {t.googlePopover.loginBtn}
                 </button>
               )}
             </div>

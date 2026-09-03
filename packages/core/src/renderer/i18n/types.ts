@@ -225,6 +225,76 @@ export interface TranslationSchema {
     localAiLoading: string;
     mcpConnected: string;
     peersOnline: string;
+    untitledDoc: string;
+    unsaved: string;
+    unsavedDescTitle: string;
+    unsavedDescBody: string;
+    savedDescTitle: string;
+    lastSavedTime: string;
+    noLastSaved: string;
+    embeddingIdle: string;
+    embeddingLoadingModel: string;
+    embeddingInProgress: string;
+    embeddingReady: string;
+    embeddingError: string;
+    embeddingToast: string;
+    depsIdle: string;
+    depsLoading: string;
+    depsReady: string;
+    depsError: string;
+    depsTitle: string;
+    depsEmpty: string;
+    docSummaryDeck: string;
+    docSummaryRunning: string;
+    dnaAnalyzing: string;
+    settingsTooltip: string;
+    versionTooltip: string;
+  };
+  aiDashboard: {
+    title: string;
+    online: string;
+    loading: string;
+    offline: string;
+    localEngine: string;
+    sessionTime: string;
+    sessionTimeTooltip: string;
+    avgTokens: string;
+    avgTokensTooltip: string;
+    vramLoading: string;
+    initPipeline: string;
+    ghostModel: string;
+    activateAiBtn: string;
+    waitingModelBtn: string;
+    runningAiBtn: string;
+  };
+  googlePopover: {
+    disconnected: string;
+    loginPrompt: string;
+    driveConnected: string;
+    driveDisconnected: string;
+    syncBtn: string;
+    signOutBtn: string;
+    loginBtn: string;
+    themeToggleTooltip: string;
+  };
+  codeConsole: {
+    title: string;
+    empty: string;
+    clear: string;
+  };
+  findReplace: {
+    findPlaceholder: string;
+    replacePlaceholder: string;
+    caseSensitive: string;
+    replace: string;
+    replaceAll: string;
+  };
+  pwa: {
+    offlineReady: string;
+    newRelease: string;
+    newReleaseDesc: string;
+    updateBtn: string;
+    dismissBtn: string;
   };
   aiPanel: {
     title: string;

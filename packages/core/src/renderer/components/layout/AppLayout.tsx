@@ -294,7 +294,8 @@ export const AppLayout: React.FC<AppLayoutProps> = (props) => {
           data-focus-region="editor"
           style={{
             zoom: editorZoom,
-            height: `${100 / editorZoom}%`,
+            height: '100%',
+            minHeight: '100%',
             position: 'relative',
             display: 'flex',
             flexDirection: 'row',

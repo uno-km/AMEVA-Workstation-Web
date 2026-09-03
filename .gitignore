@@ -93,3 +93,61 @@ vitest_out*.txt
 old_*
 scratch_*
 
+
+.env.*
+*.env
+*.env.*
+.env.prd
+.env.dev
+.env.docker
+secrets/
+*.key
+
+# ── AMEVA Master Enterprise Security & Environment Isolation Rules ──
+.env.development
+.env.test
+.env.production
+.env.staging
+*.secret
+*.secrets
+*credentials*
+*.token
+*.pfx
+*.pkcs12
+*.crt
+*.cert
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-wal
+*.db-shm
+*.dump
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+scratch/
+tmp/
+temp/
+.cache/
+.turbo/
+
+state.json
+*.tmp
+
+
+# ==============================================================================
+# Security & Credentials Isolation Policy
+# ==============================================================================
+.env*
+!.env.example
+id_rsa*
+.pypirc
+.npmrc
+secrets.json

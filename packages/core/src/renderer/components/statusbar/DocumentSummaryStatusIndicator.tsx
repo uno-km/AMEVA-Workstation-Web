@@ -1,15 +1,7 @@
-/**
- * ============================================================================
- * @file DocumentSummaryStatusIndicator.tsx
- * @system AMEVA OS Desktop Workstation - StatusBar Component
- * @location packages/core/src/renderer/components/statusbar/DocumentSummaryStatusIndicator.tsx
- * @role Status Bar Item for AI Document Summaries Deck
- * ============================================================================
- */
-
 import React from 'react';
 import { Loader2, Check } from 'lucide-react';
 import { useDocumentSummaryStore } from '../../stores/useDocumentSummaryStore';
+import { useTranslation } from '../../i18n/useTranslation';
 
 export interface DocumentSummaryStatusIndicatorProps {
   activeTooltip: string | null;
@@ -24,6 +16,7 @@ export const DocumentSummaryStatusIndicator: React.FC<DocumentSummaryStatusIndic
   handleMouseLeave,
   tooltipStyle,
 }) => {
+  const { t } = useTranslation();
   const { tasks, isDeckExpanded, toggleDeckExpanded } = useDocumentSummaryStore();
   const taskList = Object.values(tasks);
 
@@ -65,7 +58,7 @@ export const DocumentSummaryStatusIndicator: React.FC<DocumentSummaryStatusIndic
           fontWeight: 600,
           transition: 'all 0.15s ease',
         }}
-        title="AI 문서 요약 보관함"
+        title={t.statusBar.docSummaryDeck}
       >
         {isRunning ? (
           <Loader2 size={12} className="animate-spin" color="#60a5fa" />
@@ -74,7 +67,7 @@ export const DocumentSummaryStatusIndicator: React.FC<DocumentSummaryStatusIndic
         )}
 
         <span style={{ color: isRunning ? '#e2e8f0' : 'var(--text-main)' }}>
-          {isRunning ? '문서 요약 중' : '문서 요약 보관함'}
+          {isRunning ? t.statusBar.docSummaryRunning : t.statusBar.docSummaryDeck}
         </span>
 
         <span
@@ -97,12 +90,12 @@ export const DocumentSummaryStatusIndicator: React.FC<DocumentSummaryStatusIndic
       {activeTooltip === 'doc-summary-deck' && (
         <div style={{ ...tooltipStyle, bottom: '26px', right: 0, width: '180px' }}>
           <div style={{ fontWeight: 700, marginBottom: '2px', color: '#f8fafc' }}>
-            AI 문서 요약 보관함
+            {t.statusBar.docSummaryDeck}
           </div>
           <div style={{ fontSize: '10.5px', color: '#94a3b8' }}>
             {isRunning
-              ? `${runningCount}개 문서 맵리듀스 요약 진행 중...`
-              : `총 ${taskList.length}개 문서 요약 완료 (클릭하여 열람)`}
+              ? `${runningCount} summaries in progress...`
+              : `${taskList.length} summaries completed`}
           </div>
         </div>
       )}

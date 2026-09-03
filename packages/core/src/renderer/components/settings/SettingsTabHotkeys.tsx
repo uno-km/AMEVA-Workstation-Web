@@ -35,6 +35,7 @@
 
 // [외부 패키지 및 라이브러리 임포트: react]
 import React from 'react'
+import { useTranslation } from '../../i18n/useTranslation'
 // [내부 프로젝트 의존성 모듈 임포트: ../SettingsModal]
 import type { AppSettings, HotkeyConfig } from '../SettingsModal'
 
@@ -59,6 +60,7 @@ interface SettingsTabHotkeysProps {
  * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
 export function SettingsTabHotkeys({ activeTab, settings, onUpdateSettings }: SettingsTabHotkeysProps) {
+  const { isKorean } = useTranslation()
       /*
        * [ALGORITHM BRANCH / DECISION]
        * - 조건 식: `activeTab !== 'Hotkeys'`
@@ -83,7 +85,7 @@ export function SettingsTabHotkeys({ activeTab, settings, onUpdateSettings }: Se
        * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
        * - 예시: `if (!raw)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
        */
-    if (!raw) return '지정 안 됨'
+    if (!raw) return isKorean ? '지정 안 됨' : 'Unassigned'
     return raw
       .replace('Control', 'Ctrl')
       .replace('Shift', 'Shift')
@@ -222,7 +224,7 @@ export function SettingsTabHotkeys({ activeTab, settings, onUpdateSettings }: Se
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', margin: '0 0 4px' }}>
-        <h3 style={{ fontSize: '13px', fontWeight: 700, margin: 0 }}>사용자 정의 단축키 설정</h3>
+        <h3 style={{ fontSize: '13px', fontWeight: 700, margin: 0 }}>{isKorean ? '사용자 정의 단축키 설정' : 'Custom Keyboard Shortcuts'}</h3>
         <button
           onClick={handleResetHotkeys}
           style={{
@@ -230,11 +232,11 @@ export function SettingsTabHotkeys({ activeTab, settings, onUpdateSettings }: Se
             border: 'none', cursor: 'pointer', fontWeight: 700, padding: 0,
           }}
         >
-          기본값 복원 🔄
+          {isKorean ? '기본값 복원 🔄' : 'Restore Defaults 🔄'}
         </button>
       </div>
       <div style={{ fontSize: '9.5px', color: 'var(--text-muted)', marginBottom: '8px' }}>
-        입력 필드를 클릭하고 원하는 단축키 조합을 키보드로 누르면 자동으로 녹화됩니다.
+        {isKorean ? '입력 필드를 클릭하고 원하는 단축키 조합을 키보드로 누르면 자동으로 녹화됩니다.' : 'Click an input field and press your desired key combination to record.'}
       </div>
       
       <div style={{
@@ -246,15 +248,15 @@ export function SettingsTabHotkeys({ activeTab, settings, onUpdateSettings }: Se
         paddingRight: '4px'
       }}>
         {[
-          { key: 'save', label: '문서 저장' },
-          { key: 'open', label: '문서 열기' },
-          { key: 'newFile', label: '새 창 / 새 탭 생성' },
-          { key: 'pdfExport', label: 'PDF 내보내기' },
-          { key: 'toggleAI', label: 'AI 어시스턴트 토글' },
-          { key: 'toggleMode', label: '편집 / 미리보기 모드 전환' },
-          { key: 'zoomIn', label: '화면 확대 (Zoom In)' },
-          { key: 'zoomOut', label: '화면 축소 (Zoom Out)' },
-          { key: 'zoomReset', label: '화면 확대/축소 초기화' },
+          { key: 'save', label: isKorean ? '문서 저장' : 'Save Document' },
+          { key: 'open', label: isKorean ? '문서 열기' : 'Open Document' },
+          { key: 'newFile', label: isKorean ? '새 창 / 새 탭 생성' : 'New Window / Tab' },
+          { key: 'pdfExport', label: isKorean ? 'PDF 내보내기' : 'Export PDF' },
+          { key: 'toggleAI', label: isKorean ? 'AI 어시스턴트 토글' : 'Toggle AI Assistant' },
+          { key: 'toggleMode', label: isKorean ? '편집 / 미리보기 모드 전환' : 'Toggle Edit/Preview Mode' },
+          { key: 'zoomIn', label: isKorean ? '화면 확대 (Zoom In)' : 'Zoom In' },
+          { key: 'zoomOut', label: isKorean ? '화면 축소 (Zoom Out)' : 'Zoom Out' },
+          { key: 'zoomReset', label: isKorean ? '화면 확대/축소 초기화' : 'Reset Zoom' },
         ].map(item => {
       /*
        * [RUN-TIME STATE / INVARIANT]
@@ -297,7 +299,7 @@ export function SettingsTabHotkeys({ activeTab, settings, onUpdateSettings }: Se
                 type="text"
                 readOnly
                 value={formatHotkeyForUI(rawVal)}
-                placeholder="보조키 + 일반키"
+                placeholder={isKorean ? "보조키 + 일반키" : "Modifier + Key"}
                 onKeyDown={(e) => handleRecordHotkey(item.key as keyof HotkeyConfig, e)}
                 style={{
                   width: '160px',

@@ -107,14 +107,7 @@ export function JupyterCodeViewer({
     resolvedCode = lines.slice(1).join('\n')
   }
 
-  const { isRunning, runJSCode, runPythonCode, runSQLCode } = useCodeRuntime()
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `meta`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const meta = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
+  const { isRunning, executeCode } = useCodeRuntime()
   const meta = getLangMeta(resolvedLanguage)
 
   const [outputLines, setOutputLines] = useState<{ type: 'stdout' | 'stderr' | 'info'; text: string }[]>([])
@@ -138,44 +131,19 @@ export function JupyterCodeViewer({
     setShowHtmlRender(false)
   }, [code, resolvedLanguage])
 
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `handleRun`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const handleRun = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const handleRun = async () => {
     setHasRun(true)
     setSuccess(null)
     setTableData(null)
     setOutputLines([{ type: 'info', text: `▶ ${meta.label} 코드 실행 중...` }])
     try {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `resolvedLanguage === 'html'`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (resolvedLanguage === 'html')` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
       if (resolvedLanguage === 'html') {
         setSuccess(true)
         setOutputLines([{ type: 'info', text: '렌더링 완료' }])
         setShowHtmlRender(true)
         return
       }
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `result`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const result = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-      const result = (resolvedLanguage === 'python' || resolvedLanguage === 'py')
-        ? await runPythonCode(resolvedCode)
-        : (resolvedLanguage === 'sql')
-        ? await runSQLCode(resolvedCode)
-        : await runJSCode(resolvedCode)
+      const result = await executeCode(resolvedLanguage, resolvedCode)
       setSuccess(result.success)
       /*
        * [RUN-TIME STATE / INVARIANT]

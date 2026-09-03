@@ -275,7 +275,7 @@ export function AIPanel() {
                   cursor: 'pointer',
                   fontWeight: 600
                 }}
-                title="엔진 모드 전환 (WebGPU ↔ Remote API)"
+                title="Switch Engine Mode (WebGPU / Remote API)"
               >
                 {engineMode === 'webgpu' ? '⚡ WebGPU' : '🌐 API'}
               </button>
@@ -295,7 +295,7 @@ export function AIPanel() {
               padding: '6px',
               borderRadius: '4px'
             }}
-            title="엔진 API 설정"
+            title="Engine API Settings"
           >
             <Settings size={14} />
           </button>
@@ -315,7 +315,7 @@ export function AIPanel() {
                 cursor: 'pointer'
               }}
             >
-              대화
+              Chat
             </button>
             <button
               data-testid="ai-tab-outline"
@@ -331,7 +331,7 @@ export function AIPanel() {
                 cursor: 'pointer'
               }}
             >
-              목차
+              Outline
             </button>
           </div>
 
@@ -340,7 +340,7 @@ export function AIPanel() {
               data-testid="ai-clear-messages-btn"
               onClick={clearMessages}
               style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '6px', borderRadius: '4px' }}
-              title="대화 지우기"
+              title="Clear Messages"
             >
               <Trash2 size={14} />
             </button>

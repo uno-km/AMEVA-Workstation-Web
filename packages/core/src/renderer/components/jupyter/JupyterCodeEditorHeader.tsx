@@ -10,7 +10,8 @@ import { useState } from 'react'
 import { Play, Copy, ChevronDown, Sparkles, Eye, Code2, Columns } from 'lucide-react'
 import { type AmevaEditor } from '../../editor/amevaBlockSchema'
 import { useCodeRuntime } from '../../hooks/useCodeRuntime'
-import { getLangMeta } from './langMeta'
+import { getLangMeta, getDefaultCodeForLanguage, isDefaultCodeTemplate } from './langMeta'
+import { LanguagePickerMenu } from './LanguagePickerMenu'
 
 export function JupyterCodeEditorHeader({
   code,
@@ -43,7 +44,7 @@ export function JupyterCodeEditorHeader({
   previewMode?: 'preview' | 'code' | 'split'
   onTogglePreviewMode?: (mode: 'preview' | 'code' | 'split') => void
 }) {
-  const { isRunning, runJSCode, runPythonCode, runSQLCode } = useCodeRuntime()
+  const { isRunning, executeCode } = useCodeRuntime()
   const meta = getLangMeta(language)
   const [copied, setCopied] = useState(false)
 
@@ -54,11 +55,7 @@ export function JupyterCodeEditorHeader({
         onRunSuccess(true, ['렌더링 완료'])
         return
       }
-      const result = (language === 'python' || language === 'py')
-        ? await runPythonCode(code)
-        : (language === 'sql')
-        ? await runSQLCode(code)
-        : await runJSCode(code)
+      const result = await executeCode(language, code)
       onRunSuccess(result.success, (result.output || '').split('\n'), result.tableData)
     } catch (err: any) {
       onRunFailure(err.message || '알 수 없는 에러')
@@ -122,69 +119,25 @@ export function JupyterCodeEditorHeader({
         </button>
       )}
 
-      {/* 언어 선택 셀렉터 */}
-      <div style={{
-        fontSize: '11.5px',
-        fontWeight: 700,
-        color: accentColor,
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        fontFamily: 'Consolas, "JetBrains Mono", monospace',
-      }}>
-        <span style={{
-          width: '7px',
-          height: '7px',
-          borderRadius: '50%',
-          backgroundColor: accentColor,
-          display: 'inline-block'
-        }} />
-        <select
-          value={language}
-          onChange={(e) => {
-            const val = e.target.value
-            editor.updateBlock(blockId, {
-              type: 'jupyter' as any,
-              props: {
-                ...editor.getBlock(blockId)?.props,
-                language: val,
-                runState: JSON.stringify({ hasRun: false, success: null, outputLines: [] })
-              }
-            } as any)
-          }}
-          style={{
-            background: 'transparent',
-            color: accentColor,
-            border: 'none',
-            outline: 'none',
-            fontSize: '11.5px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            textTransform: 'uppercase',
-            letterSpacing: '0.8px',
-            fontFamily: 'Consolas, "JetBrains Mono", monospace',
-            padding: '2px 4px',
-            borderRadius: '4px',
-            transition: 'background 0.2s',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-          }}
-        >
-          <option value="javascript" style={{ background: '#12131a', color: '#f59e0b' }}>Javascript</option>
-          <option value="python" style={{ background: '#12131a', color: '#3b82f6' }}>Python</option>
-          <option value="sql" style={{ background: '#12131a', color: '#06b6d4' }}>SQL (SQLite)</option>
-          <option value="html" style={{ background: '#12131a', color: '#14b8a6' }}>HTML Sandbox</option>
-          <option value="mermaid" style={{ background: '#12131a', color: '#2563eb' }}>Mermaid</option>
-          <option value="plaintext" style={{ background: '#12131a', color: '#94a3b8' }}>Plaintext</option>
-          <option value="text" style={{ background: '#12131a', color: '#94a3b8' }}>Text</option>
-          <option value="json" style={{ background: '#12131a', color: '#10b981' }}>JSON</option>
-          <option value="bash" style={{ background: '#12131a', color: '#ec4899' }}>Bash</option>
-        </select>
-      </div>
+      {/* 언어 선택 셀렉터 (자주 쓰는 언어 + 기타 언어 서브메뉴) */}
+      <LanguagePickerMenu
+        currentLanguage={language}
+        onSelectLanguage={(val) => {
+          const currentBlockProps = (editor.getBlock(blockId)?.props as any) || {}
+          const currentCode = currentBlockProps.code || ''
+          const shouldUpdateCode = isDefaultCodeTemplate(language, currentCode)
+
+          editor.updateBlock(blockId, {
+            type: 'jupyter' as any,
+            props: {
+              ...currentBlockProps,
+              language: val,
+              code: shouldUpdateCode ? getDefaultCodeForLanguage(val) : currentCode,
+              runState: JSON.stringify({ hasRun: false, success: null, outputLines: [] })
+            }
+          } as any)
+        }}
+      />
 
       {/* Mermaid / HTML 전용 뷰 모드 토글 (다이어그램 / 코드 / 분할) */}
       {(meta.isMermaid || meta.isHtml) && onTogglePreviewMode && (
