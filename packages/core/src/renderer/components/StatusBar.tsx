@@ -376,7 +376,7 @@ export function StatusBar({}: StatusBarProps = {}) {
           style={{ fontSize: '10.5px', color: 'var(--text-muted)', cursor: 'default', fontWeight: 500 }} 
           title={t.statusBar.versionTooltip}
         >
-          {import.meta.env.VITE_APP_VERSION || 'v1.0.0-dev'}
+          {import.meta.env.VITE_APP_VERSION || 'v1.1.0'}
         </span>
       </div>
     </div>
