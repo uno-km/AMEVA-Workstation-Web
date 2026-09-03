@@ -41,6 +41,8 @@ import { type AmevaEditor as AppEditor } from '../../editor/amevaBlockSchema'
 import { type EditorMode } from '../../../shared/types'
 // [내부 프로젝트 의존성 모듈 임포트: ../../stores/useWorkspaceStore]
 import { useWorkspaceStore } from '../../stores/useWorkspaceStore'
+import { useI18nStore } from '../../i18n/useTranslation'
+import { INTERACTIVE_TOUR_DOC_KO, INTERACTIVE_TOUR_DOC_EN } from '../../config/welcomeDocs'
 
   /*
    * [FUNCTION CONTRACT]
@@ -288,36 +290,23 @@ export function useAppModeSwitch({
        * - 예시 코드: `const handleStartWelcomeEdit = ...` 형태로 안전 캐싱 후 가공 기동.
        */
   const handleStartWelcomeEdit = async () => {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `!editor`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (!editor)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
     if (!editor) return
     try {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `normalized`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const normalized = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-      const normalized = normalizeMarkdown(currentContent || DEFAULT_WELCOME_TEXT)
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `blocks`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const blocks = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
-      const blocks = await editor.tryParseMarkdownToBlocks(normalized)
-      cleanCodeBlocks(blocks)
-      ensureBlockIds(blocks)
-      editor.replaceBlocks(editor.document, blocks)
-      setCurrentContent(currentContent || DEFAULT_WELCOME_TEXT)
-      setOriginalContent(currentContent || DEFAULT_WELCOME_TEXT)
+      const lang = useI18nStore.getState().language
+      const isWelcomeDoc = !currentContent ||
+        currentContent === DEFAULT_WELCOME_TEXT ||
+        currentContent.includes('release-deck-card') ||
+        currentContent.includes('AMEVA Workstation Guide Book') ||
+        currentContent.startsWith('# AMEVA Workstation: 차세대') ||
+        currentContent.startsWith('# AMEVA Workstation: Next-Gen')
+
+      const targetDoc = isWelcomeDoc
+        ? (lang === 'en' ? INTERACTIVE_TOUR_DOC_EN : INTERACTIVE_TOUR_DOC_KO)
+        : currentContent
+
+      await loadMarkdownIntoEditor(editor, targetDoc)
+      setCurrentContent(targetDoc)
+      setOriginalContent(targetDoc)
       setEditorMode('edit')
     } catch (err) {
       console.error('웰컴 편집 로드 실패:', err)

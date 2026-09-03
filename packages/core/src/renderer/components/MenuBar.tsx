@@ -36,7 +36,7 @@
 // [외부 패키지 및 라이브러리 임포트: react]
 import React, { useState, useEffect, useRef } from 'react'
 // [외부 패키지 및 라이브러리 임포트: lucide-react]
-import { Check, LayoutGrid, PanelLeft, PanelBottom, PanelRight, Search, Settings, ChevronDown, RefreshCw, LogOut, Languages, Sun, Moon, Monitor } from 'lucide-react'
+import { Check, LayoutGrid, PanelLeft, PanelBottom, PanelRight, Search, Settings, ChevronDown, RefreshCw, LogOut, Languages, Sun, Moon, Monitor, BookOpen, FileText, Layers, Columns, SplitSquareVertical } from 'lucide-react'
 import { useTranslation } from '../i18n/useTranslation'
 
 // [내부 프로젝트 의존성 모듈 임포트: ../hooks/app/useMenuBarShortcuts]
@@ -105,6 +105,17 @@ export function MenuBar({}: MenuBarProps = {}) {
   const filePath = useWorkspaceStore((state) => state.filePath)
   const isSplitView = useWorkspaceStore((state) => state.isSplitView)
   const toggleSplitView = useWorkspaceStore((state) => state.toggleSplitView)
+  const pageViewMode = useWorkspaceStore((state) => state.pageViewMode)
+  const setPageViewMode = useWorkspaceStore((state) => state.setPageViewMode)
+  const viewerSkin = useWorkspaceStore((state) => state.viewerSkin)
+  const setViewerSkin = useWorkspaceStore((state) => state.setViewerSkin)
+
+  const handleViewModeChange = (mode: any) => {
+    setPageViewMode(mode)
+    if (editorMode === 'welcome') {
+      setEditorMode('edit')
+    }
+  }
   const canAccessMarketplace = true
   const [googlePopoverOpen, setGooglePopoverOpen] = useState(false)
   const [googleProfile, setGoogleProfile] = useState<any | null>(null)
@@ -711,6 +722,132 @@ export function MenuBar({}: MenuBarProps = {}) {
 
       {/* 3. 우측 영역: Antigravity 레이아웃 구성 + 검색 + 언어전환 + 브라우저열기 + 설정 + 구글계정관리 */}
       <div className="menu-bar-right">
+        {/* (0) 다중 페이지(연속/1장/2장/3장/페이지나누기) 뷰 모드 표준 문서 픽토그램 탭 그룹 */}
+        <div className="layout-btn-group" style={{ display: 'flex', alignItems: 'center', gap: '2px', background: 'var(--bg-glass-subtle)', padding: '2px', borderRadius: '6px', border: '1px solid var(--border-muted)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+          {/* 연속 스크롤 픽토그램 */}
+          <button
+            className={`layout-btn ${pageViewMode === 'continuous' ? 'active' : ''}`}
+            onClick={() => handleViewModeChange('continuous')}
+            title="연속 스크롤 (기본 에디터)"
+            style={{
+              padding: '2px 6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: pageViewMode === 'continuous' ? 'var(--primary)' : 'transparent',
+              color: pageViewMode === 'continuous' ? '#ffffff' : 'var(--text-muted)',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              height: '22px'
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+              <rect x="2" y="1.5" width="12" height="2" rx="1" />
+              <rect x="2" y="5.5" width="12" height="2" rx="1" />
+              <rect x="2" y="9.5" width="12" height="2" rx="1" />
+              <rect x="2" y="13.5" width="12" height="2" rx="1" />
+            </svg>
+          </button>
+
+          {/* 1장 보기 픽토그램 (단일 문서 용지) */}
+          <button
+            className={`layout-btn ${pageViewMode === 'single' ? 'active' : ''}`}
+            onClick={() => handleViewModeChange('single')}
+            title="1장 보기 (A4 인쇄 레이아웃)"
+            style={{
+              padding: '2px 6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: pageViewMode === 'single' ? 'var(--primary)' : 'transparent',
+              color: pageViewMode === 'single' ? '#ffffff' : 'var(--text-muted)',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              height: '22px'
+            }}
+          >
+            <svg width="11" height="14" viewBox="0 0 12 15" fill="none" stroke="currentColor" strokeWidth="1.8">
+              <rect x="1.5" y="1.5" width="9" height="12" rx="1.5" />
+            </svg>
+          </button>
+
+          {/* 2장 보기 픽토그램 (좌·우 2페이지 펼침) */}
+          <button
+            className={`layout-btn ${pageViewMode === 'dual' ? 'active' : ''}`}
+            onClick={() => handleViewModeChange('dual')}
+            title="2장 책 펼침 (좌·우)"
+            style={{
+              padding: '2px 6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: pageViewMode === 'dual' ? 'var(--primary)' : 'transparent',
+              color: pageViewMode === 'dual' ? '#ffffff' : 'var(--text-muted)',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              height: '22px'
+            }}
+          >
+            <svg width="18" height="13" viewBox="0 0 20 14" fill="none" stroke="currentColor" strokeWidth="1.6">
+              <rect x="1" y="1" width="8" height="12" rx="1" />
+              <rect x="11" y="1" width="8" height="12" rx="1" />
+            </svg>
+          </button>
+
+          {/* 3장 보기 픽토그램 (3페이지 나란히) */}
+          <button
+            className={`layout-btn ${pageViewMode === 'triple' ? 'active' : ''}`}
+            onClick={() => handleViewModeChange('triple')}
+            title="3장 와이드 (좌·중·우)"
+            style={{
+              padding: '2px 6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: pageViewMode === 'triple' ? 'var(--primary)' : 'transparent',
+              color: pageViewMode === 'triple' ? '#ffffff' : 'var(--text-muted)',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              height: '22px'
+            }}
+          >
+            <svg width="22" height="12" viewBox="0 0 24 13" fill="none" stroke="currentColor" strokeWidth="1.4">
+              <rect x="0.8" y="0.8" width="6.4" height="11.4" rx="0.8" />
+              <rect x="8.8" y="0.8" width="6.4" height="11.4" rx="0.8" />
+              <rect x="16.8" y="0.8" width="6.4" height="11.4" rx="0.8" />
+            </svg>
+          </button>
+
+          {/* 페이지 나누기 픽토그램 (절취선 분할) */}
+          <button
+            className={`layout-btn ${pageViewMode === 'page-break' ? 'active' : ''}`}
+            onClick={() => handleViewModeChange('page-break')}
+            title="페이지 나누기 모드 (A4 구분선)"
+            style={{
+              padding: '2px 6px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: pageViewMode === 'page-break' ? 'var(--primary)' : 'transparent',
+              color: pageViewMode === 'page-break' ? '#ffffff' : 'var(--text-muted)',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              height: '22px'
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <rect x="1" y="1" width="12" height="4.5" rx="1" />
+              <line x1="1" y1="7" x2="13" y2="7" strokeDasharray="2 1.5" />
+              <rect x="1" y="8.5" width="12" height="4.5" rx="1" />
+            </svg>
+          </button>
+        </div>
+
         {/* (1) 레이아웃 전환 버튼 그룹 (4개) */}
         <div className="layout-btn-group">
           {/* 전체 패널 복원 / 리셋 */}

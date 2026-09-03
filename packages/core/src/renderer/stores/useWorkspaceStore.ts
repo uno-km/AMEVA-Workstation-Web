@@ -171,6 +171,19 @@ export interface WorkspaceState {
   setIsSmartDocsMode: (val: boolean) => void
 
   /*
+   * [BOOK VIEWER & PAGE VIEW MODE STATE]
+   * - pageViewMode: 'continuous' | 'single' | 'dual' | 'triple' | 'page-break'
+   * - viewerSkin: 'dark' | 'white' | 'retro'
+   * - currentBookPage: 현재 페이지 번호
+   */
+  pageViewMode: 'continuous' | 'single' | 'dual' | 'triple' | 'page-break'
+  setPageViewMode: (mode: 'continuous' | 'single' | 'dual' | 'triple' | 'page-break') => void
+  viewerSkin: 'dark' | 'white' | 'retro'
+  setViewerSkin: (skin: 'dark' | 'white' | 'retro') => void
+  currentBookPage: number
+  setCurrentBookPage: (page: number) => void
+
+  /*
    * [PDF VIEWER STATE]
    * - pdfData: PDF 파일 열기 시 원본 base64 데이터 보존. 모드 전환 시에도 파괴되지 않아야 함.
    * - setPdfData: PDF 데이터 갱신 액션.
@@ -282,7 +295,14 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
   isSmartDocsMode: false,
   setIsSmartDocsMode: (val) => set({ isSmartDocsMode: val }),
 
-  // PDF 븷얰어 전용 데이터 (pdfData는 모드 전환시에도 보존됨)
+  pageViewMode: 'continuous',
+  setPageViewMode: (mode) => set({ pageViewMode: mode }),
+  viewerSkin: 'dark',
+  setViewerSkin: (skin) => set({ viewerSkin: skin }),
+  currentBookPage: 1,
+  setCurrentBookPage: (page) => set({ currentBookPage: page }),
+
+  // PDF 뷰어 전용 데이터 (pdfData는 모드 전환시에도 보존됨)
   pdfData: null,
   setPdfData: (data) => set({ pdfData: data }),
   pdfFileName: '',

@@ -321,40 +321,12 @@ export function convertJupyterToCodeBlocks(blocks: any[]): any[] {
  * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
 export function normalizeMarkdown(raw: string): string {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `content`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const content = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   let content = raw.replace(/\r\n/g, '\n')
   content = content.replace(/^(#{1,6})([^\s#])/gm, '$1 $2')
 
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `parts`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const parts = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const parts = content.split('```')
-      /*
-       * [LOOP CONTROL ITERATION]
-       * - 루프 조건: `for (let i = 1; i < parts.length; i += 2) {`
-       * - 예상 시나리오: 지정된 조건 한계 도달 시점까지 콜렉션 항목의 순차 매핑, 변환 및 동기 적재 처리를 수행함.
-       * - 예시: `for (const item of list)` 루프 실행 시 모든 개별 블록의 html 포맷 정제 완료 후 스택 종결.
-       */
   for (let i = 1; i < parts.length; i += 2) {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `parts[i]`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (parts[i])` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
     if (parts[i]) {
-      parts[i] = parts[i].replace(/\n\s*\n/g, '\n\u200B\n')
       parts[i] = parts[i].replace(/</g, 'LT_TEMP_XYZ')
       parts[i] = parts[i].replace(/>/g, 'GT_TEMP_XYZ')
     }
@@ -362,26 +334,12 @@ export function normalizeMarkdown(raw: string): string {
   content = parts.join('```')
   
   content = content.replace(/\n*```([a-zA-Z0-9_-]+)[^\n]*\n+/g, (_, lang) => {
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `l`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const l = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
     const l = lang.toLowerCase()
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `mapped`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const mapped = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
     const mapped = l === 'js' ? 'javascript' : l === 'ts' ? 'typescript' : l === 'py' ? 'python' : l
     return `\n\n\`\`\`${mapped}\n`
   })
   content = content.replace(/\n*```[ \t]*\n+/g, '\n```\n\n')
-  content = content.replace(/\n{3,}/g, '\n\n')
+  content = content.replace(/\n{4,}/g, '\n\n\n')
   return content.trim()
 }
 

@@ -29,8 +29,10 @@
  * [IMPORT SEGMENTATION & CONTRACTS]
  * - React, useState, useEffect: 상태 바인딩 및 HMR 라이프사이클 구동용 React 코어 API.
  */
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef, useMemo, createContext, useContext } from 'react'
 import { createPortal } from 'react-dom'
+import { autoUpdate } from '@floating-ui/react'
+import type { ReferenceElement } from '@floating-ui/react'
 
 /* 
  * [BLOCKNOTE MANTINE WYSIWYG LAYOUT]
@@ -47,6 +49,7 @@ import { BlockNoteView } from '@blocknote/mantine'
  * - DragHandleMenu: 드래그 핸들 전용 메뉴 헬퍼.
  * - BlockColorsItem: 블록 배경/글자 색상 지정 액션.
  * - DragHandleButton: 사이드 메뉴 안에서 드래그 핸들을 그리는 공식 컴포넌트.
+ * - BlockPopover: 플로팅 사이드 메뉴 앵커 팝업 렌더러.
  */
 import {
   SuggestionMenuController,
@@ -59,7 +62,9 @@ import {
   useBlockNoteEditor,
   useExtension,
   useExtensionState,
+  BlockPopover,
 } from '@blocknote/react'
+import type { FloatingUIOptions, SideMenuProps } from '@blocknote/react'
 
 /*
  * [BLOCKNOTE CORE EXTENSIONS - INTERNAL API ACCESS]
@@ -83,7 +88,7 @@ import '@blocknote/mantine/style.css'
  * - FileText: 멘션 시 대상 문서 링크 아이콘
  * - Sparkles: 헤더 참조 링크 아이콘
  */
-import { X, Users, FileText, Sparkles } from 'lucide-react'
+import { X, Users, FileText, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react'
 
 /* 
  * [MERMAID GRAPH ENGINE]
@@ -126,6 +131,7 @@ import { useWebLLM } from './useWebLLM'
 import { useLLMAction } from '../hooks/editor/useLLMAction'
 import { useGhostText } from '../hooks/editor/useGhostText'
 import { useDocumentSummaryStore } from '../stores/useDocumentSummaryStore'
+import '../styles/editorBookModes.css'
 
 /* 
  * [INTERACTION HOOKS]
@@ -168,6 +174,21 @@ export interface MarkdownEditorProps {
 }
 
 /**
+ * @context SideMenuTargetBlockContext
+ * @description 사이드 메뉴가 표시되어야 할 현재 활성 블록(포인터/커서 위치 또는 마우스 호버 대상)을
+ * 하위 커스텀 버튼(+ 및 ::)에 안전하게 전달하기 위한 컨텍스트.
+ */
+const SideMenuTargetBlockContext = createContext<{
+  block: any | undefined
+  isPersistent: boolean
+}>({
+  block: undefined,
+  isPersistent: false,
+})
+
+const useSideMenuTargetBlock = () => useContext(SideMenuTargetBlockContext)
+
+/**
  * @component CustomAddBlockButton
  * @location packages/core/src/renderer/components/MarkdownEditor.tsx
  * @description BlockNote SideMenu 안에서 렌더링되는 커스텀 [+] 블록 추가 버튼 컴포넌트.
@@ -198,10 +219,12 @@ const CustomAddBlockButton = () => {
    */
   const editor = useBlockNoteEditor()
   const suggestionMenu = useExtension(SuggestionMenu)
-  const block = useExtensionState(SideMenuExtension, {
+  const { block: ctxBlock } = useSideMenuTargetBlock()
+  const extBlock = useExtensionState(SideMenuExtension, {
     editor,
     selector: (state) => state?.block,
   })
+  const block = ctxBlock || extBlock
 
   /**
    * [EVENT HANDLER - onClick]
@@ -315,10 +338,12 @@ const CustomAddBlockButton = () => {
  */
 const SafeDragHandleMenu = () => {
   const editor = useBlockNoteEditor()
-  const block = useExtensionState(SideMenuExtension, {
+  const { block: ctxBlock } = useSideMenuTargetBlock()
+  const extBlock = useExtensionState(SideMenuExtension, {
     editor,
     selector: (state) => state?.block,
   })
+  const block = ctxBlock || extBlock
 
   const handleRemove = useCallback(() => {
     if (!block) return
@@ -385,6 +410,239 @@ const SafeCustomSideMenu = () => (
   </SideMenu>
 )
 
+/**
+ * @component PersistentSideMenuController
+ * @description 에디터 내 텍스트 포인터(커서/캐럿/선택)가 찍혀 있는 동안 좌측 [+ ::] 사이드 액션 메뉴가
+ * 소멸되지 않고 지속적으로 유지(Persistent Visible)되도록 제어하는 스마트 사이드 메뉴 컨트롤러.
+ *
+ * [핵심 해결 원리 - DESIGN INTENT / ADR]
+ * 1. BlockNote 기본 SideMenuController는 오직 마우스 이동(`mousemove`) 시에만 블록을 추적하므로,
+ *    본문에 커서를 두고 `+` 단추를 누르려고 마우스를 옮기는 찰나의 간격(Gap)에서 메뉴가 즉각 닫혀버리는 문제가 발생함.
+ * 2. 이를 해결하기 위해 에디터 내 포인터가 찍혀 있는 블록(`focusedBlock`)을 실시간 추적하여,
+ *    마우스가 다른 블록을 명시적으로 호버하고 있지 않다면 커서 위치의 블록 좌측에 [+ ::]를 상시 표출함.
+ * 3. 마우스가 [+ ::] 버튼 영역에 진입했을 때(`isHoveringMenu`) 대상 블록을 고정 락(Lock)하여
+ *    마우스 이동 및 조작 중 메뉴가 소멸되는 현상을 원천 방어함.
+ */
+const PersistentSideMenuController = (props: {
+  sideMenu?: React.FC<SideMenuProps>
+  floatingUIOptions?: Partial<FloatingUIOptions>
+  portalElement?: HTMLElement | null
+}) => {
+  const editor = useBlockNoteEditor()
+  const sideMenuExt = useExtension(SideMenuExtension)
+
+  // BlockNote 기본 호버 확장 상태
+  const extState = useExtensionState(SideMenuExtension, {
+    selector: (state) =>
+      state !== undefined
+        ? {
+            show: state.show,
+            block: state.block,
+          }
+        : undefined,
+  })
+
+  // 에디터 내 현재 커서가 찍혀 있는 블록 추적
+  const [focusedBlock, setFocusedBlock] = useState<any>(() => {
+    try {
+      return editor.getTextCursorPosition()?.block
+    } catch {
+      return undefined
+    }
+  })
+
+  // 에디터 포커스 상태 추적
+  const [isEditorFocused, setIsEditorFocused] = useState<boolean>(() => {
+    try {
+      return editor.isFocused()
+    } catch {
+      return false
+    }
+  })
+
+  // 마우스가 사이드 메뉴 영역(+ :: 버튼)에 머무르고 있는지 여부
+  const [isHoveringMenu, setIsHoveringMenu] = useState(false)
+
+  // 마지막 유효 블록 캐시 (메뉴 이동 중 일시적 null 방어)
+  const lastActiveBlockRef = useRef<any>(focusedBlock)
+
+  // 커서 변경 및 포커스 상태 동기화
+  useEffect(() => {
+    const updateCursorPosition = () => {
+      try {
+        const focused = editor.isFocused()
+        setIsEditorFocused(focused)
+        const cur = editor.getTextCursorPosition()?.block
+        if (cur) {
+          setFocusedBlock(cur)
+          lastActiveBlockRef.current = cur
+        }
+      } catch {}
+    }
+
+    const unsub = editor.onSelectionChange?.(updateCursorPosition)
+    const pmDom = editor.prosemirrorView?.dom
+
+    const handleFocus = () => {
+      setIsEditorFocused(true)
+      updateCursorPosition()
+    }
+
+    const handleBlur = (e: FocusEvent) => {
+      // 관련 타깃이 사이드 메뉴 내부이면 포커스 해제 처리 지연/무시
+      const related = e.relatedTarget as HTMLElement | null
+      if (
+        related?.closest?.('.bn-side-menu') ||
+        related?.closest?.('[data-blocknote-side-menu]') ||
+        related?.closest?.('.mantine-Menu-dropdown')
+      ) {
+        return
+      }
+      setTimeout(() => {
+        if (!editor.isFocused() && !isHoveringMenu) {
+          setIsEditorFocused(false)
+        }
+      }, 200)
+    }
+
+    if (pmDom) {
+      pmDom.addEventListener('click', updateCursorPosition, { passive: true })
+      pmDom.addEventListener('keyup', updateCursorPosition, { passive: true })
+      pmDom.addEventListener('focus', handleFocus, { passive: true })
+      pmDom.addEventListener('blur', handleBlur, { passive: true })
+    }
+
+    return () => {
+      unsub?.()
+      if (pmDom) {
+        pmDom.removeEventListener('click', updateCursorPosition)
+        pmDom.removeEventListener('keyup', updateCursorPosition)
+        pmDom.removeEventListener('focus', handleFocus)
+        pmDom.removeEventListener('blur', handleBlur)
+      }
+    }
+  }, [editor, isHoveringMenu])
+
+  // 타깃 블록 판정
+  let effectiveBlock: any = undefined
+  let effectiveShow = false
+
+  if (isHoveringMenu && lastActiveBlockRef.current) {
+    // 1순위: 마우스가 사이드 메뉴 버튼(+ ::) 위에 올라가 있으면 직전 대상 블록 고정
+    effectiveBlock = lastActiveBlockRef.current
+    effectiveShow = true
+  } else if (extState?.show && extState?.block) {
+    // 2순위: 마우스가 다른 블록을 명시적으로 호버하고 있는 경우
+    effectiveBlock = extState.block
+    effectiveShow = true
+    lastActiveBlockRef.current = extState.block
+  } else if (isEditorFocused && focusedBlock) {
+    // 3순위 (핵심): 에디터에 포인터(커서)가 찍혀 있는 경우 항상 상시 표출!
+    effectiveBlock = focusedBlock
+    effectiveShow = true
+    lastActiveBlockRef.current = focusedBlock
+  } else if (lastActiveBlockRef.current && isEditorFocused) {
+    // 4순위: 에디터가 포커스 중이면 캐시된 직전 블록 표출
+    effectiveBlock = lastActiveBlockRef.current
+    effectiveShow = true
+  }
+
+  // SideMenuExtension의 store도 함께 동기화하여 DragHandleButton 등의 내부 상태 일관성 보장
+  useEffect(() => {
+    if (effectiveShow && effectiveBlock && sideMenuExt?.store) {
+      try {
+        sideMenuExt.store.setState((prev: any) => ({
+          ...prev,
+          show: true,
+          block: effectiveBlock,
+        }))
+      } catch {}
+    }
+  }, [effectiveShow, effectiveBlock, sideMenuExt])
+
+  const whileElementsMounted = useCallback(
+    (
+      reference: ReferenceElement,
+      floating: HTMLElement,
+      _update: () => void,
+    ) => {
+      let initialized = false
+      return autoUpdate(
+        reference,
+        floating,
+        () => {
+          if (!initialized) {
+            initialized = true
+            return
+          }
+          if (!isEditorFocused && !isHoveringMenu) {
+            editor.getExtension(SideMenuExtension)?.hideMenuIfNotFrozen()
+          }
+        },
+        {
+          ancestorScroll: true,
+          ancestorResize: false,
+          elementResize: false,
+          layoutShift: false,
+        },
+      )
+    },
+    [editor, isEditorFocused, isHoveringMenu],
+  )
+
+  const floatingUIOptions = useMemo<FloatingUIOptions>(
+    () => ({
+      ...props.floatingUIOptions,
+      useFloatingOptions: {
+        open: effectiveShow,
+        placement: 'left-start',
+        whileElementsMounted,
+        ...props.floatingUIOptions?.useFloatingOptions,
+      },
+      useDismissProps: {
+        enabled: false,
+        ...props.floatingUIOptions?.useDismissProps,
+      },
+      focusManagerProps: {
+        disabled: true,
+        ...props.floatingUIOptions?.focusManagerProps,
+      },
+      elementProps: {
+        onMouseEnter: (e: any) => {
+          setIsHoveringMenu(true)
+          props.floatingUIOptions?.elementProps?.onMouseEnter?.(e)
+        },
+        onMouseLeave: (e: any) => {
+          setIsHoveringMenu(false)
+          props.floatingUIOptions?.elementProps?.onMouseLeave?.(e)
+        },
+        style: {
+          zIndex: 10000,
+          ...props.floatingUIOptions?.elementProps?.style,
+        },
+        ...props.floatingUIOptions?.elementProps,
+      },
+    }),
+    [props.floatingUIOptions, effectiveShow, whileElementsMounted],
+  )
+
+  const Component = props.sideMenu || SafeCustomSideMenu
+
+  return (
+    <SideMenuTargetBlockContext.Provider
+      value={{ block: effectiveBlock, isPersistent: Boolean(focusedBlock) }}
+    >
+      <BlockPopover
+        blockId={effectiveShow ? effectiveBlock?.id : undefined}
+        portalElement={props.portalElement}
+        {...floatingUIOptions}
+      >
+        {effectiveBlock?.id && <Component />}
+      </BlockPopover>
+    </SideMenuTargetBlockContext.Provider>
+  )
+}
+
 
 // ==========================================
 // AMEVA AI Context Action Handlers
@@ -436,6 +694,11 @@ export function MarkdownEditor({
   const setPdfFileName = useWorkspaceStore(s => s.setPdfFileName)
   const isSmartDocsMode = useWorkspaceStore(s => s.isSmartDocsMode)
   const setIsSmartDocsMode = useWorkspaceStore(s => s.setIsSmartDocsMode)
+  const pageViewMode = useWorkspaceStore(s => s.pageViewMode)
+  const setPageViewMode = useWorkspaceStore(s => s.setPageViewMode)
+  const viewerSkin = useWorkspaceStore(s => s.viewerSkin)
+  const currentBookPage = useWorkspaceStore(s => s.currentBookPage)
+  const setCurrentBookPage = useWorkspaceStore(s => s.setCurrentBookPage)
   const canUseAITagging = false
 
   /*
@@ -460,6 +723,27 @@ export function MarkdownEditor({
    */
   const [selectedFont, setSelectedFont] = useState('Pretendard')
   const [selectedSize, setSelectedSize] = useState('14px')
+  const bookViewportRef = useRef<HTMLDivElement>(null)
+  const currentSpreadIdxRef = useRef(0)
+  const [currentSpreadIdx, setCurrentSpreadIdx] = useState(0)
+
+  // 2장/3장 보기: 사이드바/탭 개폐 시 실시간 가용 폭(100%)에 맞춰 정확한 페이지 인덱스 자동 유지
+  useEffect(() => {
+    if (!bookViewportRef.current) return
+    const vp = bookViewportRef.current
+
+    const handleResize = () => {
+      const gap = pageViewMode === 'dual' ? 80 : 72
+      const pitch = vp.clientWidth + gap
+      if (pitch > 0) {
+        vp.scrollTo({ left: currentSpreadIdxRef.current * pitch, behavior: 'instant' })
+      }
+    }
+
+    const ro = new ResizeObserver(handleResize)
+    ro.observe(vp)
+    return () => ro.disconnect()
+  }, [pageViewMode])
 
   /*
    * [HOVER CONTROLLER VARIABLES]
@@ -700,16 +984,20 @@ export function MarkdownEditor({
         onDropCapture={onDropCapture}
         onPasteCapture={onPasteCapture}
         onContextMenu={handleContextMenu}
-        className={!wordWrap ? 'wrap-disabled' : ''}
+        className={`${!wordWrap ? 'wrap-disabled' : ''} ${pageViewMode !== 'continuous' ? `view-mode-${pageViewMode}` : ''}`}
         style={{
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          overflowY: 'auto',
-          padding: `40px 60px ${editorMode === 'raw' ? '40px' : '45vh'} 60px`,
+          alignItems: 'stretch',
+          overflow: pageViewMode !== 'continuous' ? 'hidden' : 'auto',
+          padding: pageViewMode !== 'continuous'
+            ? '0'
+            : `40px 60px ${editorMode === 'raw' ? '40px' : '45vh'} 60px`,
           position: 'relative',
           userSelect: 'text',
-          WebkitUserSelect: 'text'
+          WebkitUserSelect: 'text',
+          background: 'var(--bg-main)',
         }}
       >
         <PeerBlockHighlightLayer peers={peers} containerRef={editorContainerRef} />
@@ -830,128 +1118,248 @@ export function MarkdownEditor({
             currentContent={currentContent}
             editor={editor}
           />
-        ) : editorMode === 'edit' ? (
-          <BlockNoteView editor={editor} theme={theme === 'dark' ? 'dark' : 'light'} editable slashMenu={false} sideMenu={false}>
-            {/* SafeCustomSideMenu: BlockColorsItem 제거로 Mantine 7.x 호환 :: 메뉴 사용
-              * floatingUIOptions: placement 'left'로 블록 세로 중앙에 버튼 정렬
-              * (기본 'left-start'는 블록 상단 기준이라 큰 제목 블록에서 버튼이 위에 뜸) */}
-            <SideMenuController
-              sideMenu={SafeCustomSideMenu}
-              floatingUIOptions={{
-                useFloatingOptions: {
-                  placement: 'left',
+        ) : (pageViewMode !== 'continuous') ? (
+          /* 1장/2장/3장/페이지나누기: 진짜 BlockNoteView 기반 가로 페이징 (< > 넘김, 지도/유튜브/칸반/엑셀 100% 온전 구동) */
+          <div className={`editor-book-canvas mode-${pageViewMode}`}>
+            <div
+              ref={bookViewportRef}
+              className="editor-book-viewport"
+              onWheel={(e) => {
+                if (pageViewMode !== 'dual' && pageViewMode !== 'triple') return
+                if (Math.abs(e.deltaY) > 25 && bookViewportRef.current) {
+                  const vp = bookViewportRef.current
+                  const gap = pageViewMode === 'dual' ? 80 : 72
+                  const pitch = vp.clientWidth + gap
+                  const currentIdx = Math.round(vp.scrollLeft / pitch)
+                  const targetIdx = e.deltaY > 0 ? currentIdx + 1 : Math.max(0, currentIdx - 1)
+                  currentSpreadIdxRef.current = targetIdx
+                  setCurrentSpreadIdx(targetIdx)
+                  vp.scrollTo({ left: targetIdx * pitch, behavior: 'smooth' })
                 }
               }}
-            />
-            {/* 1. 슬래시(/) 명령어 단축 팝업 제어 */}
-            <SuggestionMenuController
-              triggerCharacter="/"
-              getItems={async (query) => {
-                const items = getCustomSlashMenuItems(editor, installedPlugins)
-                return items.filter(item =>
-                  item.title.toLowerCase().includes(query.toLowerCase()) ||
-                  (item.aliases?.some(a => a.toLowerCase().includes(query.toLowerCase())))
-                )
-              }}
-            />
-            {/* 2. 골뱅이(@) 참여자 멘션 및 타 문서 링크 단축 팝업 제어 */}
-            <SuggestionMenuController
-              triggerCharacter="@"
-              getItems={async (query) => {
-                if (!editor) return []
-                const peerItems = peers.map(p => ({
-                  title: p.name || '이름없는 사용자',
-                  subtext: '작업 참여자 멘션',
-                  icon: <Users size={14} color={p.color || '#a855f7'} />,
-                  onItemClick: () => {
-                    editor.insertInlineContent([{ type: 'text', text: `@${p.name} `, styles: { bold: true } as any }])
-                  }
-                }))
-                const docItems = tabs.map(t => {
-                  const title = t.filePath ? t.filePath.split(/[\\/]/).pop() || '문서' : '제목 없음'
-                  return {
-                    title: title,
-                    subtext: t.filePath ? `문서 경로: ${t.filePath}` : '저장되지 않은 문서',
-                    icon: <FileText size={14} color="#3b82f6" />,
-                    onItemClick: () => {
-                      editor.insertInlineContent([
-                        {
-                          type: 'text',
-                          text: `[doc:${title}]`,
-                          styles: { underline: true } as any
-                        }
-                      ])
-                    }
-                  }
-                })
-                /*
-                 * [RUN-TIME STATE / INVARIANT]
-                 * - 변수 명: `allItems`
-                 * - 자료형 / 예상 값: 피어와 탭 문서를 합친 단축 메뉴 통합 배열.
-                 */
-                const allItems = [...peerItems, ...docItems]
-                return allItems.filter(item => item.title.toLowerCase().includes(query.toLowerCase()))
-              }}
-            />
-            {/* 3. 우물정(#) 헤더 참조 링크 단축 팝업 제어 */}
-            <SuggestionMenuController
-              triggerCharacter="#"
-              getItems={async (query) => {
-                /*
-                 * [ALGORITHM BRANCH / DECISION]
-                 * - 조건 식: `!editor`
-                 * - 만족 시: 에디터 미지정 시 빈 배열 즉시 반환.
-                 */
-                if (!editor) return []
-                /*
-                 * [RUN-TIME STATE / INVARIANT]
-                 * - 변수 명: `headingBlocks`
-                 * - 자료형 / 예상 값: 전체 문서 내 제목(heading) 타입 블록 필터링 배열.
-                 */
-                const headingBlocks = editor.document.filter(b => b.type === 'heading')
-                /*
-                 * [RUN-TIME STATE / INVARIANT]
-                 * - 변수 명: `items`
-                 * - 자료형 / 예상 값: H1~H6 헤더 참조 링크 리스트 배열.
-                 */
-                const items = headingBlocks.map(b => {
-                  /*
-                   * [RUN-TIME STATE / INVARIANT]
-                   * - 변수 명: `textContent`
-                   * - 자료형 / 예상 값: 제목 블록 내부 텍스트 콘텐츠의 병합 문자열.
-                   */
-                  const textContent = b.content && Array.isArray(b.content)
-                    ? b.content.map((c: any) => c.text).join('')
-                    : '제목 없음'
-                  /*
-                   * [RUN-TIME STATE / INVARIANT]
-                   * - 변수 명: `level`
-                   * - 자료형 / 예상 값: 헤더 수준 정수값 (1~6).
-                   */
-                  const level = b.props?.level || 1
+            >
+              <div className="editor-paper-sheet">
+                <BlockNoteView
+                  editor={editor}
+                  theme={theme === 'white' ? 'light' : 'dark'}
+                  editable={editorMode === 'edit'}
+                  slashMenu={false}
+                  sideMenu={false}
+                >
+                  {editorMode === 'edit' && (
+                    <>
+                      <PersistentSideMenuController
+                        sideMenu={SafeCustomSideMenu}
+                        portalElement={editorContainerRef.current || (typeof document !== 'undefined' ? document.body : undefined)}
+                        floatingUIOptions={{
+                          useFloatingOptions: {
+                            placement: 'left',
+                            strategy: 'fixed',
+                          },
+                          useHoverProps: {
+                            delay: { open: 50, close: 400 },
+                          }
+                        }}
+                      />
+                      <SuggestionMenuController
+                        triggerCharacter="/"
+                        getItems={async (query) => {
+                          const items = getCustomSlashMenuItems(editor, installedPlugins)
+                          return items.filter(item =>
+                            item.title.toLowerCase().includes(query.toLowerCase()) ||
+                            (item.aliases?.some(a => a.toLowerCase().includes(query.toLowerCase())))
+                          )
+                        }}
+                      />
+                    </>
+                  )}
+                </BlockNoteView>
+              </div>
+            </div>
 
-                  return {
-                    title: textContent,
-                    subtext: `H${level} 헤더 참조 링크`,
-                    icon: <Sparkles size={14} color="#10b981" />,
-                    onItemClick: () => {
-                      editor.insertInlineContent([
-                        {
-                          type: 'text',
-                          text: `[${textContent}](#${b.id})`,
-                          styles: { italic: true } as any
-                        }
-                      ])
+            {/* 하단 플로팅 < 이전 / 다음 > 가로 페이징 컨트롤러 (2장 / 3장 전용) */}
+            {(pageViewMode === 'dual' || pageViewMode === 'triple') && (
+              <div
+                style={{
+                  position: 'fixed',
+                  bottom: '24px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  zIndex: 100,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
+                  background: 'var(--bg-card)',
+                  color: 'var(--text-main)',
+                  border: '1px solid var(--border-muted)',
+                  borderRadius: '30px',
+                  padding: '6px 24px',
+                  boxShadow: '0 8px 30px rgba(0,0,0,0.18)',
+                }}
+              >
+                <button
+                  onClick={() => {
+                    if (bookViewportRef.current) {
+                      const vp = bookViewportRef.current
+                      const gap = pageViewMode === 'dual' ? 80 : 72
+                      const pitch = vp.clientWidth + gap
+                      const currentIdx = Math.round(vp.scrollLeft / pitch)
+                      const targetIdx = Math.max(0, currentIdx - 1)
+                      currentSpreadIdxRef.current = targetIdx
+                      setCurrentSpreadIdx(targetIdx)
+                      vp.scrollTo({ left: targetIdx * pitch, behavior: 'smooth' })
                     }
-                  }
-                })
-                return items.filter(item => item.title.toLowerCase().includes(query.toLowerCase()))
-              }}
-            />
-          </BlockNoteView>
-        ) : editorMode === 'preview' ? (
-          <BlockNoteView editor={editor} theme={theme === 'dark' ? 'dark' : 'light'} editable={false}>
-            <></>
+                  }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--text-main)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    padding: '4px 8px',
+                  }}
+                >
+                  <ChevronLeft size={16} />
+                  <span>이전</span>
+                </button>
+
+                <span style={{ fontSize: '12px', fontWeight: 800, color: 'var(--primary)', letterSpacing: '0.5px' }}>
+                  {pageViewMode === 'dual' ? `📖 2장 펼침 (${currentSpreadIdx * 2 + 1} - ${currentSpreadIdx * 2 + 2}쪽)` : `📚 3장 와이드 (${currentSpreadIdx * 3 + 1} - ${currentSpreadIdx * 3 + 3}쪽)`}
+                </span>
+
+                <button
+                  onClick={() => {
+                    if (bookViewportRef.current) {
+                      const vp = bookViewportRef.current
+                      const gap = pageViewMode === 'dual' ? 80 : 72
+                      const pitch = vp.clientWidth + gap
+                      const currentIdx = Math.round(vp.scrollLeft / pitch)
+                      const targetIdx = currentIdx + 1
+                      currentSpreadIdxRef.current = targetIdx
+                      setCurrentSpreadIdx(targetIdx)
+                      vp.scrollTo({ left: targetIdx * pitch, behavior: 'smooth' })
+                    }
+                  }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--text-main)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    padding: '4px 8px',
+                  }}
+                >
+                  <span>다음</span>
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (editorMode === 'edit' || editorMode === 'preview') ? (
+          /* 연속 모드: 예전 그대로 순수 오리지널 BlockNoteView 렌더링 (래퍼 없음) */
+          <BlockNoteView
+            editor={editor}
+            theme={theme === 'dark' ? 'dark' : 'light'}
+            editable={editorMode === 'edit'}
+            slashMenu={false}
+            sideMenu={false}
+          >
+            {editorMode === 'edit' && (
+              <>
+                <PersistentSideMenuController
+                  sideMenu={SafeCustomSideMenu}
+                  portalElement={editorContainerRef.current || (typeof document !== 'undefined' ? document.body : undefined)}
+                  floatingUIOptions={{
+                    useFloatingOptions: {
+                      placement: 'left',
+                      strategy: 'fixed',
+                    },
+                    useHoverProps: {
+                      delay: { open: 50, close: 400 },
+                    }
+                  }}
+                />
+                <SuggestionMenuController
+                  triggerCharacter="/"
+                  getItems={async (query) => {
+                    const items = getCustomSlashMenuItems(editor, installedPlugins)
+                    return items.filter(item =>
+                      item.title.toLowerCase().includes(query.toLowerCase()) ||
+                      (item.aliases?.some(a => a.toLowerCase().includes(query.toLowerCase())))
+                    )
+                  }}
+                />
+                <SuggestionMenuController
+                  triggerCharacter="@"
+                  getItems={async (query) => {
+                    if (!editor) return []
+                    const peerItems = peers.map(p => ({
+                      title: p.name || '이름없는 사용자',
+                      subtext: '작업 참여자 멘션',
+                      icon: <Users size={14} color={p.color || '#a855f7'} />,
+                      onItemClick: () => {
+                        editor.insertInlineContent([{ type: 'text', text: `@${p.name} `, styles: { bold: true } as any }])
+                      }
+                    }))
+                    const docItems = tabs.map(t => {
+                      const title = t.filePath ? t.filePath.split(/[\\/]/).pop() || '문서' : '제목 없음'
+                      return {
+                        title: title,
+                        subtext: t.filePath ? `문서 경로: ${t.filePath}` : '저장되지 않은 문서',
+                        icon: <FileText size={14} color="#3b82f6" />,
+                        onItemClick: () => {
+                          editor.insertInlineContent([
+                            {
+                              type: 'text',
+                              text: `[doc:${title}]`,
+                              styles: { underline: true } as any
+                            }
+                          ])
+                        }
+                      }
+                    })
+                    const allItems = [...peerItems, ...docItems]
+                    return allItems.filter(item => item.title.toLowerCase().includes(query.toLowerCase()))
+                  }}
+                />
+                <SuggestionMenuController
+                  triggerCharacter="#"
+                  getItems={async (query) => {
+                    if (!editor) return []
+                    const headingBlocks = editor.document.filter(b => b.type === 'heading')
+                    const items = headingBlocks.map(b => {
+                      const textContent = b.content && Array.isArray(b.content)
+                        ? b.content.map((c: any) => c.text).join('')
+                        : '제목 없음'
+                      const level = b.props?.level || 1
+                      return {
+                        title: textContent,
+                        subtext: `H${level} 헤더 참조 링크`,
+                        icon: <Sparkles size={14} color="#10b981" />,
+                        onItemClick: () => {
+                          editor.insertInlineContent([
+                            {
+                              type: 'text',
+                              text: `[${textContent}](#${b.id})`,
+                              styles: { italic: true } as any
+                            }
+                          ])
+                        }
+                      }
+                    })
+                    return items.filter(item => item.title.toLowerCase().includes(query.toLowerCase()))
+                  }}
+                />
+              </>
+            )}
           </BlockNoteView>
         ) : (
           /* RAW 마크다운 원문 텍스트 영역 직접 편집 뷰 */

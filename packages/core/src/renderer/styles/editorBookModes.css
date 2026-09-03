@@ -1,0 +1,243 @@
+/**
+ * @file editorBookModes.css
+ * @system AMEVA OS Desktop Workstation
+ * @role 100% 순수 풀동적(Full Dynamic Fluid) 50:50 조판 엔진
+ * @concept 고정 픽셀 완전 제거 - 실시간 가용 너비 100% 반응형 다단 조판
+ */
+
+/* ─── 1. 전체 캔버스 (마진 0, 패딩 0) ─── */
+.editor-book-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: flex;
+  flex-direction: column;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box;
+  background: var(--bg-main) !important;
+  color: var(--text-main) !important;
+  position: relative;
+  overflow: hidden !important;
+}
+
+/* ─── 2. 2장 책 펼침 모드: 100% 풀동적 대칭 반반 (50% : 50%) ─── */
+.mode-dual .editor-book-viewport {
+  width: 100% !important;
+  height: 100% !important;
+  flex: 1;
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.mode-dual .editor-paper-sheet {
+  width: 100% !important;
+  height: 100% !important;
+  padding: 16px 48px 60px 48px !important;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+}
+
+.mode-dual .bn-editor {
+  height: calc(100vh - 120px) !important;
+  width: 100% !important;
+  column-count: 2 !important;
+  column-gap: 80px !important;
+  column-fill: auto !important;
+  column-rule: 1px solid var(--border-muted) !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+}
+
+/* ─── 3. 1장 책보기 모드 (Single Page / Print Layout) ─── */
+.mode-single {
+  overflow-y: auto !important;
+}
+.mode-single .editor-book-viewport {
+  width: 100% !important;
+  height: auto;
+  overflow-y: auto !important;
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px 120px 16px !important;
+  box-sizing: border-box;
+}
+.mode-single .editor-paper-sheet {
+  width: 860px !important;
+  max-width: 96% !important;
+  margin: 0 auto !important;
+  padding: 40px 48px !important;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-muted) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.08) !important;
+  box-sizing: border-box !important;
+  background-image: linear-gradient(
+    to bottom,
+    transparent 1030px,
+    var(--border-muted) 1030px,
+    var(--border-muted) 1032px,
+    var(--bg-main) 1032px,
+    var(--bg-main) 1056px,
+    transparent 1056px
+  ) !important;
+  background-size: 100% 1056px !important;
+}
+.mode-single .bn-editor {
+  column-count: 1 !important;
+  width: 100% !important;
+  height: auto !important;
+}
+
+/* ─── 4. 3장 와이드 모드 (Triple Page Spread): 100% 풀동적 3분할 ─── */
+.mode-triple .editor-book-viewport {
+  width: 100% !important;
+  height: 100% !important;
+  flex: 1;
+  overflow-x: hidden !important;
+  overflow-y: hidden !important;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.mode-triple .editor-paper-sheet {
+  width: 100% !important;
+  height: 100% !important;
+  padding: 16px 40px 60px 40px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  box-sizing: border-box !important;
+}
+
+.mode-triple .bn-editor {
+  height: calc(100vh - 120px) !important;
+  width: 100% !important;
+  column-count: 3 !important;
+  column-gap: 72px !important;
+  column-fill: auto !important;
+  column-rule: 1px solid var(--border-muted) !important;
+  box-sizing: border-box !important;
+  padding: 0 !important;
+}
+
+/* ─── 5. 페이지 나누기 모드 ─── */
+.mode-page-break {
+  overflow-y: auto !important;
+}
+.mode-page-break .editor-book-viewport {
+  width: 100% !important;
+  height: auto;
+  overflow-y: auto !important;
+  display: flex;
+  justify-content: center;
+  padding: 24px 16px 120px 16px !important;
+}
+.mode-page-break .editor-paper-sheet {
+  width: 860px !important;
+  max-width: 96% !important;
+  margin: 0 auto !important;
+  padding: 40px 48px !important;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-muted) !important;
+  border-radius: 6px !important;
+  background-image: linear-gradient(
+    to bottom,
+    transparent 1030px,
+    var(--border-muted) 1030px,
+    var(--border-muted) 1032px,
+    var(--bg-main) 1032px,
+    var(--bg-main) 1056px,
+    transparent 1056px
+  ) !important;
+  background-size: 100% 1056px !important;
+}
+.mode-page-break .bn-editor {
+  height: auto !important;
+}
+
+/* ─── 6. 내부 블록 풀동적 적응 & 컬럼 높이 초과 쪼개짐 원천 방지 ─── */
+.mode-dual .bn-editor > *,
+.mode-dual .bn-block-outer,
+.mode-dual .resizable-block-wrapper,
+.mode-triple .bn-editor > *,
+.mode-triple .bn-block-outer,
+.mode-triple .resizable-block-wrapper {
+  max-width: 100% !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+  -webkit-column-break-inside: avoid !important;
+}
+
+/* PDF, 주피터, 엑셀, 칸반 등 거대 위젯이 컬럼 높이를 초과하여 둘로 쪼개지는 현상 완전 박멸 */
+.mode-dual .resizable-block-wrapper,
+.mode-dual [data-resizable-body],
+.mode-dual .jupyter-block,
+.mode-dual .excel-block,
+.mode-dual .kanban-board,
+.mode-dual .map-block,
+.mode-triple .resizable-block-wrapper,
+.mode-triple [data-resizable-body],
+.mode-triple .jupyter-block,
+.mode-triple .excel-block,
+.mode-triple .kanban-board,
+.mode-triple .map-block {
+  max-height: calc(100vh - 160px) !important;
+  overflow-y: auto !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  break-inside: avoid !important;
+  page-break-inside: avoid !important;
+  -webkit-column-break-inside: avoid !important;
+}
+
+.mode-dual iframe,
+.mode-dual canvas,
+.mode-dual .leaflet-container,
+.mode-dual table,
+.mode-triple iframe,
+.mode-triple canvas,
+.mode-triple .leaflet-container,
+.mode-triple table {
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+/* ─── 7. 사이드 메뉴 최상위 레이어 & 마우스 이동 호버 브리지(Hover Safe Tunnel) ─── */
+.bn-side-menu,
+[data-blocknote-side-menu] {
+  z-index: 10000 !important;
+  pointer-events: auto !important;
+}
+
+/* 블록에서 [+] 버튼으로 마우스를 옮길 때 사라지지 않도록 투명 안전 브리지 가상요소 설치 */
+.bn-side-menu::after,
+[data-blocknote-side-menu]::after {
+  content: "";
+  position: absolute;
+  top: -16px;
+  bottom: -16px;
+  left: -16px;
+  right: -48px; /* 블록 쪽으로 투명한 호버 브리지를 넓혀서 커서 이동 중 유실 원천 방지 */
+  background: transparent;
+  z-index: -1;
+  pointer-events: auto !important;
+}
+
+.bn-side-menu-btn {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
