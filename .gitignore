@@ -149,5 +149,5 @@ state.json
 !.env.example
 id_rsa*
 .pypirc
-.npmrc
+# .npmrc
 secrets.json
