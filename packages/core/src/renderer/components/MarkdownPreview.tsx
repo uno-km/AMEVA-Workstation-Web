@@ -411,13 +411,18 @@ export const MarkdownPreview = React.memo(function MarkdownPreview({ markdown, c
          * - 예시: `if (seg.type === 'html-preview')` 만족 시 iframe 로드.
          */
         if (seg.type === 'html-preview') {
+          const rawCode = seg.code || ''
+          const srcDoc = rawCode.includes('<html') || rawCode.includes('<!DOCTYPE')
+            ? rawCode
+            : `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>body { margin: 0; padding: 10px; background: #080d1a; color: #e2e8f0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; box-sizing: border-box; } * { box-sizing: border-box; }</style></head><body>${rawCode}</body></html>`
+
           return (
             <div key={idx} style={{ margin: '16px 0' }}>
               <iframe
-                sandbox="allow-scripts"
+                sandbox="allow-scripts allow-modals"
                 title="HTML Preview Frame"
-                srcDoc={seg.code}
-                style={{ width: '100%', height: '380px', border: '1px solid rgba(249,115,22,0.3)', borderRadius: '10px', background: '#fff' }}
+                srcDoc={srcDoc}
+                style={{ width: '100%', height: '270px', border: '1px solid rgba(56, 189, 248, 0.25)', borderRadius: '12px', background: '#080d1a' }}
               />
             </div>
           )
