@@ -727,23 +727,49 @@ export function MarkdownEditor({
   const currentSpreadIdxRef = useRef(0)
   const [currentSpreadIdx, setCurrentSpreadIdx] = useState(0)
 
+  // 2장/3장 보기: 에디터 가용 폭 및 CSS 컬럼 반복 주기(editorEl.clientWidth + gap) 실측 계산
+  const getSpreadPitch = useCallback((vp: HTMLElement): number => {
+    const editorEl = vp.querySelector('.bn-editor') as HTMLElement | null
+    if (editorEl && editorEl.clientWidth > 0) {
+      const cs = window.getComputedStyle(editorEl)
+      const gap = parseFloat(cs.columnGap) || (pageViewMode === 'dual' ? 64 : 48)
+      return editorEl.clientWidth + gap
+    }
+    return vp.clientWidth
+  }, [pageViewMode])
+
   // 2장/3장 보기: 사이드바/탭 개폐 시 실시간 가용 폭(100%)에 맞춰 정확한 페이지 인덱스 자동 유지
   useEffect(() => {
     if (!bookViewportRef.current) return
     const vp = bookViewportRef.current
 
     const handleResize = () => {
-      const gap = pageViewMode === 'dual' ? 80 : 72
-      const pitch = vp.clientWidth + gap
+      const pitch = getSpreadPitch(vp)
       if (pitch > 0) {
         vp.scrollTo({ left: currentSpreadIdxRef.current * pitch, behavior: 'instant' })
       }
     }
 
+    const handleScroll = () => {
+      const pitch = getSpreadPitch(vp)
+      if (pitch > 0) {
+        const idx = Math.max(0, Math.round(vp.scrollLeft / pitch))
+        if (idx !== currentSpreadIdxRef.current) {
+          currentSpreadIdxRef.current = idx
+          setCurrentSpreadIdx(idx)
+        }
+      }
+    }
+
     const ro = new ResizeObserver(handleResize)
     ro.observe(vp)
-    return () => ro.disconnect()
-  }, [pageViewMode])
+    vp.addEventListener('scroll', handleScroll, { passive: true })
+
+    return () => {
+      ro.disconnect()
+      vp.removeEventListener('scroll', handleScroll)
+    }
+  }, [pageViewMode, getSpreadPitch])
 
   /*
    * [HOVER CONTROLLER VARIABLES]
@@ -1128,10 +1154,12 @@ export function MarkdownEditor({
                 if (pageViewMode !== 'dual' && pageViewMode !== 'triple') return
                 if (Math.abs(e.deltaY) > 25 && bookViewportRef.current) {
                   const vp = bookViewportRef.current
-                  const gap = pageViewMode === 'dual' ? 80 : 72
-                  const pitch = vp.clientWidth + gap
+                  const pitch = getSpreadPitch(vp)
+                  if (pitch <= 0) return
+                  const maxScroll = Math.max(0, vp.scrollWidth - vp.clientWidth)
+                  const maxSpread = Math.max(0, Math.ceil(maxScroll / pitch))
                   const currentIdx = Math.round(vp.scrollLeft / pitch)
-                  const targetIdx = e.deltaY > 0 ? currentIdx + 1 : Math.max(0, currentIdx - 1)
+                  const targetIdx = e.deltaY > 0 ? Math.min(maxSpread, currentIdx + 1) : Math.max(0, currentIdx - 1)
                   currentSpreadIdxRef.current = targetIdx
                   setCurrentSpreadIdx(targetIdx)
                   vp.scrollTo({ left: targetIdx * pitch, behavior: 'smooth' })
@@ -1201,8 +1229,8 @@ export function MarkdownEditor({
                   onClick={() => {
                     if (bookViewportRef.current) {
                       const vp = bookViewportRef.current
-                      const gap = pageViewMode === 'dual' ? 80 : 72
-                      const pitch = vp.clientWidth + gap
+                      const pitch = getSpreadPitch(vp)
+                      if (pitch <= 0) return
                       const currentIdx = Math.round(vp.scrollLeft / pitch)
                       const targetIdx = Math.max(0, currentIdx - 1)
                       currentSpreadIdxRef.current = targetIdx
@@ -1235,10 +1263,12 @@ export function MarkdownEditor({
                   onClick={() => {
                     if (bookViewportRef.current) {
                       const vp = bookViewportRef.current
-                      const gap = pageViewMode === 'dual' ? 80 : 72
-                      const pitch = vp.clientWidth + gap
+                      const pitch = getSpreadPitch(vp)
+                      if (pitch <= 0) return
+                      const maxScroll = Math.max(0, vp.scrollWidth - vp.clientWidth)
+                      const maxSpread = Math.max(0, Math.ceil(maxScroll / pitch))
                       const currentIdx = Math.round(vp.scrollLeft / pitch)
-                      const targetIdx = currentIdx + 1
+                      const targetIdx = Math.min(maxSpread, currentIdx + 1)
                       currentSpreadIdxRef.current = targetIdx
                       setCurrentSpreadIdx(targetIdx)
                       vp.scrollTo({ left: targetIdx * pitch, behavior: 'smooth' })
