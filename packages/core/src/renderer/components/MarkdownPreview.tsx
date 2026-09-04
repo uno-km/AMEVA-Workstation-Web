@@ -524,23 +524,21 @@ export const MarkdownPreview = React.memo(function MarkdownPreview({ markdown, c
             )
           }
 
-          if (editor) {
-            /*
-             * [RUN-TIME STATE / INVARIANT]
-             * - 변수 명: `runnerLang`
-             * - 자료형 / 예상 값: string
-             * - 시나리오: 주피터 코드 실행기(JupyterCodeViewer)에서 정상 구동 가능한 매핑 식별값(javascript, python 등)을 생성함.
-             */
-            const runnerLang = seg.language === 'js' ? 'javascript' : seg.language === 'py' ? 'python' : (seg.language || 'javascript')
-            return (
-              <div key={idx} style={{ margin: '16px 0' }}>
-                <JupyterCodeViewer
-                  code={seg.code || ''}
-                  language={runnerLang}
-                />
-              </div>
-            )
-          }
+          /*
+           * [RUN-TIME STATE / INVARIANT]
+           * - 변수 명: `runnerLang`
+           * - 자료형 / 예상 값: string
+           * - 시나리오: 주피터 코드 실행기(JupyterCodeViewer)에서 정상 구동 가능한 매핑 식별값(javascript, python 등)을 생성함.
+           */
+          const runnerLang = seg.language === 'js' ? 'javascript' : seg.language === 'py' ? 'python' : (seg.language || 'javascript')
+          return (
+            <div key={idx} style={{ margin: '16px 0' }}>
+              <JupyterCodeViewer
+                code={seg.code || ''}
+                language={runnerLang}
+              />
+            </div>
+          )
         }
 
         /** HTML Sanitizer helper to prevent XSS injection in raw markdown HTML segments */
