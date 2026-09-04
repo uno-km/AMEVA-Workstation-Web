@@ -79,8 +79,10 @@ export function InlineDocumentRenderer({ code }: { code: string }) {
   const docType = (uploadedType || props.docType || (effectiveSourceUrl?.endsWith('.pdf') ? 'pdf' : 'pdf')) as DocType
   const config = DOC_TYPE_CONFIG[docType] || DOC_TYPE_CONFIG.unknown
   const effectiveFileName = uploadedName || ((isOldMozilla && (!props.fileName || props.fileName.includes('Architecture_Specification'))) 
-    ? 'AMEVA_Document.pdf' 
-    : (props.fileName || (effectiveSourceUrl === '/sample.pdf' ? 'AMEVA_Document.pdf' : `${config.label} 문서`)))
+    ? 'TraceMonkey_PLDI09_Benchmark_Paper.pdf' 
+    : ((!props.fileName || props.fileName === 'AMEVA_Document.pdf') && effectiveSourceUrl.includes('/sample.pdf')
+        ? 'TraceMonkey_PLDI09_Benchmark_Paper.pdf'
+        : (props.fileName || `${config.label} 문서`)))
 
   const [isExpanded, setIsExpanded] = React.useState(props.isExpanded === 'true')
   const [pdfMode, setPdfMode] = React.useState<'native' | 'canvas'>('canvas')
@@ -111,7 +113,8 @@ export function InlineDocumentRenderer({ code }: { code: string }) {
         effectiveSourceUrl.startsWith('/') ||
         effectiveSourceUrl.startsWith('./')
       ) {
-        setResolvedBlobUrl(effectiveSourceUrl)
+        const bustUrl = (effectiveSourceUrl.startsWith('/') && !effectiveSourceUrl.includes('?')) ? `${effectiveSourceUrl}?t=pldi` : effectiveSourceUrl
+        setResolvedBlobUrl(bustUrl)
       } else if (effectiveSourceUrl.startsWith('data:') || props.fileBase64) {
         try {
           const raw = effectiveSourceUrl.startsWith('data:') ? effectiveSourceUrl : props.fileBase64

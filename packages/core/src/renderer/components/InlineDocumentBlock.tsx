@@ -204,7 +204,8 @@ export function PdfMiniViewer({
           objectUrlToRevoke = objectUrl
           getDocumentArg = { url: objectUrl }
         } else if (sourceUrl.startsWith('http://') || sourceUrl.startsWith('https://') || sourceUrl.startsWith('blob:') || sourceUrl.startsWith('/') || sourceUrl.startsWith('./')) {
-          getDocumentArg = { url: sourceUrl }
+          const loadUrl = (sourceUrl.startsWith('/') && !sourceUrl.includes('?')) ? `${sourceUrl}?t=pldi` : sourceUrl
+          getDocumentArg = { url: loadUrl }
         } else {
           // data:application/pdf;base64,... 또는 raw base64
           const cleanBase64 = sourceUrl.includes(',') ? sourceUrl.split(',')[1] : sourceUrl
@@ -651,8 +652,10 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
   const isOldMozilla = props.sourceUrl?.includes('helloworld.pdf') || props.sourceUrl?.includes('mozilla')
   const effectiveSourceUrl = isOldMozilla ? '/sample.pdf' : (props.sourceUrl || (props.docType === 'pdf' ? '/sample.pdf' : ''))
   const effectiveFileName = (isOldMozilla && (!props.fileName || props.fileName.includes('Architecture_Specification'))) 
-    ? 'AMEVA_Document.pdf' 
-    : (props.fileName || (effectiveSourceUrl === '/sample.pdf' ? 'AMEVA_Document.pdf' : `${DOC_TYPE_CONFIG[props.docType as DocType]?.label || '문서'} 문서`))
+    ? 'TraceMonkey_PLDI09_Benchmark_Paper.pdf' 
+    : ((!props.fileName || props.fileName === 'AMEVA_Document.pdf') && effectiveSourceUrl.includes('/sample.pdf')
+        ? 'TraceMonkey_PLDI09_Benchmark_Paper.pdf'
+        : (props.fileName || `${DOC_TYPE_CONFIG[props.docType as DocType]?.label || '문서'} 문서`))
 
   const fileId = effectiveSourceUrl?.startsWith('ameva-vfs://') ? effectiveSourceUrl.replace('ameva-vfs://', '') : null
   const profile = fileId ? profiles[fileId] : undefined

@@ -584,8 +584,8 @@ export function cleanCodeBlocks(blocks: any[]) {
             : (parsed.sourceUrl || '')
           block.props = {
             fileName: (isOldMozilla && (!parsed.fileName || parsed.fileName.includes('Architecture_Specification')))
-              ? 'AMEVA_Document.pdf'
-              : (parsed.fileName || (resolvedUrl === '/sample.pdf' ? 'AMEVA_Document.pdf' : '')),
+              ? 'TraceMonkey_PLDI09_Benchmark_Paper.pdf'
+              : (parsed.fileName || (resolvedUrl === '/sample.pdf' ? 'TraceMonkey_PLDI09_Benchmark_Paper.pdf' : '')),
             fileBase64: parsed.fileBase64 || '',
             docType: parsed.docType || (isPdf ? 'pdf' : 'unknown'),
             height: parsed.height || '460',
@@ -595,7 +595,7 @@ export function cleanCodeBlocks(blocks: any[]) {
           }
         } catch (err) {
           console.error('[cleanCodeBlocks] Failed to parse ameva-document json:', err)
-          block.props = { fileName: 'AMEVA_Document.pdf', fileBase64: '', docType: 'pdf', height: '460', sourceUrl: '/sample.pdf', isExpanded: 'false', bookmarks: '[]' }
+          block.props = { fileName: 'TraceMonkey_PLDI09_Benchmark_Paper.pdf', fileBase64: '', docType: 'pdf', height: '460', sourceUrl: '/sample.pdf', isExpanded: 'false', bookmarks: '[]' }
         }
         block.content = undefined
         return

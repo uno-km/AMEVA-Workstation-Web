@@ -514,7 +514,7 @@ export function getCustomSlashMenuItems(
         type: 'inlineDocument',
         props: {
           docType,
-          fileName: docType === 'pdf' ? 'AMEVA_Document.pdf' : '',
+          fileName: docType === 'pdf' ? 'TraceMonkey_PLDI09_Benchmark_Paper.pdf' : '',
           fileBase64: '',
           height: '460',
           sourceUrl: docType === 'pdf' ? '/sample.pdf' : '',
