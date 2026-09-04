@@ -203,7 +203,7 @@ export function PdfMiniViewer({
           const objectUrl = URL.createObjectURL(blob)
           objectUrlToRevoke = objectUrl
           getDocumentArg = { url: objectUrl }
-        } else if (sourceUrl.startsWith('http://') || sourceUrl.startsWith('https://') || sourceUrl.startsWith('blob:')) {
+        } else if (sourceUrl.startsWith('http://') || sourceUrl.startsWith('https://') || sourceUrl.startsWith('blob:') || sourceUrl.startsWith('/') || sourceUrl.startsWith('./')) {
           getDocumentArg = { url: sourceUrl }
         } else {
           // data:application/pdf;base64,... 또는 raw base64
@@ -634,7 +634,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
 
   const isExpanded = props.isExpanded === 'true'
   const [showDNA, setShowDNA] = useState(false)
-  const [pdfMode, setPdfMode] = useState<'native' | 'canvas'>('native')
+  const [pdfMode, setPdfMode] = useState<'native' | 'canvas'>('canvas')
   const [resolvedBlobUrl, setResolvedBlobUrl] = useState<string | null>(null)
 
   // [PDF IN-BLOCK SEARCH] 해당 PDF 블록 전용 검색 상태
@@ -891,7 +891,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
             setResolvedBlobUrl(createdUrl)
           }
         }).catch(console.error)
-      } else if (props.sourceUrl.startsWith('blob:') || props.sourceUrl.startsWith('http')) {
+      } else if (props.sourceUrl.startsWith('blob:') || props.sourceUrl.startsWith('http') || props.sourceUrl.startsWith('/') || props.sourceUrl.startsWith('./')) {
         setResolvedBlobUrl(props.sourceUrl)
       } else if (props.sourceUrl.startsWith('data:') || props.fileBase64) {
         try {
@@ -1253,7 +1253,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
                 onClose={() => setShowDNA(false)} 
               />
             )}
-            {docType === 'pdf' && pdfMode === 'native' && (resolvedBlobUrl || props.sourceUrl.startsWith('http')) ? (
+            {docType === 'pdf' && pdfMode === 'native' && (resolvedBlobUrl || props.sourceUrl?.startsWith('http') || props.sourceUrl?.startsWith('/')) ? (
               <iframe
                 key={`${resolvedBlobUrl || props.sourceUrl}-${targetPageNum}`}
                 src={`${resolvedBlobUrl || props.sourceUrl}${targetPageNum > 1 ? `#page=${targetPageNum}` : ''}`}
@@ -1266,21 +1266,13 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
                 PDF 문서 로딩 중...
               </div>
             ) : null}
-            {docType === 'pdf' && pdfMode === 'canvas' && hasFile && (
+            {docType === 'pdf' && pdfMode === 'canvas' && (hasFile || hasUrl) && (
               <PdfMiniViewer 
-                sourceUrl={props.sourceUrl} 
+                sourceUrl={resolvedBlobUrl || props.sourceUrl} 
                 height={viewHeight} 
                 targetPage={targetPageNum}
                 savedBookmarks={(() => { try { return JSON.parse(props.bookmarks || '[]') } catch { return [] } })()}
                 onBookmarksChange={(b) => editor.updateBlock(block.id, { props: { ...props, bookmarks: JSON.stringify(b) } })}
-              />
-            )}
-            {docType === 'pdf' && pdfMode === 'canvas' && hasUrl && (
-              <iframe
-                src={props.sourceUrl}
-                style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-                title={props.fileName || 'PDF'}
-                allowFullScreen
               />
             )}
             {docType !== 'pdf' && docType !== 'pptx' && hasFile && (
@@ -1393,7 +1385,7 @@ export function PptxMiniViewer({ sourceUrl, fileBase64, height }: { sourceUrl: s
           const blob = await getAttachment(fileId)
           if (!blob) throw new Error('VFS_EXPIRED')
           arrayBuffer = await blob.arrayBuffer()
-        } else if (sourceUrl.startsWith('blob:') || sourceUrl.startsWith('data:') || sourceUrl.startsWith('http')) {
+        } else if (sourceUrl.startsWith('blob:') || sourceUrl.startsWith('data:') || sourceUrl.startsWith('http') || sourceUrl.startsWith('/') || sourceUrl.startsWith('./')) {
           const res = await fetch(sourceUrl)
           arrayBuffer = await res.arrayBuffer()
         } else if (fileBase64) {
@@ -1664,7 +1656,7 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
           const blob = await getAttachment(fileId)
           if (!blob) throw new Error('VFS_EXPIRED')
           arrayBuffer = await blob.arrayBuffer()
-        } else if (sourceUrl.startsWith('blob:') || sourceUrl.startsWith('data:') || sourceUrl.startsWith('http')) {
+        } else if (sourceUrl.startsWith('blob:') || sourceUrl.startsWith('data:') || sourceUrl.startsWith('http') || sourceUrl.startsWith('/') || sourceUrl.startsWith('./')) {
           const res = await fetch(sourceUrl)
           arrayBuffer = await res.arrayBuffer()
         } else if (fileBase64) {

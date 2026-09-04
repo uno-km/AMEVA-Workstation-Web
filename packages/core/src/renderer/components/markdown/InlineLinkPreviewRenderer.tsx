@@ -46,6 +46,9 @@ export function InlineLinkPreviewRenderer({ code }: { code: string }) {
    * - 시나리오: 사용자가 '미리보기' 토글을 수행하면 iframe 샌드박스가 하단에 전개됨.
    */
   const [isExpanded, setIsExpanded] = useState(false)
+  const [htmlContent, setHtmlContent] = useState<string | null>(null)
+  const [loadingHtml, setLoadingHtml] = useState(false)
+  const [fetchFailed, setFetchFailed] = useState(false)
 
   /*
    * [RUN-TIME STATE / INVARIANT]
@@ -77,6 +80,31 @@ export function InlineLinkPreviewRenderer({ code }: { code: string }) {
       window.open(url, '_blank')
     }
   }
+
+  React.useEffect(() => {
+    if (!isExpanded || !url) return
+    let active = true
+    setLoadingHtml(true)
+    setFetchFailed(false)
+
+    fetch(url)
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const text = await res.text()
+        if (!active) return
+        const withBase = text.replace(/<head\b[^>]*>/i, `$&<base href="${url}">`)
+        setHtmlContent(withBase)
+        setLoadingHtml(false)
+      })
+      .catch((err) => {
+        if (!active) return
+        console.warn('[InlineLinkPreviewRenderer] fetch failed, falling back to direct iframe:', err)
+        setHtmlContent(null)
+        setLoadingHtml(false)
+      })
+
+    return () => { active = false }
+  }, [isExpanded, url])
 
   const isFailed = title === '서버 코드: 404' || title?.startsWith('연결 실패') || title === '연결 시간 초과'
   const isLoading = title === 'Loading preview...'
@@ -244,15 +272,22 @@ export function InlineLinkPreviewRenderer({ code }: { code: string }) {
           width: '100%',
           height: '420px',
           borderTop: '1px solid var(--border-muted)',
-          backgroundColor: '#ffffff',
+          backgroundColor: '#0a0d14',
           position: 'relative'
         }}>
-          <iframe
-            src={url}
-            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-            style={{ width: '100%', height: '100%', border: 'none' }}
-            title={`Preview: ${title}`}
-          />
+          {loadingHtml ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#94a3b8', fontSize: '12px' }}>
+              웹 페이지 로딩 중...
+            </div>
+          ) : (
+            <iframe
+              srcDoc={htmlContent || undefined}
+              src={htmlContent ? undefined : url}
+              sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+              style={{ width: '100%', height: '100%', border: 'none', background: '#fff' }}
+              title={`Preview: ${title}`}
+            />
+          )}
         </div>
       )}
     </div>

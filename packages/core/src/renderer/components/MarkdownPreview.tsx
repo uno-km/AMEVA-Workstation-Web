@@ -62,6 +62,12 @@ import { InlineDrawingRenderer } from './markdown/InlineDrawingRenderer'
 import { InlineDocumentRenderer } from './markdown/InlineDocumentRenderer'
 // [내부 프로젝트 의존성 모듈 임포트: ./markdown/InlineMediaEditorRenderer]
 import { InlineMediaEditorRenderer } from './markdown/InlineMediaEditorRenderer'
+// [내부 프로젝트 의존성 모듈 임포트: ./markdown/InlineVideoRenderer]
+import { InlineVideoRenderer } from './markdown/InlineVideoRenderer'
+// [내부 프로젝트 의존성 모듈 임포트: ./markdown/InlineAudioRenderer]
+import { InlineAudioRenderer } from './markdown/InlineAudioRenderer'
+// [내부 프로젝트 의존성 모듈 임포트: ./markdown/InlineImageRenderer]
+import { InlineImageRenderer } from './markdown/InlineImageRenderer'
 
       /*
        * [RUN-TIME STATE / INVARIANT]
@@ -520,6 +526,30 @@ export const MarkdownPreview = React.memo(function MarkdownPreview({ markdown, c
             return (
               <div key={idx} style={{ margin: '16px 0', width: '100%' }}>
                 <InlineMediaEditorRenderer code={seg.code} />
+              </div>
+            )
+          }
+
+          if (seg.language === 'ameva-video' || seg.language === 'video') {
+            return (
+              <div key={idx} style={{ margin: '16px 0', width: '100%' }}>
+                <InlineVideoRenderer code={seg.code} />
+              </div>
+            )
+          }
+
+          if (seg.language === 'ameva-audio' || seg.language === 'audio') {
+            return (
+              <div key={idx} style={{ margin: '16px 0', width: '100%' }}>
+                <InlineAudioRenderer code={seg.code} />
+              </div>
+            )
+          }
+
+          if (seg.language === 'ameva-image' || seg.language === 'image') {
+            return (
+              <div key={idx} style={{ margin: '16px 0', width: '100%' }}>
+                <InlineImageRenderer code={seg.code} />
               </div>
             )
           }

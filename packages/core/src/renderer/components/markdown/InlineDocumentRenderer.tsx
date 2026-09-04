@@ -33,33 +33,67 @@ import { Maximize2, Minimize2, ExternalLink } from 'lucide-react'
  * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
 export function InlineDocumentRenderer({ code }: { code: string }) {
-  let props: any = null
+  let props: any = {}
   try {
-    props = JSON.parse(code)
+    props = code ? JSON.parse(code) : {}
   } catch (err) {
-    console.error('[InlineDocumentRenderer] JSON parse failed:', err)
-    return <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>문서 데이터를 해석할 수 없습니다.</div>
+    console.error('[InlineDocumentRenderer] JSON parse failed, treating as empty:', err)
+    props = {}
   }
 
+  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null)
+  const [uploadedName, setUploadedName] = useState<string | null>(null)
+  const [uploadedType, setUploadedType] = useState<DocType | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileUpload = (file: File) => {
+    const ext = file.name.split('.').pop()?.toLowerCase() || ''
+    const docTypeMap: Record<string, DocType> = {
+      pdf: 'pdf',
+      docx: 'docx',
+      doc: 'docx',
+      pptx: 'pptx',
+      ppt: 'pptx',
+      xlsx: 'xlsx',
+      xls: 'xlsx',
+      csv: 'xlsx',
+    }
+    const detectedType = docTypeMap[ext] || 'unknown'
+    const objUrl = URL.createObjectURL(file)
+    setUploadedUrl(objUrl)
+    setUploadedName(file.name)
+    setUploadedType(detectedType)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file) handleFileUpload(file)
+  }
+
+  const effectiveSourceUrl = uploadedUrl || props.sourceUrl
+  const docType = (uploadedType || props.docType || (effectiveSourceUrl?.endsWith('.pdf') ? 'pdf' : 'pdf')) as DocType
+  const config = DOC_TYPE_CONFIG[docType] || DOC_TYPE_CONFIG.unknown
+  const effectiveFileName = uploadedName || props.fileName || `${config.label} 문서`
+
   const [isExpanded, setIsExpanded] = React.useState(props.isExpanded === 'true')
-  const [pdfMode, setPdfMode] = React.useState<'native' | 'canvas'>('native')
+  const [pdfMode, setPdfMode] = React.useState<'native' | 'canvas'>('canvas')
   const [resolvedBlobUrl, setResolvedBlobUrl] = React.useState<string | null>(null)
 
-  const docType = (props.docType as DocType) || 'unknown'
-  const config = DOC_TYPE_CONFIG[docType] || DOC_TYPE_CONFIG.unknown
-
-  const isLocalMemory = props.sourceUrl?.startsWith('blob:') || props.sourceUrl?.startsWith('ameva-vfs://') || props.sourceUrl?.startsWith('data:')
-  const hasFile = (!!props.sourceUrl && isLocalMemory) || !!props.fileBase64
-  const hasUrl = !!props.sourceUrl && !isLocalMemory
+  const isLocalMemory = effectiveSourceUrl?.startsWith('blob:') || effectiveSourceUrl?.startsWith('ameva-vfs://') || effectiveSourceUrl?.startsWith('data:')
+  const hasFile = (!!effectiveSourceUrl && (isLocalMemory || effectiveSourceUrl.startsWith('/') || effectiveSourceUrl.startsWith('./'))) || !!props.fileBase64
+  const hasUrl = !!effectiveSourceUrl && !isLocalMemory
 
   // PDF용 Blob URL 해석 (Chromium/Edge 내장 PDF 뷰어 연동)
   React.useEffect(() => {
     let active = true
     let createdUrl: string | null = null
 
-    if (docType === 'pdf' && props.sourceUrl) {
-      if (props.sourceUrl.startsWith('ameva-vfs://')) {
-        const id = props.sourceUrl.replace('ameva-vfs://', '')
+    if (docType === 'pdf' && effectiveSourceUrl) {
+      if (effectiveSourceUrl.startsWith('ameva-vfs://')) {
+        const id = effectiveSourceUrl.replace('ameva-vfs://', '')
         getAttachment(id).then(blob => {
           if (!active) return
           if (blob) {
@@ -67,11 +101,16 @@ export function InlineDocumentRenderer({ code }: { code: string }) {
             setResolvedBlobUrl(createdUrl)
           }
         }).catch(console.error)
-      } else if (props.sourceUrl.startsWith('blob:') || props.sourceUrl.startsWith('http')) {
-        setResolvedBlobUrl(props.sourceUrl)
-      } else if (props.sourceUrl.startsWith('data:') || props.fileBase64) {
+      } else if (
+        effectiveSourceUrl.startsWith('blob:') || 
+        effectiveSourceUrl.startsWith('http') ||
+        effectiveSourceUrl.startsWith('/') ||
+        effectiveSourceUrl.startsWith('./')
+      ) {
+        setResolvedBlobUrl(effectiveSourceUrl)
+      } else if (effectiveSourceUrl.startsWith('data:') || props.fileBase64) {
         try {
-          const raw = props.sourceUrl.startsWith('data:') ? props.sourceUrl : props.fileBase64
+          const raw = effectiveSourceUrl.startsWith('data:') ? effectiveSourceUrl : props.fileBase64
           const blob = base64ToBlob(raw, 'application/pdf')
           createdUrl = URL.createObjectURL(blob)
           setResolvedBlobUrl(createdUrl)
@@ -87,9 +126,47 @@ export function InlineDocumentRenderer({ code }: { code: string }) {
       active = false
       if (createdUrl) URL.revokeObjectURL(createdUrl)
     }
-  }, [docType, props.sourceUrl, props.fileBase64])
+  }, [docType, effectiveSourceUrl, props.fileBase64])
 
-  const [customHeight, setCustomHeight] = useState<number>(() => parseInt(props.height || '420', 10))
+  const [customHeight, setCustomHeight] = useState<number>(() => parseInt(props.height || '460', 10))
+
+  if (!effectiveSourceUrl && !props.fileBase64) {
+    return (
+      <div
+        onClick={() => fileInputRef.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={handleDrop}
+        style={{
+          border: `2px dashed ${isDragging ? '#ef4444' : '#3a3a4a'}`,
+          borderRadius: '10px',
+          padding: '36px 20px',
+          textAlign: 'center',
+          color: '#94a3b8',
+          background: isDragging ? 'rgba(239, 68, 68, 0.08)' : '#0f0f16',
+          cursor: 'pointer',
+          margin: '14px 0',
+          transition: 'all 0.2s ease',
+          userSelect: 'none'
+        }}
+      >
+        <div style={{ fontSize: '36px', marginBottom: '10px' }}>📑</div>
+        <div style={{ fontSize: '14px', fontWeight: 700, color: '#e2e8f0', marginBottom: '6px' }}>
+          PDF 또는 오피스 문서를 드래그하거나 클릭하여 업로드
+        </div>
+        <div style={{ fontSize: '11.5px', color: '#64748b' }}>
+          PDF, DOCX, PPTX, XLSX 지원 • 온디바이스 인라인 뷰어 즉시 렌더링
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.docx,.pptx,.xlsx,.csv"
+          style={{ display: 'none' }}
+          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFileUpload(f) }}
+        />
+      </div>
+    )
+  }
 
   const headerBar = (
     <div style={{
@@ -100,8 +177,20 @@ export function InlineDocumentRenderer({ code }: { code: string }) {
     }}>
       <span style={{ color: config.color }}>{config.icon}</span>
       <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-main)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {props.fileName || `${config.label} 문서`}
+        {effectiveFileName}
       </span>
+      {uploadedUrl && (
+        <button
+          onClick={() => { setUploadedUrl(null); setUploadedName(null); setUploadedType(null) }}
+          style={{
+            padding: '2px 8px', background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', cursor: 'pointer',
+            color: '#cbd5e1', fontSize: '10px', fontWeight: 600,
+          }}
+        >
+          다른 문서 선택
+        </button>
+      )}
       {docType === 'pdf' && (hasFile || hasUrl) && (
         <button
           onClick={() => setPdfMode(prev => prev === 'native' ? 'canvas' : 'native')}
@@ -122,17 +211,17 @@ export function InlineDocumentRenderer({ code }: { code: string }) {
             onClick={() => {
               const next = !isExpanded
               setIsExpanded(next)
-              setCustomHeight(next ? 850 : 420)
+              setCustomHeight(next ? 850 : 460)
             }}
             title={isExpanded ? '축소 (기본 높이로)' : '확대 (850px+ 로)'}
           >
             {isExpanded ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
           </button>
         )}
-        {hasUrl && (
+        {hasUrl && !effectiveSourceUrl?.startsWith('/') && (
           <button
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 2 }}
-            onClick={() => window.open(props.sourceUrl, '_blank')}
+            onClick={() => window.open(effectiveSourceUrl, '_blank')}
             title="새 탭에서 열기"
           >
             <ExternalLink size={12} />
@@ -158,11 +247,11 @@ export function InlineDocumentRenderer({ code }: { code: string }) {
 
         return (
           <div style={{ height: viewHeight, overflow: 'hidden', position: 'relative' }}>
-            {docType === 'pdf' && pdfMode === 'native' && (resolvedBlobUrl || props.sourceUrl?.startsWith('http')) ? (
+            {docType === 'pdf' && pdfMode === 'native' && (resolvedBlobUrl || effectiveSourceUrl?.startsWith('http') || effectiveSourceUrl?.startsWith('/')) ? (
               <iframe
-                src={resolvedBlobUrl || props.sourceUrl}
+                src={resolvedBlobUrl || effectiveSourceUrl}
                 style={{ width: '100%', height: '100%', border: 'none', display: 'block', background: '#525659' }}
-                title={props.fileName || 'PDF'}
+                title={effectiveFileName}
                 allowFullScreen
               />
             ) : docType === 'pdf' && pdfMode === 'native' ? (
@@ -170,42 +259,34 @@ export function InlineDocumentRenderer({ code }: { code: string }) {
                 PDF 문서 로딩 중...
               </div>
             ) : null}
-            {docType === 'pdf' && pdfMode === 'canvas' && hasFile && (
+            {docType === 'pdf' && pdfMode === 'canvas' && (hasFile || hasUrl) && (
               <PdfMiniViewer 
-                sourceUrl={props.sourceUrl} 
+                sourceUrl={resolvedBlobUrl || effectiveSourceUrl} 
                 height={viewHeight} 
                 savedBookmarks={(() => { try { return JSON.parse(props.bookmarks || '[]') } catch { return [] } })()}
               />
             )}
-            {docType === 'pdf' && pdfMode === 'canvas' && hasUrl && (
-              <iframe
-                src={props.sourceUrl}
-                style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
-                title={props.fileName || 'PDF'}
-                allowFullScreen
-              />
-            )}
             {docType !== 'pdf' && docType !== 'pptx' && hasFile && (
               <OfficeDocViewer
-                sourceUrl={props.sourceUrl}
+                sourceUrl={effectiveSourceUrl}
                 fileBase64={props.fileBase64}
                 docType={docType}
-                fileName={props.fileName}
+                fileName={effectiveFileName}
                 height={viewHeight}
               />
             )}
             {docType === 'pptx' && hasFile && (
               <PptxMiniViewer
-                sourceUrl={props.sourceUrl}
+                sourceUrl={effectiveSourceUrl}
                 fileBase64={props.fileBase64}
                 height={viewHeight}
               />
             )}
-            {docType !== 'pdf' && hasUrl && (
+            {docType !== 'pdf' && hasUrl && !effectiveSourceUrl?.startsWith('/') && (
               <iframe
-                src={`https://docs.google.com/viewer?url=${encodeURIComponent(props.sourceUrl)}&embedded=true`}
+                src={`https://docs.google.com/viewer?url=${encodeURIComponent(effectiveSourceUrl)}&embedded=true`}
                 style={{ width: '100%', height: '100%', border: 'none' }}
-                title={props.fileName || '문서'}
+                title={effectiveFileName}
               />
             )}
           </div>
