@@ -1490,10 +1490,10 @@ export function PptxMiniViewer({ sourceUrl, fileBase64, height }: { sourceUrl: s
         {/* PPT 목차 사이드 드로어 */}
         {showToc && slides.length > 0 && (
           <div style={{
-            width: 220, height: '100%', background: '#0f172a', borderLeft: '1px solid rgba(255,255,255,0.1)',
+            width: 220, height: '100%', background: 'var(--bg-surface)', borderLeft: '1px solid var(--border-muted)',
             overflowY: 'auto', padding: 8, zIndex: 20, flexShrink: 0
           }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#f97316', marginBottom: 8, paddingBottom: 4, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#f97316', marginBottom: 8, paddingBottom: 4, borderBottom: '1px solid var(--border-muted)' }}>
               📋 슬라이드 목차 ({slides.length})
             </div>
             {slides.map(item => (
@@ -1503,7 +1503,7 @@ export function PptxMiniViewer({ sourceUrl, fileBase64, height }: { sourceUrl: s
                 style={{
                   padding: '6px 8px', borderRadius: 4, marginBottom: 4, cursor: 'pointer', fontSize: 11,
                   background: currentSlide === item.index ? 'rgba(249, 115, 22, 0.2)' : 'transparent',
-                  color: currentSlide === item.index ? '#fb923c' : '#cbd5e1',
+                  color: currentSlide === item.index ? '#fb923c' : 'var(--text-main)',
                   borderLeft: currentSlide === item.index ? '3px solid #f97316' : '3px solid transparent',
                   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
                 }}
@@ -1873,17 +1873,17 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
     }
 
     return (
-      <div style={{ position: 'relative', width: '100%', height, background: '#0b0f19', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ position: 'relative', width: '100%', height, background: 'var(--bg-deep)', display: 'flex', flexDirection: 'column' }}>
         {/* Word/HWPX 상단 툴바: 페이지 이동 및 목차 버튼 */}
         {(docType === 'docx' || docType === 'hwpx') && (
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '4px 12px', background: 'rgba(15, 23, 42, 0.95)', borderBottom: '1px solid rgba(255,255,255,0.1)',
-            color: '#e2e8f0', fontSize: 11, fontWeight: 600, zIndex: 15, flexShrink: 0
+            padding: '4px 12px', background: 'var(--bg-surface)', borderBottom: '1px solid var(--border-muted)',
+            color: 'var(--text-main)', fontSize: 11, fontWeight: 600, zIndex: 15, flexShrink: 0
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <button
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '2px 6px', fontSize: 14, lineHeight: 1 }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px 6px', fontSize: 14, lineHeight: 1 }}
                 onClick={() => goToDocxPage(currentPage - 1)}
                 disabled={currentPage <= 1}
                 title="이전 페이지"
@@ -1892,7 +1892,7 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
                 {currentPage} / {totalPages} 페이지
               </span>
               <button
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '2px 6px', fontSize: 14, lineHeight: 1 }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px 6px', fontSize: 14, lineHeight: 1 }}
                 onClick={() => goToDocxPage(currentPage + 1)}
                 disabled={currentPage >= totalPages}
                 title="다음 페이지"
@@ -1903,17 +1903,17 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
               {docType === 'docx' && (
                 <div style={{
                   display: 'inline-flex',
-                  background: 'rgba(255, 255, 255, 0.08)',
+                  background: 'var(--bg-card)',
                   borderRadius: 5,
                   padding: 2,
                   gap: 2,
-                  border: '1px solid rgba(255, 255, 255, 0.12)'
+                  border: '1px solid var(--border-muted)'
                 }}>
                   <button
                     onClick={() => setDocViewMode('rich')}
                     style={{
                       background: docViewMode === 'rich' ? '#2563eb' : 'transparent',
-                      color: docViewMode === 'rich' ? '#ffffff' : '#94a3b8',
+                      color: docViewMode === 'rich' ? '#ffffff' : 'var(--text-muted)',
                       border: 'none',
                       borderRadius: 4,
                       padding: '3px 8px',
@@ -1930,7 +1930,7 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
                     onClick={() => setDocViewMode('native')}
                     style={{
                       background: docViewMode === 'native' ? '#2563eb' : 'transparent',
-                      color: docViewMode === 'native' ? '#ffffff' : '#94a3b8',
+                      color: docViewMode === 'native' ? '#ffffff' : 'var(--text-muted)',
                       border: 'none',
                       borderRadius: 4,
                       padding: '3px 8px',
@@ -1972,8 +1972,8 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
                   onClick={() => setShowToc(!showToc)}
                   style={{
                     background: showToc ? 'rgba(59, 130, 246, 0.25)' : 'transparent',
-                    border: '1px solid ' + (showToc ? '#3b82f6' : 'rgba(255,255,255,0.2)'),
-                    color: showToc ? '#60a5fa' : '#94a3b8',
+                    border: '1px solid ' + (showToc ? '#3b82f6' : 'var(--border-muted)'),
+                    color: showToc ? '#60a5fa' : 'var(--text-muted)',
                     borderRadius: 4, padding: '3px 10px', fontSize: 11, cursor: 'pointer',
                     display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600
                   }}
@@ -1997,8 +1997,8 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
               flex: 1,
               height: '100%',
               overflow: 'auto',
-              background: '#0b0f19',
-              color: '#0f172a',
+              background: 'var(--bg-deep)',
+              color: 'var(--text-main)',
               fontSize: 13,
               lineHeight: 1.6,
               position: 'relative',
@@ -2006,7 +2006,7 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
           >
             <style>{`
               .docx-preview-container {
-                background: #0b0f19 !important;
+                background: var(--bg-deep) !important;
                 padding: 24px 16px !important;
                 display: flex !important;
                 flex-direction: column !important;
@@ -2096,10 +2096,10 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
           {/* Word 목차 사이드 드로어 */}
           {showToc && tocHeadings.length > 0 && (
             <div style={{
-              width: 220, height: '100%', background: '#0f172a', borderLeft: '1px solid rgba(255,255,255,0.1)',
+              width: 220, height: '100%', background: 'var(--bg-surface)', borderLeft: '1px solid var(--border-muted)',
               overflowY: 'auto', padding: 8, zIndex: 20, flexShrink: 0
             }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#60a5fa', marginBottom: 8, paddingBottom: 4, borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#60a5fa', marginBottom: 8, paddingBottom: 4, borderBottom: '1px solid var(--border-muted)' }}>
                 📋 문서 목차 ({tocHeadings.length})
               </div>
               {tocHeadings.map(item => (
@@ -2110,7 +2110,7 @@ export function OfficeDocViewer({ sourceUrl, fileBase64, docType, fileName, heig
                     padding: '6px 8px', borderRadius: 4, marginBottom: 3, cursor: 'pointer', fontSize: 11,
                     paddingLeft: `${Math.min(24, (item.level - 1) * 10 + 8)}px`,
                     background: activeHeadingId === item.id ? 'rgba(59, 130, 246, 0.25)' : 'transparent',
-                    color: activeHeadingId === item.id ? '#60a5fa' : '#cbd5e1',
+                    color: activeHeadingId === item.id ? '#60a5fa' : 'var(--text-main)',
                     borderLeft: activeHeadingId === item.id ? '3px solid #3b82f6' : '3px solid transparent',
                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                     transition: 'all 0.15s',

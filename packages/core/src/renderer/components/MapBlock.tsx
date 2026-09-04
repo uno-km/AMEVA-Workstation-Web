@@ -358,21 +358,21 @@ export const MapBlockSpec = createReactBlockSpec(
               style={{
                 width: '100%',
                 height: `${containerH}px`,
-                backgroundColor: '#18181c',
+                backgroundColor: 'var(--bg-card)',
                 border: '1px solid var(--border-muted)',
                 borderRadius: '12px',
                 overflow: 'hidden',
                 display: 'flex',
                 flexDirection: 'column',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+                boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
                 boxSizing: 'border-box'
               }}
             >
               {/* 헤더 바 */}
-              <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border-muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#121215', flexShrink: 0 }}>
+              <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border-muted)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-surface)', flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <MapIcon size={14} color="#10b981" />
-                  <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#f8fafc' }}>지도 (Map)</span>
+                  <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-main)' }}>지도 (Map)</span>
                 </div>
                 <div style={{ display: 'flex', gap: '4px' }}>
                   <button 
@@ -395,22 +395,22 @@ export const MapBlockSpec = createReactBlockSpec(
                           <input 
                             type="text" value={searchInput} onChange={e => setSearchInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSearchPin()}
                             placeholder="장소나 주소를 검색 후 엔터를 치세요..."
-                            style={{ flex: 1, padding: '8px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-muted)', borderRadius: '4px', color: '#fff', fontSize: '11px' }}
+                            style={{ flex: 1, padding: '8px 12px', background: 'var(--bg-surface)', border: '1px solid var(--border-muted)', borderRadius: '4px', color: 'var(--text-main)', fontSize: '11px' }}
                           />
                           <button onClick={handleSearchPin} style={{ background: '#10b981', color: '#000', border: 'none', padding: '0 12px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>검색</button>
                         </div>
                         {pinSearchResults && pinSearchResults.length > 0 && (
-                          <div style={{ position: 'absolute', top: '100%', left: 0, right: '60px', background: '#1e1e24', border: '1px solid var(--border-muted)', borderRadius: '4px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', marginTop: '4px' }}>
+                          <div style={{ position: 'absolute', top: '100%', left: 0, right: '60px', background: 'var(--bg-panel)', border: '1px solid var(--border-muted)', borderRadius: '4px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', marginTop: '4px', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
                             {pinSearchResults.map((r, i) => (
-                              <div key={i} onClick={() => handleSelectPinResult(r)} style={{ padding: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: '10px' }}>
-                                <strong style={{ color: '#fff' }}>{r.name || searchInput}</strong><br/>
+                              <div key={i} onClick={() => handleSelectPinResult(r)} style={{ padding: '8px', borderBottom: '1px solid var(--border-muted)', cursor: 'pointer', fontSize: '10px' }}>
+                                <strong style={{ color: 'var(--text-main)' }}>{r.name || searchInput}</strong><br/>
                                 <span style={{ color: 'var(--text-muted)' }}>{r.display_name}</span>
                               </div>
                             ))}
                           </div>
                         )}
                         {pinSearchResults && pinSearchResults.length === 0 && searchInput && (
-                          <div style={{ position: 'absolute', top: '100%', left: 0, right: '60px', background: '#1e1e24', border: '1px solid var(--border-muted)', borderRadius: '4px', zIndex: 10, padding: '8px', marginTop: '4px', fontSize: '10px', color: 'var(--text-muted)' }}>
+                          <div style={{ position: 'absolute', top: '100%', left: 0, right: '60px', background: 'var(--bg-panel)', border: '1px solid var(--border-muted)', borderRadius: '4px', zIndex: 10, padding: '8px', marginTop: '4px', fontSize: '10px', color: 'var(--text-muted)', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
                             엔터를 눌러 검색하세요. 결과가 없으면 표시됩니다.
                           </div>
                         )}
@@ -419,11 +419,11 @@ export const MapBlockSpec = createReactBlockSpec(
                       {pins.length > 0 && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                           {pins.map((p, i) => (
-                            <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-muted)', borderRadius: '6px', overflow: 'hidden' }}>
+                            <div key={i} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-muted)', borderRadius: '6px', overflow: 'hidden' }}>
                               <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setExpandedPinIdx(expandedPinIdx === i ? null : i)}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                   <MapPin size={12} color="#10b981" />
-                                  <span style={{ fontSize: '11px', color: '#fff' }}>{p.name}</span>
+                                  <span style={{ fontSize: '11px', color: 'var(--text-main)' }}>{p.name}</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                   <button onClick={(e) => { e.stopPropagation(); handleRemovePin(i) }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><X size={12} /></button>
@@ -431,12 +431,12 @@ export const MapBlockSpec = createReactBlockSpec(
                                 </div>
                               </div>
                               {expandedPinIdx === i && (
-                                <div style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.2)', borderTop: '1px solid var(--border-muted)' }}>
+                                <div style={{ padding: '8px 12px', background: 'var(--bg-deep)', borderTop: '1px solid var(--border-muted)' }}>
                                   <textarea
                                     value={p.description || ''}
                                     onChange={e => updatePinData(i, { description: e.target.value })}
                                     placeholder="이 핀에 대한 상세 설명을 작성하세요..."
-                                    style={{ width: '100%', padding: '6px', background: 'var(--bg-deep)', border: '1px solid var(--border-muted)', borderRadius: '4px', color: 'var(--text-main)', fontSize: '11px', resize: 'vertical', minHeight: '40px' }}
+                                    style={{ width: '100%', padding: '6px', background: 'var(--bg-surface)', border: '1px solid var(--border-muted)', borderRadius: '4px', color: 'var(--text-main)', fontSize: '11px', resize: 'vertical', minHeight: '40px' }}
                                   />
                                 </div>
                               )}
@@ -457,13 +457,13 @@ export const MapBlockSpec = createReactBlockSpec(
                             <input 
                               type="text" value={startSearch} onChange={e => { setStartSearch(e.target.value); setSelectedStart(null); }} onKeyDown={e => e.key === 'Enter' && handleSearchStart()}
                               placeholder="출발지 검색 (Enter)"
-                              style={{ width: '100%', padding: '8px 12px', background: 'var(--bg-surface)', border: selectedStart ? '1px solid #3b82f6' : '1px solid var(--border-muted)', borderRadius: '4px', color: '#fff', fontSize: '11px' }}
+                              style={{ width: '100%', padding: '8px 12px', background: 'var(--bg-surface)', border: selectedStart ? '1px solid #3b82f6' : '1px solid var(--border-muted)', borderRadius: '4px', color: 'var(--text-main)', fontSize: '11px' }}
                             />
                             {startSearchResults && startSearchResults.length > 0 && (
-                              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e1e24', border: '1px solid var(--border-muted)', borderRadius: '4px', zIndex: 10, maxHeight: '200px', overflowY: 'auto' }}>
+                              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-panel)', border: '1px solid var(--border-muted)', borderRadius: '4px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
                                 {startSearchResults.map((r, i) => (
-                                  <div key={i} onClick={() => { setSelectedStart(r); setStartSearch(r.name || r.display_name.split(',')[0]); setStartSearchResults([]) }} style={{ padding: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: '10px' }}>
-                                    <strong style={{ color: '#fff' }}>{r.display_name.split(',')[0]}</strong><br/>
+                                  <div key={i} onClick={() => { setSelectedStart(r); setStartSearch(r.name || r.display_name.split(',')[0]); setStartSearchResults([]) }} style={{ padding: '8px', borderBottom: '1px solid var(--border-muted)', cursor: 'pointer', fontSize: '10px' }}>
+                                    <strong style={{ color: 'var(--text-main)' }}>{r.display_name.split(',')[0]}</strong><br/>
                                     <span style={{ color: 'var(--text-muted)' }}>{r.display_name}</span>
                                   </div>
                                 ))}
@@ -475,13 +475,13 @@ export const MapBlockSpec = createReactBlockSpec(
                             <input 
                               type="text" value={destSearch} onChange={e => { setDestSearch(e.target.value); setSelectedDest(null); }} onKeyDown={e => e.key === 'Enter' && handleSearchDest()}
                               placeholder="도착지 검색 (Enter)"
-                              style={{ width: '100%', padding: '8px 12px', background: 'var(--bg-surface)', border: selectedDest ? '1px solid #3b82f6' : '1px solid var(--border-muted)', borderRadius: '4px', color: '#fff', fontSize: '11px' }}
+                              style={{ width: '100%', padding: '8px 12px', background: 'var(--bg-surface)', border: selectedDest ? '1px solid #3b82f6' : '1px solid var(--border-muted)', borderRadius: '4px', color: 'var(--text-main)', fontSize: '11px' }}
                             />
                             {destSearchResults && destSearchResults.length > 0 && (
-                              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e1e24', border: '1px solid var(--border-muted)', borderRadius: '4px', zIndex: 10, maxHeight: '200px', overflowY: 'auto' }}>
+                              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-panel)', border: '1px solid var(--border-muted)', borderRadius: '4px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }}>
                                 {destSearchResults.map((r, i) => (
-                                  <div key={i} onClick={() => { setSelectedDest(r); setDestSearch(r.name || r.display_name.split(',')[0]); setDestSearchResults([]) }} style={{ padding: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: '10px' }}>
-                                    <strong style={{ color: '#fff' }}>{r.display_name.split(',')[0]}</strong><br/>
+                                  <div key={i} onClick={() => { setSelectedDest(r); setDestSearch(r.name || r.display_name.split(',')[0]); setDestSearchResults([]) }} style={{ padding: '8px', borderBottom: '1px solid var(--border-muted)', cursor: 'pointer', fontSize: '10px' }}>
+                                    <strong style={{ color: 'var(--text-main)' }}>{r.display_name.split(',')[0]}</strong><br/>
                                     <span style={{ color: 'var(--text-muted)' }}>{r.display_name}</span>
                                   </div>
                                 ))}
@@ -505,12 +505,12 @@ export const MapBlockSpec = createReactBlockSpec(
                       {routes.length > 0 && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
                           {routes.map((r, i) => (
-                            <div key={r.id || i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-muted)', borderRadius: '6px', overflow: 'hidden' }}>
+                            <div key={r.id || i} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-muted)', borderRadius: '6px', overflow: 'hidden' }}>
                               <div style={{ padding: '8px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }} onClick={() => setExpandedRouteIdx(expandedRouteIdx === i ? null : i)}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                   <Circle fill={r.color} color={r.color} size={10} />
-                                  <span style={{ fontSize: '11px', color: '#fff', fontWeight: 'bold' }}>{r.name}</span>
-                                  <span style={{ fontSize: '9px', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.1)', padding: '2px 6px', borderRadius: '4px' }}>{r.type === 'driving' ? '자동차' : r.type === 'walking' ? '도보' : '자전거'}</span>
+                                  <span style={{ fontSize: '11px', color: 'var(--text-main)', fontWeight: 'bold' }}>{r.name}</span>
+                                  <span style={{ fontSize: '9px', color: 'var(--text-muted)', background: 'var(--bg-deep)', padding: '2px 6px', borderRadius: '4px' }}>{r.type === 'driving' ? '자동차' : r.type === 'walking' ? '도보' : '자전거'}</span>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                   <button onClick={(e) => { e.stopPropagation(); handleRemoveRoute(i) }} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer' }}><X size={12} /></button>
@@ -518,10 +518,10 @@ export const MapBlockSpec = createReactBlockSpec(
                                 </div>
                               </div>
                               {expandedRouteIdx === i && (
-                                <div style={{ padding: '8px 12px', background: 'rgba(0,0,0,0.2)', borderTop: '1px solid var(--border-muted)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                <div style={{ padding: '8px 12px', background: 'var(--bg-deep)', borderTop: '1px solid var(--border-muted)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                     <input type="color" value={r.color} onChange={e => updateRouteData(i, { color: e.target.value })} style={{ width: '24px', height: '24px', padding: 0, border: 'none', cursor: 'pointer', background: 'transparent' }} />
-                                    <input type="text" value={r.name} onChange={e => updateRouteData(i, { name: e.target.value })} placeholder="경로 이름" style={{ flex: 1, padding: '4px 8px', background: 'var(--bg-deep)', border: '1px solid var(--border-muted)', borderRadius: '4px', color: 'var(--text-main)', fontSize: '11px' }} />
+                                    <input type="text" value={r.name} onChange={e => updateRouteData(i, { name: e.target.value })} placeholder="경로 이름" style={{ flex: 1, padding: '4px 8px', background: 'var(--bg-surface)', border: '1px solid var(--border-muted)', borderRadius: '4px', color: 'var(--text-main)', fontSize: '11px' }} />
                                   </div>
                                   <textarea
                                     value={r.description || ''}

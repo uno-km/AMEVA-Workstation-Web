@@ -59,6 +59,15 @@
   --bg-hover: var(--bg-glass-active);
   --border-main: var(--border-muted);
   --text-normal: var(--text-main);
+
+  /* 호환성 변수 및 코드 블록 표준 색상 */
+  --text-color: var(--text-main);
+  --bg-color: var(--bg-main);
+  --border-color: var(--border-muted);
+  --code-bg: #12131a;
+  --code-border: var(--border-muted);
+  --code-text: #e2e8f0;
+  --card-bg: var(--bg-card);
   
   /* 터미널(콘솔) 전용 색상 */
   --term-bg: #0a0a0f;
@@ -111,7 +120,7 @@
   --bg-glass: rgba(255, 255, 255, 0.95);
   --bg-glass-active: #e2e8f0;
   --border-glow: rgba(0, 0, 0, 0.12);
-  --border-muted: #e2e8f0;
+  --border-muted: #cbd5e1;
   --text-main: #0f172a;
   --text-muted: #475569;
   --text-dark: #64748b;
@@ -124,10 +133,18 @@
   --text-on-active: #0f172a;
 
   --bg-panel: #ffffff;
-  --bg-surface: #ffffff;
+  --bg-surface: #f8fafc;
   --bg-hover: #f1f5f9;
-  --border-main: #e2e8f0;
+  --border-main: #cbd5e1;
   --text-normal: #0f172a;
+
+  --text-color: #0f172a;
+  --bg-color: #ffffff;
+  --border-color: #cbd5e1;
+  --code-bg: #f8fafc;
+  --code-border: #cbd5e1;
+  --code-text: #0f172a;
+  --card-bg: #ffffff;
 
   --sb-w: 6px;
   --sb-track: #f1f5f9;
@@ -168,10 +185,18 @@
   --font-mono: 'D2Coding', 'Fixedsys', Consolas, monospace;
   
   --bg-panel: #c0c0c0;
-  --bg-surface: #c0c0c0;
+  --bg-surface: #ffffff;
   --bg-hover: #000080;
   --border-main: #808080;
   --text-normal: #000000;
+
+  --text-color: #000000;
+  --bg-color: #ffffff;
+  --border-color: #808080;
+  --code-bg: #ffffff;
+  --code-border: #808080;
+  --code-text: #000000;
+  --card-bg: #c0c0c0;
 
   /* Win98 전용 레트로 스크롤바 오버라이딩 */
   --sb-w: 16px;

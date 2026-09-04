@@ -33,16 +33,12 @@
  * - MUST NOT: TypeScript any 형식을 우회 수단으로 함부로 선언하지 말 것.
  */
 
-// [외부 패키지 및 라이브러리 임포트: react]
 import { useState, useEffect } from 'react'
-// [외부 패키지 및 라이브러리 임포트: lucide-react]
 import { Terminal, Eye, EyeOff, ChevronDown, Sparkles } from 'lucide-react'
-// [외부 패키지 및 라이브러리 임포트: mermaid]
 import mermaid from 'mermaid'
-// [내부 프로젝트 의존성 모듈 임포트: ./langMeta]
 import { getLangMeta } from './langMeta'
-// [내부 프로젝트 의존성 모듈 임포트: ./RunState]
 import { type RunState } from './RunState'
+import { useCurrentTheme } from '../../hooks/useCurrentTheme'
 
 /**
  * JupyterCodeEditorTerminal 함수의 핵심 비즈니스 로직 및 상태 제어를 처리합니다.
@@ -62,31 +58,11 @@ export function JupyterCodeEditorTerminal({
   onAIFix?: (errorLog: string) => void
   isFixing?: boolean
 }) {
-      /*
-       * [ALGORITHM BRANCH / DECISION]
-       * - 조건 식: `!runState`
-       * - 만족 시: 비즈니스 요구사항을 만족하여 대응 내부 분기 블록을 구동함.
-       * - 불만족 시: 바이패스(Bypass)하여 하위 연산으로 폴백하거나 조건 스택을 탈출함.
-       * - 예시: `if (!runState)` 만족 시 런타임 내포 연산 및 데이터 매핑 즉시 활성화.
-       */
   if (!runState) return null
 
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `meta`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const meta = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const meta = getLangMeta(language)
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `accentColor`
-       * - 자료형 / 예상 값: 우변 식 계산 결과에 따라 런타임 할당되는 적격 데이터 타입 (예: string, number, boolean, Object 등).
-       * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
-       * - 예시 코드: `const accentColor = ...` 형태로 안전 캐싱 후 가공 기동.
-       */
   const accentColor = meta.color
+  const { isWhite, isRetro } = useCurrentTheme()
 
   // 1. Mermaid 실시간 라이브 프리뷰 상태 및 터미널 접기 상태
   const [showMermaidPreview, setShowMermaidPreview] = useState(false)
@@ -97,8 +73,30 @@ export function JupyterCodeEditorTerminal({
   useEffect(() => {
     mermaid.initialize({
       startOnLoad: false,
-      theme: 'dark',
+      theme: isWhite || isRetro ? 'neutral' : 'dark',
+      themeVariables: isWhite ? {
+        primaryColor: '#f1f5f9',
+        primaryTextColor: '#0f172a',
+        primaryBorderColor: '#2563eb',
+        lineColor: '#475569',
+        background: '#ffffff',
+        mainBkg: '#f8fafc',
+      } : isRetro ? {
+        primaryColor: '#c0c0c0',
+        primaryTextColor: '#000000',
+        primaryBorderColor: '#000080',
+        lineColor: '#000000',
+        background: '#ffffff',
+        mainBkg: '#ffffff',
+      } : {
+        primaryColor: '#1e293b',
+        primaryTextColor: '#f8fafc',
+        primaryBorderColor: '#38bdf8',
+        lineColor: '#94a3b8',
+        background: '#0a0d14',
+      },
       securityLevel: 'loose',
+      fontFamily: 'Pretendard, -apple-system, sans-serif'
     })
       /*
        * [ALGORITHM BRANCH / DECISION]

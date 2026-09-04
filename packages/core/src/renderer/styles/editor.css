@@ -748,3 +748,377 @@
 [data-mantine-color-scheme='dark'] .ghost-text-suggestion {
   color: #9ca3af;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   FULL-SPECTRUM THEME ENHANCEMENTS (White & Retro Modes)
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── 1. Highlight.js Light Theme (VS Code Light) ── */
+[data-theme='white'] .hljs-pre,
+[data-theme='light'] .hljs-pre {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+[data-theme='white'] .hljs,
+[data-theme='light'] .hljs {
+  color: #0f172a !important;
+  background: transparent !important;
+}
+
+[data-theme='white'] .hljs-keyword,
+[data-theme='light'] .hljs-keyword,
+[data-theme='white'] .hljs-selector-tag,
+[data-theme='light'] .hljs-selector-tag {
+  color: #0000ff !important;
+  font-weight: 600;
+}
+
+[data-theme='white'] .hljs-string,
+[data-theme='light'] .hljs-string,
+[data-theme='white'] .hljs-attribute,
+[data-theme='light'] .hljs-attribute {
+  color: #a31515 !important;
+}
+
+[data-theme='white'] .hljs-comment,
+[data-theme='light'] .hljs-comment,
+[data-theme='white'] .hljs-quote,
+[data-theme='light'] .hljs-quote {
+  color: #008000 !important;
+  font-style: italic;
+}
+
+[data-theme='white'] .hljs-number,
+[data-theme='light'] .hljs-number,
+[data-theme='white'] .hljs-literal,
+[data-theme='light'] .hljs-literal {
+  color: #098658 !important;
+}
+
+[data-theme='white'] .hljs-title,
+[data-theme='light'] .hljs-title,
+[data-theme='white'] .hljs-title.function_,
+[data-theme='light'] .hljs-title.function_,
+[data-theme='white'] .hljs-section,
+[data-theme='light'] .hljs-section {
+  color: #795e26 !important;
+  font-weight: 600;
+}
+
+[data-theme='white'] .hljs-built_in,
+[data-theme='light'] .hljs-built_in,
+[data-theme='white'] .hljs-type,
+[data-theme='light'] .hljs-type,
+[data-theme='white'] .hljs-class .hljs-title,
+[data-theme='light'] .hljs-class .hljs-title {
+  color: #267f99 !important;
+}
+
+[data-theme='white'] .hljs-variable,
+[data-theme='light'] .hljs-variable,
+[data-theme='white'] .hljs-params,
+[data-theme='light'] .hljs-params {
+  color: #001080 !important;
+}
+
+/* ── 2. Highlight.js Retro Theme (Win98 / Classic Notepad) ── */
+[data-theme='win98'] .hljs-pre,
+[data-theme='retro'] .hljs-pre {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+[data-theme='win98'] .hljs,
+[data-theme='retro'] .hljs {
+  color: #000000 !important;
+  background: transparent !important;
+  font-family: 'D2Coding', 'Fixedsys', monospace !important;
+}
+
+[data-theme='win98'] .hljs-keyword,
+[data-theme='retro'] .hljs-keyword {
+  color: #000080 !important;
+  font-weight: bold;
+}
+
+[data-theme='win98'] .hljs-string,
+[data-theme='retro'] .hljs-string {
+  color: #800000 !important;
+}
+
+[data-theme='win98'] .hljs-comment,
+[data-theme='retro'] .hljs-comment {
+  color: #008000 !important;
+}
+
+[data-theme='win98'] .hljs-number,
+[data-theme='retro'] .hljs-number {
+  color: #800080 !important;
+}
+
+[data-theme='win98'] .hljs-title,
+[data-theme='retro'] .hljs-title {
+  color: #000080 !important;
+}
+
+[data-theme='win98'] .hljs-built_in,
+[data-theme='retro'] .hljs-built_in {
+  color: #008080 !important;
+}
+
+/* ── 3. Mermaid SVG 다이어그램 테마별 고대비 룰 ── */
+[data-theme='white'] .mermaid-wrapper,
+[data-theme='light'] .mermaid-wrapper,
+[data-theme='white'] .mermaid-svg-container,
+[data-theme='light'] .mermaid-svg-container {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+[data-theme='white'] .mermaid-wrapper svg text,
+[data-theme='light'] .mermaid-wrapper svg text,
+[data-theme='white'] .mermaid-svg-container svg text,
+[data-theme='light'] .mermaid-svg-container svg text,
+[data-theme='white'] .mermaid-wrapper svg .label,
+[data-theme='light'] .mermaid-wrapper svg .label,
+[data-theme='white'] .mermaid-wrapper svg .nodeLabel,
+[data-theme='light'] .mermaid-wrapper svg .nodeLabel {
+  fill: #0f172a !important;
+  color: #0f172a !important;
+  font-weight: 500;
+}
+
+[data-theme='white'] .mermaid-wrapper svg .node rect,
+[data-theme='light'] .mermaid-wrapper svg .node rect,
+[data-theme='white'] .mermaid-wrapper svg .node circle,
+[data-theme='light'] .mermaid-wrapper svg .node circle,
+[data-theme='white'] .mermaid-wrapper svg .node polygon,
+[data-theme='light'] .mermaid-wrapper svg .node polygon {
+  fill: #f8fafc !important;
+  stroke: #2563eb !important;
+  stroke-width: 1.5px !important;
+}
+
+[data-theme='white'] .mermaid-wrapper svg .edgePath .path,
+[data-theme='light'] .mermaid-wrapper svg .edgePath .path,
+[data-theme='white'] .mermaid-wrapper svg .flowchart-link,
+[data-theme='light'] .mermaid-wrapper svg .flowchart-link,
+[data-theme='white'] .mermaid-wrapper svg line,
+[data-theme='light'] .mermaid-wrapper svg line {
+  stroke: #475569 !important;
+}
+
+[data-theme='white'] .mermaid-wrapper svg marker path,
+[data-theme='light'] .mermaid-wrapper svg marker path {
+  fill: #475569 !important;
+  stroke: #475569 !important;
+}
+
+[data-theme='white'] .mermaid-wrapper svg .cluster rect,
+[data-theme='light'] .mermaid-wrapper svg .cluster rect {
+  fill: #f1f5f9 !important;
+  stroke: #cbd5e1 !important;
+}
+
+[data-theme='white'] .mermaid-wrapper svg .edgeLabel,
+[data-theme='light'] .mermaid-wrapper svg .edgeLabel {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Mermaid Retro (Win98) */
+[data-theme='win98'] .mermaid-wrapper,
+[data-theme='retro'] .mermaid-wrapper,
+[data-theme='win98'] .mermaid-svg-container,
+[data-theme='retro'] .mermaid-svg-container {
+  background: #ffffff !important;
+  border: 2px inset #808080 !important;
+}
+
+[data-theme='win98'] .mermaid-wrapper svg text,
+[data-theme='retro'] .mermaid-wrapper svg text,
+[data-theme='win98'] .mermaid-svg-container svg text,
+[data-theme='retro'] .mermaid-svg-container svg text,
+[data-theme='win98'] .mermaid-wrapper svg .label,
+[data-theme='retro'] .mermaid-wrapper svg .label,
+[data-theme='win98'] .mermaid-wrapper svg .nodeLabel,
+[data-theme='retro'] .mermaid-wrapper svg .nodeLabel {
+  fill: #000000 !important;
+  color: #000000 !important;
+  font-family: 'Pretendard', 'Gulim', sans-serif !important;
+}
+
+[data-theme='win98'] .mermaid-wrapper svg .node rect,
+[data-theme='retro'] .mermaid-wrapper svg .node rect,
+[data-theme='win98'] .mermaid-wrapper svg .node polygon,
+[data-theme='retro'] .mermaid-wrapper svg .node polygon {
+  fill: #c0c0c0 !important;
+  stroke: #000080 !important;
+  stroke-width: 1.5px !important;
+}
+
+[data-theme='win98'] .mermaid-wrapper svg .edgePath .path,
+[data-theme='retro'] .mermaid-wrapper svg .edgePath .path,
+[data-theme='win98'] .mermaid-wrapper svg line,
+[data-theme='retro'] .mermaid-wrapper svg line {
+  stroke: #000000 !important;
+  stroke-width: 1.5px !important;
+}
+
+[data-theme='win98'] .mermaid-wrapper svg marker path,
+[data-theme='retro'] .mermaid-wrapper svg marker path {
+  fill: #000000 !important;
+  stroke: #000000 !important;
+}
+
+[data-theme='win98'] .mermaid-wrapper svg .cluster rect,
+[data-theme='retro'] .mermaid-wrapper svg .cluster rect {
+  fill: #dfdfdf !important;
+  stroke: #808080 !important;
+}
+
+[data-theme='win98'] .mermaid-wrapper svg .edgeLabel,
+[data-theme='retro'] .mermaid-wrapper svg .edgeLabel {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* ── 4. 릴리즈 덱 & 플레이그라운드 쇼케이스 테마 오버라이드 ── */
+[data-theme='white'] .release-deck-card,
+[data-theme='light'] .release-deck-card {
+  background: #ffffff !important;
+  border: 1.5px solid #cbd5e1 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme='white'] .release-deck-header,
+[data-theme='light'] .release-deck-header {
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+[data-theme='white'] .release-deck-card span[style*="color:#f8fafc"],
+[data-theme='light'] .release-deck-card span[style*="color:#f8fafc"],
+[data-theme='white'] .release-deck-card span[style*="color: #f8fafc"],
+[data-theme='light'] .release-deck-card span[style*="color: #f8fafc"] {
+  color: #0f172a !important;
+}
+
+[data-theme='white'] .release-deck-card div[style*="color:#94a3b8"],
+[data-theme='light'] .release-deck-card div[style*="color:#94a3b8"] {
+  color: #475569 !important;
+}
+
+[data-theme='white'] .release-playground-dual,
+[data-theme='light'] .release-playground-dual {
+  background: #f8fafc !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+[data-theme='white'] .playground-code-box,
+[data-theme='light'] .playground-code-box {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+[data-theme='white'] .playground-terminal-box,
+[data-theme='light'] .playground-terminal-box {
+  background: #0f172a !important;
+  color: #34d399 !important;
+  border: 1px solid #334155 !important;
+}
+
+[data-theme='white'] .pl-chip-lbl,
+[data-theme='light'] .pl-chip-lbl,
+[data-theme='white'] .book-chip-lbl,
+[data-theme='light'] .book-chip-lbl {
+  background: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #334155 !important;
+}
+
+[data-theme='white'] .pl-chip-lbl:hover,
+[data-theme='light'] .pl-chip-lbl:hover,
+[data-theme='white'] .book-chip-lbl:hover,
+[data-theme='light'] .book-chip-lbl:hover {
+  background: rgba(37, 99, 235, 0.1) !important;
+  border-color: #2563eb !important;
+  color: #2563eb !important;
+}
+
+[data-theme='white'] .release-metric-row,
+[data-theme='light'] .release-metric-row {
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+[data-theme='white'] .metric-item,
+[data-theme='light'] .metric-item {
+  color: #475569 !important;
+}
+
+/* Retro Deck Cards */
+[data-theme='win98'] .release-deck-card,
+[data-theme='retro'] .release-deck-card {
+  background: #c0c0c0 !important;
+  border: 2px outset #ffffff !important;
+  box-shadow: 2px 2px 0px #000000 !important;
+}
+
+[data-theme='win98'] .release-deck-header,
+[data-theme='retro'] .release-deck-header {
+  border-bottom: 2px groove #ffffff !important;
+}
+
+[data-theme='win98'] .release-deck-card span[style*="color:#f8fafc"],
+[data-theme='retro'] .release-deck-card span[style*="color:#f8fafc"] {
+  color: #000000 !important;
+}
+
+[data-theme='win98'] .release-deck-card div[style*="color:#94a3b8"],
+[data-theme='retro'] .release-deck-card div[style*="color:#94a3b8"] {
+  color: #222222 !important;
+}
+
+[data-theme='win98'] .release-playground-dual,
+[data-theme='retro'] .release-playground-dual {
+  background: #ffffff !important;
+  border: 2px inset #808080 !important;
+}
+
+[data-theme='win98'] .playground-code-box,
+[data-theme='retro'] .playground-code-box {
+  background: #ffffff !important;
+  border: 1px solid #808080 !important;
+  color: #000000 !important;
+}
+
+[data-theme='win98'] .playground-terminal-box,
+[data-theme='retro'] .playground-terminal-box {
+  background: #000000 !important;
+  color: #00ff00 !important;
+  border: 2px inset #808080 !important;
+}
+
+[data-theme='win98'] .pl-chip-lbl,
+[data-theme='retro'] .pl-chip-lbl,
+[data-theme='win98'] .book-chip-lbl,
+[data-theme='retro'] .book-chip-lbl {
+  background: #c0c0c0 !important;
+  border: 2px outset #ffffff !important;
+  color: #000000 !important;
+  border-radius: 0 !important;
+}
+
+[data-theme='win98'] .release-metric-row,
+[data-theme='retro'] .release-metric-row {
+  background: #c0c0c0 !important;
+  border: 2px groove #ffffff !important;
+}
+
+[data-theme='win98'] .metric-item,
+[data-theme='retro'] .metric-item {
+  color: #000000 !important;
+}
+

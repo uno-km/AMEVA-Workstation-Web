@@ -24,6 +24,7 @@ import { createReactBlockSpec } from '@blocknote/react'
 import { Plus, CheckSquare, Square, ChevronUp, Equal, ChevronDown, User, Search, GripVertical, Trash2, ArrowLeft, ArrowRight } from 'lucide-react'
 // [내부 프로젝트 의존성 모듈 임포트: ./KanbanModal]
 import { KanbanModal } from './KanbanModal'
+import { useCurrentTheme } from '../hooks/useCurrentTheme'
 
 // Kanban Data Types
 /**
@@ -109,6 +110,7 @@ export const KanbanBlockSpec = createReactBlockSpec(
   },
   {
     render: (props) => {
+      const { isWhite, isRetro } = useCurrentTheme()
       const isEditable = props.editor.isEditable
       const [data, setData] = useState<KanbanData>(() => {
         try {
@@ -366,9 +368,9 @@ export const KanbanBlockSpec = createReactBlockSpec(
                 minWidth: '280px',
                 width: '280px',
                 flexShrink: 0,
-                backgroundColor: 'var(--bg-glass)',
-                border: '1px solid var(--border-muted)',
-                borderRadius: '8px',
+                backgroundColor: isRetro ? '#c0c0c0' : isWhite ? '#f1f5f9' : 'var(--bg-glass)',
+                border: isRetro ? '2px outset #ffffff' : '1px solid var(--border-muted)',
+                borderRadius: isRetro ? '2px' : '8px',
                 padding: '12px',
                 display: 'flex',
                 flexDirection: 'column',
@@ -414,10 +416,10 @@ export const KanbanBlockSpec = createReactBlockSpec(
                       style={{ 
                         fontSize: '12px', 
                         fontWeight: 600, 
-                        backgroundColor: 'rgba(33, 150, 243, 0.2)', 
-                        color: '#2196f3',
+                        backgroundColor: isRetro ? '#000080' : 'rgba(33, 150, 243, 0.2)', 
+                        color: isRetro ? '#ffffff' : '#2196f3',
                         padding: '2px 6px',
-                        borderRadius: '4px',
+                        borderRadius: isRetro ? '2px' : '4px',
                         cursor: isEditable ? 'text' : 'default'
                       }}>
                       {col.title}
@@ -446,12 +448,12 @@ export const KanbanBlockSpec = createReactBlockSpec(
                     handleDrop(e, col.id, card.id)
                   }}
                   style={{
-                    backgroundColor: 'var(--bg-main)',
-                    borderRadius: '8px',
+                    backgroundColor: isRetro ? '#ffffff' : isWhite ? '#ffffff' : 'var(--bg-main)',
+                    borderRadius: isRetro ? '2px' : '8px',
                     padding: '12px',
                     marginBottom: '8px',
-                    boxShadow: draggingCardId === card.id ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' : '0 1px 3px rgba(0,0,0,0.1)',
-                    border: '1px solid var(--border-muted)',
+                    boxShadow: draggingCardId === card.id ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' : (isRetro ? 'none' : '0 1px 3px rgba(0,0,0,0.1)'),
+                    border: isRetro ? '2px inset #808080' : '1px solid var(--border-muted)',
                     cursor: isEditable ? 'grab' : 'pointer',
                     opacity: draggingCardId === card.id ? 0.5 : 1,
                     position: 'relative'
@@ -468,7 +470,7 @@ export const KanbanBlockSpec = createReactBlockSpec(
                       >
                         {card.completed ? <CheckSquare size={16} /> : <Square size={16} />}
                       </div>
-                      <div style={{ flex: 1, fontSize: '14px', color: card.completed ? 'var(--text-muted)' : 'var(--text-main)', textDecoration: card.completed ? 'line-through' : 'none' }}>
+                      <div style={{ flex: 1, fontSize: '14px', color: card.completed ? 'var(--text-muted)' : (isRetro ? '#000000' : 'var(--text-main)'), textDecoration: card.completed ? 'line-through' : 'none' }}>
                         {card.title || 'Untitled'}
                       </div>
                     </div>

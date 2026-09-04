@@ -16,6 +16,7 @@
 
 // [외부 패키지 및 라이브러리 임포트: react]
 import React, { useState, useCallback } from 'react'
+import { useCurrentTheme } from '../../hooks/useCurrentTheme'
 
 /**
  * KanbanCard 모듈 내외부에서 사용되는 데이터 통신 규격 및 타입을 정의합니다.
@@ -72,6 +73,7 @@ function getColColor(title: string): string {
  * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
 export function InlineKanbanRenderer({ code }: { code: string }) {
+  const { isWhite, isRetro } = useCurrentTheme()
   const [data, setData] = useState<KanbanData>(() => {
     try {
       const parsed = JSON.parse(code)
@@ -89,7 +91,7 @@ export function InlineKanbanRenderer({ code }: { code: string }) {
   const cols = data.columns || []
   if (cols.length === 0) {
     return (
-      <div style={{ padding: '16px', background: 'var(--bg-glass-active)', borderRadius: '8px', color: 'var(--text-muted)' }}>
+      <div style={{ padding: '16px', background: 'var(--bg-surface)', borderRadius: '8px', color: 'var(--text-muted)' }}>
         빈 칸반 보드입니다.
       </div>
     )
@@ -220,10 +222,12 @@ export function InlineKanbanRenderer({ code }: { code: string }) {
                 flexShrink: 0,
                 background: isColDragOver
                   ? `rgba(${parseInt(colColor.slice(1,3),16)},${parseInt(colColor.slice(3,5),16)},${parseInt(colColor.slice(5,7),16)},0.12)`
-                  : 'var(--bg-glass-active)',
-                borderRadius: '10px',
-                border: `1px solid ${isColDragOver ? colColor : 'var(--border-muted)'}`,
-                boxShadow: isColDragOver ? `0 0 0 2px ${colColor}55` : 'none',
+                  : (isRetro ? '#c0c0c0' : isWhite ? '#f1f5f9' : 'var(--bg-glass-active)'),
+                borderRadius: isRetro ? '2px' : '10px',
+                border: isRetro 
+                  ? (isColDragOver ? `2px solid ${colColor}` : '2px outset #ffffff')
+                  : `1px solid ${isColDragOver ? colColor : 'var(--border-muted)'}`,
+                boxShadow: isColDragOver ? `0 0 0 2px ${colColor}55` : (isRetro ? '2px 2px 0 #000' : 'none'),
                 opacity: isDraggingThisCol ? 0.4 : 1,
                 transition: 'border-color 0.15s, box-shadow 0.15s, opacity 0.15s, background 0.15s',
                 display: 'flex',
@@ -238,13 +242,15 @@ export function InlineKanbanRenderer({ code }: { code: string }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  borderBottom: `2px solid ${colColor}55`,
+                  borderBottom: isRetro ? '2px solid #808080' : `2px solid ${colColor}55`,
                   userSelect: 'none',
+                  background: isRetro ? '#000080' : 'transparent',
+                  color: isRetro ? '#ffffff' : 'inherit'
                 }}
                 title="드래그해서 컬럼 이동"
               >
                 {/* 그립 아이콘 */}
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ opacity: 0.4, flexShrink: 0 }}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ opacity: 0.5, flexShrink: 0 }}>
                   <circle cx="4" cy="3" r="1.3" fill="currentColor" />
                   <circle cx="10" cy="3" r="1.3" fill="currentColor" />
                   <circle cx="4" cy="7" r="1.3" fill="currentColor" />
@@ -253,13 +259,16 @@ export function InlineKanbanRenderer({ code }: { code: string }) {
                   <circle cx="10" cy="11" r="1.3" fill="currentColor" />
                 </svg>
                 <span style={{
-                  fontSize: '12px', fontWeight: 700, color: colColor,
-                  background: `${colColor}22`, padding: '2px 8px', borderRadius: '6px',
+                  fontSize: '12px', fontWeight: 700, 
+                  color: isRetro ? '#ffffff' : colColor,
+                  background: isRetro ? 'transparent' : `${colColor}22`, 
+                  padding: isRetro ? '0' : '2px 8px', 
+                  borderRadius: '6px',
                   flex: 1,
                 }}>
                   {col.title}
                 </span>
-                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>
+                <span style={{ fontSize: '11px', color: isRetro ? '#d4d0c8' : 'var(--text-muted)', fontWeight: 600 }}>
                   {col.cards?.length || 0}
                 </span>
               </div>
@@ -289,25 +298,26 @@ export function InlineKanbanRenderer({ code }: { code: string }) {
                       onDragOver={(e) => dragItem?.kind === 'card' && onCardDragOver(e, col.id, card.id)}
                       onDrop={(e) => dragItem?.kind === 'card' && onCardDrop(e, col.id, card.id)}
                       style={{
-                        background: 'var(--bg-main)',
+                        background: isRetro ? '#ffffff' : isWhite ? '#ffffff' : 'var(--bg-main)',
                         padding: '11px 13px',
-                        borderRadius: '8px',
-                        border: `1px solid ${isCardOver ? colColor : 'var(--border-muted)'}`,
+                        borderRadius: isRetro ? '2px' : '8px',
+                        border: isRetro 
+                          ? '2px inset #808080' 
+                          : `1px solid ${isCardOver ? colColor : 'var(--border-muted)'}`,
                         boxShadow: isCardOver
                           ? `0 0 0 2px ${colColor}66, 0 4px 12px rgba(0,0,0,0.15)`
                           : isDraggingCard
                           ? 'none'
-                          : '0 1px 3px rgba(0,0,0,0.12)',
+                          : (isRetro ? 'none' : '0 1px 3px rgba(0,0,0,0.08)'),
                         cursor: 'grab',
                         opacity: isDraggingCard ? 0.3 : 1,
                         transform: isCardOver ? 'translateY(-2px)' : 'none',
                         transition: 'border-color 0.12s, box-shadow 0.12s, opacity 0.12s, transform 0.1s',
                         userSelect: 'none',
-                        // 마진 대신 gap 사용
                         marginBottom: 0,
                       }}
                     >
-                      <strong style={{ fontSize: '13px', color: 'var(--text-main)', display: 'block', marginBottom: card.description || card.labels?.length ? '6px' : 0 }}>
+                      <strong style={{ fontSize: '13px', color: isRetro ? '#000000' : 'var(--text-main)', display: 'block', marginBottom: card.description || card.labels?.length ? '6px' : 0 }}>
                         {card.title || ''}
                       </strong>
                       {card.labels && card.labels.length > 0 && (
@@ -320,7 +330,7 @@ export function InlineKanbanRenderer({ code }: { code: string }) {
                         </div>
                       )}
                       {card.description && (
-                        <span style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'block', whiteSpace: 'pre-wrap', opacity: 0.85 }}>
+                        <span style={{ fontSize: '12px', color: isRetro ? '#333333' : 'var(--text-muted)', display: 'block', whiteSpace: 'pre-wrap', opacity: 0.85 }}>
                           {card.description}
                         </span>
                       )}

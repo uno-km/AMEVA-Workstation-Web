@@ -263,8 +263,8 @@ const ExcelBlockSpec = createReactBlockSpec(
             </div>
           ) : (
             <div style={{ width: '100%', height: '400px', border: '1px solid var(--border-muted)', borderRadius: '8px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '4px 8px', backgroundColor: 'var(--bg-glass-active)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-muted)' }}>
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Excel Spreadsheet</span>
+              <div style={{ padding: '4px 8px', backgroundColor: 'var(--bg-surface)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-muted)' }}>
+                <span style={{ fontSize: '12px', color: 'var(--text-main)', fontWeight: 600 }}>Excel Spreadsheet</span>
                 <div>
                   <button
                     onClick={handleExportTable}

@@ -64,13 +64,13 @@ export function InlineMapRenderer({ code }: { code: string }) {
     <div style={{
       margin: '16px 0',
       width: '100%',
-      backgroundColor: '#18181c',
+      backgroundColor: 'var(--bg-card)',
       border: '1px solid var(--border-muted)',
       borderRadius: '12px',
       overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+      boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
     }}>
       {/* 헤더 바 */}
       <div style={{
@@ -79,20 +79,20 @@ export function InlineMapRenderer({ code }: { code: string }) {
         display: 'flex',
         flexDirection: 'column',
         gap: '4px',
-        background: '#121215',
+        background: 'var(--bg-surface)',
         textAlign: 'left'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
             <span style={{ fontSize: '12px', color: '#10b981' }}><MapPin size={14} /></span>
             {destination && mapMode === 'route' ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11.5px', fontWeight: 'bold', color: '#f8fafc' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11.5px', fontWeight: 'bold', color: 'var(--text-main)' }}>
                 <span style={{ color: '#38bdf8' }}>[출발]</span> {locationName}
                 <span style={{ color: 'var(--text-muted)', fontWeight: 'normal' }}>➔</span>
                 <span style={{ color: '#facc15' }}>[도착]</span> {destination}
               </div>
             ) : (
-              <span style={{ fontSize: '11.5px', fontWeight: 'bold', color: '#f8fafc' }}>{locationName}</span>
+              <span style={{ fontSize: '11.5px', fontWeight: 'bold', color: 'var(--text-main)' }}>{locationName}</span>
             )}
             <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>({lat}, {lng})</span>
           </div>
@@ -136,7 +136,7 @@ export function InlineMapRenderer({ code }: { code: string }) {
         <div style={{
           padding: '10px 14px',
           borderTop: '1px solid var(--border-muted)',
-          background: 'rgba(255,255,255,0.01)',
+          background: 'var(--bg-card)',
           display: 'flex',
           flexDirection: 'column',
           gap: '6px',
@@ -147,8 +147,8 @@ export function InlineMapRenderer({ code }: { code: string }) {
             width: '100%',
             padding: '8px 12px',
             borderRadius: '6px',
-            background: 'rgba(255,255,255,0.02)',
-            border: '1px dashed rgba(255,255,255,0.08)',
+            background: 'var(--bg-deep)',
+            border: '1px dashed var(--border-muted)',
             color: 'var(--text-main)',
             fontSize: '11px',
             lineHeight: '1.5',

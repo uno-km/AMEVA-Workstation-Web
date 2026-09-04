@@ -350,13 +350,13 @@ export function AmevaAudioPlayerViewer({
     return (
       <div 
         style={{
-          border: '2px dashed #3a3a4a', borderRadius: '10px', padding: '30px',
-          textAlign: 'center', color: '#888', background: '#0d0d1a', cursor: 'pointer'
+          border: '2px dashed var(--border-muted)', borderRadius: '10px', padding: '30px',
+          textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg-surface)', cursor: 'pointer'
         }}
         onClick={() => document.getElementById(`audio-upload-${blockId}`)?.click()}
       >
         <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎵</div>
-        <div style={{ fontSize: '13px', fontWeight: 600, color: '#e2e8f0', marginBottom: '6px' }}>클릭하여 오디오 파일 업로드</div>
+        <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '6px' }}>클릭하여 오디오 파일 업로드</div>
         <div style={{ fontSize: '11px' }}>또는 오디오 파일을 이곳으로 드래그하세요</div>
         <input
           id={`audio-upload-${blockId}`}
@@ -380,11 +380,11 @@ export function AmevaAudioPlayerViewer({
 
   return (
     <div style={{
-      background: '#0d0d1a',
-      border: '1px solid #1e1e3a',
+      background: 'var(--bg-card)',
+      border: '1px solid var(--border-muted)',
       borderRadius: '10px',
       overflow: 'hidden',
-      color: '#fff',
+      color: 'var(--text-main)',
       fontFamily: 'Pretendard, sans-serif',
       margin: '14px 0'
     }}>
@@ -395,7 +395,7 @@ export function AmevaAudioPlayerViewer({
       <div style={{
         display: 'flex', alignItems: 'center', gap: '10px',
         padding: '10px 14px', background: 'rgba(129,140,248,0.08)',
-        borderBottom: '1px solid #1e1e3a',
+        borderBottom: '1px solid var(--border-muted)',
       }}>
         <div style={{
           width: '36px', height: '36px', borderRadius: '50%',

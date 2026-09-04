@@ -369,13 +369,13 @@ export function AmevaVideoPlayerViewer({
     return (
       <div 
         style={{
-          border: '2px dashed #3a3a4a', borderRadius: '10px', padding: '40px',
-          textAlign: 'center', color: '#888', background: '#0f0f13', cursor: 'pointer'
+          border: '2px dashed var(--border-muted)', borderRadius: '10px', padding: '40px',
+          textAlign: 'center', color: 'var(--text-muted)', background: 'var(--bg-surface)', cursor: 'pointer'
         }}
         onClick={() => document.getElementById(`video-upload-${blockId}`)?.click()}
       >
         <div style={{ fontSize: '36px', marginBottom: '12px' }}>🎬</div>
-        <div style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0', marginBottom: '8px' }}>클릭하여 비디오 파일 업로드</div>
+        <div style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '8px' }}>클릭하여 비디오 파일 업로드</div>
         <div style={{ fontSize: '12px' }}>또는 비디오 파일을 이곳으로 드래그하세요</div>
         <input
           id={`video-upload-${blockId}`}
@@ -425,11 +425,11 @@ export function AmevaVideoPlayerViewer({
             width: '100%',
             height: isEditMode ? `${Math.max(containerH, 460)}px` : `${containerH}px`,
             minHeight: `${containerH}px`,
-            background: '#0f0f13',
-            border: '1px solid #2a2a3a',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-muted)',
             borderRadius: '10px',
             overflow: 'hidden',
-            color: '#fff',
+            color: 'var(--text-main)',
             fontFamily: 'Pretendard, sans-serif',
             display: 'flex',
             flexDirection: 'column'
@@ -464,7 +464,7 @@ export function AmevaVideoPlayerViewer({
 
           {/* ─── 편집 패널 (편집 모드 시 확장) ──────────────────────────────── */}
           {isEditMode && (
-            <div style={{ background: '#14141e', borderTop: '1px solid #2a2a3a', padding: '12px 16px' }}>
+            <div style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--border-muted)', padding: '12px 16px' }}>
               {/* 파형 캔버스 */}
               <div style={{ marginBottom: '10px' }}>
                 <WaveformCanvas

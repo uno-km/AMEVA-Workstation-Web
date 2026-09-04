@@ -158,10 +158,10 @@ export function InlineDocumentRenderer({ code }: { code: string }) {
         }}
       >
         <div style={{ fontSize: '36px', marginBottom: '10px' }}>📑</div>
-        <div style={{ fontSize: '14px', fontWeight: 700, color: '#e2e8f0', marginBottom: '6px' }}>
+        <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-main)', marginBottom: '6px' }}>
           PDF 또는 오피스 문서를 드래그하거나 클릭하여 업로드
         </div>
-        <div style={{ fontSize: '11.5px', color: '#64748b' }}>
+        <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
           PDF, DOCX, PPTX, XLSX 지원 • 온디바이스 인라인 뷰어 즉시 렌더링
         </div>
         <input
@@ -190,9 +190,9 @@ export function InlineDocumentRenderer({ code }: { code: string }) {
         <button
           onClick={() => { setUploadedUrl(null); setUploadedName(null); setUploadedType(null) }}
           style={{
-            padding: '2px 8px', background: 'rgba(255,255,255,0.06)',
-            border: '1px solid rgba(255,255,255,0.12)', borderRadius: '4px', cursor: 'pointer',
-            color: '#cbd5e1', fontSize: '10px', fontWeight: 600,
+            padding: '2px 8px', background: 'var(--bg-surface)',
+            border: '1px solid var(--border-muted)', borderRadius: '4px', cursor: 'pointer',
+            color: 'var(--text-main)', fontSize: '10px', fontWeight: 600,
           }}
         >
           다른 문서 선택

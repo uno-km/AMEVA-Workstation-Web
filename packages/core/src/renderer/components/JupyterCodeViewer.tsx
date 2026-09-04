@@ -15,6 +15,7 @@ import { Play, Eye, Copy, ChevronDown, Sparkles, Bug } from 'lucide-react'
 import { marked } from 'marked'
 import mermaid from 'mermaid'
 import { useUIStore } from '../stores/useUIStore'
+import { useCurrentTheme } from '../hooks/useCurrentTheme'
 
 
 
@@ -186,6 +187,7 @@ export function JupyterCodeViewer({
        * - 시나리오: 본 함수 영역 내에서 상태 생명주기를 유지하며 데이터 보존 및 후속 분기 연산에 소비됨.
        * - 예시 코드: `const accentColor = ...` 형태로 안전 캐싱 후 가공 기동.
        */
+  const { isWhite, isRetro } = useCurrentTheme()
   const accentColor = meta.color
 
   return (
@@ -193,12 +195,26 @@ export function JupyterCodeViewer({
       className="jupyter-cell viewer-cell"
       style={{
         margin: '14px 0',
-        borderRadius: '10px',
-        border: `1.5px solid ${accentColor}33`,
-        background: 'rgba(10,12,20,0.85)',
+        borderRadius: isRetro ? '0px' : '10px',
+        border: isWhite
+          ? `1.5px solid ${accentColor}44`
+          : isRetro
+          ? '2px outset #ffffff'
+          : `1.5px solid ${accentColor}33`,
+        background: isWhite
+          ? '#ffffff'
+          : isRetro
+          ? '#c0c0c0'
+          : 'rgba(10,12,20,0.85)',
         overflow: 'visible',
-        boxShadow: `0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px ${accentColor}22`,
-        fontFamily: '"JetBrains Mono","Fira Code","Cascadia Code",monospace',
+        boxShadow: isWhite
+          ? `0 4px 16px rgba(0,0,0,0.06), 0 0 0 1px ${accentColor}22`
+          : isRetro
+          ? '2px 2px 0px #000000'
+          : `0 4px 24px rgba(0,0,0,0.4), 0 0 0 1px ${accentColor}22`,
+        fontFamily: isRetro
+          ? '"D2Coding","Fixedsys",monospace'
+          : '"JetBrains Mono","Fira Code","Cascadia Code",monospace',
         position: 'relative',
       }}
     >
@@ -206,13 +222,23 @@ export function JupyterCodeViewer({
       <div style={{
         display: 'flex', alignItems: 'center', gap: '8px',
         padding: '7px 12px',
-        background: `linear-gradient(90deg, ${accentColor}22 0%, transparent 100%)`,
-        borderBottom: `1px solid ${accentColor}33`,
+        background: isWhite
+          ? `linear-gradient(90deg, ${accentColor}18 0%, rgba(241, 245, 249, 0.6) 100%)`
+          : isRetro
+          ? 'linear-gradient(90deg, #000080, #1084d0)'
+          : `linear-gradient(90deg, ${accentColor}22 0%, transparent 100%)`,
+        borderBottom: isWhite
+          ? `1px solid ${accentColor}33`
+          : isRetro
+          ? '2px groove #ffffff'
+          : `1px solid ${accentColor}33`,
         userSelect: 'none', flexWrap: 'wrap',
       }}>
         <div style={{
-          fontSize: '10px', fontWeight: 800, padding: '3px 8px', borderRadius: '4px',
-          background: `${accentColor}22`, color: accentColor, border: `1px solid ${accentColor}44`,
+          fontSize: '10px', fontWeight: 800, padding: '3px 8px', borderRadius: isRetro ? '0px' : '4px',
+          background: isWhite ? `${accentColor}18` : isRetro ? 'transparent' : `${accentColor}22`,
+          color: isRetro ? '#ffffff' : accentColor,
+          border: isRetro ? 'none' : `1px solid ${accentColor}44`,
           textTransform: 'uppercase', letterSpacing: '0.5px'
         }}>
           ● {meta.label}
@@ -314,10 +340,12 @@ export function JupyterCodeViewer({
         <pre className="hljs-pre" style={{
           margin: 0,
           padding: '12px 16px',
-          background: '#12131a',
+          background: isWhite ? '#f8fafc' : isRetro ? '#ffffff' : '#12131a',
           overflowX: 'auto',
           fontSize: '13px',
-          borderBottom: `1px solid ${accentColor}18`,
+          borderBottom: isWhite ? `1px solid ${accentColor}25` : isRetro ? '1px solid #808080' : `1px solid ${accentColor}18`,
+          borderLeft: isRetro ? '2px inset #808080' : 'none',
+          borderRight: isRetro ? '2px inset #808080' : 'none',
           textAlign: 'left'
         }}>
           <code
@@ -325,7 +353,10 @@ export function JupyterCodeViewer({
             dangerouslySetInnerHTML={{
               __html: hljs.highlight(resolvedCode, { language: hljs.getLanguage(resolvedLanguage) ? resolvedLanguage : 'plaintext' }).value
             }}
-            style={{ fontFamily: '"JetBrains Mono", monospace' }}
+            style={{
+              fontFamily: isRetro ? '"D2Coding", "Fixedsys", monospace' : '"JetBrains Mono", monospace',
+              color: isWhite ? '#0f172a' : isRetro ? '#000000' : '#e2e8f0'
+            }}
           />
         </pre>
       )}
@@ -333,9 +364,11 @@ export function JupyterCodeViewer({
       {/* ── Placeholder ── */}
       {!isCollapsed && !resolvedCode.trim() && (
         <div style={{
-          padding: '12px 16px', fontSize: '11px', color: '#4b5563',
+          padding: '12px 16px', fontSize: '11px',
+          color: isWhite ? '#64748b' : isRetro ? '#666666' : '#4b5563',
           fontStyle: 'italic', pointerEvents: 'none', userSelect: 'none',
-          background: '#12131a', borderBottom: `1px solid ${accentColor}18`
+          background: isWhite ? '#f8fafc' : isRetro ? '#ffffff' : '#12131a',
+          borderBottom: isWhite ? `1px solid ${accentColor}25` : isRetro ? '1px solid #808080' : `1px solid ${accentColor}18`
         }}>
           {`// ${meta.label} 코드가 비어 있습니다.`}
         </div>

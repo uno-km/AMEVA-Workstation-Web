@@ -74,13 +74,13 @@ export function InlineYoutubeRenderer({ code }: { code: string }) {
         className="bn-block-content-wrapper"
         style={{
           width: '100%',
-          backgroundColor: '#18181c',
+          backgroundColor: 'var(--bg-card)',
           border: '1px solid var(--border-muted)',
           borderRadius: '12px',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+          boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
         }}
       >
         {/* 헤더 바 */}
@@ -90,12 +90,12 @@ export function InlineYoutubeRenderer({ code }: { code: string }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          background: '#121215',
+          background: 'var(--bg-surface)',
           textAlign: 'left'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontSize: '12px', color: '#ff0000' }}>📹</span>
-            <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#f8fafc' }}>YouTube Player</span>
+            <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-main)' }}>YouTube Player</span>
           </div>
           <a
             href={url}

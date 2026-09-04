@@ -284,7 +284,7 @@ export const YoutubeBlockComponent = ({ block, editor }: YoutubeBlockComponentPr
         minHeight: '120px',
         resize: 'both',
         position: 'relative',
-        backgroundColor: 'rgba(30, 30, 40, 0.45)',
+        backgroundColor: 'var(--bg-card)',
         backdropFilter: 'blur(12px)',
         border: '1px solid var(--border-muted)',
         borderRadius: '12px',
@@ -300,11 +300,11 @@ export const YoutubeBlockComponent = ({ block, editor }: YoutubeBlockComponentPr
       {/* 헤더 바 */}
       <div style={{
         padding: '8px 12px', borderBottom: '1px solid var(--border-muted)', display: 'flex',
-        alignItems: 'center', justifyContent: 'space-between', background: '#121215'
+        alignItems: 'center', justifyContent: 'space-between', background: 'var(--bg-surface)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <Video size={14} style={{ color: '#ff0000' }} />
-          <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#f8fafc' }}>YouTube Player</span>
+          <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-main)' }}>YouTube Player</span>
         </div>
         <a href={url} target="_blank" rel="noreferrer" style={{ fontSize: '9.5px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', textDecoration: 'none' }}>
           {url} <ExternalLink size={10} />

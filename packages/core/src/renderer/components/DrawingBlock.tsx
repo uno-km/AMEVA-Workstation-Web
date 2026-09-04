@@ -40,6 +40,7 @@ import { createReactBlockSpec } from '@blocknote/react'
 // [외부 패키지 및 라이브러리 임포트: lucide-react]
 import { Check, Edit2, FileImage, RefreshCw, Layers } from 'lucide-react'
 import '@excalidraw/excalidraw/index.css'
+import { useCurrentTheme } from '../hooks/useCurrentTheme'
 
 /*
  * [RUN-TIME STATE / INVARIANT]
@@ -120,6 +121,7 @@ export const DrawingBlockSpec = createReactBlockSpec(
   },
   {
     render: ({ block, editor }) => {
+      const { isWhite, isRetro } = useCurrentTheme()
       /*
        * [RUN-TIME STATE / INVARIANT]
        * - mounted: 클라이언트 DOM 마운트 완료 여부 플래그.
@@ -355,8 +357,8 @@ export const DrawingBlockSpec = createReactBlockSpec(
           className="bn-block-content-wrapper"
           style={{
             width: '100%',
-            backgroundColor: '#18181c',
-            border: '1px solid #2e2e38',
+            backgroundColor: 'var(--bg-card)',
+            border: '1px solid var(--border-muted)',
             borderRadius: '8px',
             overflow: 'hidden',
             display: 'flex',
@@ -367,15 +369,15 @@ export const DrawingBlockSpec = createReactBlockSpec(
           {/* 헤더 바 */}
           <div style={{
             padding: '8px 12px',
-            borderBottom: '1px solid #2e2e38',
+            borderBottom: '1px solid var(--border-muted)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: '#121215'
+            background: 'var(--bg-surface)'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <FileImage size={14} style={{ color: 'var(--primary)' }} />
-              <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#f8fafc' }}>Drawing Canvas</span>
+              <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-main)' }}>Drawing Canvas</span>
             </div>
             
             <button
@@ -417,7 +419,10 @@ export const DrawingBlockSpec = createReactBlockSpec(
               <Excalidraw
                 initialData={{
                   elements: initialElements,
-                  appState: { viewBackgroundColor: '#1e1e24', theme: 'dark' }
+                  appState: { 
+                    viewBackgroundColor: (isWhite || isRetro) ? '#ffffff' : '#1e1e24', 
+                    theme: (isWhite || isRetro) ? 'light' : 'dark' 
+                  }
                 }}
                 onChange={handleCanvasChange}
               />
@@ -427,7 +432,10 @@ export const DrawingBlockSpec = createReactBlockSpec(
                 <Excalidraw
                   initialData={{
                     elements: initialElements,
-                    appState: { viewBackgroundColor: '#1e1e24', theme: 'dark' }
+                    appState: { 
+                      viewBackgroundColor: (isWhite || isRetro) ? '#ffffff' : '#1e1e24', 
+                      theme: (isWhite || isRetro) ? 'light' : 'dark' 
+                    }
                   }}
                   viewModeEnabled={true}
                 />

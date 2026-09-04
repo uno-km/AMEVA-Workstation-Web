@@ -48,20 +48,20 @@ export const ChartBlockSpec = createReactBlockSpec(
       }
 
       if (!chartData || !chartData.series) {
-        return <div style={{ padding: 20, background: '#f1f5f9', borderRadius: 8, color: '#64748b' }}>📊 유효하지 않은 차트 데이터입니다.</div>;
+        return <div style={{ padding: 20, background: 'var(--bg-surface)', borderRadius: 8, color: 'var(--text-muted)' }}>📊 유효하지 않은 차트 데이터입니다.</div>;
       }
 
       return (
         <div style={{
           padding: '24px 16px',
-          border: '1px solid #e2e8f0',
+          border: '1px solid var(--border-muted)',
           borderRadius: '12px',
-          background: '#ffffff',
+          background: 'var(--bg-card)',
           boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
           margin: '16px 0',
           userSelect: 'none'
         }} contentEditable={false}>
-          <h4 style={{ margin: '0 0 16px 0', textAlign: 'center', color: '#334155', fontWeight: 600 }}>{chartData.title || 'Chart'}</h4>
+          <h4 style={{ margin: '0 0 16px 0', textAlign: 'center', color: 'var(--text-main)', fontWeight: 600 }}>{chartData.title || 'Chart'}</h4>
           <AsyncBlockWrapper name="차트">
             <ChartRenderer chartData={chartData} />
           </AsyncBlockWrapper>

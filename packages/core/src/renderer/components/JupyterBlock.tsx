@@ -18,6 +18,7 @@ import { ResizableBlockContainer } from './ResizableBlockContainer'
 import { marked } from 'marked'
 import { InlineMermaidRenderer } from './markdown/InlineMermaidRenderer'
 import { InlineHtmlRenderer } from './jupyter/InlineHtmlRenderer'
+import { useCurrentTheme } from '../hooks/useCurrentTheme'
 import { 
   Sparkles, 
   Wand2, 
@@ -74,6 +75,7 @@ const JupyterBlockSpec = createReactBlockSpec(
 
         const { executeCode } = useCodeRuntime()
         const { generateCoderStream, isCoderReady, initCoderModel } = useWebLLM()
+        const { isWhite, isRetro } = useCurrentTheme()
         const [isInputCollapsed, setIsInputCollapsed] = useState(false)
         const textareaRef = useRef<HTMLTextAreaElement | null>(null)
         const [cursorPos, setCursorPos] = useState(0)
@@ -446,14 +448,26 @@ const JupyterBlockSpec = createReactBlockSpec(
                     display: 'flex',
                     flexDirection: 'column',
                     height: `${containerH}px`,
-                    background: '#0d1117',
-                    border: isAIOpen ? '1px solid #2563eb' : '1px solid #30363d',
-                    borderRadius: '8px',
-                    boxShadow: isAIOpen ? '0 2px 14px rgba(37, 99, 235, 0.25)' : '0 2px 8px rgba(0, 0, 0, 0.3)',
+                    background: isWhite ? '#ffffff' : isRetro ? '#ffffff' : '#0d1117',
+                    border: isAIOpen
+                      ? '1px solid #2563eb'
+                      : isWhite
+                      ? '1px solid #cbd5e1'
+                      : isRetro
+                      ? '2px inset #808080'
+                      : '1px solid #30363d',
+                    borderRadius: isRetro ? '0px' : '8px',
+                    boxShadow: isAIOpen
+                      ? '0 2px 14px rgba(37, 99, 235, 0.25)'
+                      : isWhite
+                      ? '0 2px 12px rgba(0, 0, 0, 0.05)'
+                      : isRetro
+                      ? 'none'
+                      : '0 2px 8px rgba(0, 0, 0, 0.3)',
                     overflow: 'hidden',
                     width: '100%',
                     boxSizing: 'border-box',
-                    fontFamily: 'Consolas, "JetBrains Mono", monospace',
+                    fontFamily: isRetro ? '"D2Coding", monospace' : 'Consolas, "JetBrains Mono", monospace',
                     WebkitFontSmoothing: 'antialiased',
                     transition: 'border-color 0.2s, box-shadow 0.2s'
                   }}
@@ -838,7 +852,7 @@ const JupyterBlockSpec = createReactBlockSpec(
                       <div 
                         style={{ 
                           padding: isInputCollapsed ? '0px 14px' : '14px 16px', 
-                          background: '#0d1117', 
+                          background: isWhite ? '#ffffff' : isRetro ? '#ffffff' : '#0d1117', 
                           display: 'flex', 
                           flexDirection: 'column', 
                           flex: 1, 
@@ -1005,8 +1019,8 @@ const JupyterBlockSpec = createReactBlockSpec(
                             flex: 1,
                             background: 'transparent',
                             border: 'none',
-                            color: '#f8fafc',
-                            fontFamily: 'Consolas, "JetBrains Mono", "Fira Code", monospace',
+                            color: isWhite ? '#0f172a' : isRetro ? '#000000' : '#f8fafc',
+                            fontFamily: isRetro ? '"D2Coding", monospace' : 'Consolas, "JetBrains Mono", "Fira Code", monospace',
                             fontSize: '13.5px',
                             lineHeight: '1.6',
                             fontWeight: 500,
@@ -1019,7 +1033,7 @@ const JupyterBlockSpec = createReactBlockSpec(
                             padding: '0',
                             margin: '0',
                             zIndex: 2,
-                            caretColor: '#38bdf8'
+                            caretColor: isWhite ? '#2563eb' : isRetro ? '#000000' : '#38bdf8'
                           }}
                         />
                       </div>
@@ -1028,14 +1042,14 @@ const JupyterBlockSpec = createReactBlockSpec(
                     if (isInputCollapsed) {
                       if (language === 'mermaid') {
                         return (
-                          <div style={{ width: '100%', minHeight: '160px', height: '100%', background: '#0a0d14', display: 'flex', overflow: 'hidden' }}>
+                          <div style={{ width: '100%', minHeight: '160px', height: '100%', background: isWhite ? '#ffffff' : isRetro ? '#ffffff' : '#0a0d14', display: 'flex', overflow: 'hidden' }}>
                             <InlineMermaidRenderer code={localCode} />
                           </div>
                         )
                       }
                       if (language === 'html') {
                         return (
-                          <div style={{ padding: '16px', background: '#0a0d14', overflowX: 'auto' }}>
+                          <div style={{ padding: '16px', background: isWhite ? '#ffffff' : isRetro ? '#ffffff' : '#0a0d14', overflowX: 'auto' }}>
                             <InlineHtmlRenderer code={localCode} />
                           </div>
                         )
@@ -1046,16 +1060,16 @@ const JupyterBlockSpec = createReactBlockSpec(
                     if (language === 'mermaid') {
                       if (previewMode === 'preview') {
                         return (
-                          <div style={{ flex: 1, minHeight: '140px', width: '100%', height: '100%', background: '#0a0d14', overflow: 'hidden', display: 'flex' }}>
+                          <div style={{ flex: 1, minHeight: '140px', width: '100%', height: '100%', background: isWhite ? '#ffffff' : isRetro ? '#ffffff' : '#0a0d14', overflow: 'hidden', display: 'flex' }}>
                             <InlineMermaidRenderer code={localCode} />
                           </div>
                         )
                       }
                       if (previewMode === 'split') {
                         return (
-                          <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: '140px', background: '#0d1117', overflow: 'hidden', height: '100%' }}>
-                            {renderTextarea({ borderRight: '1px solid #1e293b' })}
-                            <div style={{ background: '#0a0d14', overflow: 'hidden', display: 'flex', height: '100%', width: '100%' }}>
+                          <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: '140px', background: isWhite ? '#ffffff' : isRetro ? '#ffffff' : '#0d1117', overflow: 'hidden', height: '100%' }}>
+                            {renderTextarea({ borderRight: isWhite ? '1px solid #cbd5e1' : isRetro ? '2px inset #808080' : '1px solid #1e293b' })}
+                            <div style={{ background: isWhite ? '#ffffff' : isRetro ? '#ffffff' : '#0a0d14', overflow: 'hidden', display: 'flex', height: '100%', width: '100%' }}>
                               <InlineMermaidRenderer code={localCode} />
                             </div>
                           </div>
@@ -1067,16 +1081,16 @@ const JupyterBlockSpec = createReactBlockSpec(
                     if (language === 'html') {
                       if (previewMode === 'preview') {
                         return (
-                          <div style={{ flex: 1, minHeight: '120px', padding: '16px', background: '#0a0d14', overflowY: 'auto' }}>
+                          <div style={{ flex: 1, minHeight: '120px', padding: '16px', background: isWhite ? '#ffffff' : isRetro ? '#ffffff' : '#0a0d14', overflowY: 'auto' }}>
                             <InlineHtmlRenderer code={localCode} />
                           </div>
                         )
                       }
                       if (previewMode === 'split') {
                         return (
-                          <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: '120px', background: '#0d1117', overflow: 'hidden' }}>
-                            {renderTextarea({ borderRight: '1px solid #1e293b' })}
-                            <div style={{ padding: '16px', background: '#0a0d14', overflowY: 'auto' }}>
+                          <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: '120px', background: isWhite ? '#ffffff' : isRetro ? '#ffffff' : '#0d1117', overflow: 'hidden' }}>
+                            {renderTextarea({ borderRight: isWhite ? '1px solid #cbd5e1' : isRetro ? '2px inset #808080' : '1px solid #1e293b' })}
+                            <div style={{ padding: '16px', background: isWhite ? '#ffffff' : isRetro ? '#ffffff' : '#0a0d14', overflowY: 'auto' }}>
                               <InlineHtmlRenderer code={localCode} />
                             </div>
                           </div>

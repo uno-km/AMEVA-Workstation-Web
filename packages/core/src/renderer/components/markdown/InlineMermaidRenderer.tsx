@@ -9,7 +9,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import mermaid from 'mermaid'
-import { ZoomIn, ZoomOut, RotateCcw, Maximize2 } from 'lucide-react'
+import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
+import { useCurrentTheme } from '../../hooks/useCurrentTheme'
 
 export function sanitizeMermaidCode(raw: string): string {
   if (!raw) return ''
@@ -131,6 +132,7 @@ export function InlineMermaidRenderer({ code }: { code: string }) {
   const [error, setError] = useState<string | null>(null)
   const [scale, setScale] = useState<number>(1)
   const containerRef = useRef<HTMLDivElement>(null)
+  const { isWhite, isRetro } = useCurrentTheme()
 
   useEffect(() => {
     let active = true
@@ -146,12 +148,97 @@ export function InlineMermaidRenderer({ code }: { code: string }) {
       }
 
       try {
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: 'dark',
-          securityLevel: 'loose',
-          fontFamily: 'Pretendard, -apple-system, sans-serif'
-        })
+        if (isWhite) {
+          mermaid.initialize({
+            startOnLoad: false,
+            theme: 'neutral',
+            themeVariables: {
+              primaryColor: '#f1f5f9',
+              primaryTextColor: '#0f172a',
+              primaryBorderColor: '#2563eb',
+              lineColor: '#475569',
+              secondaryColor: '#ffffff',
+              tertiaryColor: '#f8fafc',
+              background: '#ffffff',
+              mainBkg: '#f8fafc',
+              nodeBorder: '#2563eb',
+              clusterBkg: '#f1f5f9',
+              clusterBorder: '#cbd5e1',
+              titleColor: '#0f172a',
+              edgeLabelBackground: '#ffffff',
+              actorBkg: '#f8fafc',
+              actorBorder: '#2563eb',
+              actorTextColor: '#0f172a',
+              signalColor: '#475569',
+              signalTextColor: '#0f172a',
+              labelBoxBkgColor: '#f1f5f9',
+              labelBoxBorderColor: '#cbd5e1',
+              labelTextColor: '#0f172a',
+              loopTextColor: '#0f172a',
+              noteBorderColor: '#f59e0b',
+              noteBkgColor: '#fef3c7',
+              noteTextColor: '#78350f',
+            },
+            securityLevel: 'loose',
+            fontFamily: 'Pretendard, -apple-system, sans-serif'
+          })
+        } else if (isRetro) {
+          mermaid.initialize({
+            startOnLoad: false,
+            theme: 'neutral',
+            themeVariables: {
+              primaryColor: '#c0c0c0',
+              primaryTextColor: '#000000',
+              primaryBorderColor: '#000080',
+              lineColor: '#000000',
+              secondaryColor: '#dfdfdf',
+              tertiaryColor: '#ffffff',
+              background: '#ffffff',
+              mainBkg: '#ffffff',
+              nodeBorder: '#000080',
+              clusterBkg: '#dfdfdf',
+              clusterBorder: '#808080',
+              titleColor: '#000000',
+              edgeLabelBackground: '#ffffff',
+              actorBkg: '#c0c0c0',
+              actorBorder: '#000080',
+              actorTextColor: '#000000',
+              signalColor: '#000000',
+              signalTextColor: '#000000',
+              labelBoxBkgColor: '#c0c0c0',
+              labelBoxBorderColor: '#808080',
+              labelTextColor: '#000000',
+              noteBorderColor: '#808080',
+              noteBkgColor: '#ffffcc',
+              noteTextColor: '#000000',
+            },
+            securityLevel: 'loose',
+            fontFamily: 'Pretendard, Gulim, sans-serif'
+          })
+        } else {
+          mermaid.initialize({
+            startOnLoad: false,
+            theme: 'dark',
+            themeVariables: {
+              primaryColor: '#1e293b',
+              primaryTextColor: '#f8fafc',
+              primaryBorderColor: '#38bdf8',
+              lineColor: '#94a3b8',
+              secondaryColor: '#0f172a',
+              tertiaryColor: '#1e1e2e',
+              background: '#0a0d14',
+              mainBkg: '#0f172a',
+              nodeBorder: '#38bdf8',
+              clusterBkg: '#12131a',
+              clusterBorder: 'rgba(255,255,255,0.12)',
+              titleColor: '#f8fafc',
+              edgeLabelBackground: '#0a0d14'
+            },
+            securityLevel: 'loose',
+            fontFamily: 'Pretendard, -apple-system, sans-serif'
+          })
+        }
+
         let cleanCode = sanitizeMermaidCode(code)
         
         let renderedSvg = ''
@@ -192,7 +279,7 @@ export function InlineMermaidRenderer({ code }: { code: string }) {
       const dEl = document.getElementById('d' + renderId)
       if (dEl) dEl.remove()
     }
-  }, [code])
+  }, [code, isWhite, isRetro])
 
   const handleZoomIn = () => setScale(prev => Math.min(3, Math.round((prev + 0.15) * 100) / 100))
   const handleZoomOut = () => setScale(prev => Math.max(0.4, Math.round((prev - 0.15) * 100) / 100))
@@ -203,21 +290,21 @@ export function InlineMermaidRenderer({ code }: { code: string }) {
       <div style={{
         padding: '14px 18px',
         borderRadius: '8px',
-        background: 'rgba(239, 68, 68, 0.09)',
-        border: '1.5px solid rgba(239, 68, 68, 0.3)',
-        color: '#fca5a5',
+        background: isWhite ? '#fef2f2' : isRetro ? '#ffffff' : 'rgba(239, 68, 68, 0.09)',
+        border: isWhite ? '1.5px solid #fca5a5' : isRetro ? '2px inset #ef4444' : '1.5px solid rgba(239, 68, 68, 0.3)',
+        color: isWhite ? '#991b1b' : isRetro ? '#b91c1c' : '#fca5a5',
         fontSize: '12px',
         textAlign: 'left',
         width: '100%',
         boxSizing: 'border-box'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-          <strong style={{ color: '#f87171', fontSize: '12.5px' }}>[Mermaid 문법 오류 감지]</strong>
+          <strong style={{ color: isWhite ? '#b91c1c' : isRetro ? '#b91c1c' : '#f87171', fontSize: '12.5px' }}>[Mermaid 문법 오류 감지]</strong>
         </div>
-        <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: '#cbd5e1' }}>
+        <p style={{ margin: '0 0 6px 0', fontSize: '11px', color: isWhite ? '#475569' : isRetro ? '#000000' : '#cbd5e1' }}>
           다이어그램 문법을 확인해 주세요. Flowchart 연결선 라벨은 <code>A --&gt;|라벨| B</code> 형식을 권장합니다.
         </p>
-        <pre style={{ margin: '0', overflowX: 'auto', fontSize: '11px', opacity: 0.9, background: 'rgba(0,0,0,0.3)', padding: '6px', borderRadius: '4px' }}>{error}</pre>
+        <pre style={{ margin: '0', overflowX: 'auto', fontSize: '11px', opacity: 0.9, background: isWhite ? '#fee2e2' : isRetro ? '#e0e0e0' : 'rgba(0,0,0,0.3)', padding: '6px', borderRadius: '4px' }}>{error}</pre>
       </div>
     )
   }
@@ -235,8 +322,10 @@ export function InlineMermaidRenderer({ code }: { code: string }) {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        background: '#0a0d14',
-        borderRadius: '6px',
+        background: isWhite ? '#ffffff' : isRetro ? '#ffffff' : '#0a0d14',
+        border: isWhite ? '1px solid #cbd5e1' : isRetro ? '2px inset #808080' : '1px solid rgba(255,255,255,0.08)',
+        borderRadius: isRetro ? '0px' : '8px',
+        boxShadow: isWhite ? '0 2px 10px rgba(0,0,0,0.04)' : isRetro ? 'none' : '0 4px 20px rgba(0,0,0,0.25)',
         overflow: 'hidden',
         boxSizing: 'border-box'
       }}
@@ -251,34 +340,34 @@ export function InlineMermaidRenderer({ code }: { code: string }) {
           display: 'flex',
           alignItems: 'center',
           gap: 3,
-          background: 'rgba(15, 23, 42, 0.85)',
+          background: isWhite ? 'rgba(241, 245, 249, 0.95)' : isRetro ? '#c0c0c0' : 'rgba(15, 23, 42, 0.85)',
           backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          borderRadius: 6,
+          border: isWhite ? '1px solid #cbd5e1' : isRetro ? '2px outset #ffffff' : '1px solid rgba(255, 255, 255, 0.12)',
+          borderRadius: isRetro ? '0px' : 6,
           padding: '2px 6px',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)'
+          boxShadow: isWhite ? '0 2px 8px rgba(0, 0, 0, 0.08)' : isRetro ? '1px 1px 0px #000000' : '0 2px 8px rgba(0, 0, 0, 0.4)'
         }}>
-          <span style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 600, marginRight: 2 }}>
+          <span style={{ fontSize: '10px', color: isWhite ? '#475569' : isRetro ? '#000000' : '#94a3b8', fontWeight: 600, marginRight: 2 }}>
             {Math.round(scale * 100)}%
           </span>
           <button
             onClick={handleZoomOut}
             title="축소"
-            style={{ background: 'transparent', border: 'none', color: '#cbd5e1', cursor: 'pointer', padding: '2px', display: 'flex' }}
+            style={{ background: 'transparent', border: 'none', color: isWhite ? '#334155' : isRetro ? '#000000' : '#cbd5e1', cursor: 'pointer', padding: '2px', display: 'flex' }}
           >
             <ZoomOut size={12} />
           </button>
           <button
             onClick={handleZoomIn}
             title="확대"
-            style={{ background: 'transparent', border: 'none', color: '#cbd5e1', cursor: 'pointer', padding: '2px', display: 'flex' }}
+            style={{ background: 'transparent', border: 'none', color: isWhite ? '#334155' : isRetro ? '#000000' : '#cbd5e1', cursor: 'pointer', padding: '2px', display: 'flex' }}
           >
             <ZoomIn size={12} />
           </button>
           <button
             onClick={handleResetZoom}
             title="원래 크기로 (100%)"
-            style={{ background: 'transparent', border: 'none', color: '#cbd5e1', cursor: 'pointer', padding: '2px', display: 'flex' }}
+            style={{ background: 'transparent', border: 'none', color: isWhite ? '#334155' : isRetro ? '#000000' : '#cbd5e1', cursor: 'pointer', padding: '2px', display: 'flex' }}
           >
             <RotateCcw size={11} />
           </button>

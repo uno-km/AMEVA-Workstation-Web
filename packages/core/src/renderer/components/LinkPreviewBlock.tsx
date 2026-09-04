@@ -103,7 +103,7 @@ function LinkPreviewComponent({ block, editor }: { block: any, editor: any }) {
         minWidth: '200px',
         minHeight: '80px',
         resize: 'both',
-        backgroundColor: 'rgba(30, 30, 40, 0.45)',
+        backgroundColor: 'var(--bg-card)',
         backdropFilter: 'blur(12px)',
         border: '1px solid var(--border-muted)',
         borderRadius: '12px',
@@ -129,14 +129,14 @@ function LinkPreviewComponent({ block, editor }: { block: any, editor: any }) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: '#16161d'
+            backgroundColor: 'var(--bg-surface)'
           }} />
         ) : (
           <div style={{
             width: '100px',
             minWidth: '100px',
             height: '110px',
-            backgroundColor: 'rgba(255,255,255,0.02)',
+            backgroundColor: 'var(--bg-surface)',
             borderRight: '1px solid var(--border-muted)',
             display: 'flex',
             alignItems: 'center',
@@ -204,8 +204,8 @@ function LinkPreviewComponent({ block, editor }: { block: any, editor: any }) {
                   <button
                     onClick={handleOpenExternal}
                     style={{
-                      background: 'rgba(255,255,255,0.06)',
-                      border: '1.5px solid rgba(255,255,255,0.15)',
+                      background: 'var(--bg-surface)',
+                      border: '1.5px solid var(--border-muted)',
                       borderRadius: '6px',
                       color: 'var(--text-main)',
                       fontSize: '10.5px',
@@ -218,12 +218,10 @@ function LinkPreviewComponent({ block, editor }: { block: any, editor: any }) {
                       transition: 'all 0.25s'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(255,255,255,0.12)'
-                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'
+                      e.currentTarget.style.background = 'var(--bg-hover)'
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(255,255,255,0.06)'
-                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'
+                      e.currentTarget.style.background = 'var(--bg-surface)'
                     }}
                   >
                     <span>확장 ↗</span>

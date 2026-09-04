@@ -29,6 +29,7 @@ import React, { useState, useEffect, useRef } from 'react'
 // [외부 패키지 및 라이브러리 임포트: lucide-react]
 import { FileImage, RefreshCw } from 'lucide-react'
 import '@excalidraw/excalidraw/index.css'
+import { useCurrentTheme } from '../../hooks/useCurrentTheme'
 
 /*
  * [RUN-TIME STATE / INVARIANT]
@@ -84,6 +85,7 @@ try {
  * @remarks 이 주석은 컨벤션에 따라 자동 생성된 문서화 내용입니다.
  */
 export function InlineDrawingRenderer({ code }: { code: string }) {
+  const { isWhite, isRetro } = useCurrentTheme()
   /*
    * [RUN-TIME STATE / INVARIANT]
    * - mounted: 클라이언트 DOM 마운트 완료 여부 플래그.
@@ -220,8 +222,8 @@ export function InlineDrawingRenderer({ code }: { code: string }) {
     <div
       style={{
         width: '100%',
-        backgroundColor: '#18181c',
-        border: '1px solid #2e2e38',
+        backgroundColor: 'var(--bg-card)',
+        border: '1px solid var(--border-muted)',
         borderRadius: '8px',
         overflow: 'hidden',
         display: 'flex',
@@ -229,16 +231,19 @@ export function InlineDrawingRenderer({ code }: { code: string }) {
         marginBottom: '10px'
       }}
     >
-      <div style={{ padding: '8px 12px', borderBottom: '1px solid #2e2e38', display: 'flex', alignItems: 'center', gap: '6px', background: '#121215' }}>
+      <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border-muted)', display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--bg-surface)' }}>
         <FileImage size={14} style={{ color: 'var(--primary)' }} />
-        <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#f8fafc' }}>Drawing Canvas (View Only)</span>
+        <span style={{ fontSize: '11px', fontWeight: 'bold', color: 'var(--text-main)' }}>Drawing Canvas (View Only)</span>
       </div>
 
       <div style={{ height: '380px', width: '100%', position: 'relative', overflow: 'hidden' }}>
         <Excalidraw
           initialData={{
             elements,
-            appState: { viewBackgroundColor: '#1e1e24', theme: 'dark' }
+            appState: { 
+              viewBackgroundColor: (isWhite || isRetro) ? '#ffffff' : '#1e1e24', 
+              theme: (isWhite || isRetro) ? 'light' : 'dark' 
+            }
           }}
           viewModeEnabled={true}
         />
