@@ -648,30 +648,36 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
   const blockContainerRef = useRef<HTMLDivElement>(null)
 
   const { profiles, enqueue } = useDocumentProfilerStore()
-  const fileId = props.sourceUrl?.startsWith('ameva-vfs://') ? props.sourceUrl.replace('ameva-vfs://', '') : null
+  const isOldMozilla = props.sourceUrl?.includes('helloworld.pdf') || props.sourceUrl?.includes('mozilla')
+  const effectiveSourceUrl = isOldMozilla ? '/sample.pdf' : (props.sourceUrl || (props.docType === 'pdf' ? '/sample.pdf' : ''))
+  const effectiveFileName = (isOldMozilla && (!props.fileName || props.fileName.includes('Architecture_Specification'))) 
+    ? 'AMEVA_Document.pdf' 
+    : (props.fileName || (effectiveSourceUrl === '/sample.pdf' ? 'AMEVA_Document.pdf' : `${DOC_TYPE_CONFIG[props.docType as DocType]?.label || '문서'} 문서`))
+
+  const fileId = effectiveSourceUrl?.startsWith('ameva-vfs://') ? effectiveSourceUrl.replace('ameva-vfs://', '') : null
   const profile = fileId ? profiles[fileId] : undefined
   const docType = (props.docType as DocType) || 'unknown'
   const config = DOC_TYPE_CONFIG[docType] || DOC_TYPE_CONFIG.unknown
 
-  const isLocalMemory = props.sourceUrl?.startsWith('blob:') || props.sourceUrl?.startsWith('ameva-vfs://') || props.sourceUrl?.startsWith('data:')
-  const hasFile = (!!props.sourceUrl && isLocalMemory) || !!props.fileBase64
-  const hasUrl = !!props.sourceUrl && !isLocalMemory
+  const isLocalMemory = effectiveSourceUrl?.startsWith('blob:') || effectiveSourceUrl?.startsWith('ameva-vfs://') || effectiveSourceUrl?.startsWith('data:')
+  const hasFile = (!!effectiveSourceUrl && (isLocalMemory || effectiveSourceUrl.startsWith('/') || effectiveSourceUrl.startsWith('./'))) || !!props.fileBase64
+  const hasUrl = !!effectiveSourceUrl && !isLocalMemory
 
   // PDF 텍스트 인덱싱 (해당 PDF 전용 검색용)
   useEffect(() => {
-    if (docType !== 'pdf' || (!props.sourceUrl && !props.fileBase64)) return
+    if (docType !== 'pdf' || (!effectiveSourceUrl && !props.fileBase64)) return
     let cancelled = false
 
     const buildPdfIndex = async () => {
       try {
         let getDocumentArg: any = null
-        if (props.sourceUrl?.startsWith('ameva-vfs://')) {
-          const id = props.sourceUrl.replace('ameva-vfs://', '')
+        if (effectiveSourceUrl?.startsWith('ameva-vfs://')) {
+          const id = effectiveSourceUrl.replace('ameva-vfs://', '')
           const blob = await getAttachment(id)
           if (!blob) return
           getDocumentArg = { data: new Uint8Array(await blob.arrayBuffer()) }
-        } else if (props.sourceUrl?.startsWith('blob:') || props.sourceUrl?.startsWith('http')) {
-          getDocumentArg = { url: props.sourceUrl }
+        } else if (effectiveSourceUrl?.startsWith('blob:') || effectiveSourceUrl?.startsWith('http') || effectiveSourceUrl?.startsWith('/') || effectiveSourceUrl?.startsWith('./')) {
+          getDocumentArg = { url: effectiveSourceUrl }
         } else if (props.fileBase64) {
           const clean = props.fileBase64.includes(',') ? props.fileBase64.split(',')[1] : props.fileBase64
           const binary = atob(clean.replace(/\s/g, ''))
@@ -881,9 +887,9 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
     let active = true
     let createdUrl: string | null = null
 
-    if (docType === 'pdf' && props.sourceUrl) {
-      if (props.sourceUrl.startsWith('ameva-vfs://')) {
-        const id = props.sourceUrl.replace('ameva-vfs://', '')
+    if (docType === 'pdf' && effectiveSourceUrl) {
+      if (effectiveSourceUrl.startsWith('ameva-vfs://')) {
+        const id = effectiveSourceUrl.replace('ameva-vfs://', '')
         getAttachment(id).then(blob => {
           if (!active) return
           if (blob) {
@@ -891,11 +897,11 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
             setResolvedBlobUrl(createdUrl)
           }
         }).catch(console.error)
-      } else if (props.sourceUrl.startsWith('blob:') || props.sourceUrl.startsWith('http') || props.sourceUrl.startsWith('/') || props.sourceUrl.startsWith('./')) {
-        setResolvedBlobUrl(props.sourceUrl)
-      } else if (props.sourceUrl.startsWith('data:') || props.fileBase64) {
+      } else if (effectiveSourceUrl.startsWith('blob:') || effectiveSourceUrl.startsWith('http') || effectiveSourceUrl.startsWith('/') || effectiveSourceUrl.startsWith('./')) {
+        setResolvedBlobUrl(effectiveSourceUrl)
+      } else if (effectiveSourceUrl.startsWith('data:') || props.fileBase64) {
         try {
-          const raw = props.sourceUrl.startsWith('data:') ? props.sourceUrl : props.fileBase64
+          const raw = effectiveSourceUrl.startsWith('data:') ? effectiveSourceUrl : props.fileBase64
           const blob = base64ToBlob(raw, 'application/pdf')
           createdUrl = URL.createObjectURL(blob)
           setResolvedBlobUrl(createdUrl)
@@ -911,7 +917,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
       active = false
       if (createdUrl) URL.revokeObjectURL(createdUrl)
     }
-  }, [docType, props.sourceUrl, props.fileBase64])
+  }, [docType, effectiveSourceUrl, props.fileBase64])
 
   useEffect(() => {
     if (docType === 'pdf' && hasFile && fileId && !profile) {
@@ -969,7 +975,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
     }}>
       <span style={{ color: config.color }}>{config.icon}</span>
       <span style={{ fontSize: 12, fontWeight: 600, color: '#e2e8f0', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {props.fileName || `${config.label} 문서`}
+        {effectiveFileName}
       </span>
       {docType === 'pdf' && (hasFile || hasUrl) && (
         <>
@@ -1253,12 +1259,12 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
                 onClose={() => setShowDNA(false)} 
               />
             )}
-            {docType === 'pdf' && pdfMode === 'native' && (resolvedBlobUrl || props.sourceUrl?.startsWith('http') || props.sourceUrl?.startsWith('/')) ? (
+            {docType === 'pdf' && pdfMode === 'native' && (resolvedBlobUrl || effectiveSourceUrl?.startsWith('http') || effectiveSourceUrl?.startsWith('/')) ? (
               <iframe
-                key={`${resolvedBlobUrl || props.sourceUrl}-${targetPageNum}`}
-                src={`${resolvedBlobUrl || props.sourceUrl}${targetPageNum > 1 ? `#page=${targetPageNum}` : ''}`}
+                key={`${resolvedBlobUrl || effectiveSourceUrl}-${targetPageNum}`}
+                src={`${resolvedBlobUrl || effectiveSourceUrl}${targetPageNum > 1 ? `#page=${targetPageNum}` : ''}`}
                 style={{ width: '100%', height: '100%', border: 'none', display: 'block', background: '#525659' }}
-                title={props.fileName || 'PDF'}
+                title={effectiveFileName}
                 allowFullScreen
               />
             ) : docType === 'pdf' && pdfMode === 'native' ? (
@@ -1268,7 +1274,7 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
             ) : null}
             {docType === 'pdf' && pdfMode === 'canvas' && (hasFile || hasUrl) && (
               <PdfMiniViewer 
-                sourceUrl={resolvedBlobUrl || props.sourceUrl} 
+                sourceUrl={resolvedBlobUrl || effectiveSourceUrl} 
                 height={viewHeight} 
                 targetPage={targetPageNum}
                 savedBookmarks={(() => { try { return JSON.parse(props.bookmarks || '[]') } catch { return [] } })()}
@@ -1277,25 +1283,25 @@ function InlineDocumentBlockComponent({ block, editor }: any) {
             )}
             {docType !== 'pdf' && docType !== 'pptx' && hasFile && (
               <OfficeDocViewer
-                sourceUrl={props.sourceUrl}
+                sourceUrl={effectiveSourceUrl}
                 fileBase64={props.fileBase64}
                 docType={docType}
-                fileName={props.fileName}
+                fileName={effectiveFileName}
                 height={viewHeight}
               />
             )}
             {docType === 'pptx' && hasFile && (
               <PptxMiniViewer
-                sourceUrl={props.sourceUrl}
+                sourceUrl={effectiveSourceUrl}
                 fileBase64={props.fileBase64}
                 height={viewHeight}
               />
             )}
-            {docType !== 'pdf' && hasUrl && (
+            {docType !== 'pdf' && hasUrl && !effectiveSourceUrl?.startsWith('/') && (
               <iframe
-                src={`https://docs.google.com/viewer?url=${encodeURIComponent(props.sourceUrl)}&embedded=true`}
+                src={`https://docs.google.com/viewer?url=${encodeURIComponent(effectiveSourceUrl)}&embedded=true`}
                 style={{ width: '100%', height: '100%', border: 'none' }}
-                title={props.fileName || '문서'}
+                title={effectiveFileName}
               />
             )}
           </div>

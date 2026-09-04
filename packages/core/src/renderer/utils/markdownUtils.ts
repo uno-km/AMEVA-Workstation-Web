@@ -577,18 +577,25 @@ export function cleanCodeBlocks(blocks: any[]) {
         block.type = 'inlineDocument'
         try {
           const parsed = JSON.parse(finalCode)
+          const isPdf = (parsed.docType === 'pdf') || (!parsed.docType && (!parsed.fileName || parsed.fileName.endsWith('.pdf')))
+          const isOldMozilla = parsed.sourceUrl?.includes('helloworld.pdf') || parsed.sourceUrl?.includes('mozilla')
+          const resolvedUrl = (isOldMozilla || (!parsed.sourceUrl && !parsed.fileBase64 && isPdf))
+            ? '/sample.pdf'
+            : (parsed.sourceUrl || '')
           block.props = {
-            fileName: parsed.fileName || '',
+            fileName: (isOldMozilla && (!parsed.fileName || parsed.fileName.includes('Architecture_Specification')))
+              ? 'AMEVA_Document.pdf'
+              : (parsed.fileName || (resolvedUrl === '/sample.pdf' ? 'AMEVA_Document.pdf' : '')),
             fileBase64: parsed.fileBase64 || '',
-            docType: parsed.docType || 'unknown',
-            height: parsed.height || '420',
-            sourceUrl: parsed.sourceUrl || '',
+            docType: parsed.docType || (isPdf ? 'pdf' : 'unknown'),
+            height: parsed.height || '460',
+            sourceUrl: resolvedUrl,
             isExpanded: parsed.isExpanded || 'false',
             bookmarks: parsed.bookmarks || '[]',
           }
         } catch (err) {
           console.error('[cleanCodeBlocks] Failed to parse ameva-document json:', err)
-          block.props = { fileName: 'Unknown Document', fileBase64: '', docType: 'unknown', height: '420', sourceUrl: '', isExpanded: 'false', bookmarks: '[]' }
+          block.props = { fileName: 'AMEVA_Document.pdf', fileBase64: '', docType: 'pdf', height: '460', sourceUrl: '/sample.pdf', isExpanded: 'false', bookmarks: '[]' }
         }
         block.content = undefined
         return

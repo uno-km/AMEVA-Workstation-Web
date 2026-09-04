@@ -77,7 +77,17 @@ print(f"🐍 원의 둘레: {circumference:.2f}")
 
 ---
 
-## 📊 3. MS Excel 호환 스프레드시트 (\`/excel\`)
+## 📑 3. 온디바이스 PDF 문서 뷰어 및 리포트 실습 (\`/doc\`)
+
+온디바이스 WebGPU AI 연동을 지원하는 캔버스 PDF 뷰어입니다. 썸네일, 북마크, 페이지 탐색 기능을 자유롭게 사용해 보세요.
+
+\`\`\`ameva-document
+{"fileName":"AMEVA_Document.pdf","docType":"pdf","sourceUrl":"/sample.pdf","height":"460","isExpanded":"true","bookmarks":"[]"}
+\`\`\`
+
+---
+
+## 📊 4. MS Excel 호환 스프레드시트 (\`/excel\)
 
 아래 스프레드시트의 셀을 더블 클릭하여 숫자를 변경하거나 수식(\`SUM\`, \`AVERAGE\` 등)을 입력해 보세요.
 
@@ -117,10 +127,11 @@ print(f"🐍 원의 둘레: {circumference:.2f}")
 
 ---
 
-## 📝 7. 체크리스트 및 실습 현황
+## 📝 8. 체크리스트 및 실습 현황
 
 - [x] 🚀 AMEVA Workstation 인터랙티브 기능 체험 시작
 - [ ] 🗄️ SQLite WASM 쿼리 실행해보기
+- [ ] 📑 온디바이스 PDF 문서 뷰어 탐색해보기
 - [ ] 💻 JavaScript / Python 코드 수정 후 실행해보기
 - [ ] 📊 엑셀 시트 셀 수정해보기
 - [ ] 📋 칸반 보드 카드 드래그해보기
@@ -194,7 +205,17 @@ print(f"🐍 Circumference: {circumference:.2f}")
 
 ---
 
-## 📊 3. Full MS Excel Compatible Spreadsheet (\`/excel\`)
+## 📑 3. On-Device PDF Document Viewer & Report (\`/doc\`)
+
+Interactive canvas PDF viewer with zero cloud egress. Explore thumbnails, bookmarks, and page navigation.
+
+\`\`\`ameva-document
+{"fileName":"AMEVA_Document.pdf","docType":"pdf","sourceUrl":"/sample.pdf","height":"460","isExpanded":"true","bookmarks":"[]"}
+\`\`\`
+
+---
+
+## 📊 4. Full MS Excel Compatible Spreadsheet (\`/excel\)
 
 Double-click any cell below to edit numbers or apply formulas (\`SUM\`, \`AVERAGE\`, etc.).
 
@@ -234,10 +255,11 @@ Click timestamps to jump directly to specific video segments.
 
 ---
 
-## 📝 7. Interactive Checklist
+## 📝 8. Interactive Checklist
 
 - [x] 🚀 Launch AMEVA Workstation Interactive Tour
 - [ ] 🗄️ Run SQLite WASM query in real-time
+- [ ] 📑 Explore on-device PDF viewer
 - [ ] 💻 Modify & run JavaScript / Python code
 - [ ] 📊 Edit Excel spreadsheet cells
 - [ ] 📋 Drag cards on the Kanban board

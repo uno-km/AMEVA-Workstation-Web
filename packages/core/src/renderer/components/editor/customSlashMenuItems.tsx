@@ -514,11 +514,11 @@ export function getCustomSlashMenuItems(
         type: 'inlineDocument',
         props: {
           docType,
-          fileName: '',
+          fileName: docType === 'pdf' ? 'AMEVA_Document.pdf' : '',
           fileBase64: '',
-          height: '850',
-          sourceUrl: '',
-          isExpanded: 'false',
+          height: '460',
+          sourceUrl: docType === 'pdf' ? '/sample.pdf' : '',
+          isExpanded: 'true',
         }
       } as any)
       // BlockNote: content 'none' 블록에는 커서를 둘 수 없으므로 다음 줄에 빈 문단 삽입
