@@ -685,6 +685,429 @@ function ResizableImageCard({
  * - 함수 명: `AmevaImageBlockSpec`
  * - 역할: BlockNote React 블록 스펙 규격에 맞춰 갤러리/단일 이미지 뷰어 컴포넌트를 선언함.
  */
+
+export interface AmevaImageGalleryViewerProps {
+  url?: string
+  caption?: string
+  previewWidth?: string
+  viewMode?: 'grid' | 'carousel' | string
+  cardSizes?: string
+  editor?: any
+  blockId?: string
+  onUpdateProps?: (newProps: Partial<{ url: string; caption: string; previewWidth: string; viewMode: string; cardSizes: string }>) => void
+  isEditable?: boolean
+}
+
+export function AmevaImageGalleryViewer({
+  url = '',
+  caption = '',
+  previewWidth = '380',
+  viewMode = 'grid',
+  cardSizes = '{}',
+  editor,
+  blockId = 'image-block',
+  onUpdateProps,
+  isEditable = true
+}: AmevaImageGalleryViewerProps) {
+  const [internalUrl, setInternalUrl] = useState(url)
+  const [internalViewMode, setInternalViewMode] = useState(viewMode)
+  const [internalPreviewWidth, setInternalPreviewWidth] = useState(previewWidth)
+  const [internalCardSizes, setInternalCardSizes] = useState(cardSizes)
+
+  useEffect(() => { setInternalUrl(url) }, [url])
+  useEffect(() => { setInternalViewMode(viewMode) }, [viewMode])
+  useEffect(() => { setInternalPreviewWidth(previewWidth) }, [previewWidth])
+  useEffect(() => { setInternalCardSizes(cardSizes) }, [cardSizes])
+
+  const effectiveUrl = internalUrl
+  const effectiveViewMode = internalViewMode
+  const effectivePreviewWidth = internalPreviewWidth
+  const effectiveCardSizes = internalCardSizes
+
+  const updateAttributes = (newProps: any) => {
+    if (newProps.url !== undefined) setInternalUrl(newProps.url)
+    if (newProps.viewMode !== undefined) setInternalViewMode(newProps.viewMode)
+    if (newProps.previewWidth !== undefined) setInternalPreviewWidth(newProps.previewWidth)
+    if (newProps.cardSizes !== undefined) setInternalCardSizes(newProps.cardSizes)
+
+    if (editor && blockId && editor.updateBlock) {
+      editor.updateBlock(blockId, {
+        type: 'image',
+        props: newProps
+      } as any)
+    }
+    onUpdateProps?.(newProps)
+  }
+
+  let urls: string[] = []
+  if (effectiveUrl) {
+    if (effectiveUrl.startsWith('[')) {
+      try { urls = JSON.parse(effectiveUrl) } catch { urls = [effectiveUrl] }
+    } else {
+      urls = [effectiveUrl]
+    }
+  }
+
+  let parsedCardSizes: Record<number, { width: number; height: number }> = {}
+  try {
+    if (effectiveCardSizes) {
+      parsedCardSizes = JSON.parse(effectiveCardSizes)
+    }
+  } catch {}
+
+  const [resolvedUrls, setResolvedUrls] = useState<string[]>([])
+  useEffect(() => {
+    let active = true
+    const createdUrls: string[] = []
+
+    Promise.all(urls.map(async u => {
+      if (u.startsWith('ameva-vfs://')) {
+        const fileId = u.replace('ameva-vfs://', '')
+        try {
+          const blob = await getAttachment(fileId)
+          if (blob) {
+            const objectUrl = URL.createObjectURL(blob)
+            createdUrls.push(objectUrl)
+            return objectUrl
+          }
+          return u
+        } catch {
+          return u
+        }
+      }
+      return u
+    })).then(res => {
+      if (active) setResolvedUrls(res)
+    })
+
+    return () => {
+      active = false
+      createdUrls.forEach(u => URL.revokeObjectURL(u))
+    }
+  }, [effectiveUrl])
+
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const currentWidth = parseInt(effectivePreviewWidth || '380', 10) || 380
+
+  const handleAddFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length > 0) {
+      const newVfsUrls = await Promise.all(files.map(async f => {
+        const fileId = `media-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+        await saveAttachment(fileId, f)
+        return `ameva-vfs://${fileId}`
+      }))
+      const updatedUrls = [...urls, ...newVfsUrls]
+      updateAttributes({ url: JSON.stringify(updatedUrls) })
+    }
+    e.target.value = ''
+  }
+
+  const handleDeleteImage = (indexToRemove: number) => {
+    const updatedUrls = urls.filter((_, idx) => idx !== indexToRemove)
+    updateAttributes({ url: JSON.stringify(updatedUrls) })
+  }
+
+  const handleApplyEdit = async (idx: number, newUrl: string) => {
+    const res = await fetch(newUrl)
+    const blob = await res.blob()
+    const fileId = `media-export-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+    await saveAttachment(fileId, blob)
+
+    const newUrls = [...urls]
+    newUrls[idx] = `ameva-vfs://${fileId}`
+    updateAttributes({ url: JSON.stringify(newUrls) })
+    setEditingIndex(null)
+  }
+
+  const setViewModeFn = (mode: string) => {
+    updateAttributes({ viewMode: mode })
+  }
+
+  const setWidth = (w: number) => {
+    updateAttributes({ previewWidth: String(w), cardSizes: '{}' })
+  }
+
+  const handleCardResizeEnd = (idx: number, newW: number, newH: number) => {
+    const updatedSizes = {
+      ...parsedCardSizes,
+      [idx]: { width: Math.round(newW), height: Math.round(newH) }
+    }
+    updateAttributes({ cardSizes: JSON.stringify(updatedSizes) })
+  }
+
+  const openLightbox = (imgUrl: string) => {
+    window.dispatchEvent(new CustomEvent('ameva:open-lightbox', { detail: { url: imgUrl } }))
+  }
+
+  const effectiveEditable = isEditable && (editor ? editor.isEditable !== false : true)
+
+  if (urls.length === 0) {
+    if (!effectiveEditable) return null
+    return (
+      <div 
+        style={{
+          border: '2px dashed rgba(59, 130, 246, 0.4)', borderRadius: '10px', padding: '36px',
+          textAlign: 'center', color: '#94a3b8', background: 'rgba(15, 23, 42, 0.6)', cursor: 'pointer',
+          transition: 'border-color 0.2s', maxWidth: '100%', boxSizing: 'border-box'
+        }}
+        onClick={() => document.getElementById(`image-upload-${blockId}`)?.click()}
+      >
+        <div style={{ fontSize: '32px', marginBottom: '8px' }}>🖼️</div>
+        <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#f1f5f9', marginBottom: '4px' }}>클릭하여 이미지 파일 업로드</div>
+        <div style={{ fontSize: '11.5px', color: '#64748b' }}>여러 장의 사진을 한 번에 선택하여 갤러리로 구성할 수 있습니다</div>
+        <input
+          id={`image-upload-${blockId}`}
+          type="file"
+          accept="image/*,.jpg,.jpeg,.png,.gif,.webp,.bmp,.svg"
+          multiple
+          style={{ display: 'none' }}
+          onChange={handleAddFiles}
+        />
+      </div>
+    )
+  }
+
+  if (editingIndex !== null && resolvedUrls[editingIndex]) {
+    return (
+      <ImageCanvasEditor 
+        src={resolvedUrls[editingIndex]} 
+        onApply={(newUrl) => handleApplyEdit(editingIndex, newUrl)}
+        onClose={() => setEditingIndex(null)}
+      />
+    )
+  }
+
+  return (
+    <div style={{ 
+      background: '#090d16', 
+      border: '1px solid rgba(59, 130, 246, 0.25)', 
+      borderRadius: '10px', 
+      padding: effectiveEditable ? '14px' : '8px',
+      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+      maxWidth: '100%',
+      width: '100%',
+      boxSizing: 'border-box',
+      overflow: 'hidden'
+    }}>
+      {/* 상단 헤더 바 (편집 모드에서만 표시) */}
+      {effectiveEditable && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: '#60a5fa', fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <ImageIcon size={16} />
+              이미지 갤러리 ({urls.length}장)
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* 크기 조절 프리셋 */}
+            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.06)', borderRadius: '6px', padding: '2px', border: '1px solid rgba(255,255,255,0.08)' }}>
+              {[
+                { label: '작게', val: 240 },
+                { label: '중간', val: 380 },
+                { label: '크게', val: 560 },
+                { label: '100%', val: 900 }
+              ].map(item => (
+                <button
+                  key={item.val}
+                  onClick={() => setWidth(item.val)}
+                  style={{
+                    padding: '3px 8px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    background: currentWidth === item.val ? '#2563eb' : 'transparent',
+                    color: currentWidth === item.val ? '#fff' : '#94a3b8'
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            {/* 편집 가위 버튼 */}
+            <button
+              onClick={() => setEditingIndex(0)}
+              style={{
+                background: 'rgba(59, 130, 246, 0.18)',
+                border: '1px solid rgba(59, 130, 246, 0.4)',
+                color: '#93c5fd',
+                borderRadius: '6px',
+                padding: '4px 10px',
+                fontSize: '11.5px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+              title="이미지 캔버스 편집기 열기"
+            >
+              <Scissors size={13} />
+              <span>편집</span>
+            </button>
+
+            {/* 사진 추가 + 버튼 */}
+            <button
+              onClick={() => document.getElementById(`image-add-${blockId}`)?.click()}
+              style={{
+                background: 'linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)',
+                border: 'none',
+                color: '#fff',
+                borderRadius: '6px',
+                padding: '4px 10px',
+                fontSize: '11.5px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)'
+              }}
+              title="사진 추가 업로드"
+            >
+              <Plus size={14} />
+              <span>사진 추가</span>
+            </button>
+            <input
+              id={`image-add-${blockId}`}
+              type="file"
+              accept="image/*,.jpg,.jpeg,.png,.gif,.webp,.bmp,.svg"
+              multiple
+              style={{ display: 'none' }}
+              onChange={handleAddFiles}
+            />
+
+            {/* 뷰 모드 셀렉트 */}
+            <select 
+              value={effectiveViewMode}
+              onChange={(e) => setViewModeFn(e.target.value)}
+              style={{ 
+                background: '#131c2e', 
+                color: '#f1f5f9', 
+                border: '1px solid rgba(59, 130, 246, 0.35)', 
+                borderRadius: '6px', 
+                padding: '4px 8px', 
+                fontSize: '11.5px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                outline: 'none'
+              }}
+            >
+              <option value="grid">격자형 (Grid)</option>
+              <option value="carousel">좌우 스크롤 (Carousel)</option>
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* 갤러리 뷰 */}
+      {effectiveViewMode === 'grid' ? (
+        <div style={{ 
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '14px',
+          maxWidth: '100%',
+          width: '100%',
+          boxSizing: 'border-box'
+        }}>
+          {resolvedUrls.map((u, i) => {
+            const cardSize = parsedCardSizes[i] || {
+              width: currentWidth,
+              height: Math.round(currentWidth * 0.75)
+            }
+            return (
+              <ResizableImageCard
+                key={i}
+                index={i}
+                src={u}
+                alt={`사진 ${i + 1}`}
+                width={cardSize.width}
+                height={cardSize.height}
+                isCarousel={false}
+                isEditable={effectiveEditable}
+                onResizeEnd={handleCardResizeEnd}
+                onDoubleClick={() => openLightbox(u)}
+                onEdit={() => setEditingIndex(i)}
+                onDelete={() => handleDeleteImage(i)}
+              />
+            )
+          })}
+
+          {/* 그리드 끝에 배치되는 + 사진 추가 타일 (편집 모드에서만 표시) */}
+          {effectiveEditable && (
+            <div
+              onClick={() => document.getElementById(`image-add-${blockId}`)?.click()}
+              style={{
+                width: `${currentWidth}px`,
+                minHeight: `${Math.round(currentWidth * 0.75)}px`,
+                border: '2px dashed rgba(59, 130, 246, 0.3)',
+                borderRadius: '8px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                color: '#60a5fa',
+                background: 'rgba(59, 130, 246, 0.05)',
+                cursor: 'pointer',
+                transition: 'background 0.2s',
+                boxSizing: 'border-box'
+              }}
+            >
+              <Plus size={24} />
+              <span style={{ fontSize: '12px', fontWeight: 600 }}>새 사진 추가</span>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div 
+          style={{ 
+            display: 'flex', 
+            gap: '14px', 
+            overflowX: 'auto', 
+            overflowY: 'hidden',
+            maxWidth: '100%', 
+            width: '100%', 
+            boxSizing: 'border-box', 
+            paddingBottom: effectiveEditable ? '14px' : '4px',
+            paddingTop: '2px',
+            paddingLeft: '2px',
+            paddingRight: '2px',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
+          {resolvedUrls.map((u, i) => {
+            const cardSize = parsedCardSizes[i] || {
+              width: currentWidth,
+              height: Math.round(currentWidth * 0.75)
+            }
+            return (
+              <ResizableImageCard
+                key={i}
+                index={i}
+                src={u}
+                alt={`사진 ${i + 1}`}
+                width={cardSize.width}
+                height={cardSize.height}
+                isCarousel={true}
+                isEditable={effectiveEditable}
+                onResizeEnd={handleCardResizeEnd}
+                onDoubleClick={() => openLightbox(u)}
+                onEdit={() => setEditingIndex(i)}
+                onDelete={() => handleDeleteImage(i)}
+              />
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export const AmevaImageBlockSpec = createReactBlockSpec(
   {
     type: 'image',
@@ -699,415 +1122,18 @@ export const AmevaImageBlockSpec = createReactBlockSpec(
     content: 'none',
   },
   {
-    render: (props) => {
-      const { url, viewMode, previewWidth, cardSizes } = props.block.props
-      
-      let urls: string[] = []
-      if (url) {
-        if (url.startsWith('[')) {
-          try { urls = JSON.parse(url) } catch { urls = [url] }
-        } else {
-          urls = [url]
-        }
-      }
-
-      let parsedCardSizes: Record<number, { width: number; height: number }> = {}
-      try {
-        if (cardSizes) {
-          parsedCardSizes = JSON.parse(cardSizes)
-        }
-      } catch {}
-
-      /*
-       * [RUN-TIME STATE / INVARIANT]
-       * - 변수 명: `resolvedUrls`
-       * - 자료형 / 예상 값: string[] (VFS object URL 또는 원본 URL 배열).
-       */
-      const [resolvedUrls, setResolvedUrls] = useState<string[]>([])
-      useEffect(() => {
-        let active = true
-        const createdUrls: string[] = []
-
-        Promise.all(urls.map(async u => {
-          if (u.startsWith('ameva-vfs://')) {
-            const fileId = u.replace('ameva-vfs://', '')
-            try {
-              const blob = await getAttachment(fileId)
-              if (blob) {
-                const objectUrl = URL.createObjectURL(blob)
-                createdUrls.push(objectUrl)
-                return objectUrl
-              }
-              return u
-            } catch {
-              return u
-            }
-          }
-          return u
-        })).then(res => {
-          if (active) setResolvedUrls(res)
-        })
-
-        return () => {
-          active = false
-          createdUrls.forEach(u => URL.revokeObjectURL(u))
-        }
-      }, [url])
-
-      const [editingIndex, setEditingIndex] = useState<number | null>(null)
-      const currentWidth = parseInt(previewWidth || '380', 10) || 380
-
-      /*
-       * [FUNCTION CONTRACT]
-       * - 함수 명: `handleAddFiles`
-       * - 역할: 다중 이미지 파일을 VFS에 저장 후 기존 이미지 URL 목록에 추가 결합함.
-       */
-      const handleAddFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files || [])
-        if (files.length > 0) {
-          const newVfsUrls = await Promise.all(files.map(async f => {
-            const fileId = `media-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-            await saveAttachment(fileId, f)
-            return `ameva-vfs://${fileId}`
-          }))
-          const updatedUrls = [...urls, ...newVfsUrls]
-          props.editor.updateBlock(props.block.id, {
-            type: 'image',
-            props: { ...props.block.props, url: JSON.stringify(updatedUrls) }
-          } as any)
-        }
-        e.target.value = ''
-      }
-
-      /*
-       * [FUNCTION CONTRACT]
-       * - 함수 명: `handleDeleteImage`
-       * - 역할: 갤러리 내 특정 인덱스의 이미지를 제거함.
-       */
-      const handleDeleteImage = (indexToRemove: number) => {
-        const updatedUrls = urls.filter((_, idx) => idx !== indexToRemove)
-        props.editor.updateBlock(props.block.id, {
-          type: 'image',
-          props: { ...props.block.props, url: JSON.stringify(updatedUrls) }
-        } as any)
-      }
-
-      /*
-       * [FUNCTION CONTRACT]
-       * - 함수 명: `handleApplyEdit`
-       * - 역할: 캔버스 편집기에서 내보낸 PNG 이미지를 VFS에 영구 보존하고 블록 URL을 갱신함.
-       */
-      const handleApplyEdit = async (idx: number, newUrl: string) => {
-        const res = await fetch(newUrl)
-        const blob = await res.blob()
-        const fileId = `media-export-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-        await saveAttachment(fileId, blob)
-
-        const newUrls = [...urls]
-        newUrls[idx] = `ameva-vfs://${fileId}`
-        props.editor.updateBlock(props.block.id, {
-          type: 'image',
-          props: { ...props.block.props, url: JSON.stringify(newUrls) }
-        } as any)
-        setEditingIndex(null)
-      }
-
-      const setViewMode = (mode: string) => {
-        props.editor.updateBlock(props.block.id, {
-          type: 'image',
-          props: { ...props.block.props, viewMode: mode }
-        } as any)
-      }
-
-      const setWidth = (w: number) => {
-        props.editor.updateBlock(props.block.id, {
-          type: 'image',
-          props: { ...props.block.props, previewWidth: String(w), cardSizes: '{}' }
-        } as any)
-      }
-
-      const handleCardResizeEnd = (idx: number, newW: number, newH: number) => {
-        const updatedSizes = {
-          ...parsedCardSizes,
-          [idx]: { width: Math.round(newW), height: Math.round(newH) }
-        }
-        props.editor.updateBlock(props.block.id, {
-          type: 'image',
-          props: { ...props.block.props, cardSizes: JSON.stringify(updatedSizes) }
-        } as any)
-      }
-
-      const openLightbox = (imgUrl: string) => {
-        window.dispatchEvent(new CustomEvent('ameva:open-lightbox', { detail: { url: imgUrl } }))
-      }
-
-      const isEditable = props.editor?.isEditable !== false
-
-      if (urls.length === 0) {
-        if (!isEditable) return null
-        return (
-          <div 
-            style={{
-              border: '2px dashed rgba(59, 130, 246, 0.4)', borderRadius: '10px', padding: '36px',
-              textAlign: 'center', color: '#94a3b8', background: 'rgba(15, 23, 42, 0.6)', cursor: 'pointer',
-              transition: 'border-color 0.2s', maxWidth: '100%', boxSizing: 'border-box'
-            }}
-            onClick={() => document.getElementById(`image-upload-${props.block.id}`)?.click()}
-          >
-            <div style={{ fontSize: '32px', marginBottom: '8px' }}>🖼️</div>
-            <div style={{ fontSize: '13.5px', fontWeight: 700, color: '#f1f5f9', marginBottom: '4px' }}>클릭하여 이미지 파일 업로드</div>
-            <div style={{ fontSize: '11.5px', color: '#64748b' }}>여러 장의 사진을 한 번에 선택하여 갤러리로 구성할 수 있습니다</div>
-            <input
-              id={`image-upload-${props.block.id}`}
-              type="file"
-              accept="image/*,.jpg,.jpeg,.png,.gif,.webp,.bmp,.svg"
-              multiple
-              style={{ display: 'none' }}
-              onChange={handleAddFiles}
-            />
-          </div>
-        )
-      }
-
-      if (editingIndex !== null && resolvedUrls[editingIndex]) {
-        return (
-          <ImageCanvasEditor 
-            src={resolvedUrls[editingIndex]} 
-            onApply={(newUrl) => handleApplyEdit(editingIndex, newUrl)}
-            onClose={() => setEditingIndex(null)}
-          />
-        )
-      }
-
-      return (
-        <div style={{ 
-          background: '#090d16', 
-          border: '1px solid rgba(59, 130, 246, 0.25)', 
-          borderRadius: '10px', 
-          padding: isEditable ? '14px' : '8px',
-          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
-          maxWidth: '100%',
-          width: '100%',
-          boxSizing: 'border-box',
-          overflow: 'hidden'
-        }}>
-          {/* 상단 헤더 바 (편집 모드에서만 표시) */}
-          {isEditable && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ color: '#60a5fa', fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <ImageIcon size={16} />
-                  이미지 갤러리 ({urls.length}장)
-                </span>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                {/* 크기 조절 프리셋 */}
-                <div style={{ display: 'flex', background: 'rgba(255,255,255,0.06)', borderRadius: '6px', padding: '2px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  {[
-                    { label: '작게', val: 240 },
-                    { label: '중간', val: 380 },
-                    { label: '크게', val: 560 },
-                    { label: '100%', val: 900 }
-                  ].map(item => (
-                    <button
-                      key={item.val}
-                      onClick={() => setWidth(item.val)}
-                      style={{
-                        padding: '3px 8px',
-                        fontSize: '11px',
-                        fontWeight: 600,
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        background: currentWidth === item.val ? '#2563eb' : 'transparent',
-                        color: currentWidth === item.val ? '#fff' : '#94a3b8'
-                      }}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* 편집 가위 버튼 */}
-                <button
-                  onClick={() => setEditingIndex(0)}
-                  style={{
-                    background: 'rgba(59, 130, 246, 0.18)',
-                    border: '1px solid rgba(59, 130, 246, 0.4)',
-                    color: '#93c5fd',
-                    borderRadius: '6px',
-                    padding: '4px 10px',
-                    fontSize: '11.5px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '5px'
-                  }}
-                  title="이미지 캔버스 편집기 열기"
-                >
-                  <Scissors size={13} />
-                  <span>편집</span>
-                </button>
-
-                {/* 사진 추가 + 버튼 */}
-                <button
-                  onClick={() => document.getElementById(`image-add-${props.block.id}`)?.click()}
-                  style={{
-                    background: 'linear-gradient(135deg, #2563eb 0%, #06b6d4 100%)',
-                    border: 'none',
-                    color: '#fff',
-                    borderRadius: '6px',
-                    padding: '4px 10px',
-                    fontSize: '11.5px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)'
-                  }}
-                  title="사진 추가 업로드"
-                >
-                  <Plus size={14} />
-                  <span>사진 추가</span>
-                </button>
-                <input
-                  id={`image-add-${props.block.id}`}
-                  type="file"
-                  accept="image/*,.jpg,.jpeg,.png,.gif,.webp,.bmp,.svg"
-                  multiple
-                  style={{ display: 'none' }}
-                  onChange={handleAddFiles}
-                />
-
-                {/* 뷰 모드 셀렉트 */}
-                <select 
-                  value={viewMode}
-                  onChange={(e) => setViewMode(e.target.value)}
-                  style={{ 
-                    background: '#131c2e', 
-                    color: '#f1f5f9', 
-                    border: '1px solid rgba(59, 130, 246, 0.35)', 
-                    borderRadius: '6px', 
-                    padding: '4px 8px', 
-                    fontSize: '11.5px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    outline: 'none'
-                  }}
-                >
-                  <option value="grid">격자형 (Grid)</option>
-                  <option value="carousel">좌우 스크롤 (Carousel)</option>
-                </select>
-              </div>
-            </div>
-          )}
-
-          {/* 갤러리 뷰 */}
-          {viewMode === 'grid' ? (
-            <div style={{ 
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '14px',
-              maxWidth: '100%',
-              width: '100%',
-              boxSizing: 'border-box'
-            }}>
-              {resolvedUrls.map((u, i) => {
-                const cardSize = parsedCardSizes[i] || {
-                  width: currentWidth,
-                  height: Math.round(currentWidth * 0.75)
-                }
-                return (
-                  <ResizableImageCard
-                    key={i}
-                    index={i}
-                    src={u}
-                    alt={`사진 ${i + 1}`}
-                    width={cardSize.width}
-                    height={cardSize.height}
-                    isCarousel={false}
-                    isEditable={isEditable}
-                    onResizeEnd={handleCardResizeEnd}
-                    onDoubleClick={() => openLightbox(u)}
-                    onEdit={() => setEditingIndex(i)}
-                    onDelete={() => handleDeleteImage(i)}
-                  />
-                )
-              })}
-
-              {/* 그리드 끝에 배치되는 + 사진 추가 타일 (편집 모드에서만 표시) */}
-              {isEditable && (
-                <div
-                  onClick={() => document.getElementById(`image-add-${props.block.id}`)?.click()}
-                  style={{
-                    width: `${currentWidth}px`,
-                    minHeight: `${Math.round(currentWidth * 0.75)}px`,
-                    border: '2px dashed rgba(59, 130, 246, 0.3)',
-                    borderRadius: '8px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                    color: '#60a5fa',
-                    background: 'rgba(59, 130, 246, 0.05)',
-                    cursor: 'pointer',
-                    transition: 'background 0.2s',
-                    boxSizing: 'border-box'
-                  }}
-                >
-                  <Plus size={24} />
-                  <span style={{ fontSize: '12px', fontWeight: 600 }}>새 사진 추가</span>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div 
-              style={{ 
-                display: 'flex', 
-                gap: '14px', 
-                overflowX: 'auto', 
-                overflowY: 'hidden',
-                maxWidth: '100%', 
-                width: '100%', 
-                boxSizing: 'border-box', 
-                paddingBottom: isEditable ? '14px' : '4px',
-                paddingTop: '2px',
-                paddingLeft: '2px',
-                paddingRight: '2px',
-                WebkitOverflowScrolling: 'touch'
-              }}
-            >
-              {resolvedUrls.map((u, i) => {
-                const cardSize = parsedCardSizes[i] || {
-                  width: currentWidth,
-                  height: Math.round(currentWidth * 0.75)
-                }
-                return (
-                  <ResizableImageCard
-                    key={i}
-                    index={i}
-                    src={u}
-                    alt={`사진 ${i + 1}`}
-                    width={cardSize.width}
-                    height={cardSize.height}
-                    isCarousel={true}
-                    isEditable={isEditable}
-                    onResizeEnd={handleCardResizeEnd}
-                    onDoubleClick={() => openLightbox(u)}
-                    onEdit={() => setEditingIndex(i)}
-                    onDelete={() => handleDeleteImage(i)}
-                  />
-                )
-              })}
-            </div>
-          )}
-        </div>
-      )
-    },
+    render: (props) => (
+      <AmevaImageGalleryViewer
+        url={props.block.props.url}
+        caption={props.block.props.caption}
+        previewWidth={props.block.props.previewWidth}
+        viewMode={props.block.props.viewMode}
+        cardSizes={props.block.props.cardSizes}
+        editor={props.editor}
+        blockId={props.block.id}
+        isEditable={props.editor?.isEditable !== false}
+      />
+    ),
     toExternalHTML: ({ block }) => {
       let urls: string[] = []
       const url = block.props.url

@@ -133,470 +133,454 @@ function WaveformCanvas({
 }
 
 // ─── 메인 블록 정의 ───────────────────────────────────────────────────────────
-export const AmevaVideoBlockSpec = createReactBlockSpec(
-  {
-    type: 'video',
-    propSchema: {
-      url: { default: '' },
-      caption: { default: '' },
-      showPreview: { default: 'true' },
-      previewWidth: { default: '512' },
-      width: { default: '100%' },
-      height: { default: '400' },
-    },
-    content: 'none',
-  },
-  {
-    render: (props) => {
-      const [isEditMode, setIsEditMode] = useState(false)
-      const [currentTime, setCurrentTime] = useState(0)
-      const [duration, setDuration] = useState(0)
-      const [isPlaying, setIsPlaying] = useState(false)
-      const [waveformData, setWaveformData] = useState<Float32Array>(new Float32Array(0))
-      const [silenceSegments, setSilenceSegments] = useState<SilenceSegment[]>([])
-      const [cutRegions, setCutRegions] = useState<{ start: number; end: number }[]>([])
-      const [cutIn, setCutIn] = useState<number | null>(null)
-      const [cutOut, setCutOut] = useState<number | null>(null)
-      const [silenceThreshold, setSilenceThreshold] = useState(0.01)
-      const [minSilenceDuration, setMinSilenceDuration] = useState(0.5)
-      const [isExporting, setIsExporting] = useState(false)
-      const [exportProgress, setExportProgress] = useState(0)
 
-      const videoRef = useRef<HTMLVideoElement>(null)
-      const containerRef = useRef<HTMLDivElement>(null)
+export interface AmevaVideoPlayerViewerProps {
+  url?: string
+  caption?: string
+  width?: string
+  height?: string
+  editor?: any
+  blockId?: string
+  onUpdateProps?: (newProps: Partial<{ url: string; caption: string; width: string; height: string }>) => void
+  isEditable?: boolean
+}
 
-      const { analyzeMedia, isAnalyzing, progress: analyzeProgress } = useWaveformAnalyzer({
-        silenceThreshold,
-        minSilenceDuration,
-      })
+export function AmevaVideoPlayerViewer({
+  url = '',
+  caption = '',
+  width = '100%',
+  height = '400',
+  editor,
+  blockId = 'video-block',
+  onUpdateProps,
+  isEditable = true
+}: AmevaVideoPlayerViewerProps) {
+  const [internalUrl, setInternalUrl] = useState(url)
+  const [internalWidth, setInternalWidth] = useState(width)
+  const [internalHeight, setInternalHeight] = useState(height)
+  const [internalCaption, setInternalCaption] = useState(caption)
 
-      const rawUrl = props.block.props.url
-      const [src, setSrc] = useState<string>('')
+  useEffect(() => { setInternalUrl(url) }, [url])
+  useEffect(() => { setInternalWidth(width) }, [width])
+  useEffect(() => { setInternalHeight(height) }, [height])
+  useEffect(() => { setInternalCaption(caption) }, [caption])
 
-      useEffect(() => {
-        let active = true
-        let objectUrl: string | null = null
+  const effectiveUrl = internalUrl
+  const effectiveWidth = internalWidth
+  const effectiveHeight = internalHeight
+  const effectiveCaption = internalCaption
 
-        if (!rawUrl) {
-          setSrc('')
-          return
+  const updateAttributes = (newProps: any) => {
+    if (newProps.url !== undefined) setInternalUrl(newProps.url)
+    if (newProps.width !== undefined) setInternalWidth(newProps.width)
+    if (newProps.height !== undefined) setInternalHeight(newProps.height)
+    if (newProps.caption !== undefined) setInternalCaption(newProps.caption)
+
+    if (editor && blockId && editor.updateBlock) {
+      editor.updateBlock(blockId, {
+        type: 'video',
+        props: newProps
+      } as any)
+    }
+    onUpdateProps?.(newProps)
+  }
+
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [waveformData, setWaveformData] = useState<Float32Array>(new Float32Array(0))
+  const [silenceSegments, setSilenceSegments] = useState<SilenceSegment[]>([])
+  const [cutRegions, setCutRegions] = useState<{ start: number; end: number }[]>([])
+  const [cutIn, setCutIn] = useState<number | null>(null)
+  const [cutOut, setCutOut] = useState<number | null>(null)
+  const [silenceThreshold, setSilenceThreshold] = useState(0.01)
+  const [minSilenceDuration, setMinSilenceDuration] = useState(0.5)
+  const [isExporting, setIsExporting] = useState(false)
+  const [exportProgress, setExportProgress] = useState(0)
+
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const { analyzeMedia, isAnalyzing, progress: analyzeProgress } = useWaveformAnalyzer({
+    silenceThreshold,
+    minSilenceDuration,
+  })
+
+  const rawUrl = effectiveUrl
+  const [src, setSrc] = useState<string>('')
+
+  useEffect(() => {
+    let active = true
+    let objectUrl: string | null = null
+
+    if (!rawUrl) {
+      setSrc('')
+      return
+    }
+    if (rawUrl.startsWith('ameva-vfs://')) {
+      const fileId = rawUrl.replace('ameva-vfs://', '')
+      getAttachment(fileId).then(blob => {
+        if (active && blob) {
+          objectUrl = URL.createObjectURL(blob)
+          setSrc(objectUrl)
         }
-        if (rawUrl.startsWith('ameva-vfs://')) {
-          const fileId = rawUrl.replace('ameva-vfs://', '')
-          getAttachment(fileId).then(blob => {
-            if (active && blob) {
-              objectUrl = URL.createObjectURL(blob)
-              setSrc(objectUrl)
-            }
-          }).catch(err => console.error("Failed to load VFS blob:", err))
-        } else {
-          setSrc(rawUrl)
-        }
+      }).catch(err => console.error("Failed to load VFS blob:", err))
+    } else {
+      setSrc(rawUrl)
+    }
 
-        return () => {
-          active = false
-          if (objectUrl) {
-            URL.revokeObjectURL(objectUrl)
-          }
-        }
-      }, [rawUrl])
-
-      useEffect(() => {
-        const video = videoRef.current
-        if (!video) return
-        // const onTime = () => setCurrentTime(video.currentTime) // 성능 최적화를 위해 상태 의존 제거
-        const onLoad = () => setDuration(video.duration)
-        const onEnd = () => setIsPlaying(false)
-        // video.addEventListener('timeupdate', onTime)
-        video.addEventListener('loadedmetadata', onLoad)
-        video.addEventListener('ended', onEnd)
-        return () => {
-          // video.removeEventListener('timeupdate', onTime)
-          video.removeEventListener('loadedmetadata', onLoad)
-          video.removeEventListener('ended', onEnd)
-        }
-      }, [src])
-
-      const togglePlay = () => {
-        const v = videoRef.current
-        if (!v) return
-        if (isPlaying) v.pause()
-        else v.play()
-        setIsPlaying(!isPlaying)
+    return () => {
+      active = false
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl)
       }
+    }
+  }, [rawUrl])
 
-      const handleAnalyze = async () => {
-        if (!src) return
-        const result = await analyzeMedia(src)
-        setWaveformData(result.waveformData)
-        setSilenceSegments(result.silenceSegments)
-        if (!duration) setDuration(result.duration)
-      }
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+    const onLoad = () => setDuration(video.duration)
+    const onEnd = () => setIsPlaying(false)
+    video.addEventListener('loadedmetadata', onLoad)
+    video.addEventListener('ended', onEnd)
+    return () => {
+      video.removeEventListener('loadedmetadata', onLoad)
+      video.removeEventListener('ended', onEnd)
+    }
+  }, [src])
 
-      const applyDetectedSilences = () => {
-        setCutRegions(prev => mergeCutRegions([...prev, ...silenceSegments]))
-      }
+  const togglePlay = () => {
+    const v = videoRef.current
+    if (!v) return
+    if (isPlaying) v.pause()
+    else v.play()
+    setIsPlaying(!isPlaying)
+  }
 
-      const handleSetIn = () => setCutIn(videoRef.current ? videoRef.current.currentTime : null)
-      const handleSetOut = () => setCutOut(videoRef.current ? videoRef.current.currentTime : null)
-      const handleAddCut = () => {
-        if (cutIn !== null && cutOut !== null && cutIn < cutOut) {
-          setCutRegions(prev => mergeCutRegions([...prev, { start: cutIn, end: cutOut }]))
-          setCutIn(null)
-          setCutOut(null)
-        } else {
-          alert('시작점과 끝점을 올바르게 설정해주세요.')
-        }
-      }
+  const handleAnalyze = async () => {
+    if (!src) return
+    const result = await analyzeMedia(src)
+    setWaveformData(result.waveformData)
+    setSilenceSegments(result.silenceSegments)
+    if (!duration) setDuration(result.duration)
+  }
 
-      const removeCutRegion = (idx: number) => {
-        setCutRegions(prev => prev.filter((_, i) => i !== idx))
-      }
+  const applyDetectedSilences = () => {
+    setCutRegions(prev => mergeCutRegions([...prev, ...silenceSegments]))
+  }
 
-      const handleApply = async () => {
-        if (!src || cutRegions.length === 0) return
-        setIsExporting(true)
-        setExportProgress(0)
+  const handleSetIn = () => setCutIn(videoRef.current ? videoRef.current.currentTime : null)
+  const handleSetOut = () => setCutOut(videoRef.current ? videoRef.current.currentTime : null)
+  const handleAddCut = () => {
+    if (cutIn !== null && cutOut !== null && cutIn < cutOut) {
+      setCutRegions(prev => mergeCutRegions([...prev, { start: cutIn, end: cutOut }]))
+      setCutIn(null)
+      setCutOut(null)
+    } else {
+      alert('시작점과 끝점을 올바르게 설정해주세요.')
+    }
+  }
 
-        try {
-          // MediaRecorder 기반 내보내기: 컷 구간을 건너뛰며 재인코딩
-          const video = videoRef.current
-          if (!video) throw new Error('비디오 엘리먼트 없음')
+  const removeCutRegion = (idx: number) => {
+    setCutRegions(prev => prev.filter((_, i) => i !== idx))
+  }
 
-          const stream = (video as any).captureStream ? (video as any).captureStream() : null
-          if (!stream) {
-            alert('브라우저가 MediaRecorder 내보내기를 지원하지 않습니다. WebCodecs 폴백이 필요합니다.')
+  const handleExport = async () => {
+    const video = videoRef.current
+    if (!video || !src) return
+
+    setIsExporting(true)
+    setExportProgress(0)
+
+    try {
+      const sortedCuts = [...cutRegions].sort((a, b) => a.start - b.start)
+      const stream = (video as any).captureStream ? (video as any).captureStream() : (video as any).mozCaptureStream()
+      const recorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp8,opus' })
+      const chunks: Blob[] = []
+      recorder.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data) }
+      recorder.start(100)
+
+      await new Promise<void>((resolve) => {
+        let frameHandle: number
+        let nextCutIdx = 0
+        video.currentTime = 0
+
+        const processFrame = () => {
+          const t = video.currentTime
+          setExportProgress(Math.round((t / duration) * 100))
+
+          if (t >= duration || video.ended) {
+            cancelAnimationFrame(frameHandle)
+            resolve()
             return
           }
 
-          const chunks: Blob[] = []
-          const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' })
-          recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data) }
-
-          const sortedCuts = [...cutRegions].sort((a, b) => a.start - b.start)
-          let nextCutIdx = 0
-
-          recorder.start()
-          video.currentTime = 0
-
-          await new Promise<void>((resolve) => {
-            const onEnded = () => {
-              video.removeEventListener('ended', onEnded)
-              resolve()
+          if (nextCutIdx < sortedCuts.length) {
+            const cut = sortedCuts[nextCutIdx]
+            if (t >= cut.start && t < cut.end) {
+              video.currentTime = cut.end
+              nextCutIdx++
             }
-            video.addEventListener('ended', onEnded)
-
-            // WebCodecs 렌더링 폴백 전 프론트엔드 최선의 방어책: requestVideoFrameCallback 
-            let frameHandle: number
-            const processFrame = () => {
-              if (video.ended) return
-              const ct = video.currentTime
-              setExportProgress(Math.round((ct / duration) * 100))
-
-              if (nextCutIdx < sortedCuts.length) {
-                const cut = sortedCuts[nextCutIdx]
-                if (ct >= cut.start) {
-                  video.currentTime = cut.end
-                  nextCutIdx++
-                }
-              }
-              if ('requestVideoFrameCallback' in video) {
-                frameHandle = (video as any).requestVideoFrameCallback(processFrame)
-              } else {
-                frameHandle = requestAnimationFrame(processFrame) as any
-              }
-            }
-            
-            video.play().then(() => {
-              if ('requestVideoFrameCallback' in video) {
-                frameHandle = (video as any).requestVideoFrameCallback(processFrame)
-              } else {
-                frameHandle = requestAnimationFrame(processFrame) as any
-              }
-            })
-          })
-
-          recorder.stop()
-          await new Promise<void>(r => { recorder.onstop = () => r() })
-          video.pause()
-
-          const blob = new Blob(chunks, { type: 'video/webm' })
-          const fileId = `media-export-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-          await saveAttachment(fileId, blob)
-          const url = `ameva-vfs://${fileId}`
-          
-          props.editor.updateBlock(props.block.id, {
-            type: 'video',
-            props: { ...props.block.props, url }
-          } as any)
-          
-          setIsEditMode(false)
-        } finally {
-          setIsExporting(false)
-          setExportProgress(0)
+          }
+          if ('requestVideoFrameCallback' in video) {
+            frameHandle = (video as any).requestVideoFrameCallback(processFrame)
+          } else {
+            frameHandle = requestAnimationFrame(processFrame) as any
+          }
         }
-      }
+        
+        video.play().then(() => {
+          if ('requestVideoFrameCallback' in video) {
+            frameHandle = (video as any).requestVideoFrameCallback(processFrame)
+          } else {
+            frameHandle = requestAnimationFrame(processFrame) as any
+          }
+        })
+      })
 
-      const formatTime = (t: number) => {
-        const m = Math.floor(t / 60).toString().padStart(2, '0')
-        const s = (t % 60).toFixed(1).padStart(4, '0')
-        return `${m}:${s}`
-      }
+      recorder.stop()
+      await new Promise<void>(r => { recorder.onstop = () => r() })
+      video.pause()
 
-      if (!src) {
-        return (
-          <div 
-            style={{
-              border: '2px dashed #3a3a4a', borderRadius: '10px', padding: '40px',
-              textAlign: 'center', color: '#888', background: '#0f0f13', cursor: 'pointer'
-            }}
-            onClick={() => document.getElementById(`video-upload-${props.block.id}`)?.click()}
-          >
-            <div style={{ fontSize: '36px', marginBottom: '12px' }}>🎬</div>
-            <div style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0', marginBottom: '8px' }}>클릭하여 비디오 파일 업로드</div>
-            <div style={{ fontSize: '12px' }}>또는 비디오 파일을 이곳으로 드래그하세요</div>
-            <input
-              id={`video-upload-${props.block.id}`}
-              type="file"
-              accept="video/*,.mp4,.avi,.mkv,.mov,.wmv,.flv,.webm"
-              style={{ display: 'none' }}
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) {
-                  const fileId = `media-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-                  saveAttachment(fileId, file).then(() => {
-                    const url = `ameva-vfs://${fileId}`
-                    props.editor.updateBlock(props.block.id, {
-                      type: 'video',
-                      props: { ...props.block.props, url }
-                    } as any)
-                  })
-                }
-              }}
-            />
-          </div>
-        )
-      }
+      const blob = new Blob(chunks, { type: 'video/webm' })
+      const fileId = `media-export-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+      await saveAttachment(fileId, blob)
+      const newUrl = `ameva-vfs://${fileId}`
+      
+      updateAttributes({ url: newUrl })
+      setIsEditMode(false)
+    } finally {
+      setIsExporting(false)
+      setExportProgress(0)
+    }
+  }
 
-      const initialHeight = parseInt(props.block.props.height || '400', 10)
-      const initialWidth = props.block.props.width || '100%'
-      const isEditable = props.editor?.isEditable !== false
+  const formatTime = (t: number) => {
+    const m = Math.floor(t / 60).toString().padStart(2, '0')
+    const s = (t % 60).toFixed(1).padStart(4, '0')
+    return `${m}:${s}`
+  }
 
-      return (
-        <ResizableBlockContainer
-          initialHeight={initialHeight}
-          initialWidth={initialWidth}
-          minHeight={220}
-          maxHeight={3000}
-          minWidth={280}
-          maxWidth={3200}
-          disabled={!isEditable}
-          accentColor="#3b82f6"
-          onResizeEnd={({ height: newH, width: newW }) => {
-            props.editor.updateBlock(props.block.id, {
-              type: 'video',
-              props: {
-                ...props.block.props,
-                height: String(Math.round(newH)),
-                width: newW || props.block.props.width || '100%'
-              }
-            } as any)
+  const effectiveEditable = isEditable && (editor ? editor.isEditable !== false : true)
+
+  if (!src) {
+    return (
+      <div 
+        style={{
+          border: '2px dashed #3a3a4a', borderRadius: '10px', padding: '40px',
+          textAlign: 'center', color: '#888', background: '#0f0f13', cursor: 'pointer'
+        }}
+        onClick={() => document.getElementById(`video-upload-${blockId}`)?.click()}
+      >
+        <div style={{ fontSize: '36px', marginBottom: '12px' }}>🎬</div>
+        <div style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0', marginBottom: '8px' }}>클릭하여 비디오 파일 업로드</div>
+        <div style={{ fontSize: '12px' }}>또는 비디오 파일을 이곳으로 드래그하세요</div>
+        <input
+          id={`video-upload-${blockId}`}
+          type="file"
+          accept="video/*,.mp4,.avi,.mkv,.mov,.wmv,.flv,.webm"
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) {
+              const fileId = `media-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+              saveAttachment(fileId, file).then(() => {
+                const newUrl = `ameva-vfs://${fileId}`
+                updateAttributes({ url: newUrl })
+              })
+            }
           }}
-          style={{ margin: '14px 0', width: props.block.props.width || '100%' }}
+        />
+      </div>
+    )
+  }
+
+  const initialHeight = parseInt(effectiveHeight || '400', 10)
+  const initialWidth = effectiveWidth || '100%'
+
+  return (
+    <ResizableBlockContainer
+      initialHeight={initialHeight}
+      initialWidth={initialWidth}
+      minHeight={220}
+      maxHeight={3000}
+      minWidth={280}
+      maxWidth={3200}
+      disabled={!effectiveEditable}
+      accentColor="#3b82f6"
+      onResizeEnd={({ height: newH, width: newW }) => {
+        updateAttributes({
+          height: String(Math.round(newH)),
+          width: newW || effectiveWidth || '100%'
+        })
+      }}
+      style={{ margin: '14px 0', width: effectiveWidth || '100%' }}
+    >
+      {({ height: containerH }) => (
+        <div
+          ref={containerRef}
+          style={{
+            width: '100%',
+            height: isEditMode ? `${Math.max(containerH, 460)}px` : `${containerH}px`,
+            minHeight: `${containerH}px`,
+            background: '#0f0f13',
+            border: '1px solid #2a2a3a',
+            borderRadius: '10px',
+            overflow: 'hidden',
+            color: '#fff',
+            fontFamily: 'Pretendard, sans-serif',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
         >
-          {({ height: containerH }) => (
-            <div
-              ref={containerRef}
-              style={{
-                width: '100%',
-                height: isEditMode ? `${Math.max(containerH, 460)}px` : `${containerH}px`,
-                minHeight: `${containerH}px`,
-                background: '#0f0f13',
-                border: '1px solid #2a2a3a',
-                borderRadius: '10px',
-                overflow: 'hidden',
-                color: '#fff',
-                fontFamily: 'Pretendard, sans-serif',
-                display: 'flex',
-                flexDirection: 'column'
-              }}
-            >
-              {/* ─── 비디오 뷰어 (상하좌우 크기에 맞춰 선명하게 채움) ───────────────── */}
-              <div style={{ position: 'relative', background: '#000', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px', overflow: 'hidden' }}>
-                <video
-                  ref={videoRef}
-                  src={src || undefined}
-                  style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
-                  controls={!isEditMode}
+          {/* ─── 비디오 뷰어 (상하좌우 크기에 맞춰 선명하게 채움) ───────────────── */}
+          <div style={{ position: 'relative', background: '#000', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px', overflow: 'hidden' }}>
+            <video
+              ref={videoRef}
+              src={src || undefined}
+              style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
+              controls={!isEditMode}
+            />
+            {/* 편집 모드 토글 버튼 */}
+            {effectiveEditable && (
+              <button
+                onClick={() => setIsEditMode(m => !m)}
+                style={{
+                  position: 'absolute', top: '8px', right: '8px',
+                  background: isEditMode ? '#ef4444' : 'rgba(0,0,0,0.7)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: '#fff', borderRadius: '6px',
+                  padding: '4px 10px', fontSize: '12px', cursor: 'pointer',
+                  backdropFilter: 'blur(8px)',
+                  zIndex: 5
+                }}
+              >
+                {isEditMode ? '✕ 편집 닫기' : '✂️ 편집 모드'}
+              </button>
+            )}
+          </div>
+
+          {/* ─── 편집 패널 (편집 모드 시 확장) ──────────────────────────────── */}
+          {isEditMode && (
+            <div style={{ background: '#14141e', borderTop: '1px solid #2a2a3a', padding: '12px 16px' }}>
+              {/* 파형 캔버스 */}
+              <div style={{ marginBottom: '10px' }}>
+                <WaveformCanvas
+                  waveformData={waveformData}
+                  duration={duration}
+                  currentTime={currentTime}
+                  cutRegions={cutRegions}
+                  silenceSegments={silenceSegments}
+                  videoRef={videoRef}
+                  onSeek={(t) => {
+                    if (videoRef.current) videoRef.current.currentTime = t
+                    setCurrentTime(t)
+                  }}
+                  width={containerRef.current ? containerRef.current.clientWidth - 32 : 760}
                 />
-                {/* 편집 모드 토글 버튼 (미리보기 모드에선 숨김) */}
-                {isEditable && (
-                  <button
-                    onClick={() => setIsEditMode(m => !m)}
-                    style={{
-                      position: 'absolute', top: '8px', right: '8px',
-                      background: isEditMode ? '#ef4444' : 'rgba(0,0,0,0.7)',
-                      border: '1px solid rgba(255,255,255,0.2)',
-                      color: '#fff', borderRadius: '6px',
-                      padding: '4px 10px', fontSize: '12px', cursor: 'pointer',
-                      backdropFilter: 'blur(8px)',
-                      zIndex: 5
-                    }}
-                  >
-                    {isEditMode ? '✕ 편집 닫기' : '✂️ 편집 모드'}
-                  </button>
-                )}
               </div>
 
-          {/* ─── 인라인 편집 패널 ────────────────────────────────── */}
-          {isEditMode && (
-            <div style={{ padding: '12px 16px' }}>
-              {/* 컨트롤 바 */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+              {/* 재생 / 인점 / 아웃점 컨트롤 */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
                 <button
                   onClick={togglePlay}
-                  style={{ background: '#3b82f6', border: 'none', color: '#fff', borderRadius: '6px', padding: '6px 14px', cursor: 'pointer', fontSize: '13px' }}
-                >
-                  {isPlaying ? '⏸' : '▶️'}
-                </button>
-                <span style={{ fontSize: '12px', color: '#aaa', minWidth: '90px' }}>
-                  {formatTime(videoRef.current ? videoRef.current.currentTime : 0)} / {formatTime(duration)}
-                </span>
-                <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginLeft: '10px' }}>
-                  <button
-                    onClick={handleSetIn}
-                    style={{ background: '#4b5563', border: 'none', color: '#fff', borderRadius: '6px', padding: '6px 10px', cursor: 'pointer', fontSize: '12px' }}
-                  >
-                    [ In
-                  </button>
-                  <button
-                    onClick={handleSetOut}
-                    style={{ background: '#4b5563', border: 'none', color: '#fff', borderRadius: '6px', padding: '6px 10px', cursor: 'pointer', fontSize: '12px' }}
-                  >
-                    Out ]
-                  </button>
-                  <button
-                    onClick={handleAddCut}
-                    disabled={cutIn === null || cutOut === null}
-                    style={{ 
-                      background: (cutIn !== null && cutOut !== null) ? '#dc2626' : '#374151', 
-                      border: 'none', color: '#fff', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', fontSize: '12px',
-                      opacity: (cutIn !== null && cutOut !== null) ? 1 : 0.5
-                    }}
-                  >
-                    ✂️ 구간 자르기
-                  </button>
-                  {(cutIn !== null || cutOut !== null) && (
-                    <span style={{ fontSize: '11px', color: '#fca5a5', marginLeft: '6px' }}>
-                      {cutIn !== null ? formatTime(cutIn) : '--:--'} ~ {cutOut !== null ? formatTime(cutOut) : '--:--'}
-                    </span>
-                  )}
-                </div>
-                <div style={{ flex: 1 }} />
-                <button
-                  onClick={handleApply}
-                  disabled={isExporting || cutRegions.length === 0}
                   style={{
-                    background: isExporting ? '#374151' : '#10b981',
-                    border: 'none', color: '#fff', borderRadius: '6px',
-                    padding: '6px 14px', cursor: 'pointer', fontSize: '12px',
-                    opacity: cutRegions.length === 0 ? 0.5 : 1,
+                    background: '#2563eb', border: 'none', color: '#fff',
+                    borderRadius: '6px', padding: '6px 14px', fontSize: '13px', cursor: 'pointer'
                   }}
                 >
-                  {isExporting ? `⏳ ${exportProgress}%` : '💾 적용하기'}
+                  {isPlaying ? '⏸ 일시정지' : '▶ 재생'}
                 </button>
-              </div>
 
-              {/* 파형 분석 컨트롤 */}
-              <div style={{
-                background: '#1a1a2e', borderRadius: '8px', padding: '10px 12px',
-                marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap',
-              }}>
-                <span style={{ fontSize: '11px', color: '#7c83fd', fontWeight: 600 }}>🔊 무음 탐지</span>
-                <label style={{ fontSize: '11px', color: '#aaa', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  임계값
-                  <input
-                    type="range" min="0.001" max="0.1" step="0.001"
-                    value={silenceThreshold}
-                    onChange={e => setSilenceThreshold(parseFloat(e.target.value))}
-                    style={{ width: '70px' }}
-                  />
-                  <span style={{ color: '#fff', fontSize: '10px' }}>
-                    {(20 * Math.log10(silenceThreshold)).toFixed(0)}dB
-                  </span>
-                </label>
-                <label style={{ fontSize: '11px', color: '#aaa', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  최소 구간
-                  <input
-                    type="range" min="0.1" max="3" step="0.1"
-                    value={minSilenceDuration}
-                    onChange={e => setMinSilenceDuration(parseFloat(e.target.value))}
-                    style={{ width: '70px' }}
-                  />
-                  <span style={{ color: '#fff', fontSize: '10px' }}>{minSilenceDuration}s</span>
-                </label>
+                <button
+                  onClick={handleSetIn}
+                  style={{
+                    background: '#1e293b', border: '1px solid #334155', color: '#94a3b8',
+                    borderRadius: '6px', padding: '6px 12px', fontSize: '12px', cursor: 'pointer'
+                  }}
+                >
+                  [ 시작점 (In) {cutIn !== null ? `: ${formatTime(cutIn)}` : ''}
+                </button>
+
+                <button
+                  onClick={handleSetOut}
+                  style={{
+                    background: '#1e293b', border: '1px solid #334155', color: '#94a3b8',
+                    borderRadius: '6px', padding: '6px 12px', fontSize: '12px', cursor: 'pointer'
+                  }}
+                >
+                  ] 끝점 (Out) {cutOut !== null ? `: ${formatTime(cutOut)}` : ''}
+                </button>
+
+                <button
+                  onClick={handleAddCut}
+                  disabled={cutIn === null || cutOut === null}
+                  style={{
+                    background: '#ef4444', border: 'none', color: '#fff',
+                    borderRadius: '6px', padding: '6px 12px', fontSize: '12px',
+                    cursor: cutIn !== null && cutOut !== null ? 'pointer' : 'not-allowed',
+                    opacity: cutIn !== null && cutOut !== null ? 1 : 0.5
+                  }}
+                >
+                  ✂️ 컷 구간 추가
+                </button>
+
+                {/* 무음 감지 분석 */}
                 <button
                   onClick={handleAnalyze}
                   disabled={isAnalyzing}
                   style={{
-                    background: isAnalyzing ? '#374151' : '#2563eb',
-                    border: 'none', color: '#fff', borderRadius: '5px',
-                    padding: '5px 12px', cursor: 'pointer', fontSize: '11px',
+                    background: '#7c3aed', border: 'none', color: '#fff',
+                    borderRadius: '6px', padding: '6px 12px', fontSize: '12px', cursor: 'pointer',
+                    marginLeft: 'auto'
                   }}
                 >
-                  {isAnalyzing ? `분석 중 ${analyzeProgress}%...` : '🔍 파형 분석'}
+                  {isAnalyzing ? `분석 중 (${Math.round(analyzeProgress * 100)}%)` : '🔊 무음 자동 탐지'}
                 </button>
+
                 {silenceSegments.length > 0 && (
                   <button
                     onClick={applyDetectedSilences}
                     style={{
-                      background: '#dc2626', border: 'none', color: '#fff',
-                      borderRadius: '5px', padding: '5px 12px', cursor: 'pointer', fontSize: '11px',
+                      background: '#d97706', border: 'none', color: '#fff',
+                      borderRadius: '6px', padding: '6px 12px', fontSize: '12px', cursor: 'pointer'
                     }}
                   >
-                    ✂️ 무음 {silenceSegments.length}개 일괄 삭제
+                    무음 구간 ${silenceSegments.length}개 컷 일괄 적용
                   </button>
                 )}
+
+                {/* 내보내기 */}
+                <button
+                  onClick={handleExport}
+                  disabled={isExporting || cutRegions.length === 0}
+                  style={{
+                    background: '#059669', border: 'none', color: '#fff',
+                    borderRadius: '6px', padding: '6px 14px', fontSize: '12px',
+                    cursor: isExporting || cutRegions.length === 0 ? 'not-allowed' : 'pointer',
+                    opacity: isExporting || cutRegions.length === 0 ? 0.5 : 1
+                  }}
+                >
+                  {isExporting ? `내보내는 중 (${exportProgress}%)` : '💾 편집본 저장'}
+                </button>
               </div>
 
-              {/* 파형 + 타임라인 */}
-              <div style={{ borderRadius: '6px', overflow: 'hidden', marginBottom: '10px' }}>
-                {waveformData.length > 0 ? (
-                  <WaveformCanvas
-                    waveformData={waveformData}
-                    duration={duration}
-                    currentTime={currentTime}
-                    cutRegions={cutRegions}
-                    silenceSegments={silenceSegments}
-                    onSeek={(t) => {
-                      if (videoRef.current) videoRef.current.currentTime = t
-                    }}
-                    height={72}
-                    videoRef={videoRef}
-                  />
-                ) : (
-                  <div style={{
-                    height: '72px', background: '#111', display: 'flex',
-                    alignItems: 'center', justifyContent: 'center',
-                    color: '#555', fontSize: '12px', borderRadius: '6px',
-                  }}>
-                    파형 분석 버튼을 눌러 파형을 시각화하세요
-                  </div>
-                )}
-              </div>
-
-              {/* 컷 목록 */}
+              {/* 컷 구간 목록 칩 */}
               {cutRegions.length > 0 && (
-                <div style={{ fontSize: '11px', color: '#aaa', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                  {cutRegions.map((r, i) => (
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+                  <span style={{ fontSize: '11px', color: '#64748b' }}>삭제 예정 구간:</span>
+                  {cutRegions.map((cut, i) => (
                     <span
                       key={i}
                       style={{
-                        background: 'rgba(239,68,68,0.2)', border: '1px solid #ef4444',
-                        borderRadius: '4px', padding: '3px 8px', display: 'flex', gap: '6px',
+                        background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)',
+                        color: '#f87171', borderRadius: '4px', padding: '2px 8px', fontSize: '11px',
+                        display: 'flex', alignItems: 'center', gap: '4px'
                       }}
                     >
-                      ✂️ {formatTime(r.start)}~{formatTime(r.end)}
+                      {formatTime(cut.start)} ~ {formatTime(cut.end)}
                       <button
                         onClick={() => removeCutRegion(i)}
                         style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0 }}
@@ -611,16 +595,42 @@ export const AmevaVideoBlockSpec = createReactBlockSpec(
           )}
 
           {/* 캡션 */}
-          {props.block.props.caption && (
+          {effectiveCaption && (
             <div style={{ padding: '6px 16px 10px', fontSize: '12px', color: '#888', textAlign: 'center' }}>
-              {props.block.props.caption}
+              {effectiveCaption}
             </div>
           )}
-            </div>
-          )}
-        </ResizableBlockContainer>
-      )
+        </div>
+      )}
+    </ResizableBlockContainer>
+  )
+}
+
+export const AmevaVideoBlockSpec = createReactBlockSpec(
+  {
+    type: 'video',
+    propSchema: {
+      url: { default: '' },
+      caption: { default: '' },
+      showPreview: { default: 'true' },
+      previewWidth: { default: '512' },
+      width: { default: '100%' },
+      height: { default: '400' },
     },
+    content: 'none',
+  },
+  {
+    render: (props) => (
+      <AmevaVideoPlayerViewer
+        url={props.block.props.url}
+        caption={props.block.props.caption}
+        width={props.block.props.width}
+        height={props.block.props.height}
+        editor={props.editor}
+        blockId={props.block.id}
+        isEditable={props.editor?.isEditable !== false}
+      />
+    ),
     toExternalHTML: ({ block }) => {
       return (
         <div data-content-type="video" data-url={block.props.url} data-width={block.props.width} data-height={block.props.height}>

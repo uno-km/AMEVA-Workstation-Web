@@ -140,6 +140,462 @@ function AudioWaveformCanvas({
 }
 
 // ─── 메인 블록 정의 ───────────────────────────────────────────────────────────
+
+export interface AmevaAudioPlayerViewerProps {
+  url?: string
+  caption?: string
+  editor?: any
+  blockId?: string
+  onUpdateProps?: (newProps: Partial<{ url: string; caption: string }>) => void
+  isEditable?: boolean
+}
+
+export function AmevaAudioPlayerViewer({
+  url = '',
+  caption = '',
+  editor,
+  blockId = 'audio-block',
+  onUpdateProps,
+  isEditable = true
+}: AmevaAudioPlayerViewerProps) {
+  const [internalUrl, setInternalUrl] = useState(url)
+  const [internalCaption, setInternalCaption] = useState(caption)
+
+  useEffect(() => { setInternalUrl(url) }, [url])
+  useEffect(() => { setInternalCaption(caption) }, [caption])
+
+  const effectiveUrl = internalUrl
+  const effectiveCaption = internalCaption
+
+  const updateAttributes = (newProps: any) => {
+    if (newProps.url !== undefined) setInternalUrl(newProps.url)
+    if (newProps.caption !== undefined) setInternalCaption(newProps.caption)
+
+    if (editor && blockId && editor.updateBlock) {
+      editor.updateBlock(blockId, {
+        type: 'audio',
+        props: newProps
+      } as any)
+    }
+    onUpdateProps?.(newProps)
+  }
+
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [waveformData, setWaveformData] = useState<Float32Array>(new Float32Array(0))
+  const [silenceSegments, setSilenceSegments] = useState<SilenceSegment[]>([])
+  const [cutRegions, setCutRegions] = useState<{ start: number; end: number }[]>([])
+  const [cutIn, setCutIn] = useState<number | null>(null)
+  const [cutOut, setCutOut] = useState<number | null>(null)
+  const [silenceThreshold, setSilenceThreshold] = useState(0.01)
+  const [minSilenceDuration, setMinSilenceDuration] = useState(0.5)
+  const [isExporting, setIsExporting] = useState(false)
+
+  const audioRef = useRef<HTMLAudioElement>(null)
+  const { analyzeMedia, isAnalyzing, progress: analyzeProgress } = useWaveformAnalyzer({
+    silenceThreshold,
+    minSilenceDuration,
+  })
+
+  const rawUrl = effectiveUrl
+  const [src, setSrc] = useState<string>('')
+
+  useEffect(() => {
+    let active = true
+    let objectUrl: string | null = null
+
+    if (!rawUrl) {
+      setSrc('')
+      return
+    }
+    if (rawUrl.startsWith('ameva-vfs://')) {
+      const fileId = rawUrl.replace('ameva-vfs://', '')
+      getAttachment(fileId).then(blob => {
+        if (active && blob) {
+          objectUrl = URL.createObjectURL(blob)
+          setSrc(objectUrl)
+        }
+      }).catch(err => console.error("Failed to load VFS blob:", err))
+    } else {
+      setSrc(rawUrl)
+    }
+
+    return () => {
+      active = false
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [rawUrl])
+
+  useEffect(() => {
+    const a = audioRef.current
+    if (!a) return
+    const onTime = () => setCurrentTime(a.currentTime)
+    const onLoad = () => setDuration(a.duration)
+    const onEnd = () => setIsPlaying(false)
+    a.addEventListener('timeupdate', onTime)
+    a.addEventListener('loadedmetadata', onLoad)
+    a.addEventListener('ended', onEnd)
+    return () => {
+      a.removeEventListener('timeupdate', onTime)
+      a.removeEventListener('loadedmetadata', onLoad)
+      a.removeEventListener('ended', onEnd)
+    }
+  }, [src])
+
+  const togglePlay = () => {
+    const a = audioRef.current
+    if (!a) return
+    if (isPlaying) a.pause()
+    else a.play()
+    setIsPlaying(!isPlaying)
+  }
+
+  const handleAnalyze = async () => {
+    if (!src) return
+    const result = await analyzeMedia(src)
+    setWaveformData(result.waveformData)
+    setSilenceSegments(result.silenceSegments)
+    if (!duration) setDuration(result.duration)
+  }
+
+  const applyDetectedSilences = () => {
+    setCutRegions(prev => mergeCutRegions([...prev, ...silenceSegments]))
+  }
+
+  const handleSetIn = () => setCutIn(audioRef.current ? audioRef.current.currentTime : null)
+  const handleSetOut = () => setCutOut(audioRef.current ? audioRef.current.currentTime : null)
+  const handleAddCut = () => {
+    if (cutIn !== null && cutOut !== null && cutIn < cutOut) {
+      setCutRegions(prev => mergeCutRegions([...prev, { start: cutIn, end: cutOut }]))
+      setCutIn(null)
+      setCutOut(null)
+    } else {
+      alert('시작점과 끝점을 올바르게 설정해주세요.')
+    }
+  }
+
+  const handleExport = async () => {
+    if (!src || cutRegions.length === 0) return
+    setIsExporting(true)
+    try {
+      const response = await fetch(src)
+      const arrayBuffer = await response.arrayBuffer()
+      const audioCtx = new AudioContext()
+      const decodedBuffer = await audioCtx.decodeAudioData(arrayBuffer)
+
+      const sortedCuts = [...cutRegions].sort((a, b) => a.start - b.start)
+      const keepIntervals: { start: number; end: number }[] = []
+      let lastEnd = 0
+
+      for (const cut of sortedCuts) {
+        if (cut.start > lastEnd) {
+          keepIntervals.push({ start: lastEnd, end: cut.start })
+        }
+        lastEnd = Math.max(lastEnd, cut.end)
+      }
+      if (lastEnd < decodedBuffer.duration) {
+        keepIntervals.push({ start: lastEnd, end: decodedBuffer.duration })
+      }
+
+      const sampleRate = decodedBuffer.sampleRate
+      const totalSamples = keepIntervals.reduce((sum, inv) => {
+        return sum + Math.floor((inv.end - inv.start) * sampleRate)
+      }, 0)
+
+      const outBuffer = audioCtx.createBuffer(
+        decodedBuffer.numberOfChannels,
+        totalSamples,
+        sampleRate
+      )
+
+      let writeOffset = 0
+      for (const inv of keepIntervals) {
+        const startSample = Math.floor(inv.start * sampleRate)
+        const endSample = Math.floor(inv.end * sampleRate)
+        const count = endSample - startSample
+
+        for (let ch = 0; ch < decodedBuffer.numberOfChannels; ch++) {
+          const srcData = decodedBuffer.getChannelData(ch)
+          const dstData = outBuffer.getChannelData(ch)
+          for (let s = 0; s < count; s++) {
+            dstData[writeOffset + s] = srcData[startSample + s]
+          }
+        }
+        writeOffset += count
+      }
+
+      const wavBlob = audioBufferToWav(outBuffer)
+      const fileId = `media-export-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+      await saveAttachment(fileId, wavBlob)
+      const newUrl = `ameva-vfs://${fileId}`
+      
+      updateAttributes({ url: newUrl })
+      setIsEditMode(false)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const formatTime = (t: number) => {
+    const m = Math.floor(t / 60).toString().padStart(2, '0')
+    const s = (t % 60).toFixed(1).padStart(4, '0')
+    return `${m}:${s}`
+  }
+
+  const effectiveEditable = isEditable && (editor ? editor.isEditable !== false : true)
+
+  if (!src) {
+    return (
+      <div 
+        style={{
+          border: '2px dashed #3a3a4a', borderRadius: '10px', padding: '30px',
+          textAlign: 'center', color: '#888', background: '#0d0d1a', cursor: 'pointer'
+        }}
+        onClick={() => document.getElementById(`audio-upload-${blockId}`)?.click()}
+      >
+        <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎵</div>
+        <div style={{ fontSize: '13px', fontWeight: 600, color: '#e2e8f0', marginBottom: '6px' }}>클릭하여 오디오 파일 업로드</div>
+        <div style={{ fontSize: '11px' }}>또는 오디오 파일을 이곳으로 드래그하세요</div>
+        <input
+          id={`audio-upload-${blockId}`}
+          type="file"
+          accept="audio/*,.mp3,.wav,.ogg,.flac,.m4a,.wma,.aac"
+          style={{ display: 'none' }}
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (file) {
+              const fileId = `media-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+              saveAttachment(fileId, file).then(() => {
+                const newUrl = `ameva-vfs://${fileId}`
+                updateAttributes({ url: newUrl })
+              })
+            }
+          }}
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div style={{
+      background: '#0d0d1a',
+      border: '1px solid #1e1e3a',
+      borderRadius: '10px',
+      overflow: 'hidden',
+      color: '#fff',
+      fontFamily: 'Pretendard, sans-serif',
+      margin: '14px 0'
+    }}>
+      {/* ─── 오디오 엘리먼트 (숨김) ──────────────────────────── */}
+      <audio ref={audioRef} src={src} style={{ display: 'none' }} />
+
+      {/* ─── 헤더 바 ─────────────────────────────────────────── */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '10px',
+        padding: '10px 14px', background: 'rgba(129,140,248,0.08)',
+        borderBottom: '1px solid #1e1e3a',
+      }}>
+        <div style={{
+          width: '36px', height: '36px', borderRadius: '50%',
+          background: 'linear-gradient(135deg, #2563eb, #818cf8)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px',
+        }}>🎵</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: '13px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {src.split('/').pop() || '오디오 파일'}
+          </div>
+          {effectiveCaption && (
+            <div style={{ fontSize: '11px', color: '#888' }}>{effectiveCaption}</div>
+          )}
+        </div>
+        {effectiveEditable && (
+          <button
+            onClick={() => setIsEditMode(m => !m)}
+            style={{
+              background: isEditMode ? '#dc2626' : 'rgba(37, 99, 235,0.3)',
+              border: '1px solid rgba(129,140,248,0.3)',
+              color: '#fff', borderRadius: '6px', padding: '5px 12px', fontSize: '12px', cursor: 'pointer',
+            }}
+          >
+            {isEditMode ? '✕ 닫기' : '✂️ 편집'}
+          </button>
+        )}
+      </div>
+
+      {/* ─── 기본 플레이어 컨트롤 ────────────────────────────── */}
+      <div style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <button
+          onClick={togglePlay}
+          style={{
+            background: 'linear-gradient(135deg, #2563eb, #818cf8)',
+            border: 'none', color: '#fff', borderRadius: '50%',
+            width: '36px', height: '36px', cursor: 'pointer', fontSize: '14px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          {isPlaying ? '⏸' : '▶'}
+        </button>
+        {/* 진행바 */}
+        <div
+          style={{ flex: 1, height: '4px', background: '#2a2a4a', borderRadius: '2px', cursor: 'pointer', position: 'relative' }}
+          onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect()
+            const t = ((e.clientX - rect.left) / rect.width) * duration
+            if (audioRef.current) audioRef.current.currentTime = t
+            setCurrentTime(t)
+          }}
+        >
+          <div style={{
+            height: '100%', borderRadius: '2px',
+            background: 'linear-gradient(90deg, #2563eb, #818cf8)',
+            width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%',
+            transition: 'width 0.05s',
+          }} />
+        </div>
+        <span style={{ fontSize: '11px', color: '#aaa', whiteSpace: 'nowrap' }}>
+          {formatTime(audioRef.current ? audioRef.current.currentTime : 0)} / {formatTime(duration)}
+        </span>
+      </div>
+
+      {/* ─── 편집 패널 ───────────────────────────────────────── */}
+      {isEditMode && (
+        <div style={{ padding: '0 14px 14px' }}>
+          {/* 파형 분석 컨트롤 */}
+          <div style={{
+            background: '#12122a', borderRadius: '8px', padding: '10px',
+            marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap',
+          }}>
+            <span style={{ fontSize: '11px', color: '#818cf8', fontWeight: 600 }}>🔊 무음 탐지</span>
+            <label style={{ fontSize: '11px', color: '#aaa', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              임계값
+              <input
+                type="range" min="0.001" max="0.1" step="0.001"
+                value={silenceThreshold}
+                onChange={e => setSilenceThreshold(parseFloat(e.target.value))}
+                style={{ width: '60px', accentColor: '#2563eb' }}
+              />
+            </label>
+            <label style={{ fontSize: '11px', color: '#aaa', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              최소무음시간
+              <input
+                type="range" min="0.2" max="3" step="0.1"
+                value={minSilenceDuration}
+                onChange={e => setMinSilenceDuration(parseFloat(e.target.value))}
+                style={{ width: '60px', accentColor: '#2563eb' }}
+              />
+              {minSilenceDuration}s
+            </label>
+            <button
+              onClick={handleAnalyze}
+              disabled={isAnalyzing}
+              style={{
+                background: '#4f46e5', border: 'none', color: '#fff',
+                borderRadius: '6px', padding: '4px 10px', fontSize: '11px', cursor: 'pointer',
+              }}
+            >
+              {isAnalyzing ? `분석 중 (${Math.round(analyzeProgress * 100)}%)` : '파형 분석'}
+            </button>
+            {silenceSegments.length > 0 && (
+              <button
+                onClick={applyDetectedSilences}
+                style={{
+                  background: '#d97706', border: 'none', color: '#fff',
+                  borderRadius: '6px', padding: '4px 10px', fontSize: '11px', cursor: 'pointer',
+                }}
+              >
+                무음 ${silenceSegments.length}개 일괄 컷
+              </button>
+            )}
+          </div>
+
+          {/* 파형 캔버스 */}
+          <AudioWaveformCanvas
+            waveformData={waveformData}
+            duration={duration}
+            currentTime={currentTime}
+            cutRegions={cutRegions}
+            silenceSegments={silenceSegments}
+            audioRef={audioRef}
+            onSeek={t => {
+              if (audioRef.current) audioRef.current.currentTime = t
+              setCurrentTime(t)
+            }}
+          />
+
+          {/* 컷편집 도구 */}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '10px', flexWrap: 'wrap' }}>
+            <button
+              onClick={handleSetIn}
+              style={{
+                background: '#1e1e38', border: '1px solid #333', color: '#ccc',
+                borderRadius: '5px', padding: '4px 10px', fontSize: '11px', cursor: 'pointer',
+              }}
+            >
+              [ 시작점 (In): {cutIn !== null ? `${formatTime(cutIn)}` : '--:--'}
+            </button>
+            <button
+              onClick={handleSetOut}
+              style={{
+                background: '#1e1e38', border: '1px solid #333', color: '#ccc',
+                borderRadius: '5px', padding: '4px 10px', fontSize: '11px', cursor: 'pointer',
+              }}
+            >
+              ] 끝점 (Out): {cutOut !== null ? `${formatTime(cutOut)}` : '--:--'}
+            </button>
+            <button
+              onClick={handleAddCut}
+              disabled={cutIn === null || cutOut === null}
+              style={{
+                background: '#dc2626', border: 'none', color: '#fff',
+                borderRadius: '5px', padding: '4px 10px', fontSize: '11px',
+                cursor: cutIn !== null && cutOut !== null ? 'pointer' : 'not-allowed',
+                opacity: cutIn !== null && cutOut !== null ? 1 : 0.5,
+              }}
+            >
+              ✂️ 컷 추가
+            </button>
+            <button
+              onClick={handleExport}
+              disabled={isExporting || cutRegions.length === 0}
+              style={{
+                marginLeft: 'auto', background: '#059669', border: 'none', color: '#fff',
+                borderRadius: '5px', padding: '4px 12px', fontSize: '11px',
+                cursor: isExporting || cutRegions.length === 0 ? 'not-allowed' : 'pointer',
+                opacity: isExporting || cutRegions.length === 0 ? 0.5 : 1,
+              }}
+            >
+              {isExporting ? '인코딩 중...' : '💾 편집본 저장'}
+            </button>
+          </div>
+
+          {/* 컷 영역 목록 */}
+          {cutRegions.length > 0 && (
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '8px', fontSize: '11px' }}>
+              <span style={{ color: '#888' }}>컷 목록:</span>
+              {cutRegions.map((r, i) => (
+                <span key={i} style={{
+                  background: 'rgba(220,38,38,0.2)', border: '1px solid #dc2626',
+                  borderRadius: '4px', padding: '3px 8px', display: 'flex', gap: '6px',
+                }}>
+                  ✂️ {formatTime(r.start)}~{formatTime(r.end)}
+                  <button
+                    onClick={() => setCutRegions(prev => prev.filter((_, j) => j !== i))}
+                    style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0, fontSize: '10px' }}
+                  >
+                    ✕
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export const AmevaAudioBlockSpec = createReactBlockSpec(
   {
     type: 'audio',
@@ -152,440 +608,15 @@ export const AmevaAudioBlockSpec = createReactBlockSpec(
     content: 'none',
   },
   {
-    render: (props) => {
-      const [isEditMode, setIsEditMode] = useState(false)
-      const [currentTime, setCurrentTime] = useState(0)
-      const [duration, setDuration] = useState(0)
-      const [isPlaying, setIsPlaying] = useState(false)
-      const [waveformData, setWaveformData] = useState<Float32Array>(new Float32Array(0))
-      const [silenceSegments, setSilenceSegments] = useState<SilenceSegment[]>([])
-      const [cutRegions, setCutRegions] = useState<{ start: number; end: number }[]>([])
-      const [cutIn, setCutIn] = useState<number | null>(null)
-      const [cutOut, setCutOut] = useState<number | null>(null)
-      const [silenceThreshold, setSilenceThreshold] = useState(0.01)
-      const [minSilenceDuration, setMinSilenceDuration] = useState(0.5)
-      const [isExporting, setIsExporting] = useState(false)
-
-      const audioRef = useRef<HTMLAudioElement>(null)
-      const { analyzeMedia, isAnalyzing, progress: analyzeProgress } = useWaveformAnalyzer({
-        silenceThreshold,
-        minSilenceDuration,
-      })
-
-      const rawUrl = props.block.props.url
-      const [src, setSrc] = useState<string>('')
-
-      useEffect(() => {
-        let active = true
-        let objectUrl: string | null = null
-
-        if (!rawUrl) {
-          setSrc('')
-          return
-        }
-        if (rawUrl.startsWith('ameva-vfs://')) {
-          const fileId = rawUrl.replace('ameva-vfs://', '')
-          getAttachment(fileId).then(blob => {
-            if (active && blob) {
-              objectUrl = URL.createObjectURL(blob)
-              setSrc(objectUrl)
-            }
-          }).catch(err => console.error("Failed to load VFS blob:", err))
-        } else {
-          setSrc(rawUrl)
-        }
-
-        return () => {
-          active = false
-          if (objectUrl) {
-            URL.revokeObjectURL(objectUrl)
-          }
-        }
-      }, [rawUrl])
-
-      useEffect(() => {
-        const audio = audioRef.current
-        if (!audio) return
-        // const onTime = () => setCurrentTime(audio.currentTime)
-        const onLoad = () => setDuration(audio.duration)
-        const onEnd = () => setIsPlaying(false)
-        // audio.addEventListener('timeupdate', onTime)
-        audio.addEventListener('loadedmetadata', onLoad)
-        audio.addEventListener('ended', onEnd)
-        return () => {
-          // audio.removeEventListener('timeupdate', onTime)
-          audio.removeEventListener('loadedmetadata', onLoad)
-          audio.removeEventListener('ended', onEnd)
-        }
-      }, [src])
-
-      const togglePlay = () => {
-        const a = audioRef.current
-        if (!a) return
-        if (isPlaying) a.pause()
-        else a.play()
-        setIsPlaying(!isPlaying)
-      }
-
-      const handleAnalyze = async () => {
-        if (!src) return
-        const result = await analyzeMedia(src)
-        setWaveformData(result.waveformData)
-        setSilenceSegments(result.silenceSegments)
-        if (!duration) setDuration(result.duration)
-      }
-
-      const applyDetectedSilences = () => {
-        setCutRegions(prev => mergeCutRegions([...prev, ...silenceSegments]))
-      }
-
-      const handleSetIn = () => setCutIn(audioRef.current ? audioRef.current.currentTime : null)
-      const handleSetOut = () => setCutOut(audioRef.current ? audioRef.current.currentTime : null)
-      const handleAddCut = () => {
-        if (cutIn !== null && cutOut !== null && cutIn < cutOut) {
-          setCutRegions(prev => mergeCutRegions([...prev, { start: cutIn, end: cutOut }]))
-          setCutIn(null)
-          setCutOut(null)
-        } else {
-          alert('시작점과 끝점을 올바르게 설정해주세요.')
-        }
-      }
-
-      const removeCutRegion = (idx: number) => {
-        setCutRegions(prev => prev.filter((_, i) => i !== idx))
-      }
-
-      const handleApplyAudio = async () => {
-        if (!src) return
-        setIsExporting(true)
-        try {
-          const response = await fetch(src)
-          const arrayBuffer = await response.arrayBuffer()
-          const audioCtx = new AudioContext()
-          const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer)
-
-          const { sampleRate, numberOfChannels, duration: dur } = audioBuffer
-
-          // 컷 구간을 제외한 유효 구간 계산
-          const sortedCuts = [...cutRegions].sort((a, b) => a.start - b.start)
-          type Segment = { start: number; end: number }
-          const validSegments: Segment[] = []
-          let cursor = 0
-          for (const cut of sortedCuts) {
-            if (cursor < cut.start) validSegments.push({ start: cursor, end: cut.start })
-            cursor = cut.end
-          }
-          if (cursor < dur) validSegments.push({ start: cursor, end: dur })
-
-          const totalValidSamples = validSegments.reduce(
-            (sum, s) => sum + Math.round((s.end - s.start) * sampleRate), 0
-          )
-
-          const offlineCtx = new OfflineAudioContext(numberOfChannels, totalValidSamples, sampleRate)
-          let writeOffset = 0
-
-          for (const seg of validSegments) {
-            const startSample = Math.round(seg.start * sampleRate)
-            const endSample = Math.round(seg.end * sampleRate)
-            const segLength = endSample - startSample
-            const segBuffer = offlineCtx.createBuffer(numberOfChannels, segLength, sampleRate)
-
-            for (let ch = 0; ch < numberOfChannels; ch++) {
-              const srcData = audioBuffer.getChannelData(ch).slice(startSample, endSample)
-              segBuffer.copyToChannel(srcData, ch)
-            }
-
-            const source = offlineCtx.createBufferSource()
-            source.buffer = segBuffer
-            source.connect(offlineCtx.destination)
-            source.start(writeOffset / sampleRate)
-            writeOffset += segLength
-          }
-
-          const renderedBuffer = await offlineCtx.startRendering()
-          await audioCtx.close()
-
-          // WAV 변환 및 적용
-          const wavBlob = audioBufferToWav(renderedBuffer)
-          const fileId = `media-export-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-          await saveAttachment(fileId, wavBlob)
-          const url = `ameva-vfs://${fileId}`
-          
-          props.editor.updateBlock(props.block.id, {
-            type: 'audio',
-            props: { ...props.block.props, url }
-          } as any)
-          
-          setIsEditMode(false)
-        } finally {
-          setIsExporting(false)
-        }
-      }
-
-      const formatTime = (t: number) => {
-        const m = Math.floor(t / 60).toString().padStart(2, '0')
-        const s = (t % 60).toFixed(1).padStart(4, '0')
-        return `${m}:${s}`
-      }
-
-      if (!src) {
-        return (
-          <div 
-            style={{
-              border: '2px dashed #3a3a4a', borderRadius: '10px', padding: '30px',
-              textAlign: 'center', color: '#888', background: '#0d0d1a', cursor: 'pointer'
-            }}
-            onClick={() => document.getElementById(`audio-upload-${props.block.id}`)?.click()}
-          >
-            <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎵</div>
-            <div style={{ fontSize: '13px', fontWeight: 600, color: '#e2e8f0', marginBottom: '6px' }}>클릭하여 오디오 파일 업로드</div>
-            <div style={{ fontSize: '11px' }}>또는 오디오 파일을 이곳으로 드래그하세요</div>
-            <input
-              id={`audio-upload-${props.block.id}`}
-              type="file"
-              accept="audio/*,.mp3,.wav,.ogg,.flac,.m4a,.wma,.aac"
-              style={{ display: 'none' }}
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) {
-                  const fileId = `media-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-                  saveAttachment(fileId, file).then(() => {
-                    const url = `ameva-vfs://${fileId}`
-                    props.editor.updateBlock(props.block.id, {
-                      type: 'audio',
-                      props: { ...props.block.props, url }
-                    } as any)
-                  })
-                }
-              }}
-            />
-          </div>
-        )
-      }
-
-      return (
-        <div style={{
-          background: '#0d0d1a',
-          border: '1px solid #1e1e3a',
-          borderRadius: '10px',
-          overflow: 'hidden',
-          color: '#fff',
-          fontFamily: 'Pretendard, sans-serif',
-        }}>
-          {/* ─── 오디오 엘리먼트 (숨김) ──────────────────────────── */}
-          <audio ref={audioRef} src={src} style={{ display: 'none' }} />
-
-          {/* ─── 헤더 바 ─────────────────────────────────────────── */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '10px',
-            padding: '10px 14px', background: 'rgba(129,140,248,0.08)',
-            borderBottom: '1px solid #1e1e3a',
-          }}>
-            <div style={{
-              width: '36px', height: '36px', borderRadius: '50%',
-              background: 'linear-gradient(135deg, #2563eb, #818cf8)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px',
-            }}>🎵</div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '13px', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {src.split('/').pop() || '오디오 파일'}
-              </div>
-              {props.block.props.caption && (
-                <div style={{ fontSize: '11px', color: '#888' }}>{props.block.props.caption}</div>
-              )}
-            </div>
-            <button
-              onClick={() => setIsEditMode(m => !m)}
-              style={{
-                background: isEditMode ? '#dc2626' : 'rgba(37, 99, 235,0.3)',
-                border: '1px solid rgba(129,140,248,0.3)',
-                color: '#fff', borderRadius: '6px', padding: '5px 12px', fontSize: '12px', cursor: 'pointer',
-              }}
-            >
-              {isEditMode ? '✕ 닫기' : '✂️ 편집'}
-            </button>
-          </div>
-
-          {/* ─── 기본 플레이어 컨트롤 ────────────────────────────── */}
-          <div style={{ padding: '10px 14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <button
-              onClick={togglePlay}
-              style={{
-                background: 'linear-gradient(135deg, #2563eb, #818cf8)',
-                border: 'none', color: '#fff', borderRadius: '50%',
-                width: '36px', height: '36px', cursor: 'pointer', fontSize: '14px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}
-            >
-              {isPlaying ? '⏸' : '▶'}
-            </button>
-            {/* 진행바 */}
-            <div
-              style={{ flex: 1, height: '4px', background: '#2a2a4a', borderRadius: '2px', cursor: 'pointer', position: 'relative' }}
-              onClick={(e) => {
-                const rect = e.currentTarget.getBoundingClientRect()
-                const t = ((e.clientX - rect.left) / rect.width) * duration
-                if (audioRef.current) audioRef.current.currentTime = t
-                setCurrentTime(t)
-              }}
-            >
-              <div style={{
-                height: '100%', borderRadius: '2px',
-                background: 'linear-gradient(90deg, #2563eb, #818cf8)',
-                width: duration > 0 ? `${(currentTime / duration) * 100}%` : '0%',
-                transition: 'width 0.05s',
-              }} />
-            </div>
-            <span style={{ fontSize: '11px', color: '#aaa', whiteSpace: 'nowrap' }}>
-              {formatTime(audioRef.current ? audioRef.current.currentTime : 0)} / {formatTime(duration)}
-            </span>
-          </div>
-
-          {/* ─── 편집 패널 ───────────────────────────────────────── */}
-          {isEditMode && (
-            <div style={{ padding: '0 14px 14px' }}>
-              {/* 파형 분석 컨트롤 */}
-              <div style={{
-                background: '#12122a', borderRadius: '8px', padding: '10px',
-                marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap',
-              }}>
-                <span style={{ fontSize: '11px', color: '#818cf8', fontWeight: 600 }}>🔊 무음 탐지</span>
-                <label style={{ fontSize: '11px', color: '#aaa', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  임계값
-                  <input
-                    type="range" min="0.001" max="0.1" step="0.001"
-                    value={silenceThreshold}
-                    onChange={e => setSilenceThreshold(parseFloat(e.target.value))}
-                    style={{ width: '60px', accentColor: '#2563eb' }}
-                  />
-                  <span style={{ color: '#c4c4ff', fontSize: '10px' }}>
-                    {(20 * Math.log10(silenceThreshold)).toFixed(0)}dB
-                  </span>
-                </label>
-                <label style={{ fontSize: '11px', color: '#aaa', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  최소 구간
-                  <input
-                    type="range" min="0.1" max="3" step="0.1"
-                    value={minSilenceDuration}
-                    onChange={e => setMinSilenceDuration(parseFloat(e.target.value))}
-                    style={{ width: '60px', accentColor: '#2563eb' }}
-                  />
-                  <span style={{ color: '#c4c4ff', fontSize: '10px' }}>{minSilenceDuration}s</span>
-                </label>
-                <button
-                  onClick={handleAnalyze}
-                  disabled={isAnalyzing}
-                  style={{
-                    background: isAnalyzing ? '#374151' : '#2563eb',
-                    border: 'none', color: '#fff', borderRadius: '5px',
-                    padding: '5px 12px', cursor: 'pointer', fontSize: '11px',
-                  }}
-                >
-                  {isAnalyzing ? `분석 중 ${analyzeProgress}%...` : '🔍 파형 분석'}
-                </button>
-                {silenceSegments.length > 0 && (
-                  <button
-                    onClick={applyDetectedSilences}
-                    style={{
-                      background: '#dc2626', border: 'none', color: '#fff',
-                      borderRadius: '5px', padding: '5px 12px', cursor: 'pointer', fontSize: '11px',
-                    }}
-                  >
-                    ✂️ 무음 {silenceSegments.length}개 삭제
-                  </button>
-                )}
-                <div style={{ display: 'flex', gap: '4px', alignItems: 'center', marginLeft: '10px' }}>
-                  <button
-                    onClick={handleSetIn}
-                    style={{ background: '#4b5563', border: 'none', color: '#fff', borderRadius: '5px', padding: '5px 8px', cursor: 'pointer', fontSize: '11px' }}
-                  >
-                    [ In
-                  </button>
-                  <button
-                    onClick={handleSetOut}
-                    style={{ background: '#4b5563', border: 'none', color: '#fff', borderRadius: '5px', padding: '5px 8px', cursor: 'pointer', fontSize: '11px' }}
-                  >
-                    Out ]
-                  </button>
-                  <button
-                    onClick={handleAddCut}
-                    disabled={cutIn === null || cutOut === null}
-                    style={{ 
-                      background: (cutIn !== null && cutOut !== null) ? '#dc2626' : '#374151', 
-                      border: 'none', color: '#fff', borderRadius: '5px', padding: '5px 10px', cursor: 'pointer', fontSize: '11px',
-                      opacity: (cutIn !== null && cutOut !== null) ? 1 : 0.5
-                    }}
-                  >
-                    ✂️ 구간 자르기
-                  </button>
-                  {(cutIn !== null || cutOut !== null) && (
-                    <span style={{ fontSize: '10px', color: '#fca5a5', marginLeft: '4px' }}>
-                      {cutIn !== null ? formatTime(cutIn) : '--:--'} ~ {cutOut !== null ? formatTime(cutOut) : '--:--'}
-                    </span>
-                  )}
-                </div>
-                <div style={{ flex: 1 }} />
-                <button
-                  onClick={handleApplyAudio}
-                  disabled={isExporting || cutRegions.length === 0}
-                  style={{
-                    background: isExporting ? '#374151' : '#059669',
-                    border: 'none', color: '#fff', borderRadius: '5px',
-                    padding: '5px 12px', cursor: 'pointer', fontSize: '11px',
-                    opacity: cutRegions.length === 0 ? 0.5 : 1,
-                  }}
-                >
-                  {isExporting ? '⏳ 처리 중...' : '💾 적용하기'}
-                </button>
-              </div>
-
-              {/* 파형 캔버스 */}
-              {waveformData.length > 0 ? (
-                  <AudioWaveformCanvas
-                    waveformData={waveformData}
-                    duration={duration}
-                    currentTime={currentTime}
-                    cutRegions={cutRegions}
-                    silenceSegments={silenceSegments}
-                    onSeek={(t) => {
-                      if (audioRef.current) audioRef.current.currentTime = t
-                    }}
-                    audioRef={audioRef}
-                  />
-              ) : (
-                <div style={{
-                  height: '80px', background: '#0a0a14', borderRadius: '6px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#555', fontSize: '12px',
-                }}>
-                  파형 분석 버튼을 눌러 파형을 시각화하세요
-                </div>
-              )}
-
-              {/* 컷 목록 */}
-              {cutRegions.length > 0 && (
-                <div style={{ marginTop: '8px', fontSize: '11px', color: '#aaa', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                  {cutRegions.map((r, i) => (
-                    <span key={i} style={{
-                      background: 'rgba(220,38,38,0.2)', border: '1px solid #dc2626',
-                      borderRadius: '4px', padding: '3px 8px', display: 'flex', gap: '6px',
-                    }}>
-                      ✂️ {formatTime(r.start)}~{formatTime(r.end)}
-                      <button
-                        onClick={() => setCutRegions(prev => prev.filter((_, j) => j !== i))}
-                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0, fontSize: '10px' }}
-                      >
-                        ✕
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )
-    },
+    render: (props) => (
+      <AmevaAudioPlayerViewer
+        url={props.block.props.url}
+        caption={props.block.props.caption}
+        editor={props.editor}
+        blockId={props.block.id}
+        isEditable={props.editor?.isEditable !== false}
+      />
+    ),
     toExternalHTML: ({ block }) => {
       return (
         <div data-content-type="audio" data-url={block.props.url}>
